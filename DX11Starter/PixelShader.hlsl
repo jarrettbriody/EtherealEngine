@@ -1,3 +1,5 @@
+#define MAX_LIGHTS 128;
+
 
 // Struct representing the data we expect to receive from earlier pipeline stages
 // - Should match the output of our corresponding vertex shader
@@ -24,9 +26,8 @@ struct DirectionalLight {
 
 cbuffer lightCBuffer : register(b0)
 {
-	DirectionalLight light;
-	DirectionalLight light2;
-	DirectionalLight light3;
+	Light lights[MAX_LIGHTS];
+	int lightCount;
 };
 
 Texture2D DiffuseTexture  :  register(t0);
