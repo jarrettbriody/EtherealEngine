@@ -1,0 +1,13 @@
+﻿  compilation object save succeeded; see Z:\IGMProfile\Desktop\RIT\Game Graphics Programming\GGPProject\x64\Debug\PixelShader.cso
+  compilation object save succeeded; see Z:\IGMProfile\Desktop\RIT\Game Graphics Programming\GGPProject\x64\Debug\VertexShader.cso
+  Camera.cpp
+  DXCore.cpp
+  Entity.cpp
+  Game.cpp
+  Main.cpp
+  Material.cpp
+  Mesh.cpp
+  Renderer.cpp
+  SimpleShader.cpp
+  Generating Code...
+  DX11Starter.vcxproj -> Z:\IGMProfile\Desktop\RIT\Game Graphics Programming\GGPProject\x64\Debug\DX11Starter.exe

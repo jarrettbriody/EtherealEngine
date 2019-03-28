@@ -117,33 +117,23 @@ void Game::Init()
 	prevMousePos.x = 0;
 	prevMousePos.y = 0;
 
-	dLight.AmbientColor = XMFLOAT4(0.1f, 0.1f, 0.1f, 1.0f);
-	dLight.DiffuseColor = XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f);
+	dLight.Type = LIGHT_TYPE_DIR;
+	dLight.Color = XMFLOAT3(0.0f, 0.0f, 1.0f);
 	dLight.Direction = XMFLOAT3(1.0f, -1.0f, 0.0f);
 
-	dLight2.AmbientColor = XMFLOAT4(0.1f, 0.1f, 0.1f, 1.0f);
-	dLight2.DiffuseColor = XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f);
+	dLight2.Type = LIGHT_TYPE_DIR;
+	dLight2.Color = XMFLOAT3(1.0f, 0.0f, 0.0f);
 	dLight2.Direction = XMFLOAT3(-1.0f, -1.0f, 0.0f);
 
-	dLight3.AmbientColor = XMFLOAT4(0.1f, 0.1f, 0.1f, 1.0f);
-	dLight3.DiffuseColor = XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f);
+	dLight3.Type = LIGHT_TYPE_DIR;
+	dLight3.Color = XMFLOAT3(0.0f, 1.0f, 0.0f);
 	dLight3.Direction = XMFLOAT3(0.0f, 1.0f, 0.0f);
 
-	pixelShader->SetData(
-		"light",
-		&dLight,
-		sizeof(DirectionalLight)
-	);
-	pixelShader->SetData(
-		"light2",
-		&dLight2,
-		sizeof(DirectionalLight)
-	);
-	pixelShader->SetData(
-		"light3",
-		&dLight3,
-		sizeof(DirectionalLight)
-	);
+	renderer.AddLight("blue", dLight);
+	renderer.AddLight("red", dLight2);
+	renderer.AddLight("green", dLight3);
+
+	renderer.SendAllLightsToShader(pixelShader);
 
 	// Tell the input assembler stage of the pipeline what kind of
 	// geometric primitives (points, lines or triangles) we want to draw.  

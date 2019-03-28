@@ -7,6 +7,7 @@
 #include "Entity.h"
 #include "Camera.h"
 #include "Lights.h"
+#include "Renderer.h"
 
 class Game 
 	: public DXCore
@@ -65,13 +66,15 @@ private:
 	Material* material;
 	Material* material2;
 
-	DirectionalLight dLight;
-	DirectionalLight dLight2;
-	DirectionalLight dLight3;
+	Light dLight;
+	Light dLight2;
+	Light dLight3;
 
 	ID3D11ShaderResourceView* marbleSRV;
 	ID3D11ShaderResourceView* hedgeSRV;
 
 	ID3D11SamplerState* sampler;
+
+	Renderer renderer;
 };
 

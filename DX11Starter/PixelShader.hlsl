@@ -1,4 +1,7 @@
-#define MAX_LIGHTS 128;
+#define MAX_LIGHTS 32
+#define LIGHT_TYPE_DIR 0
+#define LIGHT_TYPE_POINT 1
+#define LIGHT_TYPE_SPOT 2
 
 
 // Struct representing the data we expect to receive from earlier pipeline stages
@@ -18,10 +21,15 @@ struct VertexToPixel
 	float2 uv           : TEXCOORD;
 };
 
-struct DirectionalLight {
-	float4 AmbientColor;
-	float4 DiffuseColor;
+struct Light {
+	int Type;
 	float3 Direction;
+	float Range;
+	float3 Position;
+	float Intensity;
+	float3 Color;
+	float SpotFalloff;
+	float3 Padding;
 };
 
 cbuffer lightCBuffer : register(b0)
@@ -34,11 +42,11 @@ Texture2D DiffuseTexture  :  register(t0);
 
 SamplerState BasicSampler :  register(s0);
 
-float4 CalcLighting(float3 n, DirectionalLight l) {
+float4 CalcDirectionalLighting(float3 n, Light l) {
 	n = normalize(n);
 	float3 negatedLightDir = -l.Direction;
 	float lightAmt = saturate(dot(n, negatedLightDir));
-	return (l.DiffuseColor * lightAmt + l.AmbientColor);
+	return (float4(l.Color,1.0f) * lightAmt + float4(0.1f,0.1f,0.1f,1.0f));
 }
 
 // --------------------------------------------------------
@@ -57,5 +65,14 @@ float4 main(VertexToPixel input) : SV_TARGET
 	// - This color (like most values passing through the rasterizer) is 
 	//   interpolated for each pixel between the corresponding vertices 
 	//   of the triangle we're rendering
-	return CalcLighting(input.normal, light) * surfaceColor + CalcLighting(input.normal, light2) * surfaceColor + CalcLighting(input.normal, light3) * surfaceColor;
+	float4 finalColor = float4(0,0,0,1);
+	for (int i = 0; i < lightCount; i++)
+	{
+		switch (lights[i].Type) {
+		case LIGHT_TYPE_DIR:
+			finalColor += CalcDirectionalLighting(input.normal, lights[i]) * surfaceColor;
+			break;
+		}
+	}
+	return finalColor;
 }
