@@ -40,10 +40,13 @@ Game::Game(HINSTANCE hInstance)
 // --------------------------------------------------------
 Game::~Game()
 {
-	for (size_t i = 0; i < 6; i++)
-	{
-		delete entities[i];
-	}
+	marbleSRV->Release();
+	hedgeSRV->Release();
+	sampler->Release();
+
+	delete material;
+	delete material2;
+
 	delete mesh1;
 	delete mesh2;
 	delete mesh3;
@@ -55,14 +58,13 @@ Game::~Game()
 	delete helix;
 	delete torus;
 
+	for (size_t i = 0; i < 7; i++)
+	{
+		delete entities[i];
+	}
+
 	delete camera;
-
-	marbleSRV->Release();
-	hedgeSRV->Release();
-	sampler->Release();
-
-	delete material;
-	delete material2;
+	delete renderer;
 
 	// Delete our simple shader objects, which
 	// will clean up their own internal DirectX stuff
@@ -82,6 +84,8 @@ void Game::Init()
 	LoadShaders();
 
 	camera = new Camera();
+
+	renderer = new Renderer();
 
 	CreateMatrices();
 	CreateBasicGeometry();
@@ -129,11 +133,11 @@ void Game::Init()
 	dLight3.Color = XMFLOAT3(0.0f, 1.0f, 0.0f);
 	dLight3.Direction = XMFLOAT3(0.0f, 1.0f, 0.0f);
 
-	renderer.AddLight("blue", dLight);
-	renderer.AddLight("red", dLight2);
-	renderer.AddLight("green", dLight3);
+	renderer->AddLight("blue", dLight);
+	renderer->AddLight("red", dLight2);
+	renderer->AddLight("green", dLight3);
 
-	renderer.SendAllLightsToShader(pixelShader);
+	renderer->SendAllLightsToShader(pixelShader);
 
 	// Tell the input assembler stage of the pipeline what kind of
 	// geometric primitives (points, lines or triangles) we want to draw.  

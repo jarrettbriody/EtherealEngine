@@ -75,6 +75,6 @@ private:
 
 	ID3D11SamplerState* sampler;
 
-	Renderer renderer;
+	Renderer* renderer;
 };
 
