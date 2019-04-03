@@ -16,8 +16,10 @@ Material::Material(SimpleVertexShader * vShader, SimplePixelShader * pShader, ID
 
 Material::~Material()
 {
-	shaderResourceView->Release();
-	samplerState->Release();
+	vertexShader = NULL;
+	pixelShader = NULL;
+	shaderResourceView = NULL;
+	samplerState = NULL;
 }
 
 SimpleVertexShader * Material::GetVertexShader()
