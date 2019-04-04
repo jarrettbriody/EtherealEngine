@@ -8,6 +8,10 @@
 #include "Camera.h"
 #include "Lights.h"
 #include "Renderer.h"
+#include <regex>
+#include <iostream>
+
+using namespace std;
 
 class Game 
 	: public DXCore
@@ -53,9 +57,6 @@ private:
 	// determining how far the mouse moved in a single frame.
 	POINT prevMousePos;
 
-	Mesh* mesh1;
-	Mesh* mesh2;
-	Mesh* mesh3;
 	Mesh* sphere;
 	Mesh* cone;
 	Mesh* cube;
@@ -63,7 +64,7 @@ private:
 	Mesh* helix;
 	Mesh* torus;
 
-	Entity* entities[7];
+	Entity* walls[11];
 
 	Camera* camera;
 
@@ -76,6 +77,7 @@ private:
 
 	ID3D11ShaderResourceView* marbleSRV;
 	ID3D11ShaderResourceView* hedgeSRV;
+	ID3D11ShaderResourceView* redSRV;
 
 	ID3D11SamplerState* sampler;
 

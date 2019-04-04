@@ -43,6 +43,7 @@ Game::~Game()
 {
 	marbleSRV->Release();
 	hedgeSRV->Release();
+	redSRV->Release();
 	sampler->Release();
 
 	skySRV->Release();
@@ -54,10 +55,6 @@ Game::~Game()
 	delete material;
 	delete material2;
 
-	delete mesh1;
-	delete mesh2;
-	delete mesh3;
-
 	delete sphere;
 	delete cone;
 	delete cube;
@@ -65,9 +62,9 @@ Game::~Game()
 	delete helix;
 	delete torus;
 
-	for (size_t i = 0; i < 7; i++)
+	for (size_t i = 0; i < 10; i++)
 	{
-		delete entities[i];
+		delete walls[i];
 	}
 
 	delete camera;
@@ -95,11 +92,12 @@ void Game::Init()
 	renderer = new Renderer();
 
 	CreateMatrices();
-	CreateBasicGeometry();
 
 	DirectX::CreateWICTextureFromFile(device, context, L"../../Assets/Textures/marble.png", 0, &marbleSRV);
 
 	DirectX::CreateWICTextureFromFile(device, context, L"../../Assets/Textures/hedge.jpg", 0, &hedgeSRV);
+
+	DirectX::CreateWICTextureFromFile(device, context, L"../../Assets/Textures/red.png", 0, &redSRV);
 
 	DirectX::CreateDDSTextureFromFile(device, L"../../Assets/Textures/SunnyCubeMap.dds", 0, &skySRV);
 
@@ -125,38 +123,19 @@ void Game::Init()
 	skyDS.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
 	device->CreateDepthStencilState(&skyDS, &skyDepthState);
 
-	material = new Material(vertexShader, pixelShader, marbleSRV, sampler);
+	material = new Material(vertexShader, pixelShader, redSRV, sampler);
 	material2 = new Material(vertexShader, pixelShader, hedgeSRV, sampler);
 
-	entities[0] = new Entity(cone, material);
-	entities[1] = new Entity(cube, material);
-
-	entities[2] = new Entity(cylinder, material);
-	entities[3] = new Entity(helix, material2);
-
-	entities[4] = new Entity(torus, material2);
-	entities[5] = new Entity(mesh3, material);
-
-	entities[6] = new Entity(sphere, material2);
+	CreateBasicGeometry();
 
 	prevMousePos.x = 0;
 	prevMousePos.y = 0;
 
 	dLight.Type = LIGHT_TYPE_DIR;
-	dLight.Color = XMFLOAT3(0.0f, 0.0f, 1.0f);
+	dLight.Color = XMFLOAT3(1.0f, 244.0f / 255.0f, 214.0f / 255.0f);
 	dLight.Direction = XMFLOAT3(1.0f, -1.0f, 0.0f);
 
-	dLight2.Type = LIGHT_TYPE_DIR;
-	dLight2.Color = XMFLOAT3(1.0f, 0.0f, 0.0f);
-	dLight2.Direction = XMFLOAT3(-1.0f, -1.0f, 0.0f);
-
-	dLight3.Type = LIGHT_TYPE_DIR;
-	dLight3.Color = XMFLOAT3(0.0f, 1.0f, 0.0f);
-	dLight3.Direction = XMFLOAT3(0.0f, 1.0f, 0.0f);
-
-	renderer->AddLight("blue", dLight);
-	renderer->AddLight("red", dLight2);
-	renderer->AddLight("green", dLight3);
+	renderer->AddLight("directional", dLight);
 
 	renderer->SendAllLightsToShader(pixelShader);
 
@@ -236,47 +215,34 @@ void Game::CreateBasicGeometry()
 	helix = new Mesh("../../Assets/Models/helix.obj", device);
 	torus = new Mesh("../../Assets/Models/torus.obj", device);
 
-	// Set up the vertices of the triangle we would like to draw
-	// - We're going to copy this array, exactly as it exists in memory
-	//    over to a DirectX-controlled data structure (the vertex buffer)
-	Vertex vertices[] =
+	regex transformationRegex[3] = { regex("P\\(.*?\\)"),regex("R\\(.*?\\)"), regex("S\\(.*?\\)") };
+	regex iteratorRegex = regex("-\\d*\\.\\d*|\\d*\\.\\d*");
+
+	ifstream infile("../../Assets/Scenes/scene.txt");
+	string line;
+	smatch match;
+	float parsedNumbers[9];
+	int wallCount = 0;
+	while (getline(infile, line))
 	{
-		{ XMFLOAT3(+0.0f, +1.0f, +0.0f), XMFLOAT3(+0.0f, +0.0f, -1.0f), XMFLOAT2(+0.0f, +0.0f) },
-		{ XMFLOAT3(+1.5f, -1.0f, +0.0f), XMFLOAT3(+0.0f, +0.0f, -1.0f), XMFLOAT2(+0.0f, +0.0f) },
-		{ XMFLOAT3(-1.5f, -1.0f, +0.0f), XMFLOAT3(+0.0f, +0.0f, -1.0f), XMFLOAT2(+0.0f, +0.0f) },
-	};
-
-	// Set up the indices, which tell us which vertices to use and in which order
-	// - This is somewhat redundant for just 3 vertices (it's a simple example)
-	// - Indices are technically not required if the vertices are in the buffer 
-	//    in the correct order and each one will be used exactly once
-	// - But just to see how it's done...
-	unsigned int indices[] = { 0, 1, 2 };
-
-	Vertex vertices2[] =
-	{
-		{ XMFLOAT3(+1.0f, +1.0f, +0.0f), XMFLOAT3(+0.0f, +0.0f, -1.0f), XMFLOAT2(+0.0f, +0.0f) },
-		{ XMFLOAT3(+1.0f, -1.0f, +0.0f), XMFLOAT3(+0.0f, +0.0f, -1.0f), XMFLOAT2(+0.0f, +0.0f) },
-		{ XMFLOAT3(-1.0f, -1.0f, +0.0f), XMFLOAT3(+0.0f, +0.0f, -1.0f), XMFLOAT2(+0.0f, +0.0f) },
-		{ XMFLOAT3(-1.0f, +1.0f, +0.0f), XMFLOAT3(+0.0f, +0.0f, -1.0f), XMFLOAT2(+0.0f, +0.0f) },
-	};
-
-	unsigned int indices2[] = { 0, 1, 3, 3, 1, 2 };
-
-	Vertex vertices3[] =
-	{
-		{ XMFLOAT3(+0.0f, +2.0f, +0.0f), XMFLOAT3(+0.0f, +0.0f, -1.0f), XMFLOAT2(+0.0f, +0.0f) },
-		{ XMFLOAT3(+2.5f, -1.0f, +0.0f), XMFLOAT3(+0.0f, +0.0f, -1.0f), XMFLOAT2(+0.0f, +0.0f) },
-		{ XMFLOAT3(-1.5f, -1.0f, +0.0f), XMFLOAT3(+0.0f, +0.0f, -1.0f), XMFLOAT2(+0.0f, +0.0f) },
-	};
-
-	unsigned int indices3[] = { 0, 1, 2 };
-
-	mesh1 = new Mesh(vertices, 3, indices, 3, device);
-
-	mesh2 = new Mesh(vertices2, 4, indices2, 6, device);
-
-	mesh3 = new Mesh(vertices3, 3, indices3, 3, device);
+		if (line != "") {
+			std::sregex_iterator iter(line.begin(), line.end(), iteratorRegex);
+			int counter = 0;
+			for (; iter != std::sregex_iterator(); ++iter) {
+				if (counter < 9) {
+					match = *iter;
+					parsedNumbers[counter] = std::stof(match.str());
+				}
+				counter++;
+			}
+			walls[wallCount] = new Entity(cube, material2);
+			walls[wallCount]->SetPosition(parsedNumbers[0], parsedNumbers[1], parsedNumbers[2]);
+			walls[wallCount]->SetRotation(DirectX::XMConvertToRadians(parsedNumbers[3]), DirectX::XMConvertToRadians(parsedNumbers[4]), DirectX::XMConvertToRadians(parsedNumbers[5]));
+			walls[wallCount]->SetScale(parsedNumbers[6], parsedNumbers[7], parsedNumbers[8]);
+			walls[wallCount]->CalcWorldMatrix();
+			wallCount++;
+		}
+	}
 }
 
 
@@ -303,13 +269,6 @@ void Game::Update(float deltaTime, float totalTime)
 		Quit();
 
 	camera->Update();
-
-	entities[0]->Move(sin(totalTime) * deltaTime, 0.0f, 0.0f);
-	entities[1]->Move(0.1f * deltaTime, 0.0f, 0.0f);
-	entities[2]->Move(-sin(totalTime) * deltaTime, 0.0f, 0.0f);
-	entities[3]->Move(0.0f, 0.1f * deltaTime, 0.0f);
-	entities[4]->Move(0.1f * deltaTime, -0.1f * deltaTime, 0.0f);
-	entities[5]->Move(0.0f, 0.0f, 0.1f * deltaTime);
 }
 
 // --------------------------------------------------------
@@ -336,16 +295,16 @@ void Game::Draw(float deltaTime, float totalTime)
 	UINT stride = sizeof(Vertex);
 	UINT offset = 0;
 
-	for (size_t i = 0; i < 7; i++)
+	for (size_t i = 0; i < 11; i++)
 	{
-		ID3D11Buffer* vbo = entities[i]->GetMeshVertexBuffer();
+		ID3D11Buffer* vbo = walls[i]->GetMeshVertexBuffer();
 		context->IASetVertexBuffers(0, 1, &vbo, &stride, &offset);
-		context->IASetIndexBuffer(entities[i]->GetMeshIndexBuffer(), DXGI_FORMAT_R32_UINT, 0);
+		context->IASetIndexBuffer(walls[i]->GetMeshIndexBuffer(), DXGI_FORMAT_R32_UINT, 0);
 
-		entities[i]->PrepareMaterial(camera->GetViewMatrix(), camera->GetProjMatrix());
+		walls[i]->PrepareMaterial(camera->GetViewMatrix(), camera->GetProjMatrix());
 
-		pixelShader->SetSamplerState("BasicSampler", entities[i]->GetMaterial()->GetSamplerState());
-		pixelShader->SetShaderResourceView("DiffuseTexture", entities[i]->GetMaterial()->GetShaderResourceView());
+		pixelShader->SetSamplerState("BasicSampler", walls[i]->GetMaterial()->GetSamplerState());
+		pixelShader->SetShaderResourceView("DiffuseTexture", walls[i]->GetMaterial()->GetShaderResourceView());
 
 		// Finally do the actual drawing
 		//  - Do this ONCE PER OBJECT you intend to draw
@@ -353,7 +312,7 @@ void Game::Draw(float deltaTime, float totalTime)
 		//  - DrawIndexed() uses the currently set INDEX BUFFER to look up corresponding
 		//     vertices in the currently set VERTEX BUFFER
 		context->DrawIndexed(
-			entities[i]->GetMeshIndexCount(),   // The number of indices to use (we could draw a subset if we wanted)
+			walls[i]->GetMeshIndexCount(),   // The number of indices to use (we could draw a subset if we wanted)
 			0,									// Offset to the first index we want to use
 			0);									// Offset to add to each index when looking up vertices
 	}
