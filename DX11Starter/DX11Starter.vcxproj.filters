@@ -94,4 +94,7 @@
   <ItemGroup>
     <ResourceCompile Include="DX11Starter.rc" />
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="scene.txt" />
+  </ItemGroup>
 </Project>
