@@ -62,7 +62,7 @@ Game::~Game()
 	delete helix;
 	delete torus;
 
-	for (size_t i = 0; i < 10; i++)
+	for (size_t i = 0; i < 11; i++)
 	{
 		delete walls[i];
 	}
