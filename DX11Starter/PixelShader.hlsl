@@ -20,6 +20,7 @@ struct VertexToPixel
 	float3 normal       : NORMAL;
 	float2 uv           : TEXCOORD;
 	float3 view			: POSITION0;
+	float3 worldPos		: POSITION1;
 };
 
 struct Light {
@@ -60,6 +61,14 @@ float4 CalcSpecular(float4 p, float3 v, float3 n, Light l) {
 	return specAmount;
 }
 
+float4 PointLight(float4 p, float3 n, Light l) {
+	float3 worldP = p.xyz;
+	float3 lightDir = normalize(worldP - l.Position);
+	n = normalize(n);
+	float NdotL = dot(n, -lightDir);
+	return NdotL;
+}
+
 // --------------------------------------------------------
 // The entry point (main method) for our pixel shader
 // 
@@ -82,6 +91,9 @@ float4 main(VertexToPixel input) : SV_TARGET
 		switch (lights[i].Type) {
 		case LIGHT_TYPE_DIR:
 			finalColor += (CalcDirectionalLighting(input.normal, lights[i]) + CalcSpecular(input.position,input.view,input.normal,lights[i]))* surfaceColor;
+			break;
+		case LIGHT_TYPE_POINT:
+			finalColor += (PointLight(input.position, input.normal, lights[i]) + CalcSpecular(input.position, input.view, input.normal, lights[i]))* surfaceColor;
 			break;
 		}
 	}
