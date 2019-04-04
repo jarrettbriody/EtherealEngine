@@ -1,5 +1,5 @@
 ﻿  Game.cpp
   Main.cpp
   Generating Code...
-  LINK : C:\Users\Ben\Desktop\forSchool\Semester 6\Graphics\GGPProject\x64\Debug\DX11Starter.exe not found or not built by the last incremental link; performing full link
+Camera.obj : warning LNK4099: PDB 'vc141.pdb' was not found with 'Camera.obj' or at 'C:\Users\Ben\Desktop\forSchool\Semester 6\Graphics\GGPProject\x64\Debug\vc141.pdb'; linking object as if no debug info
   DX11Starter.vcxproj -> C:\Users\Ben\Desktop\forSchool\Semester 6\Graphics\GGPProject\x64\Debug\DX11Starter.exe
