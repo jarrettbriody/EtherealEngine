@@ -1,25 +1,19 @@
 #include "Material.h"
 
-Material::Material()
-{
-	vertexShader = 0;
-	pixelShader = 0;
-}
-
-Material::Material(SimpleVertexShader * vShader, SimplePixelShader * pShader, ID3D11ShaderResourceView* shaderRV, ID3D11SamplerState* sampler)
+Material::Material(string n, MaterialData matData, SimpleVertexShader * vShader, SimplePixelShader * pShader, ID3D11SamplerState* sampler)
 {
 	vertexShader = vShader;
 	pixelShader = pShader;
-	shaderResourceView = shaderRV;
+	materialData = matData;
 	samplerState = sampler;
+	name = n;
 }
 
 Material::~Material()
 {
-	vertexShader = NULL;
-	pixelShader = NULL;
-	shaderResourceView = NULL;
-	samplerState = NULL;
+	vertexShader = nullptr;
+	pixelShader = nullptr;
+	samplerState = nullptr;
 }
 
 SimpleVertexShader * Material::GetVertexShader()
@@ -32,12 +26,17 @@ SimplePixelShader * Material::GetPixelShader()
 	return pixelShader;
 }
 
-ID3D11ShaderResourceView * Material::GetShaderResourceView()
+MaterialData Material::GetMaterialData()
 {
-	return shaderResourceView;
+	return materialData;
 }
 
 ID3D11SamplerState * Material::GetSamplerState()
 {
 	return samplerState;
+}
+
+string Material::GetName()
+{
+	return name;
 }

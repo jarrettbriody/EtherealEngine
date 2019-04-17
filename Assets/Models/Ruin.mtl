@@ -1,0 +1,70 @@
+newmtl Material_25
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+map_Kd 004-concrete-texture.jpg
+map_Ka 004-concrete-texture.jpg
+Ni 1.50
+Ks 0.00 0.00 0.00
+Ns 10.00
+newmtl Material_26
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+map_Kd wood_rotten_0003_01_preview.jpg
+map_Ka wood_rotten_0003_01_preview.jpg
+Ni 1.50
+Ks 0.00 0.00 0.00
+Ns 10.00
+newmtl Material_27
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+map_Kd broken_concrete_020073.JPG
+map_Ka broken_concrete_020073.JPG
+Ni 1.50
+Ks 0.00 0.00 0.00
+Ns 10.00
+newmtl Material_28
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+map_Kd building_rubble_2568.JPG
+map_Ka building_rubble_2568.JPG
+Ni 1.50
+Ks 0.00 0.00 0.00
+Ns 10.00
+newmtl Material_29
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+map_Kd flamable.jpg
+map_Ka flamable.jpg
+Ni 1.50
+Ks 0.00 0.00 0.00
+Ns 10.00
+newmtl Material_31
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+map_Kd crate.jpg
+map_Ka crate.jpg
+Ni 1.50
+Ks 0.00 0.00 0.00
+Ns 10.00
+newmtl Material_35
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+map_Kd crate.jpg
+map_Ka crate.jpg
+Ni 1.50
+Ks 0.00 0.00 0.00
+Ns 10.00

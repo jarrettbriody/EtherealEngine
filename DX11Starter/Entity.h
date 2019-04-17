@@ -1,8 +1,11 @@
 #pragma once
 #include <d3d11.h>
 #include <DirectXMath.h>
+#include <map>
 #include "Mesh.h"
 #include "Material.h"
+
+using namespace std;
 
 class Entity
 {
@@ -12,9 +15,9 @@ private:
 	DirectX::XMFLOAT3 position;
 	DirectX::XMFLOAT3 scale;
 	DirectX::XMFLOAT3 rotation;
-	Material* material;
+	map<string, Material*> materialMap;
 public:
-	Entity(Mesh* entityMesh, Material* mat);
+	Entity(Mesh* entityMesh, Material* mat = nullptr);
 	~Entity();
 	DirectX::XMFLOAT4X4 GetWorldMatrix();
 	DirectX::XMFLOAT3 GetPosition();
@@ -24,11 +27,16 @@ public:
 	void SetScale(float x, float y, float z);
 	void SetRotation(float x, float y, float z);
 	void Move(float x, float y, float z);
-	ID3D11Buffer* GetMeshVertexBuffer();
-	ID3D11Buffer* GetMeshIndexBuffer();
-	int GetMeshIndexCount();
+	ID3D11Buffer* GetMeshVertexBuffer(int i = -1);
+	ID3D11Buffer* GetMeshIndexBuffer(int i = -1);
+	int GetMeshIndexCount(int i = -1);
+	string GetMeshMaterialName(int i = -1);
 	void CalcWorldMatrix();
-	void PrepareMaterial(DirectX::XMFLOAT4X4 view, DirectX::XMFLOAT4X4 proj);
-	Material* GetMaterial();
+	void PrepareMaterial(string n, DirectX::XMFLOAT4X4 view, DirectX::XMFLOAT4X4 proj);
+	Material* GetMaterial(string n);
+	bool MeshHasChildren();
+	int GetMeshChildCount();
+	vector<string> GetMaterialNameList();
+	void AddMaterial(Material* mat);
 };
 

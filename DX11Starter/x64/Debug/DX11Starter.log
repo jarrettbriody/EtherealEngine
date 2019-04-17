@@ -1,6 +1,32 @@
-﻿  compilation object save succeeded; see C:\Users\Ben\Desktop\forSchool\Semester 6\Graphics\GGPProject\x64\Debug\PixelShader.cso
-  compilation object save succeeded; see C:\Users\Ben\Desktop\forSchool\Semester 6\Graphics\GGPProject\x64\Debug\VertexShader.cso
+﻿  Entity.cpp
   Game.cpp
+c:\users\jarrett\desktop\rit\year 3 semester 2\foundations of game graphics programming\ggpproject\dx11starter\game.cpp(240): warning C4302: 'type cast': truncation from 'const _Elem *' to 'wchar_t'
+          with
+          [
+              _Elem=char
+          ]
+c:\users\jarrett\desktop\rit\year 3 semester 2\foundations of game graphics programming\ggpproject\dx11starter\game.cpp(246): warning C4302: 'type cast': truncation from 'const _Elem *' to 'wchar_t'
+          with
+          [
+              _Elem=char
+          ]
+c:\users\jarrett\desktop\rit\year 3 semester 2\foundations of game graphics programming\ggpproject\dx11starter\game.cpp(252): warning C4302: 'type cast': truncation from 'const _Elem *' to 'wchar_t'
+          with
+          [
+              _Elem=char
+          ]
+c:\users\jarrett\desktop\rit\year 3 semester 2\foundations of game graphics programming\ggpproject\dx11starter\game.cpp(258): warning C4302: 'type cast': truncation from 'const _Elem *' to 'wchar_t'
+          with
+          [
+              _Elem=char
+          ]
+c:\users\jarrett\desktop\rit\year 3 semester 2\foundations of game graphics programming\ggpproject\dx11starter\game.cpp(264): warning C4302: 'type cast': truncation from 'const _Elem *' to 'wchar_t'
+          with
+          [
+              _Elem=char
+          ]
   Main.cpp
+  Material.cpp
+  Mesh.cpp
   Generating Code...
-  DX11Starter.vcxproj -> C:\Users\Ben\Desktop\forSchool\Semester 6\Graphics\GGPProject\x64\Debug\DX11Starter.exe
+  DX11Starter.vcxproj -> C:\Users\Jarrett\Desktop\RIT\Year 3 Semester 2\Foundations of Game Graphics Programming\GGPProject\x64\Debug\DX11Starter.exe

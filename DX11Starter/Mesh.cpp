@@ -3,18 +3,22 @@
 
 using namespace DirectX;
 
+vector<string> Mesh::mtlPaths;
 
 Mesh::Mesh()
 {
 }
 
-Mesh::Mesh(Vertex * vertexObjects, int vertexCount, unsigned int * indices, int indexCnt, ID3D11Device * device)
+Mesh::Mesh(Vertex * vertexObjects, int vertexCount, unsigned int * indices, int indexCnt, ID3D11Device * device, string meshN, string matName)
 {
+	meshName = meshN;
+	materialNameList.push_back(matName);
 	CreateBuffers(vertexObjects, vertexCount, indices, indexCnt, device);
 }
 
-Mesh::Mesh(char * objFile, ID3D11Device* device)
+Mesh::Mesh(string meshN, char * objFile, ID3D11Device* device)
 {
+	meshName = meshN;
 	// File input object
 	std::ifstream obj(objFile);
 
@@ -29,13 +33,36 @@ Mesh::Mesh(char * objFile, ID3D11Device* device)
 	std::vector<Vertex> verts;           // Verts we're assembling
 	std::vector<UINT> indices;           // Indices of these verts
 	unsigned int vertCounter = 0;        // Count of vertices/indices
-	char chars[100];                     // String for line reading
+	char chars[200];                     // String for line reading
+	string line;
+	bool isGroup = false;
+	string groupName = "";
+	string matName = "";
+	regex useMatRgx("^(usemtl )");
+	regex mtllibRgx("^(mtllib )");
+	smatch match;
 
 	// Still have data left?
 	while (obj.good())
 	{
 		// Get the line (100 characters should be more than enough)
-		obj.getline(chars, 100);
+		obj.getline(chars, 200);
+
+		line = string(chars);
+
+		//new group, push current group to children
+		if (isGroup && chars[0] == 'v') {
+			materialNameList.push_back(matName);
+			children.push_back(new Mesh(&verts[0], vertCounter, &indices[0], vertCounter, device, groupName, matName));
+			childCount++;
+			//reset everything
+			isGroup = false;
+			groupName = "";
+			matName = "";
+			verts.clear();
+			indices.clear();
+			vertCounter = 0;
+		}
 
 		// Check the type of line
 		if (chars[0] == 'v' && chars[1] == 'n')
@@ -166,30 +193,42 @@ Mesh::Mesh(char * objFile, ID3D11Device* device)
 				indices.push_back(vertCounter); vertCounter += 1;
 			}
 		}
+		else if (chars[0] == 'g') {
+			isGroup = true;
+			groupName = line.substr(2);
+		}
+		else if (regex_search(line, match, useMatRgx)) {
+			matName = regex_replace(line, useMatRgx, "");
+			materialNameList.push_back(matName);
+		}
+		else if (regex_search(line, match, mtllibRgx)) {
+			mtlPath = regex_replace(line, mtllibRgx, "");
+			mtlPaths.push_back(mtlPath);
+		}
 	}
 
-	// Close the file and create the actual buffers
 	obj.close();
 
-
-	// - At this point, "verts" is a vector of Vertex structs, and can be used
-	//    directly to create a vertex buffer:  &verts[0] is the address of the first vert
-	//
-	// - The vector "indices" is similar. It's a vector of unsigned ints and
-	//    can be used directly for the index buffer: &indices[0] is the address of the first int
-	//
-	// - "vertCounter" is BOTH the number of vertices and the number of indices
-	// - Yes, the indices are a bit redundant here (one per vertex).  Could you skip using
-	//    an index buffer in this case?  Sure!  Though, if your mesh class assumes you have
-	//    one, you'll need to write some extra code to handle cases when you don't.
-	CreateBuffers(&verts[0], vertCounter, &indices[0], vertCounter, device);
+	if (isGroup && groupName != "" && matName != "" && childCount > 0) {
+		materialNameList.push_back(matName);
+		children.push_back(new Mesh(&verts[0], vertCounter, &indices[0], vertCounter, device, groupName, matName));
+		childCount++;
+	}
+	else if(childCount == 0)
+		CreateBuffers(&verts[0], vertCounter, &indices[0], vertCounter, device);
 }
 
 
 Mesh::~Mesh()
 {
-	vertexBuffer->Release();
-	indexBuffer->Release();
+	if (childCount == 0) {
+		vertexBuffer->Release();
+		indexBuffer->Release();
+	}
+	for (size_t i = 0; i < childCount; i++)
+	{
+		delete children[i];
+	}
 }
 
 ID3D11Buffer * Mesh::GetVertexBuffer()
@@ -211,45 +250,61 @@ void Mesh::CreateBuffers(Vertex* vertexObjects, int vertexCount, unsigned int* i
 {
 	indexCount = indexCnt;
 
-	// Create the VERTEX BUFFER description -----------------------------------
-	// - The description is created on the stack because we only need
-	//    it to create the buffer.  The description is then useless.
 	D3D11_BUFFER_DESC vbd;
 	vbd.Usage = D3D11_USAGE_IMMUTABLE;
 	vbd.ByteWidth = sizeof(Vertex) * vertexCount;       // 3 = number of vertices in the buffer
-	vbd.BindFlags = D3D11_BIND_VERTEX_BUFFER; // Tells DirectX this is a vertex buffer
+	vbd.BindFlags = D3D11_BIND_VERTEX_BUFFER;			// Tells DirectX this is a vertex buffer
 	vbd.CPUAccessFlags = 0;
 	vbd.MiscFlags = 0;
 	vbd.StructureByteStride = 0;
 
-	// Create the proper struct to hold the initial vertex data
-	// - This is how we put the initial data into the buffer
 	D3D11_SUBRESOURCE_DATA initialVertexData;
 	initialVertexData.pSysMem = vertexObjects;
 
-	// Actually create the buffer with the initial data
-	// - Once we do this, we'll NEVER CHANGE THE BUFFER AGAIN
 	device->CreateBuffer(&vbd, &initialVertexData, &vertexBuffer);
 
-
-
-	// Create the INDEX BUFFER description ------------------------------------
-	// - The description is created on the stack because we only need
-	//    it to create the buffer.  The description is then useless.
 	D3D11_BUFFER_DESC ibd;
 	ibd.Usage = D3D11_USAGE_IMMUTABLE;
-	ibd.ByteWidth = sizeof(int) * indexCnt;         // 3 = number of indices in the buffer
-	ibd.BindFlags = D3D11_BIND_INDEX_BUFFER; // Tells DirectX this is an index buffer
+	ibd.ByteWidth = sizeof(int) * indexCnt;				// 3 = number of indices in the buffer
+	ibd.BindFlags = D3D11_BIND_INDEX_BUFFER;			// Tells DirectX this is an index buffer
 	ibd.CPUAccessFlags = 0;
 	ibd.MiscFlags = 0;
 	ibd.StructureByteStride = 0;
 
-	// Create the proper struct to hold the initial index data
-	// - This is how we put the initial data into the buffer
 	D3D11_SUBRESOURCE_DATA initialIndexData;
 	initialIndexData.pSysMem = indices;
 
-	// Actually create the buffer with the initial data
-	// - Once we do this, we'll NEVER CHANGE THE BUFFER AGAIN
 	device->CreateBuffer(&ibd, &initialIndexData, &indexBuffer);
+}
+
+vector<string> Mesh::GetMaterialNameList()
+{
+	return materialNameList;
+}
+
+string Mesh::GetFirstMaterialName()
+{
+	if (materialNameList.size() > 0)
+		return materialNameList[0];
+	else return "There are no materials assigned to this mesh.";
+}
+
+bool Mesh::HasChildren()
+{
+	return childCount != 0;
+}
+
+vector<Mesh*> Mesh::GetChildren()
+{
+	return children;
+}
+
+int Mesh::GetChildCount()
+{
+	return childCount;
+}
+
+vector<string>* Mesh::GetMtlPaths()
+{
+	return &mtlPaths;
 }

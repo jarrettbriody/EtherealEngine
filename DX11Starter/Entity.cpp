@@ -1,7 +1,6 @@
 #include "Entity.h"
 
 
-
 Entity::Entity(Mesh* entityMesh, Material* mat)
 {
 	mesh = entityMesh;
@@ -10,7 +9,8 @@ Entity::Entity(Mesh* entityMesh, Material* mat)
 	rotation = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
 	DirectX::XMMATRIX W = DirectX::XMMatrixIdentity();
 	DirectX::XMStoreFloat4x4(&worldMatrix, XMMatrixTranspose(W));
-	material = mat;
+	if (mat != nullptr)
+		materialMap.insert({ mat->GetName(), mat });
 }
 
 
@@ -67,19 +67,36 @@ void Entity::Move(float x, float y, float z)
 	CalcWorldMatrix();
 }
 
-ID3D11Buffer * Entity::GetMeshVertexBuffer()
+ID3D11Buffer * Entity::GetMeshVertexBuffer(int i)
 {
-	return mesh->GetVertexBuffer();
+	if(i == -1)
+		return mesh->GetVertexBuffer();
+	else
+		return mesh->GetChildren()[i]->GetVertexBuffer();
 }
 
-ID3D11Buffer * Entity::GetMeshIndexBuffer()
+ID3D11Buffer * Entity::GetMeshIndexBuffer(int i)
 {
-	return mesh->GetIndexBuffer();
+	if (i == -1)
+		return mesh->GetIndexBuffer();
+	else
+		return mesh->GetChildren()[i]->GetIndexBuffer();
 }
 
-int Entity::GetMeshIndexCount()
+int Entity::GetMeshIndexCount(int i)
 {
-	return mesh->GetIndexCount();
+	if (i == -1)
+		return mesh->GetIndexCount();
+	else
+		return mesh->GetChildren()[i]->GetIndexCount();
+}
+
+string Entity::GetMeshMaterialName(int i)
+{
+	if (i == -1)
+		return mesh->GetFirstMaterialName();
+	else
+		return mesh->GetChildren()[i]->GetFirstMaterialName();
 }
 
 void Entity::CalcWorldMatrix()
@@ -91,10 +108,11 @@ void Entity::CalcWorldMatrix()
 	XMStoreFloat4x4(&worldMatrix, XMMatrixTranspose(world));
 }
 
-void Entity::PrepareMaterial(DirectX::XMFLOAT4X4 view, DirectX::XMFLOAT4X4 proj)
+void Entity::PrepareMaterial(string n, DirectX::XMFLOAT4X4 view, DirectX::XMFLOAT4X4 proj)
 {
-	SimpleVertexShader* vShader = material->GetVertexShader();
-	SimplePixelShader* pShader = material->GetPixelShader();
+	Material* crntMat = materialMap[n];
+	SimpleVertexShader* vShader = crntMat->GetVertexShader();
+	SimplePixelShader* pShader = crntMat->GetPixelShader();
 
 	// Send data to shader variables
 		//  - Do this ONCE PER OBJECT you're drawing
@@ -117,9 +135,32 @@ void Entity::PrepareMaterial(DirectX::XMFLOAT4X4 view, DirectX::XMFLOAT4X4 proj)
 	//  - If you skip this, the "SetMatrix" calls above won't make it to the GPU!
 	vShader->CopyAllBufferData();
 	pShader->CopyAllBufferData();
+
+	pShader->SetSamplerState("BasicSampler", crntMat->GetSamplerState());
+	pShader->SetShaderResourceView("DiffuseTexture", crntMat->GetMaterialData().DiffuseTextureMapSRV);
 }
 
-Material * Entity::GetMaterial()
+Material * Entity::GetMaterial(string n)
 {
-	return material;
+	return materialMap[n];
+}
+
+bool Entity::MeshHasChildren()
+{
+	return mesh->HasChildren();
+}
+
+int Entity::GetMeshChildCount()
+{
+	return mesh->GetChildCount();
+}
+
+vector<string> Entity::GetMaterialNameList()
+{
+	return mesh->GetMaterialNameList();
+}
+
+void Entity::AddMaterial(Material * mat)
+{
+	materialMap.insert({ mat->GetName(),mat });
 }

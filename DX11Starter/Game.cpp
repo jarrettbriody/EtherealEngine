@@ -3,42 +3,28 @@
 #include "WICTextureLoader.h"
 #include "DDSTextureLoader.h"
 
-// For the DirectX Math library
+
 using namespace DirectX;
 
-// --------------------------------------------------------
-// Constructor
-//
-// DXCore (base class) constructor will set up underlying fields.
-// DirectX itself, and our window, are not ready yet!
-//
-// hInstance - the application's OS-level handle (unique ID)
-// --------------------------------------------------------
 Game::Game(HINSTANCE hInstance)
 	: DXCore(
-		hInstance,		// The application's handle
-		"DirectX Game",	   	// Text for the window's title bar
-		1280,			// Width of the window's client area
-		720,			// Height of the window's client area
-		true)			// Show extra stats (fps) in title bar?
+		hInstance,					// The application's handle
+		"Small Shooting Arena",	   	// Text for the window's title bar
+		1600,						// Width of the window's client area
+		900,						// Height of the window's client area
+		true)						// Show extra stats (fps) in title bar?
 {
 	// Initialize fields
 	vertexShader = 0;
 	pixelShader = 0;
 
 #if defined(DEBUG) || defined(_DEBUG)
-	// Do we want a console window?  Probably only in debug mode
 	CreateConsoleWindow(500, 120, 32, 120);
 	printf("Console window created successfully.  Feel free to printf() here.\n");
 #endif
 	
 }
 
-// --------------------------------------------------------
-// Destructor - Clean up anything our game has created:
-//  - Release all DirectX objects created here
-//  - Delete any objects to prevent memory leaks
-// --------------------------------------------------------
 Game::~Game()
 {
 	marbleSRV->Release();
@@ -52,46 +38,47 @@ Game::~Game()
 	delete skyVS;
 	delete skyPS;
 
+	for (size_t i = 0; i < sceneEntities.size(); i++)
+	{
+		delete sceneEntities[i];
+	}
+
+	delete meshMap["Cube"];
+	delete meshMap["Cylinder"];
+	delete meshMap["Cone"];
+	delete meshMap["Sphere"];
+	delete meshMap["Helix"];
+	delete meshMap["Torus"];
+	delete meshMap["Wall"];
+	delete meshMap["Barrier1"];
+	delete meshMap["Barrier2"];
+	delete meshMap["Ruin"];
+
+	/*
+	for (auto meshMapIter = meshMap.begin(); meshMapIter != meshMap.end(); meshMapIter++)
+	{
+		delete meshMapIter->second;
+	}
+	*/
+
 	delete material;
 	delete material2;
-
-	delete sphere;
-	delete cone;
-	delete cube;
-	delete cylinder;
-	delete helix;
-	delete torus;
-
-	for (size_t i = 0; i < 11; i++)
-	{
-		delete walls[i];
-	}
 
 	delete camera;
 	delete renderer;
 
-	// Delete our simple shader objects, which
-	// will clean up their own internal DirectX stuff
 	delete vertexShader;
 	delete pixelShader;
 }
 
-// --------------------------------------------------------
-// Called once per program, after DirectX and the window
-// are initialized but before the game loop.
-// --------------------------------------------------------
 void Game::Init()
 {
-	// Helper methods for loading shaders, creating some basic
-	// geometry to draw and some simple camera matrices.
-	//  - You'll be expanding and/or replacing these later
 	LoadShaders();
 
 	camera = new Camera();
+	camera->UpdateProjectionMatrix(width, height);
 
 	renderer = new Renderer();
-
-	CreateMatrices();
 
 	DirectX::CreateWICTextureFromFile(device, context, L"../../Assets/Textures/marble.png", 0, &marbleSRV);
 
@@ -123,10 +110,18 @@ void Game::Init()
 	skyDS.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
 	device->CreateDepthStencilState(&skyDS, &skyDepthState);
 
-	material = new Material(vertexShader, pixelShader, redSRV, sampler);
-	material2 = new Material(vertexShader, pixelShader, hedgeSRV, sampler);
+	MaterialData md;
+	md.DiffuseTextureMapSRV = redSRV;
 
-	CreateBasicGeometry();
+	material = new Material("Red", md,vertexShader, pixelShader, sampler);
+
+	md.DiffuseTextureMapSRV = hedgeSRV;
+
+	material2 = new Material("Hedges", md, vertexShader, pixelShader, sampler);
+
+	LoadModels();
+	LoadMaterials();
+	LoadScene();
 
 	prevMousePos.x = 0;
 	prevMousePos.y = 0;
@@ -139,18 +134,9 @@ void Game::Init()
 
 	renderer->SendAllLightsToShader(pixelShader);
 
-	// Tell the input assembler stage of the pipeline what kind of
-	// geometric primitives (points, lines or triangles) we want to draw.  
-	// Essentially: "What kind of shape should the GPU draw with our data?"
 	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 }
 
-// --------------------------------------------------------
-// Loads shaders from compiled shader object (.cso) files using
-// my SimpleShader wrapper for DirectX shader manipulation.
-// - SimpleShader provides helpful methods for sending
-//   data to individual variables on the GPU
-// --------------------------------------------------------
 void Game::LoadShaders()
 {
 	vertexShader = new SimpleVertexShader(device, context);
@@ -166,66 +152,140 @@ void Game::LoadShaders()
 	skyPS->LoadShaderFile(L"SkyPS.cso");
 }
 
-
-
-// --------------------------------------------------------
-// Initializes the matrices necessary to represent our geometry's 
-// transformations and our 3D camera
-// --------------------------------------------------------
-void Game::CreateMatrices()
+void Game::LoadModels()
 {
-	// Set up world matrix
-	// - In an actual game, each object will need one of these and they should
-	//    update when/if the object moves (every frame)
-	// - You'll notice a "transpose" happening below, which is redundant for
-	//    an identity matrix.  This is just to show that HLSL expects a different
-	//    matrix (column major vs row major) than the DirectX Math library
-	XMMATRIX W = XMMatrixIdentity();
-	XMStoreFloat4x4(&worldMatrix, XMMatrixTranspose(W)); // Transpose for HLSL!
-
-	// Create the View matrix
-	// - In an actual game, recreate this matrix every time the camera 
-	//    moves (potentially every frame)
-	// - We're using the LOOK TO function, which takes the position of the
-	//    camera and the direction vector along which to look (as well as "up")
-	// - Another option is the LOOK AT function, to look towards a specific
-	//    point in 3D space
-	XMVECTOR pos = XMVectorSet(0, 0, -5, 0);
-	XMVECTOR dir = XMVectorSet(0, 0, 1, 0);
-	XMVECTOR up = XMVectorSet(0, 1, 0, 0);
-	XMMATRIX V = XMMatrixLookToLH(
-		pos,     // The position of the "camera"
-		dir,     // Direction the camera is looking
-		up);     // "Up" direction in 3D space (prevents roll)
-	XMStoreFloat4x4(&viewMatrix, XMMatrixTranspose(V)); // Transpose for HLSL!
-
-	camera->UpdateProjectionMatrix(width, height);
+	meshMap.insert({ "Cube", new Mesh("Cube", "../../Assets/Models/cube.obj", device) });
+	meshMap.insert({ "Cylinder", new Mesh("Cylinder", "../../Assets/Models/cylinder.obj", device) });
+	meshMap.insert({ "Cone", new Mesh("Cone", "../../Assets/Models/cone.obj", device) });
+	meshMap.insert({ "Sphere", new Mesh("Sphere", "../../Assets/Models/sphere.obj", device) });
+	meshMap.insert({ "Helix", new Mesh("Helix", "../../Assets/Models/helix.obj", device) });
+	meshMap.insert({ "Torus", new Mesh("Torus", "../../Assets/Models/torus.obj", device) });
+	meshMap.insert({ "Ground", meshMap["Cube"] });
+	meshMap.insert({ "Wall", new Mesh("Wall", "../../Assets/Models/Wall.obj", device) });
+	meshMap.insert({ "Barrier1", new Mesh("Barrier1", "../../Assets/Models/Barrier1.obj", device) });
+	meshMap.insert({ "Barrier2", new Mesh("Barrier2", "../../Assets/Models/Barrier2.obj", device) });
+	meshMap.insert({ "Ruin", new Mesh("Ruin", "../../Assets/Models/Ruin.obj", device) });
 }
 
-
-// --------------------------------------------------------
-// Creates the geometry we're going to draw - a single triangle for now
-// --------------------------------------------------------
-void Game::CreateBasicGeometry()
+void Game::LoadMaterials()
 {
-	sphere = new Mesh("../../Assets/Models/sphere.obj", device);
-	cone = new Mesh("../../Assets/Models/cone.obj", device);
-	cube = new Mesh("../../Assets/Models/cube.obj", device);
-	cylinder = new Mesh("../../Assets/Models/cylinder.obj", device);
-	helix = new Mesh("../../Assets/Models/helix.obj", device);
-	torus = new Mesh("../../Assets/Models/torus.obj", device);
+	regex newMtlRgx("^(newmtl )");
+	regex ambientColorRgx("^(Ka )");
+	regex diffuseColorRgx("^(Kd )");
+	regex specularColorRgx("^(Ks )");
+	regex specularExpRgx("^(Ns )");
+	regex dTransparencyRgx("^(d )");
+	regex trTransparencyRgx("^(Tr )");
+	regex illuminationRgx("^(illum )");
+	regex ambientTextureRgx("^(map_Ka )");
+	regex diffuseTextureRgx("^(map_Kd )");
+	regex specularColorTextureRgx("^(map_Ks )");
+	regex specularHighlightTextureRgx("^(map_Ns )");
+	regex alphaTextureRgx("^(map_d )");
+	bool ongoingMat = false;
+	string ongoingMatName = "";
+	MaterialData matData;
+	vector<string>* mtlPaths = Mesh::GetMtlPaths();
+	for (size_t i = 0; i < mtlPaths->size(); i++)
+	{
+		ongoingMat = false;
+		string filepath("../../Assets/Models/");
+		string file(mtlPaths->data()[i]);
+		filepath += file;
+		ifstream infile(filepath);
+		string line;
+		smatch match;
+		while (getline(infile, line)) {
+			if (line != "" && !regex_search(line, match, regex("^#"))) {
+				if (regex_search(line, match, newMtlRgx)) {
+					line = regex_replace(line, newMtlRgx, "");
+					if (ongoingMat) {
+						materialMap.insert({ ongoingMatName, new Material(ongoingMatName, matData, vertexShader, pixelShader, sampler) });
+						matData = {};
+					}
+					ongoingMat = true;
+					ongoingMatName = line;
+				}
+				else if (regex_search(line, match, ambientColorRgx)) {
+					line = regex_replace(line, ambientColorRgx, "");
+					Utility::ParseFloat3FromString(line, matData.AmbientColor);
+				}
+				else if (regex_search(line, match, diffuseColorRgx)) {
+					line = regex_replace(line, diffuseColorRgx, "");
+					Utility::ParseFloat3FromString(line, matData.DiffuseColor);
+				}
+				else if (regex_search(line, match, specularColorRgx)) {
+					line = regex_replace(line, specularColorRgx, "");
+					Utility::ParseFloat3FromString(line, matData.SpecularColor);
+				}
+				else if (regex_search(line, match, specularExpRgx)) {
+					line = regex_replace(line, specularExpRgx, "");
+					Utility::ParseFloatFromString(line, matData.SpecularExponent);
+				}
+				else if (regex_search(line, match, dTransparencyRgx)) {
+					line = regex_replace(line, dTransparencyRgx, "");
+					Utility::ParseFloatFromString(line, matData.Transparency);
+				}
+				else if (regex_search(line, match, trTransparencyRgx)) {
+					line = regex_replace(line, trTransparencyRgx, "");
+					Utility::ParseFloatFromString(line, matData.Transparency);
+					matData.Transparency = 1.0f - matData.Transparency;
+				}
+				else if (regex_search(line, match, illuminationRgx)) {
+					line = regex_replace(line, illuminationRgx, "");
+					Utility::ParseIntFromString(line, matData.Illumination);
+				}
+				else if (regex_search(line, match, ambientTextureRgx)) {
+					line = regex_replace(line, ambientTextureRgx, "");
+					textureMap.insert({ line, nullptr });
+					DirectX::CreateWICTextureFromFile(device, context, L"../../Assets/Textures/" + (wchar_t)line.c_str(), 0, &textureMap[line]);
+					matData.AmbientTextureMapSRV = textureMap[line];
+				}
+				else if (regex_search(line, match, diffuseTextureRgx)) {
+					line = regex_replace(line, diffuseTextureRgx, "");
+					textureMap.insert({ line, nullptr });
+					DirectX::CreateWICTextureFromFile(device, context, L"../../Assets/Textures/" + (wchar_t)line.c_str(), 0, &textureMap[line]);
+					matData.DiffuseTextureMapSRV = textureMap[line];
+				}
+				else if (regex_search(line, match, specularColorTextureRgx)) {
+					line = regex_replace(line, specularColorTextureRgx, "");
+					textureMap.insert({ line, nullptr });
+					DirectX::CreateWICTextureFromFile(device, context, L"../../Assets/Textures/" + (wchar_t)line.c_str(), 0, &textureMap[line]);
+					matData.SpecularColorTextureMapSRV = textureMap[line];
+				}
+				else if (regex_search(line, match, specularHighlightTextureRgx)) {
+					line = regex_replace(line, specularHighlightTextureRgx, "");
+					textureMap.insert({ line, nullptr });
+					DirectX::CreateWICTextureFromFile(device, context, L"../../Assets/Textures/" + (wchar_t)line.c_str(), 0, &textureMap[line]);
+					matData.SpecularHighlightTextureMapSRV = textureMap[line];
+				}
+				else if (regex_search(line, match, alphaTextureRgx)) {
+					line = regex_replace(line, alphaTextureRgx, "");
+					textureMap.insert({ line, nullptr });
+					DirectX::CreateWICTextureFromFile(device, context, L"../../Assets/Textures/" + (wchar_t)line.c_str(), 0, &textureMap[line]);
+					matData.AlphaTextureMapSRV = textureMap[line];
+				}
+			}
+		}
+	}
+}
 
+void Game::LoadScene()
+{
 	regex transformationRegex[3] = { regex("P\\(.*?\\)"),regex("R\\(.*?\\)"), regex("S\\(.*?\\)") };
-	regex iteratorRegex = regex("-\\d*\\.\\d*|\\d*\\.\\d*");
+	regex iteratorRegex = regex("-\\d*\\.\\d*|\\d*\\.\\d*|-\\d+|\\d+");
 
 	ifstream infile("../../Assets/Scenes/scene.txt");
 	string line;
 	smatch match;
 	float parsedNumbers[9];
-	int wallCount = 0;
+	string objName;
 	while (getline(infile, line))
 	{
 		if (line != "") {
+			regex_search(line, match, regex("^(\\S+)"));
+			objName = match[0];
+			line = regex_replace(line, regex("^(\\S+ )"), "");
 			std::sregex_iterator iter(line.begin(), line.end(), iteratorRegex);
 			int counter = 0;
 			for (; iter != std::sregex_iterator(); ++iter) {
@@ -235,48 +295,39 @@ void Game::CreateBasicGeometry()
 				}
 				counter++;
 			}
-			walls[wallCount] = new Entity(cube, material2);
-			walls[wallCount]->SetPosition(parsedNumbers[0], parsedNumbers[1], parsedNumbers[2]);
-			walls[wallCount]->SetRotation(DirectX::XMConvertToRadians(parsedNumbers[3]), DirectX::XMConvertToRadians(parsedNumbers[4]), DirectX::XMConvertToRadians(parsedNumbers[5]));
-			walls[wallCount]->SetScale(parsedNumbers[6], parsedNumbers[7], parsedNumbers[8]);
-			walls[wallCount]->CalcWorldMatrix();
-			wallCount++;
+			Entity* someEntity = new Entity(meshMap[objName]);
+			vector<string> requiredMaterials = someEntity->GetMaterialNameList();
+			for (int i = 0; i < requiredMaterials.size(); i++)
+			{
+				string requiredMat = requiredMaterials[i];
+				someEntity->AddMaterial(materialMap[requiredMat]);
+			}
+			someEntity->SetPosition(parsedNumbers[0], parsedNumbers[1], parsedNumbers[2]);
+			someEntity->SetRotation(DirectX::XMConvertToRadians(parsedNumbers[3]), DirectX::XMConvertToRadians(parsedNumbers[4]), DirectX::XMConvertToRadians(parsedNumbers[5]));
+			someEntity->SetScale(parsedNumbers[6], parsedNumbers[7], parsedNumbers[8]);
+			someEntity->CalcWorldMatrix();
+			sceneEntities.push_back(someEntity);
 		}
 	}
 }
 
-
-// --------------------------------------------------------
-// Handle resizing DirectX "stuff" to match the new window size.
-// For instance, updating our projection matrix's aspect ratio.
-// --------------------------------------------------------
 void Game::OnResize()
 {
-	// Handle base-level DX resize stuff
 	DXCore::OnResize();
-
-	// Update our projection matrix since the window size changed
 	camera->UpdateProjectionMatrix(width, height);
 }
 
-// --------------------------------------------------------
-// Update your game here - user input, move objects, AI, etc.
-// --------------------------------------------------------
 void Game::Update(float deltaTime, float totalTime)
 {
-	// Quit if the escape key is pressed
 	if (GetAsyncKeyState(VK_ESCAPE))
 		Quit();
 
 	camera->Update();
 }
 
-// --------------------------------------------------------
-// Clear the screen, redraw everything, present to the user
-// --------------------------------------------------------
 void Game::Draw(float deltaTime, float totalTime)
 {
-	// Background color (Cornflower Blue in this case) for clearing
+	// Background color
 	const float color[4] = { 0.4f, 0.6f, 0.75f, 0.0f };
 
 	// Clear the render target and depth buffer (erases what's on the screen)
@@ -289,49 +340,39 @@ void Game::Draw(float deltaTime, float totalTime)
 		1.0f,
 		0);
 
-	// Set buffers in the input assembler
-	//  - Do this ONCE PER OBJECT you're drawing, since each object might
-	//    have different geometry.
 	UINT stride = sizeof(Vertex);
 	UINT offset = 0;
 
-	for (size_t i = 0; i < 11; i++)
+	for (size_t i = 0; i < sceneEntities.size(); i++)
 	{
-		ID3D11Buffer* vbo = walls[i]->GetMeshVertexBuffer();
-		context->IASetVertexBuffers(0, 1, &vbo, &stride, &offset);
-		context->IASetIndexBuffer(walls[i]->GetMeshIndexBuffer(), DXGI_FORMAT_R32_UINT, 0);
+		for (int j = -1; j < sceneEntities[i]->GetMeshChildCount(); j++)
+		{
+			if (sceneEntities[i]->MeshHasChildren() && j == -1)
+				j++;
 
-		walls[i]->PrepareMaterial(camera->GetViewMatrix(), camera->GetProjMatrix());
+			ID3D11Buffer* vbo = sceneEntities[i]->GetMeshVertexBuffer(j);
+			context->IASetVertexBuffers(0, 1, &vbo, &stride, &offset);
+			context->IASetIndexBuffer(sceneEntities[i]->GetMeshIndexBuffer(j), DXGI_FORMAT_R32_UINT, 0);
 
-		pixelShader->SetSamplerState("BasicSampler", walls[i]->GetMaterial()->GetSamplerState());
-		pixelShader->SetShaderResourceView("DiffuseTexture", walls[i]->GetMaterial()->GetShaderResourceView());
+			sceneEntities[i]->PrepareMaterial(sceneEntities[i]->GetMeshMaterialName(j), camera->GetViewMatrix(), camera->GetProjMatrix());
 
-		// Finally do the actual drawing
-		//  - Do this ONCE PER OBJECT you intend to draw
-		//  - This will use all of the currently set DirectX "stuff" (shaders, buffers, etc)
-		//  - DrawIndexed() uses the currently set INDEX BUFFER to look up corresponding
-		//     vertices in the currently set VERTEX BUFFER
-		context->DrawIndexed(
-			walls[i]->GetMeshIndexCount(),   // The number of indices to use (we could draw a subset if we wanted)
-			0,									// Offset to the first index we want to use
-			0);									// Offset to add to each index when looking up vertices
+			context->DrawIndexed(
+				sceneEntities[i]->GetMeshIndexCount(j),		// The number of indices to use (we could draw a subset if we wanted)
+				0,											// Offset to the first index we want to use
+				0);											// Offset to add to each index when looking up vertices
+		}
 	}
 
 	DrawSky();
 
-
-
-	// Present the back buffer to the user
-	//  - Puts the final frame we're drawing into the window so the user can see it
-	//  - Do this exactly ONCE PER FRAME (always at the very end of the frame)
 	swapChain->Present(0, 0);
 	context->OMSetRenderTargets(1, &backBufferRTV, depthStencilView);
 }
 
 
 void Game::DrawSky() {
-	ID3D11Buffer* vb = cube->GetVertexBuffer();
-	ID3D11Buffer* ib = cube->GetIndexBuffer();
+	ID3D11Buffer* vb = meshMap["Cube"]->GetVertexBuffer();
+	ID3D11Buffer* ib = meshMap["Cube"]->GetIndexBuffer();
 
 	UINT stride = sizeof(Vertex);
 	UINT offset = 0;
@@ -350,67 +391,37 @@ void Game::DrawSky() {
 	context->RSSetState(skyRasterState);
 	context->OMSetDepthStencilState(skyDepthState, 0);
 
-	context->DrawIndexed(cube->GetIndexCount(), 0, 0);
+	context->DrawIndexed(meshMap["Cube"]->GetIndexCount(), 0, 0);
 
 	context->RSSetState(0);
 	context->OMSetDepthStencilState(0, 0);
 }
 
 #pragma region Mouse Input
-
-// --------------------------------------------------------
-// Helper method for mouse clicking.  We get this information
-// from the OS-level messages anyway, so these helpers have
-// been created to provide basic mouse input if you want it.
-// --------------------------------------------------------
 void Game::OnMouseDown(WPARAM buttonState, int x, int y)
 {
-	// Add any custom code here...
-
-	// Save the previous mouse position, so we have it for the future
 	prevMousePos.x = x;
 	prevMousePos.y = y;
 
-	// Caputure the mouse so we keep getting mouse move
-	// events even if the mouse leaves the window.  we'll be
-	// releasing the capture once a mouse button is released
 	SetCapture(hWnd);
 }
 
-// --------------------------------------------------------
-// Helper method for mouse release
-// --------------------------------------------------------
 void Game::OnMouseUp(WPARAM buttonState, int x, int y)
 {
-	// Add any custom code here...
 
-	// We don't care about the tracking the cursor outside
-	// the window anymore (we're not dragging if the mouse is up)
 	ReleaseCapture();
 }
 
-// --------------------------------------------------------
-// Helper method for mouse movement.  We only get this message
-// if the mouse is currently over the window, or if we're 
-// currently capturing the mouse.
-// --------------------------------------------------------
 void Game::OnMouseMove(WPARAM buttonState, int x, int y)
 {
-	// Add any custom code here...
 	camera->RotateCamera(x - (int)prevMousePos.x, y - (int)prevMousePos.y);
 
-	// Save the previous mouse position, so we have it for the future
 	prevMousePos.x = x;
 	prevMousePos.y = y;
 }
 
-// --------------------------------------------------------
-// Helper method for mouse wheel scrolling.  
-// WheelDelta may be positive or negative, depending 
-// on the direction of the scroll
-// --------------------------------------------------------
 void Game::OnMouseWheel(float wheelDelta, int x, int y)
 {
-	// Add any custom code here...
+	
 }
 #pragma endregion

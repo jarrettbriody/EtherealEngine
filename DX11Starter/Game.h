@@ -10,6 +10,9 @@
 #include "Renderer.h"
 #include <regex>
 #include <iostream>
+#include <map>
+#include "Utility.h"
+#include <atlbase.h>
 
 using namespace std;
 
@@ -38,9 +41,10 @@ public:
 private:
 
 	// Initialization helper methods - feel free to customize, combine, etc.
-	void LoadShaders(); 
-	void CreateMatrices();
-	void CreateBasicGeometry();
+	void LoadShaders();
+	void LoadModels();
+	void LoadMaterials();
+	void LoadScene();
 
 	// Wrappers for DirectX shaders to provide simplified functionality
 	SimpleVertexShader* vertexShader;
@@ -57,14 +61,11 @@ private:
 	// determining how far the mouse moved in a single frame.
 	POINT prevMousePos;
 
-	Mesh* sphere;
-	Mesh* cone;
-	Mesh* cube;
-	Mesh* cylinder;
-	Mesh* helix;
-	Mesh* torus;
+	map<string, Mesh*> meshMap;
+	map<string, ID3D11ShaderResourceView*> textureMap;
+	map<string, Material*> materialMap;
 
-	Entity* walls[11];
+	vector<Entity*> sceneEntities;
 
 	Camera* camera;
 
