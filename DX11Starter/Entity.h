@@ -37,6 +37,7 @@ public:
 	bool MeshHasChildren();
 	int GetMeshChildCount();
 	vector<string> GetMaterialNameList();
+	void AddMaterialNameToMesh(string nm);
 	void AddMaterial(Material* mat);
 };
 

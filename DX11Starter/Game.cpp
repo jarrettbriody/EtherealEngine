@@ -54,12 +54,15 @@ Game::~Game()
 	delete meshMap["Barrier2"];
 	delete meshMap["Ruin"];
 
-	/*
-	for (auto meshMapIter = meshMap.begin(); meshMapIter != meshMap.end(); meshMapIter++)
+	for (auto matMapIter = materialMap.begin(); matMapIter != materialMap.end(); matMapIter++)
 	{
-		delete meshMapIter->second;
+		delete matMapIter->second;
 	}
-	*/
+
+	for (auto texMapIter = textureMap.begin(); texMapIter != textureMap.end(); texMapIter++)
+	{
+		texMapIter->second->Release();
+	}
 
 	delete material;
 	delete material2;
@@ -185,12 +188,12 @@ void Game::LoadMaterials()
 	bool ongoingMat = false;
 	string ongoingMatName = "";
 	MaterialData matData;
-	vector<string>* mtlPaths = Mesh::GetMtlPaths();
-	for (size_t i = 0; i < mtlPaths->size(); i++)
+	vector<string> mtlPaths = Mesh::GetMtlPaths();
+	for (size_t i = 0; i < mtlPaths.size(); i++)
 	{
 		ongoingMat = false;
 		string filepath("../../Assets/Models/");
-		string file(mtlPaths->data()[i]);
+		string file(mtlPaths[i]);
 		filepath += file;
 		ifstream infile(filepath);
 		string line;
@@ -237,35 +240,60 @@ void Game::LoadMaterials()
 				}
 				else if (regex_search(line, match, ambientTextureRgx)) {
 					line = regex_replace(line, ambientTextureRgx, "");
-					textureMap.insert({ line, nullptr });
-					DirectX::CreateWICTextureFromFile(device, context, L"../../Assets/Textures/" + (wchar_t)line.c_str(), 0, &textureMap[line]);
+					ID3D11ShaderResourceView* srv;
+					wchar_t path[100] = L"../../Assets/Textures/";
+					wchar_t file[50];
+					MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, &line.c_str()[0], -1, &file[0], 50);
+					DirectX::CreateWICTextureFromFile(device, context, wcsncat(path, file, 100), 0, &srv);
+					textureMap.insert({ line, srv });
 					matData.AmbientTextureMapSRV = textureMap[line];
 				}
 				else if (regex_search(line, match, diffuseTextureRgx)) {
 					line = regex_replace(line, diffuseTextureRgx, "");
-					textureMap.insert({ line, nullptr });
-					DirectX::CreateWICTextureFromFile(device, context, L"../../Assets/Textures/" + (wchar_t)line.c_str(), 0, &textureMap[line]);
+					ID3D11ShaderResourceView* srv;
+					wchar_t path[100] = L"../../Assets/Textures/";
+					wchar_t file[50];
+					MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, &line.c_str()[0], -1, &file[0], 50);
+					DirectX::CreateWICTextureFromFile(device, context, wcsncat(path, file, 100), 0, &srv);
+					textureMap.insert({ line, srv });
 					matData.DiffuseTextureMapSRV = textureMap[line];
 				}
 				else if (regex_search(line, match, specularColorTextureRgx)) {
 					line = regex_replace(line, specularColorTextureRgx, "");
-					textureMap.insert({ line, nullptr });
-					DirectX::CreateWICTextureFromFile(device, context, L"../../Assets/Textures/" + (wchar_t)line.c_str(), 0, &textureMap[line]);
+					ID3D11ShaderResourceView* srv;
+					wchar_t path[100] = L"../../Assets/Textures/";
+					wchar_t file[50];
+					MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, &line.c_str()[0], -1, &file[0], 50);
+					DirectX::CreateWICTextureFromFile(device, context, wcsncat(path, file, 100), 0, &srv);
+					textureMap.insert({ line, srv });
 					matData.SpecularColorTextureMapSRV = textureMap[line];
 				}
 				else if (regex_search(line, match, specularHighlightTextureRgx)) {
 					line = regex_replace(line, specularHighlightTextureRgx, "");
-					textureMap.insert({ line, nullptr });
-					DirectX::CreateWICTextureFromFile(device, context, L"../../Assets/Textures/" + (wchar_t)line.c_str(), 0, &textureMap[line]);
+					ID3D11ShaderResourceView* srv;
+					wchar_t path[100] = L"../../Assets/Textures/";
+					wchar_t file[50];
+					MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, &line.c_str()[0], -1, &file[0], 50);
+					DirectX::CreateWICTextureFromFile(device, context, wcsncat(path, file, 100), 0, &srv);
+					textureMap.insert({ line, srv });
 					matData.SpecularHighlightTextureMapSRV = textureMap[line];
 				}
 				else if (regex_search(line, match, alphaTextureRgx)) {
 					line = regex_replace(line, alphaTextureRgx, "");
-					textureMap.insert({ line, nullptr });
-					DirectX::CreateWICTextureFromFile(device, context, L"../../Assets/Textures/" + (wchar_t)line.c_str(), 0, &textureMap[line]);
+					ID3D11ShaderResourceView* srv;
+					wchar_t path[100] = L"../../Assets/Textures/";
+					wchar_t file[50];
+					MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, &line.c_str()[0], -1, &file[0], 50);
+					DirectX::CreateWICTextureFromFile(device, context, wcsncat(path, file, 100), 0, &srv);
+					textureMap.insert({ line, srv });
 					matData.AlphaTextureMapSRV = textureMap[line];
 				}
 			}
+		}
+		if (ongoingMat) {
+			materialMap.insert({ ongoingMatName, new Material(ongoingMatName, matData, vertexShader, pixelShader, sampler) });
+			matData = {};
+			ongoingMat = false;
 		}
 	}
 }
@@ -300,7 +328,12 @@ void Game::LoadScene()
 			for (int i = 0; i < requiredMaterials.size(); i++)
 			{
 				string requiredMat = requiredMaterials[i];
-				someEntity->AddMaterial(materialMap[requiredMat]);
+				if (materialMap.count(requiredMat))
+					someEntity->AddMaterial(materialMap[requiredMat]);
+			}
+			if (requiredMaterials.size() == 0) {
+				someEntity->AddMaterial(material);
+				someEntity->AddMaterialNameToMesh(material->GetName());
 			}
 			someEntity->SetPosition(parsedNumbers[0], parsedNumbers[1], parsedNumbers[2]);
 			someEntity->SetRotation(DirectX::XMConvertToRadians(parsedNumbers[3]), DirectX::XMConvertToRadians(parsedNumbers[4]), DirectX::XMConvertToRadians(parsedNumbers[5]));
@@ -354,6 +387,7 @@ void Game::Draw(float deltaTime, float totalTime)
 			context->IASetVertexBuffers(0, 1, &vbo, &stride, &offset);
 			context->IASetIndexBuffer(sceneEntities[i]->GetMeshIndexBuffer(j), DXGI_FORMAT_R32_UINT, 0);
 
+			//if(sceneEntities[i]->GetMeshMaterialName(j))
 			sceneEntities[i]->PrepareMaterial(sceneEntities[i]->GetMeshMaterialName(j), camera->GetViewMatrix(), camera->GetProjMatrix());
 
 			context->DrawIndexed(

@@ -46,7 +46,7 @@ float4 CalcDirectionalLighting(float3 n, Light l) {
 	n = normalize(n);
 	float3 negatedLightDir = -l.Direction;
 	float lightAmt = saturate(dot(n, negatedLightDir));
-	return (float4(l.Color,1.0f) * lightAmt + float4(0.1f,0.1f,0.1f,1.0f));
+	return (float4(l.Color,1.0f) * lightAmt + float4(0.25f,0.25f,0.25f,1.0f));
 }
 
 // --------------------------------------------------------

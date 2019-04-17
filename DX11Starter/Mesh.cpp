@@ -289,6 +289,11 @@ string Mesh::GetFirstMaterialName()
 	else return "There are no materials assigned to this mesh.";
 }
 
+void Mesh::AddMaterialName(string nm)
+{
+	materialNameList.push_back(nm);
+}
+
 bool Mesh::HasChildren()
 {
 	return childCount != 0;
@@ -304,7 +309,7 @@ int Mesh::GetChildCount()
 	return childCount;
 }
 
-vector<string>* Mesh::GetMtlPaths()
+vector<string> Mesh::GetMtlPaths()
 {
-	return &mtlPaths;
+	return mtlPaths;
 }

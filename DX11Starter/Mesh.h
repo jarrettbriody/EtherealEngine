@@ -32,9 +32,10 @@ public:
 	void CreateBuffers(Vertex* vertexObjects, int vertexCount, unsigned int* indices, int indexCnt, ID3D11Device* device);
 	vector<string> GetMaterialNameList();
 	string GetFirstMaterialName();
+	void AddMaterialName(string nm);
 	bool HasChildren();
 	vector<Mesh*> GetChildren();
 	int GetChildCount();
-	static vector<string>* GetMtlPaths();
+	static vector<string> GetMtlPaths();
 };
 

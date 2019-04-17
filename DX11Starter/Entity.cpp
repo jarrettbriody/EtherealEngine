@@ -160,6 +160,11 @@ vector<string> Entity::GetMaterialNameList()
 	return mesh->GetMaterialNameList();
 }
 
+void Entity::AddMaterialNameToMesh(string nm)
+{
+	mesh->AddMaterialName(nm);
+}
+
 void Entity::AddMaterial(Material * mat)
 {
 	materialMap.insert({ mat->GetName(),mat });
