@@ -2,8 +2,16 @@
 #include <DirectXMath.h>
 #include <string>
 #include <regex>
+#include "WICTextureLoader.h"
+#include "DDSTextureLoader.h"
 
 namespace Utility {
+	enum MESH_TYPE {
+		LOAD_FAILURE = -1,
+		DEFAULT_MESH = 0,
+		GENERATED_MESH = 1,
+	};
+
 	static void ParseFloat3FromString(std::string s, DirectX::XMFLOAT3& f) {
 		std::smatch match;
 		int i = 0;
@@ -48,5 +56,14 @@ namespace Utility {
 		std::wstring rval = buf;
 		delete[] buf;
 		return rval;
+	}
+
+	static ID3D11ShaderResourceView* LoadSRV(ID3D11Device* device, ID3D11DeviceContext*	context, string texture){
+		ID3D11ShaderResourceView* srv;
+		wchar_t path[100] = L"../../Assets/Textures/";
+		wchar_t fileName[50];
+		::MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, &texture.c_str()[0], -1, &fileName[0], 50);
+		DirectX::CreateWICTextureFromFile(device, context, wcsncat(path, fileName, 100), 0, &srv);
+		return srv;
 	}
 }

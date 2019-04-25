@@ -1,8 +1,9 @@
 #include "Entity.h"
 
 
-Entity::Entity(Mesh* entityMesh, Material* mat)
+Entity::Entity(string entityName, Mesh* entityMesh, Material* mat)
 {
+	name = entityName;
 	mesh = entityMesh;
 	position = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
 	scale = DirectX::XMFLOAT3(1.0f, 1.0f, 1.0f);
@@ -168,4 +169,9 @@ void Entity::AddMaterialNameToMesh(string nm)
 void Entity::AddMaterial(Material * mat)
 {
 	materialMap.insert({ mat->GetName(),mat });
+}
+
+string Entity::GetName()
+{
+	return name;
 }

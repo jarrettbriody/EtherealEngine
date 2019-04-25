@@ -16,15 +16,18 @@ Mesh::Mesh(Vertex * vertexObjects, int vertexCount, unsigned int * indices, int 
 	CreateBuffers(vertexObjects, vertexCount, indices, indexCnt, device);
 }
 
-Mesh::Mesh(string meshN, char * objFile, ID3D11Device* device)
+Mesh::Mesh(string meshN, char * objFile, ID3D11Device* device, bool* success)
 {
 	meshName = meshN;
 	// File input object
 	std::ifstream obj(objFile);
 
 	// Check for successful open
-	if (!obj.is_open())
+	if (!obj.is_open()) {
+		if(success != nullptr)
+			*success = false;
 		return;
+	}
 
 	// Variables used while reading the file
 	std::vector<XMFLOAT3> positions;     // Positions from the file
@@ -216,15 +219,17 @@ Mesh::Mesh(string meshN, char * objFile, ID3D11Device* device)
 	}
 	else if(childCount == 0)
 		CreateBuffers(&verts[0], vertCounter, &indices[0], vertCounter, device);
+	if (success != nullptr)
+		*success = true;
 }
 
 
 Mesh::~Mesh()
 {
-	if (childCount == 0) {
+	if(vertexBuffer)
 		vertexBuffer->Release();
+	if(indexBuffer)
 		indexBuffer->Release();
-	}
 	for (size_t i = 0; i < childCount; i++)
 	{
 		delete children[i];
@@ -309,7 +314,12 @@ int Mesh::GetChildCount()
 	return childCount;
 }
 
-vector<string> Mesh::GetMtlPaths()
+string Mesh::GetMTLPath()
+{
+	return mtlPath;
+}
+
+vector<string> Mesh::GetMTLPaths()
 {
 	return mtlPaths;
 }

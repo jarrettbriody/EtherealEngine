@@ -13,6 +13,8 @@
 #include <map>
 #include "Utility.h"
 #include <atlbase.h>
+#include "WICTextureLoader.h"
+#include "DDSTextureLoader.h"
 
 using namespace std;
 
@@ -40,45 +42,47 @@ public:
 	void OnMouseWheel(float wheelDelta,   int x, int y);
 private:
 
-	// Initialization helper methods - feel free to customize, combine, etc.
+	// Initialization methods
 	void LoadShaders();
-	void LoadModels();
-	void LoadMaterials();
-	void LoadScene();
+	void LoadDefaultMeshes();
+	void LoadDefaultTextures();
+	void LoadDefaultMaterials();
+
+	void BuildDefaultEntity(string entityName, string objName, Entity* e);
+
+	// Scene generation methods
+	Utility::MESH_TYPE AutoLoadOBJMTL(string name);
+	void LoadScene(string sceneName = "scene");
 
 	// Wrappers for DirectX shaders to provide simplified functionality
 	SimpleVertexShader* vertexShader;
 	SimplePixelShader* pixelShader;
 
-	// The matrices to go from model space to screen space
-	DirectX::XMFLOAT4X4 worldMatrix;
-	DirectX::XMFLOAT4X4 viewMatrix;
-	DirectX::XMFLOAT4X4 projectionMatrix;
-
-
-
-	// Keeps track of the old mouse position.  Useful for 
-	// determining how far the mouse moved in a single frame.
+	// Keeps track of the old mouse position for determining how far the mouse moved in a single frame
 	POINT prevMousePos;
 
-	map<string, Mesh*> meshMap;
-	map<string, ID3D11ShaderResourceView*> textureMap;
-	map<string, Material*> materialMap;
+	//maps representing meshes, materials, and textures currently being used in the scene
+	map<string, bool> utilizedMeshesMap;
+	map<string, bool> utilizedMaterialsMap;
+	map<string, bool> utilizedTexturesMap;
 
+	map<string, Mesh*> defaultMeshesMap;
+	map<string, Mesh*> generatedMeshesMap;
+
+	map<string, ID3D11ShaderResourceView*> defaultTexturesMap;
+	map<string, ID3D11ShaderResourceView*> generatedTexturesMap;
+
+	map<string, Material*> defaultMaterialsMap;
+	map<string, Material*> generatedMaterialsMap;
+
+	map<string, Entity*> sceneEntitiesMap;
 	vector<Entity*> sceneEntities;
 
 	Camera* camera;
 
-	Material* material;
-	Material* material2;
-
 	Light dLight;
 	Light dLight2;
 	Light dLight3;
-
-	ID3D11ShaderResourceView* marbleSRV;
-	ID3D11ShaderResourceView* hedgeSRV;
-	ID3D11ShaderResourceView* redSRV;
 
 	ID3D11SamplerState* sampler;
 

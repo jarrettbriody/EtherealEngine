@@ -7,5 +7,5 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.000000
 d 1.000000
 illum 1
-map_Kd Barrier2_CM.png
-map_Bump Barrier2_NM.png
+map_Kd Barrier/Barrier2_CM.png
+map_Bump Barrier/Barrier2_NM.png

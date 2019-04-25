@@ -1,29 +1,14 @@
-﻿  compilation object save succeeded; see C:\Users\Jarrett\Desktop\RIT\Year 3 Semester 2\Foundations of Game Graphics Programming\GGPProject\x64\Debug\PixelShader.cso
-  compilation object save succeeded; see C:\Users\Jarrett\Desktop\RIT\Year 3 Semester 2\Foundations of Game Graphics Programming\GGPProject\x64\Debug\SkyPS.cso
-  compilation object save succeeded; see C:\Users\Jarrett\Desktop\RIT\Year 3 Semester 2\Foundations of Game Graphics Programming\GGPProject\x64\Debug\SkyVS.cso
-  compilation object save succeeded; see C:\Users\Jarrett\Desktop\RIT\Year 3 Semester 2\Foundations of Game Graphics Programming\GGPProject\x64\Debug\VertexShader.cso
-  Camera.cpp
-  DXCore.cpp
-  Entity.cpp
+﻿  Entity.cpp
   Game.cpp
-c:\users\jarrett\desktop\rit\year 3 semester 2\foundations of game graphics programming\ggpproject\dx11starter\utility.h(47): warning C4996: 'swprintf': function has been changed to conform with the ISO C standard, adding an extra character count parameter. To use the traditional Microsoft version, set _CRT_NON_CONFORMING_SWPRINTFS.
+c:\users\jarrett\desktop\rit\year 3 semester 2\foundations of game graphics programming\ggpproject\dx11starter\utility.h(55): warning C4996: 'swprintf': function has been changed to conform with the ISO C standard, adding an extra character count parameter. To use the traditional Microsoft version, set _CRT_NON_CONFORMING_SWPRINTFS.
   c:\program files (x86)\windows kits\10\include\10.0.17134.0\ucrt\corecrt_wstdio.h(1822): note: see declaration of 'swprintf'
-c:\users\jarrett\desktop\rit\year 3 semester 2\foundations of game graphics programming\ggpproject\dx11starter\game.cpp(247): warning C4996: 'wcsncat': This function or variable may be unsafe. Consider using wcsncat_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-  c:\program files (x86)\windows kits\10\include\10.0.17134.0\ucrt\corecrt_wstring.h(183): note: see declaration of 'wcsncat'
-c:\users\jarrett\desktop\rit\year 3 semester 2\foundations of game graphics programming\ggpproject\dx11starter\game.cpp(257): warning C4996: 'wcsncat': This function or variable may be unsafe. Consider using wcsncat_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-  c:\program files (x86)\windows kits\10\include\10.0.17134.0\ucrt\corecrt_wstring.h(183): note: see declaration of 'wcsncat'
-c:\users\jarrett\desktop\rit\year 3 semester 2\foundations of game graphics programming\ggpproject\dx11starter\game.cpp(267): warning C4996: 'wcsncat': This function or variable may be unsafe. Consider using wcsncat_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-  c:\program files (x86)\windows kits\10\include\10.0.17134.0\ucrt\corecrt_wstring.h(183): note: see declaration of 'wcsncat'
-c:\users\jarrett\desktop\rit\year 3 semester 2\foundations of game graphics programming\ggpproject\dx11starter\game.cpp(277): warning C4996: 'wcsncat': This function or variable may be unsafe. Consider using wcsncat_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-  c:\program files (x86)\windows kits\10\include\10.0.17134.0\ucrt\corecrt_wstring.h(183): note: see declaration of 'wcsncat'
-c:\users\jarrett\desktop\rit\year 3 semester 2\foundations of game graphics programming\ggpproject\dx11starter\game.cpp(287): warning C4996: 'wcsncat': This function or variable may be unsafe. Consider using wcsncat_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+c:\users\jarrett\desktop\rit\year 3 semester 2\foundations of game graphics programming\ggpproject\dx11starter\utility.h(66): warning C4996: 'wcsncat': This function or variable may be unsafe. Consider using wcsncat_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
   c:\program files (x86)\windows kits\10\include\10.0.17134.0\ucrt\corecrt_wstring.h(183): note: see declaration of 'wcsncat'
   Main.cpp
-c:\users\jarrett\desktop\rit\year 3 semester 2\foundations of game graphics programming\ggpproject\dx11starter\utility.h(47): warning C4996: 'swprintf': function has been changed to conform with the ISO C standard, adding an extra character count parameter. To use the traditional Microsoft version, set _CRT_NON_CONFORMING_SWPRINTFS.
+c:\users\jarrett\desktop\rit\year 3 semester 2\foundations of game graphics programming\ggpproject\dx11starter\utility.h(55): warning C4996: 'swprintf': function has been changed to conform with the ISO C standard, adding an extra character count parameter. To use the traditional Microsoft version, set _CRT_NON_CONFORMING_SWPRINTFS.
   c:\program files (x86)\windows kits\10\include\10.0.17134.0\ucrt\corecrt_wstdio.h(1822): note: see declaration of 'swprintf'
-  Material.cpp
+c:\users\jarrett\desktop\rit\year 3 semester 2\foundations of game graphics programming\ggpproject\dx11starter\utility.h(66): warning C4996: 'wcsncat': This function or variable may be unsafe. Consider using wcsncat_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  c:\program files (x86)\windows kits\10\include\10.0.17134.0\ucrt\corecrt_wstring.h(183): note: see declaration of 'wcsncat'
   Mesh.cpp
-  Renderer.cpp
-  SimpleShader.cpp
   Generating Code...
   DX11Starter.vcxproj -> C:\Users\Jarrett\Desktop\RIT\Year 3 Semester 2\Foundations of Game Graphics Programming\GGPProject\x64\Debug\DX11Starter.exe

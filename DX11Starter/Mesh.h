@@ -13,8 +13,8 @@ class Mesh
 {
 private:
 	static vector<string> mtlPaths;
-	ID3D11Buffer* vertexBuffer;
-	ID3D11Buffer* indexBuffer;
+	ID3D11Buffer* vertexBuffer = nullptr;
+	ID3D11Buffer* indexBuffer = nullptr;
 	int indexCount = 0;
 	vector<Mesh*> children;
 	string mtlPath = "";
@@ -24,7 +24,7 @@ private:
 public:
 	Mesh();
 	Mesh(Vertex* vertexObjects, int vertexCount, unsigned int* indices, int indexCnt, ID3D11Device* device, string meshN, string matName = "DEFAULT_MATERIAL");
-	Mesh(string meshN, char* objFile, ID3D11Device* device);
+	Mesh(string meshN, char* objFile, ID3D11Device* device, bool* success = nullptr);
 	~Mesh();
 	ID3D11Buffer* GetVertexBuffer();
 	ID3D11Buffer* GetIndexBuffer();
@@ -36,6 +36,7 @@ public:
 	bool HasChildren();
 	vector<Mesh*> GetChildren();
 	int GetChildCount();
-	static vector<string> GetMtlPaths();
+	string GetMTLPath();
+	static vector<string> GetMTLPaths();
 };
 

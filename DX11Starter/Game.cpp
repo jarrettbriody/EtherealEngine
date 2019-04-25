@@ -1,7 +1,5 @@
 #include "Game.h"
 #include "Vertex.h"
-#include "WICTextureLoader.h"
-#include "DDSTextureLoader.h"
 
 
 using namespace DirectX;
@@ -27,9 +25,51 @@ Game::Game(HINSTANCE hInstance)
 
 Game::~Game()
 {
-	marbleSRV->Release();
-	hedgeSRV->Release();
-	redSRV->Release();
+	//defaults
+	for (auto texMapIter = defaultTexturesMap.begin(); texMapIter != defaultTexturesMap.end(); ++texMapIter)
+	{
+		texMapIter->second->Release();
+		cout << "Releasing " << texMapIter->first << endl;
+	}
+
+	for (auto matMapIter = defaultMaterialsMap.begin(); matMapIter != defaultMaterialsMap.end(); ++matMapIter)
+	{
+		delete matMapIter->second;
+		cout << "Deleting " << matMapIter->first << endl;
+	}
+
+	for (auto meshMapIter = defaultMeshesMap.begin(); meshMapIter != defaultMeshesMap.end(); ++meshMapIter)
+	{
+		if (meshMapIter->first != "Ground") {
+			delete meshMapIter->second;
+			cout << "Deleting " << meshMapIter->first << endl;
+		}
+	}
+
+	//generated
+	for (auto texMapIter = generatedTexturesMap.begin(); texMapIter != generatedTexturesMap.end(); ++texMapIter)
+	{
+		texMapIter->second->Release();
+		cout << "Releasing " << texMapIter->first << endl;
+	}
+
+	for (auto matMapIter = generatedMaterialsMap.begin(); matMapIter != generatedMaterialsMap.end(); ++matMapIter)
+	{
+		delete matMapIter->second;
+		cout << "Deleting " << matMapIter->first << endl;
+	}
+
+	for (auto meshMapIter = generatedMeshesMap.begin(); meshMapIter != generatedMeshesMap.end(); ++meshMapIter)
+	{
+		delete meshMapIter->second;
+		cout << "Deleting " << meshMapIter->first << endl;
+	}
+
+	for (size_t i = 0; i < sceneEntities.size(); i++)
+	{
+		delete sceneEntities[i];
+	}
+
 	sampler->Release();
 
 	skySRV->Release();
@@ -38,40 +78,11 @@ Game::~Game()
 	delete skyVS;
 	delete skyPS;
 
-	for (size_t i = 0; i < sceneEntities.size(); i++)
-	{
-		delete sceneEntities[i];
-	}
-
-	delete meshMap["Cube"];
-	delete meshMap["Cylinder"];
-	delete meshMap["Cone"];
-	delete meshMap["Sphere"];
-	delete meshMap["Helix"];
-	delete meshMap["Torus"];
-	delete meshMap["Wall"];
-	delete meshMap["Barrier1"];
-	delete meshMap["Barrier2"];
-	delete meshMap["Ruin"];
-
-	for (auto matMapIter = materialMap.begin(); matMapIter != materialMap.end(); matMapIter++)
-	{
-		delete matMapIter->second;
-	}
-
-	for (auto texMapIter = textureMap.begin(); texMapIter != textureMap.end(); texMapIter++)
-	{
-		texMapIter->second->Release();
-	}
-
-	delete material;
-	delete material2;
+	delete vertexShader;
+	delete pixelShader;
 
 	delete camera;
 	delete renderer;
-
-	delete vertexShader;
-	delete pixelShader;
 }
 
 void Game::Init()
@@ -82,12 +93,6 @@ void Game::Init()
 	camera->UpdateProjectionMatrix(width, height);
 
 	renderer = new Renderer();
-
-	DirectX::CreateWICTextureFromFile(device, context, L"../../Assets/Textures/marble.png", 0, &marbleSRV);
-
-	DirectX::CreateWICTextureFromFile(device, context, L"../../Assets/Textures/hedge.jpg", 0, &hedgeSRV);
-
-	DirectX::CreateWICTextureFromFile(device, context, L"../../Assets/Textures/red.png", 0, &redSRV);
 
 	DirectX::CreateDDSTextureFromFile(device, L"../../Assets/Textures/SunnyCubeMap.dds", 0, &skySRV);
 
@@ -113,18 +118,11 @@ void Game::Init()
 	skyDS.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
 	device->CreateDepthStencilState(&skyDS, &skyDepthState);
 
-	MaterialData md;
-	md.DiffuseTextureMapSRV = redSRV;
+	LoadDefaultMeshes();
+	LoadDefaultTextures();
+	LoadDefaultMaterials();
 
-	material = new Material("Red", md,vertexShader, pixelShader, sampler);
-
-	md.DiffuseTextureMapSRV = hedgeSRV;
-
-	material2 = new Material("Hedges", md, vertexShader, pixelShader, sampler);
-
-	LoadModels();
-	LoadMaterials();
-	LoadScene();
+	LoadScene("Arena");
 
 	prevMousePos.x = 0;
 	prevMousePos.y = 0;
@@ -155,23 +153,119 @@ void Game::LoadShaders()
 	skyPS->LoadShaderFile(L"SkyPS.cso");
 }
 
-void Game::LoadModels()
+void Game::LoadDefaultMeshes()
 {
-	meshMap.insert({ "Cube", new Mesh("Cube", "../../Assets/Models/cube.obj", device) });
-	meshMap.insert({ "Cylinder", new Mesh("Cylinder", "../../Assets/Models/cylinder.obj", device) });
-	meshMap.insert({ "Cone", new Mesh("Cone", "../../Assets/Models/cone.obj", device) });
-	meshMap.insert({ "Sphere", new Mesh("Sphere", "../../Assets/Models/sphere.obj", device) });
-	meshMap.insert({ "Helix", new Mesh("Helix", "../../Assets/Models/helix.obj", device) });
-	meshMap.insert({ "Torus", new Mesh("Torus", "../../Assets/Models/torus.obj", device) });
-	meshMap.insert({ "Ground", meshMap["Cube"] });
-	meshMap.insert({ "Wall", new Mesh("Wall", "../../Assets/Models/Wall.obj", device) });
-	meshMap.insert({ "Barrier1", new Mesh("Barrier1", "../../Assets/Models/Barrier1.obj", device) });
-	meshMap.insert({ "Barrier2", new Mesh("Barrier2", "../../Assets/Models/Barrier2.obj", device) });
-	meshMap.insert({ "Ruin", new Mesh("Ruin", "../../Assets/Models/Ruin.obj", device) });
+	defaultMeshesMap.insert({ "Cube", new Mesh("Cube", "../../Assets/Models/Default/cube.obj", device) });
+	defaultMeshesMap.insert({ "Cylinder", new Mesh("Cylinder", "../../Assets/Models/Default/cylinder.obj", device) });
+	defaultMeshesMap.insert({ "Cone", new Mesh("Cone", "../../Assets/Models/Default/cone.obj", device) });
+	defaultMeshesMap.insert({ "Sphere", new Mesh("Sphere", "../../Assets/Models/Default/sphere.obj", device) });
+	defaultMeshesMap.insert({ "Helix", new Mesh("Helix", "../../Assets/Models/Default/helix.obj", device) });
+	defaultMeshesMap.insert({ "Torus", new Mesh("Torus", "../../Assets/Models/Default/torus.obj", device) });
+	defaultMeshesMap.insert({ "Ground", defaultMeshesMap["Cube"] });
 }
 
-void Game::LoadMaterials()
+void Game::LoadDefaultTextures()
 {
+	defaultTexturesMap.insert({ "GrassDiffuse", Utility::LoadSRV(device,context,"Default/Grass/DefaultGrassDiffuse.jpg") });
+	defaultTexturesMap.insert({ "GrassNormal", Utility::LoadSRV(device,context,"Default/Grass/DefaultGrassNormal.jpg") });
+	defaultTexturesMap.insert({ "Red", Utility::LoadSRV(device,context,"Default/red.png") });
+	defaultTexturesMap.insert({ "Marble", Utility::LoadSRV(device,context,"Default/marble.png") });
+	defaultTexturesMap.insert({ "Hedge", Utility::LoadSRV(device,context,"Default/hedge.jpg") });
+}
+
+void Game::LoadDefaultMaterials()
+{
+	MaterialData materialData = {};
+	defaultMaterialsMap.insert({"DEFAULT", new Material("DEFAULT", materialData, vertexShader, pixelShader, sampler)});
+
+	materialData = {};
+	materialData.DiffuseTextureMapSRV = defaultTexturesMap["GrassDiffuse"];
+	materialData.NormalTextureMapSRV = defaultTexturesMap["GrassNormal"];
+	defaultMaterialsMap.insert({ "Grass", new Material("Grass", materialData, vertexShader, pixelShader, sampler) });
+
+	materialData = {};
+	materialData.DiffuseTextureMapSRV = defaultTexturesMap["Red"];
+	defaultMaterialsMap.insert({ "Red", new Material("Red", materialData, vertexShader, pixelShader, sampler) });
+
+	materialData = {};
+	materialData.DiffuseTextureMapSRV = defaultTexturesMap["Marble"];
+	defaultMaterialsMap.insert({ "Marble", new Material("Marble", materialData, vertexShader, pixelShader, sampler) });
+
+	materialData = {};
+	materialData.DiffuseTextureMapSRV = defaultTexturesMap["Hedge"];
+	defaultMaterialsMap.insert({ "Hedge", new Material("Hedge", materialData, vertexShader, pixelShader, sampler) });
+}
+
+void Game::BuildDefaultEntity(string entityName, string objName, Entity* e)
+{
+	if (objName == "Ground") {
+		e->AddMaterial(defaultMaterialsMap["Grass"]);
+		e->AddMaterialNameToMesh("Grass");
+	}
+}
+
+Utility::MESH_TYPE Game::AutoLoadOBJMTL(string name)
+{
+	//mesh exists in default meshes map, which will remain untouched during program execution
+	if (defaultMeshesMap.count(name))
+		return Utility::MESH_TYPE::DEFAULT_MESH;
+
+	//if mesh is already loaded
+	if (generatedMeshesMap.count(name)) {
+		//if the mesh is not already recorded as utilized, utilize it
+		if (!utilizedMeshesMap.count(name)){
+			utilizedMeshesMap.insert({ name, true });
+			//get the material names utilized under the mesh
+			vector<string> utilizedMaterials = generatedMeshesMap[name]->GetMaterialNameList();
+			for (int i = 0; i < utilizedMaterials.size(); i++)
+			{
+				//if the material is not already utilized, utilize it
+				if (!utilizedMaterialsMap.count(utilizedMaterials[i])) {
+					utilizedMaterialsMap.insert({ utilizedMaterials[i], true });
+					//get the texture names utilized under the material
+					vector<string> utilizedTextures = generatedMaterialsMap[utilizedMaterials[i]]->GetMaterialData().SRVNames;
+					for (int j = 0; j < utilizedTextures.size(); j++)
+					{
+						//if the texture is not already utilized, utilize it
+						if (!utilizedTexturesMap.count(utilizedTextures[i]))
+							utilizedTexturesMap.insert({ utilizedTextures[i], true });
+					}
+				}
+			}
+		}
+		//mesh is already loaded and mesh, materials, and textures are now marked as utilized, exit func
+		return Utility::MESH_TYPE::GENERATED_MESH;
+	}
+
+	string objPath = "../../Assets/Models/" + name + ".obj";
+
+	//Mesh will change bool ref to false if OBJ file does not exist, otherwise it will generate it and add to map
+	bool success;
+	generatedMeshesMap.insert({ name, new Mesh(name, (char*)objPath.c_str(), device, &success) });
+	if (!success) {
+		cout << "Cannot load Object (OBJ) file: " + string(objPath) << endl;
+		return Utility::MESH_TYPE::LOAD_FAILURE;
+	}
+
+	//record mesh as utilized
+	utilizedMeshesMap.insert({ name,true });
+
+	string mtlPath = generatedMeshesMap[name]->GetMTLPath();
+
+	if (mtlPath == "") {
+		cout << "Material Template Library (MTL) link not found inside \"" + name + ".obj\". If this is unintentional, link MTL file inside OBJ file." << endl;
+		return Utility::MESH_TYPE::GENERATED_MESH;
+	}
+
+	ifstream infile("../../Assets/Models/" + mtlPath);
+
+	if (!infile.is_open()) {
+		cout << "Material Template Library (MTL) file not found. Please include MTL file in same directory as OBJ file or remove the internal OBJ link to " + mtlPath + "." << endl;
+		return Utility::MESH_TYPE::GENERATED_MESH;
+	}
+
+	using namespace Utility;
+
 	regex newMtlRgx("^(newmtl )");
 	regex ambientColorRgx("^(Ka )");
 	regex diffuseColorRgx("^(Kd )");
@@ -185,161 +279,262 @@ void Game::LoadMaterials()
 	regex specularColorTextureRgx("^(map_Ks )");
 	regex specularHighlightTextureRgx("^(map_Ns )");
 	regex alphaTextureRgx("^(map_d )");
+	regex normalTextureRgx("^(map_Bump )");
+
 	bool ongoingMat = false;
 	string ongoingMatName = "";
 	MaterialData matData;
-	vector<string> mtlPaths = Mesh::GetMtlPaths();
-	for (size_t i = 0; i < mtlPaths.size(); i++)
-	{
-		ongoingMat = false;
-		string filepath("../../Assets/Models/");
-		string file(mtlPaths[i]);
-		filepath += file;
-		ifstream infile(filepath);
-		string line;
-		smatch match;
-		while (getline(infile, line)) {
-			if (line != "" && !regex_search(line, match, regex("^#"))) {
-				if (regex_search(line, match, newMtlRgx)) {
-					line = regex_replace(line, newMtlRgx, "");
-					if (ongoingMat) {
-						materialMap.insert({ ongoingMatName, new Material(ongoingMatName, matData, vertexShader, pixelShader, sampler) });
-						matData = {};
-					}
-					ongoingMat = true;
-					ongoingMatName = line;
+
+	string line;
+	smatch match;
+
+	while (getline(infile, line)) {
+		if (line != "" && !regex_search(line, match, regex("^#"))) {
+			//search for new material line
+			if (regex_search(line, match, newMtlRgx)) {
+				line = regex_replace(line, newMtlRgx, "");
+				//new material line was found but a material was in progress, complete this material before continuing
+				if (ongoingMat) {
+					//TODO: Different shaders based on matData values
+					generatedMaterialsMap.insert({ ongoingMatName, new Material(ongoingMatName, matData, vertexShader, pixelShader, sampler) });
+					matData = {};
 				}
-				else if (regex_search(line, match, ambientColorRgx)) {
-					line = regex_replace(line, ambientColorRgx, "");
-					Utility::ParseFloat3FromString(line, matData.AmbientColor);
-				}
-				else if (regex_search(line, match, diffuseColorRgx)) {
-					line = regex_replace(line, diffuseColorRgx, "");
-					Utility::ParseFloat3FromString(line, matData.DiffuseColor);
-				}
-				else if (regex_search(line, match, specularColorRgx)) {
-					line = regex_replace(line, specularColorRgx, "");
-					Utility::ParseFloat3FromString(line, matData.SpecularColor);
-				}
-				else if (regex_search(line, match, specularExpRgx)) {
-					line = regex_replace(line, specularExpRgx, "");
-					Utility::ParseFloatFromString(line, matData.SpecularExponent);
-				}
-				else if (regex_search(line, match, dTransparencyRgx)) {
-					line = regex_replace(line, dTransparencyRgx, "");
-					Utility::ParseFloatFromString(line, matData.Transparency);
-				}
-				else if (regex_search(line, match, trTransparencyRgx)) {
-					line = regex_replace(line, trTransparencyRgx, "");
-					Utility::ParseFloatFromString(line, matData.Transparency);
-					matData.Transparency = 1.0f - matData.Transparency;
-				}
-				else if (regex_search(line, match, illuminationRgx)) {
-					line = regex_replace(line, illuminationRgx, "");
-					Utility::ParseIntFromString(line, matData.Illumination);
-				}
-				else if (regex_search(line, match, ambientTextureRgx)) {
-					line = regex_replace(line, ambientTextureRgx, "");
-					ID3D11ShaderResourceView* srv;
-					wchar_t path[100] = L"../../Assets/Textures/";
-					wchar_t file[50];
-					MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, &line.c_str()[0], -1, &file[0], 50);
-					DirectX::CreateWICTextureFromFile(device, context, wcsncat(path, file, 100), 0, &srv);
-					textureMap.insert({ line, srv });
-					matData.AmbientTextureMapSRV = textureMap[line];
-				}
-				else if (regex_search(line, match, diffuseTextureRgx)) {
-					line = regex_replace(line, diffuseTextureRgx, "");
-					ID3D11ShaderResourceView* srv;
-					wchar_t path[100] = L"../../Assets/Textures/";
-					wchar_t file[50];
-					MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, &line.c_str()[0], -1, &file[0], 50);
-					DirectX::CreateWICTextureFromFile(device, context, wcsncat(path, file, 100), 0, &srv);
-					textureMap.insert({ line, srv });
-					matData.DiffuseTextureMapSRV = textureMap[line];
-				}
-				else if (regex_search(line, match, specularColorTextureRgx)) {
-					line = regex_replace(line, specularColorTextureRgx, "");
-					ID3D11ShaderResourceView* srv;
-					wchar_t path[100] = L"../../Assets/Textures/";
-					wchar_t file[50];
-					MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, &line.c_str()[0], -1, &file[0], 50);
-					DirectX::CreateWICTextureFromFile(device, context, wcsncat(path, file, 100), 0, &srv);
-					textureMap.insert({ line, srv });
-					matData.SpecularColorTextureMapSRV = textureMap[line];
-				}
-				else if (regex_search(line, match, specularHighlightTextureRgx)) {
-					line = regex_replace(line, specularHighlightTextureRgx, "");
-					ID3D11ShaderResourceView* srv;
-					wchar_t path[100] = L"../../Assets/Textures/";
-					wchar_t file[50];
-					MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, &line.c_str()[0], -1, &file[0], 50);
-					DirectX::CreateWICTextureFromFile(device, context, wcsncat(path, file, 100), 0, &srv);
-					textureMap.insert({ line, srv });
-					matData.SpecularHighlightTextureMapSRV = textureMap[line];
-				}
-				else if (regex_search(line, match, alphaTextureRgx)) {
-					line = regex_replace(line, alphaTextureRgx, "");
-					ID3D11ShaderResourceView* srv;
-					wchar_t path[100] = L"../../Assets/Textures/";
-					wchar_t file[50];
-					MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, &line.c_str()[0], -1, &file[0], 50);
-					DirectX::CreateWICTextureFromFile(device, context, wcsncat(path, file, 100), 0, &srv);
-					textureMap.insert({ line, srv });
-					matData.AlphaTextureMapSRV = textureMap[line];
-				}
+				ongoingMat = true;
+				ongoingMatName = line;
+
+				//record material as utilized
+				utilizedMaterialsMap.insert({ ongoingMatName,true });
+			}
+			//ambient color
+			else if (regex_search(line, match, ambientColorRgx)) {
+				line = regex_replace(line, ambientColorRgx, "");
+				ParseFloat3FromString(line, matData.AmbientColor);
+			}
+			//diffuse color
+			else if (regex_search(line, match, diffuseColorRgx)) {
+				line = regex_replace(line, diffuseColorRgx, "");
+				ParseFloat3FromString(line, matData.DiffuseColor);
+			}
+			//specular color
+			else if (regex_search(line, match, specularColorRgx)) {
+				line = regex_replace(line, specularColorRgx, "");
+				ParseFloat3FromString(line, matData.SpecularColor);
+			}
+			//specular value
+			else if (regex_search(line, match, specularExpRgx)) {
+				line = regex_replace(line, specularExpRgx, "");
+				ParseFloatFromString(line, matData.SpecularExponent);
+			}
+			//transparency value
+			else if (regex_search(line, match, dTransparencyRgx)) {
+				line = regex_replace(line, dTransparencyRgx, "");
+				ParseFloatFromString(line, matData.Transparency);
+			}
+			//transparency value
+			else if (regex_search(line, match, trTransparencyRgx)) {
+				line = regex_replace(line, trTransparencyRgx, "");
+				ParseFloatFromString(line, matData.Transparency);
+				matData.Transparency = 1.0f - matData.Transparency;
+			}
+			//illumination value
+			else if (regex_search(line, match, illuminationRgx)) {
+				line = regex_replace(line, illuminationRgx, "");
+				ParseIntFromString(line, matData.Illumination);
+			}
+			//ambient occlusion map
+			else if (regex_search(line, match, ambientTextureRgx)) {
+				line = regex_replace(line, ambientTextureRgx, "");
+				generatedTexturesMap.insert({ line, LoadSRV(device,context,line) });
+				matData.AmbientTextureMapSRV = generatedTexturesMap[line];
+				matData.SRVNames.push_back(line);
+
+				//record texture as utilized
+				utilizedTexturesMap.insert({ line,true });
+			}
+			//diffuse map
+			else if (regex_search(line, match, diffuseTextureRgx)) {
+				line = regex_replace(line, diffuseTextureRgx, "");
+				generatedTexturesMap.insert({ line, LoadSRV(device,context,line) });
+				matData.DiffuseTextureMapSRV = generatedTexturesMap[line];
+				matData.SRVNames.push_back(line);
+
+				//record texture as utilized
+				utilizedTexturesMap.insert({ line,true });
+			}
+			//specular color map
+			else if (regex_search(line, match, specularColorTextureRgx)) {
+				line = regex_replace(line, specularColorTextureRgx, "");
+				generatedTexturesMap.insert({ line, LoadSRV(device,context,line) });
+				matData.SpecularColorTextureMapSRV = generatedTexturesMap[line];
+				matData.SRVNames.push_back(line);
+
+				//record texture as utilized
+				utilizedTexturesMap.insert({ line,true });
+			}
+			//specular highlight map
+			else if (regex_search(line, match, specularHighlightTextureRgx)) {
+				line = regex_replace(line, specularHighlightTextureRgx, "");
+				generatedTexturesMap.insert({ line, LoadSRV(device,context,line) });
+				matData.SpecularHighlightTextureMapSRV = generatedTexturesMap[line];
+				matData.SRVNames.push_back(line);
+
+				//record texture as utilized
+				utilizedTexturesMap.insert({ line,true });
+			}
+			//alpha map
+			else if (regex_search(line, match, alphaTextureRgx)) {
+				line = regex_replace(line, alphaTextureRgx, "");
+				generatedTexturesMap.insert({ line, LoadSRV(device,context,line) });
+				matData.AlphaTextureMapSRV = generatedTexturesMap[line];
+				matData.SRVNames.push_back(line);
+
+				//record texture as utilized
+				utilizedTexturesMap.insert({ line,true });
+			}
+			//bump map
+			else if (regex_search(line, match, normalTextureRgx)) {
+				line = regex_replace(line, normalTextureRgx, "");
+				generatedTexturesMap.insert({ line, LoadSRV(device,context,line) });
+				matData.NormalTextureMapSRV = generatedTexturesMap[line];
+				matData.SRVNames.push_back(line);
+
+				//record texture as utilized
+				utilizedTexturesMap.insert({ line,true });
 			}
 		}
-		if (ongoingMat) {
-			materialMap.insert({ ongoingMatName, new Material(ongoingMatName, matData, vertexShader, pixelShader, sampler) });
-			matData = {};
-			ongoingMat = false;
-		}
 	}
+	//basically only executes if the end of the file is reached and there was an ongoing material being created
+	if (ongoingMat) {
+		generatedMaterialsMap.insert({ ongoingMatName, new Material(ongoingMatName, matData, vertexShader, pixelShader, sampler) });
+		matData = {};
+		ongoingMat = false;
+	}
+	infile.close();
+	return Utility::MESH_TYPE::GENERATED_MESH;
 }
 
-void Game::LoadScene()
+void Game::LoadScene(string sceneName)
 {
-	regex transformationRegex[3] = { regex("P\\(.*?\\)"),regex("R\\(.*?\\)"), regex("S\\(.*?\\)") };
+	//remove all current entities loaded
+	for (size_t i = 0; i < sceneEntities.size(); i++)
+	{
+		delete sceneEntities[i];
+	}
+	sceneEntities.clear();
+	sceneEntitiesMap.clear();
+	utilizedMeshesMap.clear();
+	utilizedMaterialsMap.clear();
+	utilizedTexturesMap.clear();
+
+	//for iterating over each line to get the float values for transformations
 	regex iteratorRegex = regex("-\\d*\\.\\d*|\\d*\\.\\d*|-\\d+|\\d+");
 
-	ifstream infile("../../Assets/Scenes/scene.txt");
+	ifstream infile("../../Assets/Scenes/" + sceneName + ".txt");
 	string line;
 	smatch match;
 	float parsedNumbers[9];
 	string objName;
 	while (getline(infile, line))
 	{
+		cout << line << endl;
 		if (line != "") {
-			regex_search(line, match, regex("^(\\S+)"));
-			objName = match[0];
-			line = regex_replace(line, regex("^(\\S+ )"), "");
-			std::sregex_iterator iter(line.begin(), line.end(), iteratorRegex);
-			int counter = 0;
-			for (; iter != std::sregex_iterator(); ++iter) {
-				if (counter < 9) {
-					match = *iter;
-					parsedNumbers[counter] = std::stof(match.str());
+			//if the line does not start with "//"
+			if (!regex_match(line, regex("//.*"))) {
+				//search for OBJ name at start of line
+				regex_search(line, match, regex("^(\\S+)"));
+				objName = match[0];
+
+				//load mesh, material, and textures, and if they already exist then mark them as utilized
+				Utility::MESH_TYPE meshType = AutoLoadOBJMTL(objName);
+
+				Entity* someEntity;
+
+				//naming of entity internally
+				string entityName = objName; //temporary, should have entity name in scene file
+				int sameNameEntityCnt = 1;
+				while (sceneEntitiesMap.count(entityName)) {
+					entityName = objName + " (" + to_string(sameNameEntityCnt) + ")";
+					sameNameEntityCnt++;
 				}
-				counter++;
+
+				//figure out what map to pull from
+				switch (meshType) {
+				case Utility::LOAD_FAILURE:
+					continue;
+				case Utility::DEFAULT_MESH:
+					someEntity = new Entity(entityName, defaultMeshesMap[objName]);
+					BuildDefaultEntity(entityName, objName, someEntity);
+					break;
+				case Utility::GENERATED_MESH: {
+					someEntity = new Entity(entityName, generatedMeshesMap[objName]);
+
+					//generated meshes should have a list of required materials,
+					//add them if they do or add the default (just black) if they dont
+					vector<string> requiredMaterials = someEntity->GetMaterialNameList();
+					for (int i = 0; i < requiredMaterials.size(); i++)
+					{
+						string requiredMat = requiredMaterials[i];
+						if (generatedMaterialsMap.count(requiredMat))
+							someEntity->AddMaterial(generatedMaterialsMap[requiredMat]);
+					}
+					if (requiredMaterials.size() == 0) {
+						someEntity->AddMaterial(defaultMaterialsMap["DEFAULT"]);
+						someEntity->AddMaterialNameToMesh("DEFAULT");
+					}
+					break;
+				}
+				default:
+					break;
+				}
+				
+				//get the transformation data associated with this entity
+				line = regex_replace(line, regex("^(\\S+ )"), "");
+				std::sregex_iterator iter(line.begin(), line.end(), iteratorRegex);
+				int counter = 0;
+				for (; iter != std::sregex_iterator(); ++iter) {
+					if (counter < 9) {
+						match = *iter;
+						parsedNumbers[counter] = std::stof(match.str());
+					}
+					counter++;
+				}
+				someEntity->SetPosition(parsedNumbers[0], parsedNumbers[1], parsedNumbers[2]);
+				someEntity->SetRotation(DirectX::XMConvertToRadians(parsedNumbers[3]), DirectX::XMConvertToRadians(parsedNumbers[4]), DirectX::XMConvertToRadians(parsedNumbers[5]));
+				someEntity->SetScale(parsedNumbers[6], parsedNumbers[7], parsedNumbers[8]);
+				someEntity->CalcWorldMatrix();
+
+				//finally add the entity to the appropriate lists
+				sceneEntitiesMap.insert({ entityName,someEntity });
+				sceneEntities.push_back(someEntity);
 			}
-			Entity* someEntity = new Entity(meshMap[objName]);
-			vector<string> requiredMaterials = someEntity->GetMaterialNameList();
-			for (int i = 0; i < requiredMaterials.size(); i++)
-			{
-				string requiredMat = requiredMaterials[i];
-				if (materialMap.count(requiredMat))
-					someEntity->AddMaterial(materialMap[requiredMat]);
-			}
-			if (requiredMaterials.size() == 0) {
-				someEntity->AddMaterial(material);
-				someEntity->AddMaterialNameToMesh(material->GetName());
-			}
-			someEntity->SetPosition(parsedNumbers[0], parsedNumbers[1], parsedNumbers[2]);
-			someEntity->SetRotation(DirectX::XMConvertToRadians(parsedNumbers[3]), DirectX::XMConvertToRadians(parsedNumbers[4]), DirectX::XMConvertToRadians(parsedNumbers[5]));
-			someEntity->SetScale(parsedNumbers[6], parsedNumbers[7], parsedNumbers[8]);
-			someEntity->CalcWorldMatrix();
-			sceneEntities.push_back(someEntity);
+		}
+	}
+
+	infile.close();
+
+	//clean up memory from prior scene, wont reload any resources that already exist and that
+	//are needed, but will remove unused resources in the current scene
+	for (auto meshMapIter = generatedMeshesMap.begin(); meshMapIter != generatedMeshesMap.end(); ++meshMapIter)
+	{
+		if (!utilizedMeshesMap.count(meshMapIter->first)) {
+			delete meshMapIter->second;
+			//generatedMeshesMap.erase(meshMapIter->first);
+		}
+	}
+
+	for (auto texMapIter = generatedTexturesMap.begin(); texMapIter != generatedTexturesMap.end(); ++texMapIter)
+	{
+		if (!utilizedTexturesMap.count(texMapIter->first)) {
+			texMapIter->second->Release();
+			//generatedTexturesMap.erase(texMapIter->first);
+		}
+	}
+
+	for (auto matMapIter = generatedMaterialsMap.begin(); matMapIter != generatedMaterialsMap.end(); ++matMapIter)
+	{
+		if (!utilizedMaterialsMap.count(matMapIter->first)) {
+			delete matMapIter->second;
+			//generatedMaterialsMap.erase(matMapIter->first);
 		}
 	}
 }
@@ -405,8 +600,8 @@ void Game::Draw(float deltaTime, float totalTime)
 
 
 void Game::DrawSky() {
-	ID3D11Buffer* vb = meshMap["Cube"]->GetVertexBuffer();
-	ID3D11Buffer* ib = meshMap["Cube"]->GetIndexBuffer();
+	ID3D11Buffer* vb = defaultMeshesMap["Cube"]->GetVertexBuffer();
+	ID3D11Buffer* ib = defaultMeshesMap["Cube"]->GetIndexBuffer();
 
 	UINT stride = sizeof(Vertex);
 	UINT offset = 0;
@@ -425,7 +620,7 @@ void Game::DrawSky() {
 	context->RSSetState(skyRasterState);
 	context->OMSetDepthStencilState(skyDepthState, 0);
 
-	context->DrawIndexed(meshMap["Cube"]->GetIndexCount(), 0, 0);
+	context->DrawIndexed(defaultMeshesMap["Cube"]->GetIndexCount(), 0, 0);
 
 	context->RSSetState(0);
 	context->OMSetDepthStencilState(0, 0);

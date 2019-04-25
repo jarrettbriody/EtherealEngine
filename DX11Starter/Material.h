@@ -28,6 +28,8 @@ struct MaterialData {
 	ID3D11ShaderResourceView* SpecularColorTextureMapSRV = nullptr; //map_Ks
 	ID3D11ShaderResourceView* SpecularHighlightTextureMapSRV = nullptr; //map_Ns
 	ID3D11ShaderResourceView* AlphaTextureMapSRV = nullptr; //map_d
+	ID3D11ShaderResourceView* NormalTextureMapSRV = nullptr; //map_Bump
+	vector<string> SRVNames;
 };
 
 class Material

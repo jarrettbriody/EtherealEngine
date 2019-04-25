@@ -16,8 +16,9 @@ private:
 	DirectX::XMFLOAT3 scale;
 	DirectX::XMFLOAT3 rotation;
 	map<string, Material*> materialMap;
+	string name;
 public:
-	Entity(Mesh* entityMesh, Material* mat = nullptr);
+	Entity(string entityName, Mesh* entityMesh, Material* mat = nullptr);
 	~Entity();
 	DirectX::XMFLOAT4X4 GetWorldMatrix();
 	DirectX::XMFLOAT3 GetPosition();
@@ -39,5 +40,6 @@ public:
 	vector<string> GetMaterialNameList();
 	void AddMaterialNameToMesh(string nm);
 	void AddMaterial(Material* mat);
+	string GetName();
 };
 
