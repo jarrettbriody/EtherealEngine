@@ -344,62 +344,74 @@ Utility::MESH_TYPE Game::AutoLoadOBJMTL(string name)
 			//ambient occlusion map
 			else if (regex_search(line, match, ambientTextureRgx)) {
 				line = regex_replace(line, ambientTextureRgx, "");
-				generatedTexturesMap.insert({ line, LoadSRV(device,context,line) });
-				matData.AmbientTextureMapSRV = generatedTexturesMap[line];
-				matData.SRVNames.push_back(line);
+				if (!generatedTexturesMap.count(line)) {
+					generatedTexturesMap.insert({ line, LoadSRV(device,context,line) });
+					matData.AmbientTextureMapSRV = generatedTexturesMap[line];
+					matData.SRVNames.push_back(line);
 
-				//record texture as utilized
-				utilizedTexturesMap.insert({ line,true });
+					//record texture as utilized
+					utilizedTexturesMap.insert({ line,true });
+				}
 			}
 			//diffuse map
 			else if (regex_search(line, match, diffuseTextureRgx)) {
 				line = regex_replace(line, diffuseTextureRgx, "");
-				generatedTexturesMap.insert({ line, LoadSRV(device,context,line) });
-				matData.DiffuseTextureMapSRV = generatedTexturesMap[line];
-				matData.SRVNames.push_back(line);
+				if (!generatedTexturesMap.count(line)) {
+					generatedTexturesMap.insert({ line, LoadSRV(device,context,line) });
+					matData.DiffuseTextureMapSRV = generatedTexturesMap[line];
+					matData.SRVNames.push_back(line);
 
-				//record texture as utilized
-				utilizedTexturesMap.insert({ line,true });
+					//record texture as utilized
+					utilizedTexturesMap.insert({ line,true });
+				}
 			}
 			//specular color map
 			else if (regex_search(line, match, specularColorTextureRgx)) {
 				line = regex_replace(line, specularColorTextureRgx, "");
-				generatedTexturesMap.insert({ line, LoadSRV(device,context,line) });
-				matData.SpecularColorTextureMapSRV = generatedTexturesMap[line];
-				matData.SRVNames.push_back(line);
+				if (!generatedTexturesMap.count(line)) {
+					generatedTexturesMap.insert({ line, LoadSRV(device,context,line) });
+					matData.SpecularColorTextureMapSRV = generatedTexturesMap[line];
+					matData.SRVNames.push_back(line);
 
-				//record texture as utilized
-				utilizedTexturesMap.insert({ line,true });
+					//record texture as utilized
+					utilizedTexturesMap.insert({ line,true });
+				}
 			}
 			//specular highlight map
 			else if (regex_search(line, match, specularHighlightTextureRgx)) {
 				line = regex_replace(line, specularHighlightTextureRgx, "");
-				generatedTexturesMap.insert({ line, LoadSRV(device,context,line) });
-				matData.SpecularHighlightTextureMapSRV = generatedTexturesMap[line];
-				matData.SRVNames.push_back(line);
+				if (!generatedTexturesMap.count(line)) {
+					generatedTexturesMap.insert({ line, LoadSRV(device,context,line) });
+					matData.SpecularHighlightTextureMapSRV = generatedTexturesMap[line];
+					matData.SRVNames.push_back(line);
 
-				//record texture as utilized
-				utilizedTexturesMap.insert({ line,true });
+					//record texture as utilized
+					utilizedTexturesMap.insert({ line,true });
+				}
 			}
 			//alpha map
 			else if (regex_search(line, match, alphaTextureRgx)) {
 				line = regex_replace(line, alphaTextureRgx, "");
-				generatedTexturesMap.insert({ line, LoadSRV(device,context,line) });
-				matData.AlphaTextureMapSRV = generatedTexturesMap[line];
-				matData.SRVNames.push_back(line);
+				if (!generatedTexturesMap.count(line)) {
+					generatedTexturesMap.insert({ line, LoadSRV(device,context,line) });
+					matData.AlphaTextureMapSRV = generatedTexturesMap[line];
+					matData.SRVNames.push_back(line);
 
-				//record texture as utilized
-				utilizedTexturesMap.insert({ line,true });
+					//record texture as utilized
+					utilizedTexturesMap.insert({ line,true });
+				}
 			}
 			//bump map
 			else if (regex_search(line, match, normalTextureRgx)) {
 				line = regex_replace(line, normalTextureRgx, "");
-				generatedTexturesMap.insert({ line, LoadSRV(device,context,line) });
-				matData.NormalTextureMapSRV = generatedTexturesMap[line];
-				matData.SRVNames.push_back(line);
+				if (!generatedTexturesMap.count(line)) {
+					generatedTexturesMap.insert({ line, LoadSRV(device,context,line) });
+					matData.NormalTextureMapSRV = generatedTexturesMap[line];
+					matData.SRVNames.push_back(line);
 
-				//record texture as utilized
-				utilizedTexturesMap.insert({ line,true });
+					//record texture as utilized
+					utilizedTexturesMap.insert({ line,true });
+				}
 			}
 		}
 	}
