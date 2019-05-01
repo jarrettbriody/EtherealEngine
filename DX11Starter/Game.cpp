@@ -12,9 +12,6 @@ Game::Game(HINSTANCE hInstance)
 		900,						// Height of the window's client area
 		true)						// Show extra stats (fps) in title bar?
 {
-	// Initialize fields
-	vertexShader = 0;
-	pixelShader = 0;
 
 #if defined(DEBUG) || defined(_DEBUG)
 	CreateConsoleWindow(500, 120, 32, 120);
@@ -29,20 +26,20 @@ Game::~Game()
 	for (auto texMapIter = defaultTexturesMap.begin(); texMapIter != defaultTexturesMap.end(); ++texMapIter)
 	{
 		texMapIter->second->Release();
-		cout << "Releasing " << texMapIter->first << endl;
+		//cout << "Releasing " << texMapIter->first << endl;
 	}
 
 	for (auto matMapIter = defaultMaterialsMap.begin(); matMapIter != defaultMaterialsMap.end(); ++matMapIter)
 	{
 		delete matMapIter->second;
-		cout << "Deleting " << matMapIter->first << endl;
+		//cout << "Deleting " << matMapIter->first << endl;
 	}
 
 	for (auto meshMapIter = defaultMeshesMap.begin(); meshMapIter != defaultMeshesMap.end(); ++meshMapIter)
 	{
 		if (meshMapIter->first != "Ground") {
 			delete meshMapIter->second;
-			cout << "Deleting " << meshMapIter->first << endl;
+			//cout << "Deleting " << meshMapIter->first << endl;
 		}
 	}
 
@@ -50,19 +47,19 @@ Game::~Game()
 	for (auto texMapIter = generatedTexturesMap.begin(); texMapIter != generatedTexturesMap.end(); ++texMapIter)
 	{
 		texMapIter->second->Release();
-		cout << "Releasing " << texMapIter->first << endl;
+		//cout << "Releasing " << texMapIter->first << endl;
 	}
 
 	for (auto matMapIter = generatedMaterialsMap.begin(); matMapIter != generatedMaterialsMap.end(); ++matMapIter)
 	{
 		delete matMapIter->second;
-		cout << "Deleting " << matMapIter->first << endl;
+		//cout << "Deleting " << matMapIter->first << endl;
 	}
 
 	for (auto meshMapIter = generatedMeshesMap.begin(); meshMapIter != generatedMeshesMap.end(); ++meshMapIter)
 	{
 		delete meshMapIter->second;
-		cout << "Deleting " << meshMapIter->first << endl;
+		//cout << "Deleting " << meshMapIter->first << endl;
 	}
 
 	for (size_t i = 0; i < sceneEntities.size(); i++)
@@ -70,16 +67,22 @@ Game::~Game()
 		delete sceneEntities[i];
 	}
 
+	//delete shaders
+	for (auto vertSIter = vertexShadersMap.begin(); vertSIter != vertexShadersMap.end(); ++vertSIter)
+	{
+		delete vertSIter->second;
+	}
+
+	for (auto pixSIter = pixelShadersMap.begin(); pixSIter != pixelShadersMap.end(); ++pixSIter)
+	{
+		delete pixSIter->second;
+	}
+
 	sampler->Release();
 
 	skySRV->Release();
 	skyDepthState->Release();
 	skyRasterState->Release();
-	delete skyVS;
-	delete skyPS;
-
-	delete vertexShader;
-	delete pixelShader;
 
 	delete camera;
 	delete renderer;
@@ -92,7 +95,10 @@ void Game::Init()
 	camera = new Camera();
 	camera->UpdateProjectionMatrix(width, height);
 
-	renderer = new Renderer();
+	renderer = new Renderer(device, context, swapChain, backBufferRTV, depthStencilView, width, height);
+	renderer->SetCamera(camera);
+	renderer->SetShadowVertexShader(vertexShadersMap["Shadow"]);
+	renderer->SetEntities(&sceneEntities);
 
 	DirectX::CreateDDSTextureFromFile(device, L"../../Assets/Textures/SunnyCubeMap.dds", 0, &skySRV);
 
@@ -122,35 +128,60 @@ void Game::Init()
 	LoadDefaultTextures();
 	LoadDefaultMaterials();
 
-	LoadScene("Arena");
+	LoadScene("ArenaV2");
 
 	prevMousePos.x = 0;
 	prevMousePos.y = 0;
 
+	Light dLight;
 	dLight.Type = LIGHT_TYPE_DIR;
 	dLight.Color = XMFLOAT3(1.0f, 244.0f / 255.0f, 214.0f / 255.0f);
-	dLight.Direction = XMFLOAT3(1.0f, -1.0f, 0.0f);
+	dLight.Direction = XMFLOAT3(0.5f, -1.0f, 1.0f);
 
-	renderer->AddLight("directional", dLight);
+	renderer->AddLight("Sun", dLight);
 
-	renderer->SendAllLightsToShader(pixelShader);
+	renderer->SendAllLightsToShader(pixelShadersMap["DEFAULT"]);
+
+	renderer->SendAllLightsToShader(pixelShadersMap["Normal"]);
+
+	renderer->SetShadowMapResolution(4096);
+
+	renderer->InitShadows();
 
 	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 }
 
 void Game::LoadShaders()
 {
-	vertexShader = new SimpleVertexShader(device, context);
-	vertexShader->LoadShaderFile(L"VertexShader.cso");
+	//vertex shaders
+	SimpleVertexShader* defaultVS = new SimpleVertexShader(device, context);
+	defaultVS->LoadShaderFile(L"DefaultVS.cso");
+	vertexShadersMap.insert({ "DEFAULT", defaultVS });
 
-	pixelShader = new SimplePixelShader(device, context);
-	pixelShader->LoadShaderFile(L"PixelShader.cso");
+	SimpleVertexShader* shadowVS = new SimpleVertexShader(device, context);
+	shadowVS->LoadShaderFile(L"ShadowVS.cso");
+	vertexShadersMap.insert({ "Shadow", shadowVS });
 
-	skyVS = new SimpleVertexShader(device, context);
+	SimpleVertexShader* skyVS = new SimpleVertexShader(device, context);
 	skyVS->LoadShaderFile(L"SkyVS.cso");
+	vertexShadersMap.insert({ "Sky", skyVS });
 
-	skyPS = new SimplePixelShader(device, context);
+	SimpleVertexShader* normalVS = new SimpleVertexShader(device, context);
+	normalVS->LoadShaderFile(L"NormalVS.cso");
+	vertexShadersMap.insert({ "Normal", normalVS });
+
+	//pixel shaders
+	SimplePixelShader* defaultPS = new SimplePixelShader(device, context);
+	defaultPS->LoadShaderFile(L"DefaultPS.cso");
+	pixelShadersMap.insert({ "DEFAULT", defaultPS });
+
+	SimplePixelShader* skyPS = new SimplePixelShader(device, context);
 	skyPS->LoadShaderFile(L"SkyPS.cso");
+	pixelShadersMap.insert({ "Sky", skyPS });
+
+	SimplePixelShader* normalPS = new SimplePixelShader(device, context);
+	normalPS->LoadShaderFile(L"NormalPS.cso");
+	pixelShadersMap.insert({ "Normal", normalPS });
 }
 
 void Game::LoadDefaultMeshes()
@@ -176,24 +207,24 @@ void Game::LoadDefaultTextures()
 void Game::LoadDefaultMaterials()
 {
 	MaterialData materialData = {};
-	defaultMaterialsMap.insert({"DEFAULT", new Material("DEFAULT", materialData, vertexShader, pixelShader, sampler)});
+	defaultMaterialsMap.insert({"DEFAULT", new Material("DEFAULT", materialData, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], sampler)});
 
 	materialData = {};
 	materialData.DiffuseTextureMapSRV = defaultTexturesMap["GrassDiffuse"];
 	materialData.NormalTextureMapSRV = defaultTexturesMap["GrassNormal"];
-	defaultMaterialsMap.insert({ "Grass", new Material("Grass", materialData, vertexShader, pixelShader, sampler) });
+	defaultMaterialsMap.insert({ "Grass", new Material("Grass", materialData, vertexShadersMap["Normal"], pixelShadersMap["Normal"], sampler) });
 
 	materialData = {};
 	materialData.DiffuseTextureMapSRV = defaultTexturesMap["Red"];
-	defaultMaterialsMap.insert({ "Red", new Material("Red", materialData, vertexShader, pixelShader, sampler) });
+	defaultMaterialsMap.insert({ "Red", new Material("Red", materialData, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], sampler) });
 
 	materialData = {};
 	materialData.DiffuseTextureMapSRV = defaultTexturesMap["Marble"];
-	defaultMaterialsMap.insert({ "Marble", new Material("Marble", materialData, vertexShader, pixelShader, sampler) });
+	defaultMaterialsMap.insert({ "Marble", new Material("Marble", materialData, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], sampler) });
 
 	materialData = {};
 	materialData.DiffuseTextureMapSRV = defaultTexturesMap["Hedge"];
-	defaultMaterialsMap.insert({ "Hedge", new Material("Hedge", materialData, vertexShader, pixelShader, sampler) });
+	defaultMaterialsMap.insert({ "Hedge", new Material("Hedge", materialData, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], sampler) });
 }
 
 void Game::BuildDefaultEntity(string entityName, string objName, Entity* e)
@@ -201,6 +232,8 @@ void Game::BuildDefaultEntity(string entityName, string objName, Entity* e)
 	if (objName == "Ground") {
 		e->AddMaterial(defaultMaterialsMap["Grass"]);
 		e->AddMaterialNameToMesh("Grass");
+		XMFLOAT3 s = e->GetScale();
+		e->SetRepeatTexture(s.x / 2.0f, s.z / 2.0f);
 	}
 }
 
@@ -295,8 +328,13 @@ Utility::MESH_TYPE Game::AutoLoadOBJMTL(string name)
 				line = regex_replace(line, newMtlRgx, "");
 				//new material line was found but a material was in progress, complete this material before continuing
 				if (ongoingMat) {
-					//TODO: Different shaders based on matData values
-					generatedMaterialsMap.insert({ ongoingMatName, new Material(ongoingMatName, matData, vertexShader, pixelShader, sampler) });
+					//Different shaders based on matData values
+					if (matData.NormalTextureMapSRV) {
+						generatedMaterialsMap.insert({ ongoingMatName, new Material(ongoingMatName, matData, vertexShadersMap["Normal"], pixelShadersMap["Normal"], sampler) });
+					}
+					else {
+						generatedMaterialsMap.insert({ ongoingMatName, new Material(ongoingMatName, matData, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], sampler) });
+					}
 					matData = {};
 				}
 				ongoingMat = true;
@@ -417,7 +455,12 @@ Utility::MESH_TYPE Game::AutoLoadOBJMTL(string name)
 	}
 	//basically only executes if the end of the file is reached and there was an ongoing material being created
 	if (ongoingMat) {
-		generatedMaterialsMap.insert({ ongoingMatName, new Material(ongoingMatName, matData, vertexShader, pixelShader, sampler) });
+		if (matData.NormalTextureMapSRV) {
+			generatedMaterialsMap.insert({ ongoingMatName, new Material(ongoingMatName, matData, vertexShadersMap["Normal"], pixelShadersMap["Normal"], sampler) });
+		}
+		else {
+			generatedMaterialsMap.insert({ ongoingMatName, new Material(ongoingMatName, matData, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], sampler) });
+		}
 		matData = {};
 		ongoingMat = false;
 	}
@@ -448,7 +491,7 @@ void Game::LoadScene(string sceneName)
 	string objName;
 	while (getline(infile, line))
 	{
-		cout << line << endl;
+		//cout << line << endl;
 		if (line != "") {
 			//if the line does not start with "//"
 			if (!regex_match(line, regex("//.*"))) {
@@ -475,7 +518,6 @@ void Game::LoadScene(string sceneName)
 					continue;
 				case Utility::DEFAULT_MESH:
 					someEntity = new Entity(entityName, defaultMeshesMap[objName]);
-					BuildDefaultEntity(entityName, objName, someEntity);
 					break;
 				case Utility::GENERATED_MESH: {
 					someEntity = new Entity(entityName, generatedMeshesMap[objName]);
@@ -515,6 +557,9 @@ void Game::LoadScene(string sceneName)
 				someEntity->SetScale(parsedNumbers[6], parsedNumbers[7], parsedNumbers[8]);
 				someEntity->CalcWorldMatrix();
 
+				if (meshType == Utility::DEFAULT_MESH)
+					BuildDefaultEntity(entityName, objName, someEntity);
+
 				//finally add the entity to the appropriate lists
 				sceneEntitiesMap.insert({ entityName,someEntity });
 				sceneEntities.push_back(someEntity);
@@ -526,28 +571,43 @@ void Game::LoadScene(string sceneName)
 
 	//clean up memory from prior scene, wont reload any resources that already exist and that
 	//are needed, but will remove unused resources in the current scene
+	vector<string> meshesToDelete;
 	for (auto meshMapIter = generatedMeshesMap.begin(); meshMapIter != generatedMeshesMap.end(); ++meshMapIter)
 	{
 		if (!utilizedMeshesMap.count(meshMapIter->first)) {
-			delete meshMapIter->second;
-			//generatedMeshesMap.erase(meshMapIter->first);
+			meshesToDelete.push_back(meshMapIter->first);
 		}
 	}
+	for (size_t i = 0; i < meshesToDelete.size(); i++)
+	{
+		delete generatedMeshesMap[meshesToDelete[i]];
+		generatedMeshesMap.erase(meshesToDelete[i]);
+	}
 
+	vector<string> texturesToDelete;
 	for (auto texMapIter = generatedTexturesMap.begin(); texMapIter != generatedTexturesMap.end(); ++texMapIter)
 	{
 		if (!utilizedTexturesMap.count(texMapIter->first)) {
-			texMapIter->second->Release();
-			//generatedTexturesMap.erase(texMapIter->first);
+			texturesToDelete.push_back(texMapIter->first);
 		}
 	}
+	for (size_t i = 0; i < texturesToDelete.size(); i++)
+	{
+		delete generatedTexturesMap[texturesToDelete[i]];
+		generatedTexturesMap.erase(texturesToDelete[i]);
+	}
 
+	vector<string> materialsToDelete;
 	for (auto matMapIter = generatedMaterialsMap.begin(); matMapIter != generatedMaterialsMap.end(); ++matMapIter)
 	{
 		if (!utilizedMaterialsMap.count(matMapIter->first)) {
-			delete matMapIter->second;
-			//generatedMaterialsMap.erase(matMapIter->first);
+			materialsToDelete.push_back(matMapIter->first);
 		}
+	}
+	for (size_t i = 0; i < materialsToDelete.size(); i++)
+	{
+		delete generatedMaterialsMap[materialsToDelete[i]];
+		generatedMaterialsMap.erase(materialsToDelete[i]);
 	}
 }
 
@@ -567,47 +627,15 @@ void Game::Update(float deltaTime, float totalTime)
 
 void Game::Draw(float deltaTime, float totalTime)
 {
-	// Background color
-	const float color[4] = { 0.4f, 0.6f, 0.75f, 0.0f };
+	renderer->ClearFrame();
 
-	// Clear the render target and depth buffer (erases what's on the screen)
-	//  - Do this ONCE PER FRAME
-	//  - At the beginning of Draw (before drawing *anything*)
-	context->ClearRenderTargetView(backBufferRTV, color);
-	context->ClearDepthStencilView(
-		depthStencilView,
-		D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL,
-		1.0f,
-		0);
+	renderer->RenderShadowMap();
 
-	UINT stride = sizeof(Vertex);
-	UINT offset = 0;
-
-	for (size_t i = 0; i < sceneEntities.size(); i++)
-	{
-		for (int j = -1; j < sceneEntities[i]->GetMeshChildCount(); j++)
-		{
-			if (sceneEntities[i]->MeshHasChildren() && j == -1)
-				j++;
-
-			ID3D11Buffer* vbo = sceneEntities[i]->GetMeshVertexBuffer(j);
-			context->IASetVertexBuffers(0, 1, &vbo, &stride, &offset);
-			context->IASetIndexBuffer(sceneEntities[i]->GetMeshIndexBuffer(j), DXGI_FORMAT_R32_UINT, 0);
-
-			//if(sceneEntities[i]->GetMeshMaterialName(j))
-			sceneEntities[i]->PrepareMaterial(sceneEntities[i]->GetMeshMaterialName(j), camera->GetViewMatrix(), camera->GetProjMatrix());
-
-			context->DrawIndexed(
-				sceneEntities[i]->GetMeshIndexCount(j),		// The number of indices to use (we could draw a subset if we wanted)
-				0,											// Offset to the first index we want to use
-				0);											// Offset to add to each index when looking up vertices
-		}
-	}
+	renderer->RenderFrame();
 
 	DrawSky();
 
-	swapChain->Present(0, 0);
-	context->OMSetRenderTargets(1, &backBufferRTV, depthStencilView);
+	renderer->PresentFrame();
 }
 
 
@@ -620,14 +648,14 @@ void Game::DrawSky() {
 	context->IASetVertexBuffers(0, 1, &vb, &stride, &offset);
 	context->IASetIndexBuffer(ib, DXGI_FORMAT_R32_UINT, 0);
 
-	skyVS->SetMatrix4x4("view", camera->GetViewMatrix());
-	skyVS->SetMatrix4x4("projection", camera->GetProjMatrix());
-	skyVS->CopyAllBufferData();
-	skyVS->SetShader();
+	vertexShadersMap["Sky"]->SetMatrix4x4("view", camera->GetViewMatrix());
+	vertexShadersMap["Sky"]->SetMatrix4x4("projection", camera->GetProjMatrix());
+	vertexShadersMap["Sky"]->CopyAllBufferData();
+	vertexShadersMap["Sky"]->SetShader();
 
-	skyPS->SetShaderResourceView("Sky", skySRV);
-	skyPS->SetSamplerState("BasicSampler", sampler);
-	skyPS->SetShader();
+	pixelShadersMap["Sky"]->SetShaderResourceView("Sky", skySRV);
+	pixelShadersMap["Sky"]->SetSamplerState("BasicSampler", sampler);
+	pixelShadersMap["Sky"]->SetShader();
 
 	context->RSSetState(skyRasterState);
 	context->OMSetDepthStencilState(skyDepthState, 0);

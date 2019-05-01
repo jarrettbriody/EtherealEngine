@@ -8,6 +8,7 @@ Entity::Entity(string entityName, Mesh* entityMesh, Material* mat)
 	position = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
 	scale = DirectX::XMFLOAT3(1.0f, 1.0f, 1.0f);
 	rotation = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
+	repeatTex = XMFLOAT2(1.0f, 1.0f);
 	DirectX::XMMATRIX W = DirectX::XMMatrixIdentity();
 	DirectX::XMStoreFloat4x4(&worldMatrix, XMMatrixTranspose(W));
 	if (mat != nullptr)
@@ -58,6 +59,21 @@ void Entity::SetRotation(float x, float y, float z)
 	rotation.x = x;
 	rotation.y = y;
 	rotation.z = z;
+}
+
+void Entity::SetRepeatTexture(float x, float y)
+{
+	repeatTex = XMFLOAT2(x, y);
+}
+
+void Entity::SetShadowData(ShadowData shadowData)
+{
+	this->shadowData = shadowData;
+}
+
+void Entity::ToggleShadows(bool toggle)
+{
+	shadowsEnabled = toggle;
 }
 
 void Entity::Move(float x, float y, float z)
@@ -111,34 +127,32 @@ void Entity::CalcWorldMatrix()
 
 void Entity::PrepareMaterial(string n, DirectX::XMFLOAT4X4 view, DirectX::XMFLOAT4X4 proj)
 {
-	Material* crntMat = materialMap[n];
-	SimpleVertexShader* vShader = crntMat->GetVertexShader();
-	SimplePixelShader* pShader = crntMat->GetPixelShader();
+	SimpleVertexShader* vs = materialMap[n]->GetVertexShader();
+	SimplePixelShader* ps = materialMap[n]->GetPixelShader();
 
 	// Send data to shader variables
 		//  - Do this ONCE PER OBJECT you're drawing
 		//  - This is actually a complex process of copying data to a local buffer
 		//    and then copying that entire buffer to the GPU.  
 		//  - The "SimpleShader" class handles all of that for you.
-	vShader->SetMatrix4x4("world", GetWorldMatrix());
-	vShader->SetMatrix4x4("view", view);
-	vShader->SetMatrix4x4("projection", proj);
+	vs->SetMatrix4x4("world", GetWorldMatrix());
+	vs->SetMatrix4x4("view", view);
+	vs->SetMatrix4x4("projection", proj);
 
-	// Set the vertex and pixel shaders to use for the next Draw() command
-	//  - These don't technically need to be set every frame...YET
-	//  - Once you start applying different shaders to different objects,
-	//    you'll need to swap the current shaders before each draw
-	vShader->SetShader();
-	pShader->SetShader();
+	ps->SetData(
+		"uvMult",
+		&repeatTex,
+		sizeof(repeatTex)
+	);
 
-	// Once you've set all of the data you care to change for
-	// the next draw call, you need to actually send it to the GPU
-	//  - If you skip this, the "SetMatrix" calls above won't make it to the GPU!
-	vShader->CopyAllBufferData();
-	pShader->CopyAllBufferData();
+	if (shadowsEnabled) {
+		vs->SetMatrix4x4("shadowView", shadowData.shadowViewMatrix);
+		vs->SetMatrix4x4("shadowProj", shadowData.shadowProjectionMatrix);
+		ps->SetShaderResourceView("ShadowMap", shadowData.shadowSRV);
+		ps->SetSamplerState("ShadowSampler", shadowData.shadowSampler);
+	}
 
-	pShader->SetSamplerState("BasicSampler", crntMat->GetSamplerState());
-	pShader->SetShaderResourceView("DiffuseTexture", crntMat->GetMaterialData().DiffuseTextureMapSRV);
+	materialMap[n]->Prepare();
 }
 
 Material * Entity::GetMaterial(string n)

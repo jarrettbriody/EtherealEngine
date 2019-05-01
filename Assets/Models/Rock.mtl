@@ -1,0 +1,10 @@
+newmtl Rock
+Kd 0.8 0.8 0.8
+Ns 256
+d 1
+illum 2
+Ka 0 0 0
+Ks 0.1 0.1 0.1
+map_Kd Rock/Rock_d.jpg
+map_Ks Rock/Rock_s.jpg
+map_bump Rock/Rock_n.jpg

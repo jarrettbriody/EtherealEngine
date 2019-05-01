@@ -55,8 +55,8 @@ private:
 	void LoadScene(string sceneName = "scene");
 
 	// Wrappers for DirectX shaders to provide simplified functionality
-	SimpleVertexShader* vertexShader;
-	SimplePixelShader* pixelShader;
+	map<string, SimpleVertexShader*> vertexShadersMap;
+	map<string, SimplePixelShader*> pixelShadersMap;
 
 	// Keeps track of the old mouse position for determining how far the mouse moved in a single frame
 	POINT prevMousePos;
@@ -80,15 +80,9 @@ private:
 
 	Camera* camera;
 
-	Light dLight;
-	Light dLight2;
-	Light dLight3;
-
 	ID3D11SamplerState* sampler;
 
 	ID3D11ShaderResourceView* skySRV;
-	SimpleVertexShader* skyVS;
-	SimplePixelShader* skyPS;
 	ID3D11RasterizerState* skyRasterState;
 	ID3D11DepthStencilState* skyDepthState;
 

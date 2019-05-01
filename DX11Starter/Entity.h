@@ -5,6 +5,13 @@
 #include "Mesh.h"
 #include "Material.h"
 
+struct ShadowData {
+	DirectX::XMFLOAT4X4 shadowViewMatrix;
+	DirectX::XMFLOAT4X4 shadowProjectionMatrix;
+	ID3D11ShaderResourceView* shadowSRV = nullptr;
+	ID3D11SamplerState* shadowSampler = nullptr;
+};
+
 using namespace std;
 
 class Entity
@@ -15,8 +22,12 @@ private:
 	DirectX::XMFLOAT3 position;
 	DirectX::XMFLOAT3 scale;
 	DirectX::XMFLOAT3 rotation;
+	DirectX::XMFLOAT2 repeatTex;
 	map<string, Material*> materialMap;
 	string name;
+
+	bool shadowsEnabled = true;
+	ShadowData shadowData;
 public:
 	Entity(string entityName, Mesh* entityMesh, Material* mat = nullptr);
 	~Entity();
@@ -27,6 +38,9 @@ public:
 	void SetPosition(float x, float y, float z);
 	void SetScale(float x, float y, float z);
 	void SetRotation(float x, float y, float z);
+	void SetRepeatTexture(float x, float y);
+	void SetShadowData(ShadowData shadowData);
+	void ToggleShadows(bool toggle);
 	void Move(float x, float y, float z);
 	ID3D11Buffer* GetMeshVertexBuffer(int i = -1);
 	ID3D11Buffer* GetMeshIndexBuffer(int i = -1);
