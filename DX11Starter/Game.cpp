@@ -95,11 +95,6 @@ void Game::Init()
 	camera = new Camera();
 	camera->UpdateProjectionMatrix(width, height);
 
-	renderer = new Renderer(device, context, swapChain, backBufferRTV, depthStencilView, width, height);
-	renderer->SetCamera(camera);
-	renderer->SetShadowVertexShader(vertexShadersMap["Shadow"]);
-	renderer->SetEntities(&sceneEntities);
-
 	DirectX::CreateDDSTextureFromFile(device, L"../../Assets/Textures/SunnyCubeMap.dds", 0, &skySRV);
 
 	D3D11_SAMPLER_DESC samplerDesc = {};
@@ -138,14 +133,14 @@ void Game::Init()
 	dLight.Color = XMFLOAT3(1.0f, 244.0f / 255.0f, 214.0f / 255.0f);
 	dLight.Direction = XMFLOAT3(0.5f, -1.0f, 1.0f);
 
+	renderer = new Renderer(device, context, swapChain, backBufferRTV, depthStencilView, width, height);
+	renderer->SetCamera(camera);
+	renderer->SetShadowVertexShader(vertexShadersMap["Shadow"]);
+	renderer->SetEntities(&sceneEntities);
 	renderer->AddLight("Sun", dLight);
-
 	renderer->SendAllLightsToShader(pixelShadersMap["DEFAULT"]);
-
 	renderer->SendAllLightsToShader(pixelShadersMap["Normal"]);
-
 	renderer->SetShadowMapResolution(4096);
-
 	renderer->InitShadows();
 
 	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);

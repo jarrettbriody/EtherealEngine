@@ -46,9 +46,9 @@ cbuffer uvRepeatCBuffer : register(b1) {
 
 Texture2D DiffuseTexture  : register(t0);
 
-Texture2D NormalTexture   : register(t1);
+Texture2D ShadowMap		  : register(t1);
 
-Texture2D ShadowMap		  : register(t2);
+Texture2D NormalTexture   : register(t2);
 
 SamplerState BasicSampler               : register(s0);
 SamplerComparisonState ShadowSampler	: register(s1);

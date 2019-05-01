@@ -45,18 +45,18 @@ void Material::Prepare()
 	vertexShader->SetShader();
 	pixelShader->SetShader();
 
-	// Once you've set all of the data you care to change for
-	// the next draw call, you need to actually send it to the GPU
-	//  - If you skip this, the "SetMatrix" calls above won't make it to the GPU!
-	vertexShader->CopyAllBufferData();
-	pixelShader->CopyAllBufferData();
-
 	pixelShader->SetSamplerState("BasicSampler", samplerState);
 	pixelShader->SetShaderResourceView("DiffuseTexture", materialData.DiffuseTextureMapSRV);
 
 	if (materialData.NormalTextureMapSRV) {
 		pixelShader->SetShaderResourceView("NormalTexture", materialData.NormalTextureMapSRV);
 	}
+
+	// Once you've set all of the data you care to change for
+	// the next draw call, you need to actually send it to the GPU
+	//  - If you skip this, the "SetMatrix" calls above won't make it to the GPU!
+	vertexShader->CopyAllBufferData();
+	pixelShader->CopyAllBufferData();
 }
 
 string Material::GetName()

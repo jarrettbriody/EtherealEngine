@@ -86,6 +86,8 @@ void Renderer::RenderFrame()
 				e->GetMeshIndexCount(j),		// The number of indices to use (we could draw a subset if we wanted)
 				0,											// Offset to the first index we want to use
 				0);											// Offset to add to each index when looking up vertices
+
+			e->GetMaterial(e->GetMeshMaterialName(j))->GetPixelShader()->SetShaderResourceView("ShadowMap", NULL);
 		}
 	}
 }
@@ -291,14 +293,8 @@ void Renderer::RenderShadowMap()
 
 	// Revert to original pipeline state
 	context->OMSetRenderTargets(1, &backBufferRTV, depthStencilView);
-
-	vp.TopLeftX = 0;
-	vp.TopLeftY = 0;
 	vp.Width = (float)viewPortWidth;
 	vp.Height = (float)viewPortHeight;
-	vp.MinDepth = 0.0f;
-	vp.MaxDepth = 1.0f;
-
 	context->RSSetViewports(1, &vp);
 	context->RSSetState(0);
 }
