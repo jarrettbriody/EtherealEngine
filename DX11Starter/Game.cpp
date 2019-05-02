@@ -678,10 +678,12 @@ void Game::OnMouseUp(WPARAM buttonState, int x, int y)
 
 void Game::OnMouseMove(WPARAM buttonState, int x, int y)
 {
-	camera->RotateCamera(x - (int)prevMousePos.x, y - (int)prevMousePos.y);
+	if (buttonState & 0x0001) {
+		camera->RotateCamera(x - (int)prevMousePos.x, y - (int)prevMousePos.y);
 
-	prevMousePos.x = x;
-	prevMousePos.y = y;
+		prevMousePos.x = x;
+		prevMousePos.y = y;
+	}
 }
 
 void Game::OnMouseWheel(float wheelDelta, int x, int y)

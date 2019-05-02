@@ -72,27 +72,27 @@ void Camera::Update()
 	XMVECTOR right = XMVector3Cross(dir, XMLoadFloat3(&yAxis));
 
 	if (GetAsyncKeyState('W') & 0x8000) {
-		pos = XMVectorAdd(pos, XMVectorScale(dir,0.02f));
+		pos = XMVectorAdd(pos, XMVectorScale(dir,0.05f));
 		XMStoreFloat3(&position, pos);
 	}
 	if (GetAsyncKeyState('S') & 0x8000) {
-		pos = XMVectorAdd(pos, XMVectorScale(dir, -0.02f));
+		pos = XMVectorAdd(pos, XMVectorScale(dir, -0.05f));
 		XMStoreFloat3(&position, pos);
 	}
 	if (GetAsyncKeyState('A') & 0x8000) {
-		pos = XMVectorAdd(pos, XMVectorScale(right, 0.02f));
+		pos = XMVectorAdd(pos, XMVectorScale(right, 0.05f));
 		XMStoreFloat3(&position, pos);
 	}
 	if (GetAsyncKeyState('D') & 0x8000) {
-		pos = XMVectorAdd(pos, XMVectorScale(right, -0.02f));
+		pos = XMVectorAdd(pos, XMVectorScale(right, -0.05f));
 		XMStoreFloat3(&position, pos);
 	}
 	if (GetAsyncKeyState(VK_SPACE) & 0x8000) {
-		pos = XMVectorAdd(pos, XMVectorScale(XMLoadFloat3(&yAxis), 0.02f));
+		pos = XMVectorAdd(pos, XMVectorScale(XMLoadFloat3(&yAxis), 0.05f));
 		XMStoreFloat3(&position, pos);
 	}
 	if (GetAsyncKeyState('X') & 0x8000) {
-		pos = XMVectorAdd(pos, XMVectorScale(XMLoadFloat3(&yAxis), -0.02f));
+		pos = XMVectorAdd(pos, XMVectorScale(XMLoadFloat3(&yAxis), -0.05f));
 		XMStoreFloat3(&position, pos);
 	}
 
