@@ -13,6 +13,7 @@ class Mesh
 {
 private:
 	static vector<string> mtlPaths;
+	vector<XMFLOAT3> vertices;
 	ID3D11Buffer* vertexBuffer = nullptr;
 	ID3D11Buffer* indexBuffer = nullptr;
 	int indexCount = 0;
@@ -39,5 +40,7 @@ public:
 	int GetChildCount();
 	string GetMTLPath();
 	static vector<string> GetMTLPaths();
+	void SetVertices(vector<XMFLOAT3> verts);
+	vector<XMFLOAT3> GetVertices();
 };
 

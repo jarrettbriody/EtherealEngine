@@ -214,11 +214,15 @@ Mesh::Mesh(string meshN, char * objFile, ID3D11Device* device, bool* success)
 
 	if (isGroup && groupName != "" && matName != "" && childCount > 0) {
 		materialNameList.push_back(matName);
-		children.push_back(new Mesh(&verts[0], vertCounter, &indices[0], vertCounter, device, groupName, matName));
+		Mesh* childMesh = new Mesh(&verts[0], vertCounter, &indices[0], vertCounter, device, groupName, matName);
+		childMesh->SetVertices(positions);
+		children.push_back(childMesh);
 		childCount++;
 	}
-	else if(childCount == 0)
+	else if (childCount == 0) {
+		vertices = positions;
 		CreateBuffers(&verts[0], vertCounter, &indices[0], vertCounter, device);
+	}
 	if (success != nullptr)
 		*success = true;
 }
@@ -399,4 +403,14 @@ string Mesh::GetMTLPath()
 vector<string> Mesh::GetMTLPaths()
 {
 	return mtlPaths;
+}
+
+void Mesh::SetVertices(vector<XMFLOAT3> verts)
+{
+	vertices = verts;
+}
+
+vector<XMFLOAT3> Mesh::GetVertices()
+{
+	return vertices;
 }
