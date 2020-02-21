@@ -405,12 +405,12 @@ vector<string> Mesh::GetMTLPaths()
 	return mtlPaths;
 }
 
-void Mesh::SetVertices(vector<XMFLOAT3> verts)
+void Mesh::SetVertices(vector<DirectX::XMFLOAT3> verts)
 {
 	vertices = verts;
 }
 
-vector<XMFLOAT3> Mesh::GetVertices()
+vector<DirectX::XMFLOAT3> Mesh::GetVertices()
 {
 	return vertices;
 }
