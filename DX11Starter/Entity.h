@@ -25,6 +25,8 @@ private:
 	DirectX::XMFLOAT2 repeatTex;
 	map<string, Material*> materialMap;
 	string name;
+	vector<Entity*> children;
+	Entity* parent = nullptr;
 
 	bool shadowsEnabled = true;
 	ShadowData shadowData;
@@ -55,5 +57,6 @@ public:
 	void AddMaterialNameToMesh(string nm);
 	void AddMaterial(Material* mat);
 	string GetName();
+	void AddChildEntity(Entity* child);
 };
 

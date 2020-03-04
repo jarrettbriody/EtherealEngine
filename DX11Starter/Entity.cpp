@@ -122,7 +122,15 @@ void Entity::CalcWorldMatrix()
 	DirectX::XMMATRIX rot   = DirectX::XMMatrixRotationRollPitchYaw(rotation.x, rotation.y, rotation.z);
 	DirectX::XMMATRIX scl   = DirectX::XMMatrixScaling(scale.x, scale.y, scale.z);
 	DirectX::XMMATRIX world = scl * rot * trans;
-	XMStoreFloat4x4(&worldMatrix, XMMatrixTranspose(world));
+	if (parent != nullptr) {
+		DirectX::XMMATRIX parentWorld = DirectX::XMMatrixTranspose(DirectX::XMLoadFloat4x4(&parent->worldMatrix));
+		world = DirectX::XMMatrixMultiply(world, parentWorld);
+	}
+	DirectX::XMStoreFloat4x4(&worldMatrix, DirectX::XMMatrixTranspose(world));
+	for (size_t i = 0; i < children.size(); i++)
+	{
+		children[i]->CalcWorldMatrix();
+	}
 }
 
 void Entity::PrepareMaterial(string n, DirectX::XMFLOAT4X4 view, DirectX::XMFLOAT4X4 proj)
@@ -188,4 +196,10 @@ void Entity::AddMaterial(Material * mat)
 string Entity::GetName()
 {
 	return name;
+}
+
+void Entity::AddChildEntity(Entity* child)
+{
+	children.push_back(child);
+	child->parent = this;
 }
