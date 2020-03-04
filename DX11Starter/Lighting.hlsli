@@ -58,8 +58,10 @@ float3 CalcPointLight(float4 surfaceColor, float normal, Light light, float3 toC
 	
 	float3 finalColor = diffuse * surfaceColor;
 
-	
-
+	if (specularValue > 0)
+	{
+		//finalColor += GetSpecularity(normal, toLight, toCameraVector, specularValue);
+	}
 	finalColor *= atten * light.Intensity * light.Color;
 
 	
