@@ -133,21 +133,23 @@ void Game::Init()
 	dLight->Color = XMFLOAT3(1.0f, 244.0f / 255.0f, 214.0f / 255.0f);
 	//dLight->Color = XMFLOAT3(0.f, 0.f, 0.f);
 	dLight->Direction = XMFLOAT3(0.5f, -1.0f, 1.0f);
-	dLight->Intensity = 1.f;
+	dLight->Intensity = 0.f;
 
 	testLight = new Light;
-	testLight->Type = LIGHT_TYPE_POINT;
-	testLight->Intensity = 1.f;
+	testLight->Type = LIGHT_TYPE_SPOT;
+	testLight->Direction = camera->direction;
+	testLight->Intensity = 5.f;
 	testLight->Position = XMFLOAT3(-3.2f, 2.f, -5.f);
-	testLight->Color = XMFLOAT3(1.0f, 1.f, 1.f);
-
+	testLight->Color = XMFLOAT3(1.f, 0.f, 0.f);
+	testLight->Range = 10.f;
+	testLight->SpotFalloff = 20.f;
 
 	renderer = new Renderer(device, context, swapChain, backBufferRTV, depthStencilView, width, height);
 	renderer->SetCamera(camera);
 	renderer->SetShadowVertexShader(vertexShadersMap["Shadow"]);
 	renderer->SetEntities(&sceneEntities);
 	renderer->AddLight("Sun", dLight);
-	//renderer->AddLight("testLight", testLight);
+	renderer->AddLight("testLight", testLight);
 	renderer->SendAllLightsToShader(pixelShadersMap["DEFAULT"]);
 	renderer->SendAllLightsToShader(pixelShadersMap["Normal"]);
 	renderer->SetShadowMapResolution(4096);
@@ -628,6 +630,11 @@ void Game::Update(float deltaTime, float totalTime)
 		Quit();
 
 	camera->Update();
+	if (!GetAsyncKeyState(VK_CONTROL))
+	{
+		testLight->Position = camera->position;
+		testLight->Direction = camera->direction;
+	}
 }
 
 void Game::Draw(float deltaTime, float totalTime)

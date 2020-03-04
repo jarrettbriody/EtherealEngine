@@ -79,11 +79,13 @@ VertexToPixel main( VertexShaderInput input )
 	// The result is essentially the position (XY) of the vertex on our 2D 
 	// screen and the distance (Z) from the camera (the "depth" of the pixel)
 	output.position = mul(float4(input.position, 1.0f), worldViewProj);
-	output.normal = mul(input.normal, (float3x3)world);
+
+	output.worldPos = mul(float4(input.position, 1.0f), world).xyz;
+
+	output.normal = normalize(mul(input.normal, (float3x3)world));
 
 	output.uv = input.uv;
 
-	output.worldPos = mul(float4(input.position, 1.0f), world).xyz;
 
 	// Calculate shadow map position
 	matrix shadowWVP = mul(mul(world, shadowView), shadowProj);

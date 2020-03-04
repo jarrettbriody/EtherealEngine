@@ -93,7 +93,6 @@ float4 main(VertexToPixel input) : SV_TARGET
 	float shadowAmount = ShadowMap.SampleCmpLevelZero(ShadowSampler, shadowUV, depthFromLight);
 
 	float3 toCameraVector = normalize(cameraPosition - input.worldPos);
-	float3 normal = normalize(input.normal);
 
 
 	float3 finalColor = float3(0.f, 0.f, 0.f);
@@ -101,10 +100,13 @@ float4 main(VertexToPixel input) : SV_TARGET
 	{
 		switch (lights[i].Type) {
 		case LIGHT_TYPE_DIR:
-			finalColor += (CalcDirectionalLighting(surfaceColor, normal, lights[i], toCameraVector, specularValue, shadowAmount));
+			finalColor += (CalcDirectionalLight(surfaceColor, input.normal, lights[i], toCameraVector, specularValue, shadowAmount));
 			break;
 		case LIGHT_TYPE_POINT:
-			finalColor += (CalcPointLighting(surfaceColor, normal, lights[i], toCameraVector, specularValue, input.worldPos));
+			finalColor += (CalcPointLight(surfaceColor, input.normal, lights[i], toCameraVector, specularValue, input.worldPos));
+			break;
+		case LIGHT_TYPE_SPOT:
+			finalColor += (CalcSpotLight(surfaceColor, input.normal, lights[i], toCameraVector, specularValue, input.worldPos));
 			break;
 		}
 	}

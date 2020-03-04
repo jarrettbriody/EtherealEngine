@@ -25,14 +25,14 @@ float Attenuate(Light light, float3 worldPos)
 {
 	float dist = distance(light.Position, worldPos);
 
-	float attenuation = saturate(1.0f - (pow(dist, 2) / pow(light.Range, 2)));
+	float attenuation = saturate(1.0f - (dist * dist / (light.Range * light.Range)));
 
-	return pow(attenuation, 2);
+	return attenuation * attenuation;
 }
 
 //Lighting methods
 
-float3 CalcDirectionalLighting(float4 surfaceColor, float3 normal, Light light, float3 toCameraVector, float specularValue, float shadowAmount) 
+float3 CalcDirectionalLight(float4 surfaceColor, float3 normal, Light light, float3 toCameraVector, float specularValue, float shadowAmount) 
 {
 	float3 toLight = normalize(-light.Direction);
 	float diffuse = saturate(dot(normal, toLight));
@@ -49,7 +49,7 @@ float3 CalcDirectionalLighting(float4 surfaceColor, float3 normal, Light light, 
 	return (finalColor * shadowAmount) + (surfaceColor * 0.05f);
 }
 
-float3 CalcPointLighting(float4 surfaceColor, float normal, Light light, float3 toCameraVector, float specularValue, float3 worldPos) 
+float3 CalcPointLight(float4 surfaceColor, float normal, Light light, float3 toCameraVector, float specularValue, float3 worldPos) 
 {
 	float3 toLight = normalize(light.Position - worldPos);
 
@@ -58,12 +58,18 @@ float3 CalcPointLighting(float4 surfaceColor, float normal, Light light, float3 
 	
 	float3 finalColor = diffuse * surfaceColor;
 
-	if (specularValue > 0)
-	{
-		finalColor += GetSpecularity(normal, toLight, toCameraVector, specularValue);
-	}
+	
 
 	finalColor *= atten * light.Intensity * light.Color;
+
 	
-	return finalColor;
+	return finalColor + (surfaceColor * 0.05f);
+}
+
+float3 CalcSpotLight(float4 surfaceColor, float normal, Light light, float3 toCameraVector, float specularValue, float3 worldPos)
+{
+	float3 toLight = normalize(light.Position - worldPos);
+	float penumbra = pow(saturate(dot(-toLight, light.Direction)), light.SpotFalloff);
+
+	return CalcPointLight(surfaceColor, normal, light, toCameraVector, specularValue, worldPos) * penumbra;
 }
