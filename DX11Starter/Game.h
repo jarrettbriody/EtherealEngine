@@ -87,5 +87,8 @@ private:
 	ID3D11DepthStencilState* skyDepthState;
 
 	Renderer* renderer;
+
+	//testing
+	Light* testLight;
 };
 

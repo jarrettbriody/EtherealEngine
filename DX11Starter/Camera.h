@@ -11,11 +11,11 @@ class Camera
 private:
 	XMFLOAT4X4 viewMatrix;
 	XMFLOAT4X4 projMatrix;
+public:
 	XMFLOAT3 position;
 	XMFLOAT3 direction;
 	float xRotation;
 	float yRotation;
-public:
 	Camera();
 	~Camera();
 	XMFLOAT4X4 GetViewMatrix();
