@@ -125,6 +125,61 @@ void Game::Init()
 
 	LoadScene("ArenaV2");
 
+	//test area --------------------------
+	/*
+	CUBE ALWAYS TRIES TO APPLY GRASS MATERIAL BECAUSE OF GROUND NEED TO FIX
+
+	Entity* cube1;
+	cube1 = new Entity("cube1", defaultMeshesMap["Cube"]);
+	cube1->AddMaterial(defaultMaterialsMap["DEFAULT"]);
+	cube1->AddMaterialNameToMesh("DEFAULT");
+	cube1->SetPosition(8.0f, 8.0f, 8.0f);
+	cube1->SetRotation(DirectX::XMConvertToRadians(30), DirectX::XMConvertToRadians(30), DirectX::XMConvertToRadians(30));
+	cube1->SetScale(1.0f, 2.0f, 1.0f);
+	sceneEntitiesMap.insert({ "cube1", cube1 });
+	sceneEntities.push_back(cube1);
+
+	Entity* cube2;
+	cube2 = new Entity("cube2", defaultMeshesMap["Cube"]);
+	cube2->AddMaterial(defaultMaterialsMap["DEFAULT"]);
+	cube2->AddMaterialNameToMesh("DEFAULT");
+	cube2->SetPosition(1.0f, 1.0f, 1.0f);
+	cube2->SetRotation(DirectX::XMConvertToRadians(30), DirectX::XMConvertToRadians(30), DirectX::XMConvertToRadians(30));
+	cube2->SetScale(1.0f, 1.0f, 1.0f);
+	sceneEntitiesMap.insert({ "cube2", cube2 });
+	sceneEntities.push_back(cube2);
+
+	cube1->AddChildEntity(cube2);
+
+	cube1->CalcWorldMatrix();
+	*/
+
+	Entity* sphere1;
+	sphere1 = new Entity("sphere1", defaultMeshesMap["Sphere"]);
+	sphere1->AddMaterial(defaultMaterialsMap["DEFAULT"]);
+	sphere1->AddMaterialNameToMesh("DEFAULT");
+	sphere1->SetPosition(8.0f, 8.0f, 8.0f);
+	sphere1->SetRotation(DirectX::XMConvertToRadians(30), DirectX::XMConvertToRadians(30), DirectX::XMConvertToRadians(30));
+	sphere1->SetScale(1.0f, 2.0f, 1.0f);
+	sceneEntitiesMap.insert({ "sphere1", sphere1 });
+	sceneEntities.push_back(sphere1);
+
+	Entity* sphere2;
+	sphere2 = new Entity("sphere2", defaultMeshesMap["Sphere"]);
+	sphere2->AddMaterial(defaultMaterialsMap["DEFAULT"]);
+	sphere2->AddMaterialNameToMesh("DEFAULT");
+	sphere2->SetPosition(2.0f, 2.0f, 2.0f);
+	sphere2->SetRotation(0.0f, 0.0f, 0.0f);
+	sphere2->SetScale(1.0f, 1.0f, 2.0f);
+	sceneEntitiesMap.insert({ "sphere2", sphere2 });
+	sceneEntities.push_back(sphere2);
+
+	sphere1->AddChildEntity(sphere2);
+
+	sphere1->CalcWorldMatrix();
+
+	//------------------------------------
+
 	prevMousePos.x = 0;
 	prevMousePos.y = 0;
 
@@ -616,6 +671,20 @@ void Game::Update(float deltaTime, float totalTime)
 {
 	if (GetAsyncKeyState(VK_ESCAPE))
 		Quit();
+
+	if (GetAsyncKeyState('F') & 0x8000) {
+		DirectX::XMFLOAT3 rot = sceneEntitiesMap["sphere1"]->GetRotation();
+		rot.y += DirectX::XMConvertToRadians(2.0f);
+		sceneEntitiesMap["sphere1"]->SetRotation(rot.x,rot.y,rot.z);
+		sceneEntitiesMap["sphere1"]->CalcWorldMatrix();
+	}
+
+	if (GetAsyncKeyState('G') & 0x8000) {
+		DirectX::XMFLOAT3 rot = sceneEntitiesMap["sphere1"]->GetRotation();
+		rot.y -= DirectX::XMConvertToRadians(2.0f);
+		sceneEntitiesMap["sphere1"]->SetRotation(rot.x, rot.y, rot.z);
+		sceneEntitiesMap["sphere1"]->CalcWorldMatrix();
+	}
 
 	camera->Update();
 }
