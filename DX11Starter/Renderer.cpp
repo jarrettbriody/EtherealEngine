@@ -18,6 +18,18 @@ Renderer::~Renderer()
 	shadowSRV->Release();
 	shadowRasterizer->Release();
 	shadowSampler->Release();
+
+	map<string, Light*>::iterator lightMapIterator;
+	for (int i = 0; i < lightCount; i++)
+	{
+		lightMapIterator = lights.begin();
+		std::advance(lightMapIterator, i);
+
+		if (lightMapIterator->second != nullptr)
+		{
+			delete lightMapIterator->second;
+		}
+	}
 }
 
 void Renderer::SetEntities(vector<Entity*>* entities)
@@ -159,7 +171,7 @@ void Renderer::InitShadows()
 
 	// Create the matrices that represent seeing the scene from
 	// the light's point of view
-	XMFLOAT3 dir = lights["Sun"].Direction;
+	XMFLOAT3 dir = lights["Sun"]->Direction;
 	XMMATRIX shadowView = XMMatrixTranspose(XMMatrixLookToLH(
 		XMVectorSet(dir.x * -15, dir.y * -15, dir.z * -15, 0),
 		XMVectorSet(dir.x, dir.y, dir.z, 0),
@@ -174,7 +186,7 @@ void Renderer::InitShadows()
 	XMStoreFloat4x4(&shadowProjectionMatrix, shadowProj);
 }
 
-bool Renderer::AddLight(std::string name, Light newLight)
+bool Renderer::AddLight(std::string name, Light* newLight)
 {
 	if (lights.count(name) || lightCount >= MAX_LIGHTS) {
 		return false;
@@ -197,12 +209,12 @@ bool Renderer::RemoveLight(std::string name)
 void Renderer::SendAllLightsToShader(SimplePixelShader* pixelShader)
 {
 	Light lightArray[MAX_LIGHTS];
-	map<string, Light>::iterator lightMapIterator;
+	map<string, Light*>::iterator lightMapIterator;
 	for (int i = 0; i < lightCount; i++)
 	{
 		lightMapIterator = lights.begin();
 		std::advance(lightMapIterator, i);
-		lightArray[i] = lightMapIterator->second;
+		lightArray[i] = *lightMapIterator->second;
 	}
 	pixelShader->SetData(
 		"lights",
@@ -214,9 +226,10 @@ void Renderer::SendAllLightsToShader(SimplePixelShader* pixelShader)
 		&lightCount,
 		sizeof(lightCount)
 	);
+	pixelShader->SetFloat3("cameraPosition", camera->position);
 }
 
-Light Renderer::GetLight(string name)
+Light* Renderer::GetLight(string name)
 {
 	if (lights.count(name)) {
 		return lights[name];

@@ -29,7 +29,7 @@ private:
 	vector<Entity*>* entities = nullptr;
 	Camera* camera = nullptr;
 
-	map<string, Light> lights;
+	map<string, Light*> lights;
 	//map<string, Shadow> shadows;
 	unsigned int lightCount = 0;
 	bool shadowsEnabled = true;
@@ -52,10 +52,10 @@ public:
 	void ClearFrame();
 	void RenderFrame();
 	void PresentFrame();
-	bool AddLight(std::string name, Light newLight);
+	bool AddLight(std::string name, Light* newLight);
 	bool RemoveLight(std::string name);
 	void SendAllLightsToShader(SimplePixelShader* pixelShader);
-	Light GetLight(string name);
+	Light* GetLight(string name);
 	void ToggleShadows(bool toggle);
 	void SetShadowMapResolution(unsigned int res);
 	void RenderShadowMap();
