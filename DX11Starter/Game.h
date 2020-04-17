@@ -15,6 +15,7 @@
 #include <atlbase.h>
 #include "WICTextureLoader.h"
 #include "DDSTextureLoader.h"
+#include "Terrain.h"
 
 using namespace std;
 
@@ -87,5 +88,9 @@ private:
 	ID3D11DepthStencilState* skyDepthState;
 
 	Renderer* renderer;
+
+	//terrain example stuff
+	Terrain* terrain;
+	Entity* terrainEntity;
 };
 

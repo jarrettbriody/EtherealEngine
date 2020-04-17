@@ -14,6 +14,7 @@ Mesh::Mesh(Vertex * vertexObjects, int vertexCount, unsigned int * indices, int 
 	meshName = meshN;
 	materialNameList.push_back(matName);
 	CreateBuffers(vertexObjects, vertexCount, indices, indexCnt, device);
+	childCount = 0;
 }
 
 Mesh::Mesh(string meshN, char * objFile, ID3D11Device* device, bool* success)

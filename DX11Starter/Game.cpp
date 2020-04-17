@@ -84,6 +84,9 @@ Game::~Game()
 	skyDepthState->Release();
 	skyRasterState->Release();
 
+	delete terrain;
+	delete terrainEntity;
+
 	delete camera;
 	delete renderer;
 }
@@ -191,6 +194,9 @@ void Game::Init()
 	renderer = new Renderer(device, context, swapChain, backBufferRTV, depthStencilView, width, height);
 	renderer->SetCamera(camera);
 	renderer->SetShadowVertexShader(vertexShadersMap["Shadow"]);
+
+	sceneEntities.push_back(terrainEntity);
+
 	renderer->SetEntities(&sceneEntities);
 	renderer->AddLight("Sun", dLight);
 	renderer->SendAllLightsToShader(pixelShadersMap["DEFAULT"]);
@@ -199,6 +205,11 @@ void Game::Init()
 	renderer->InitShadows();
 
 	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	//terrain -----------------
+
+	terrain = new Terrain(device, "../../Assets/valley.raw16", 513, 513, 1.0f, 1.0f, 1.0f);
+	terrainEntity = new Entity("terrain", terrain);
 }
 
 void Game::LoadShaders()
