@@ -83,6 +83,9 @@ Game::~Game()
 	skyDepthState->Release();
 	skyRasterState->Release();
 
+	delete terrain;
+	delete terrainEntity;
+
 	delete camera;
 	delete renderer;
 }
@@ -198,14 +201,14 @@ void Game::Init()
 	dLight->Direction = XMFLOAT3(0.5f, -1.0f, 1.0f);
 	dLight->Intensity = 1.f;
 
-	testLight = new Light;
+	/*testLight = new Light;
 	testLight->Type = LIGHT_TYPE_SPOT;
 	testLight->Direction = camera->direction;
 	testLight->Intensity = 5.f;
 	testLight->Position = XMFLOAT3(-3.2f, 2.f, -5.f);
-	testLight->Color = XMFLOAT3(1.f, 0.f, 0.f);
+	testLight->Color = XMFLOAT3(1.f, 1.f, 1.f);
 	testLight->Range = 10.f;
-	testLight->SpotFalloff = 20.f;
+	testLight->SpotFalloff = 20.f;*/
 
 	renderer = new Renderer(device, context, swapChain, backBufferRTV, depthStencilView, width, height);
 	renderer->SetCamera(camera);
@@ -214,7 +217,7 @@ void Game::Init()
 	renderer->SetDebugLinePixelShader(pixelShadersMap["DebugLine"]);
 	renderer->SetEntities(&sceneEntities);
 	renderer->AddLight("Sun", dLight);
-	renderer->AddLight("testLight", testLight);
+	//renderer->AddLight("testLight", testLight);
 	renderer->SendAllLightsToShader(pixelShadersMap["DEFAULT"]);
 	renderer->SendAllLightsToShader(pixelShadersMap["Normal"]);
 	renderer->SetShadowMapResolution(4096);
@@ -222,6 +225,19 @@ void Game::Init()
 	//EtherealEngine::GetInstance()->SetRenderer(renderer);
 
 	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	//terrain -----------------
+
+	terrain = new Terrain(device, "../../Assets/valley.raw16", 513, 513, 1.0f, 50.0f, 1.0f);
+	terrainEntity = new Entity("Terrain", terrain);
+	terrainEntity->AddMaterial(defaultMaterialsMap["Terrain"]);
+	terrainEntity->AddMaterialNameToMesh("Terrain");
+	terrainEntity->SetPosition(0.f, -10.f, 0.f);
+	terrainEntity->SetRotation(0.f, 0.f, 0.f);
+	terrainEntity->SetScale(1.0f, 1.0f, 1.0f);
+	sceneEntitiesMap.insert({ "Terrain", terrainEntity });
+	sceneEntities.push_back(terrainEntity);
+	terrainEntity->CalcWorldMatrix();
 }
 
 void Game::LoadShaders()
@@ -263,6 +279,10 @@ void Game::LoadShaders()
 	SimplePixelShader* debugLinePS = new SimplePixelShader(device, context);
 	debugLinePS->LoadShaderFile(L"DebugLinePS.cso");
 	pixelShadersMap.insert({ "DebugLine", debugLinePS });
+  
+	SimplePixelShader* terrainPS = new SimplePixelShader(device, context);
+	terrainPS->LoadShaderFile(L"TerrainPS.cso");
+	pixelShadersMap.insert({ "Terrain", terrainPS });
 }
 
 void Game::LoadDefaultMeshes()
@@ -283,6 +303,13 @@ void Game::LoadDefaultTextures()
 	defaultTexturesMap.insert({ "Red", Utility::LoadSRV(device,context,"Default/red.png") });
 	defaultTexturesMap.insert({ "Marble", Utility::LoadSRV(device,context,"Default/marble.png") });
 	defaultTexturesMap.insert({ "Hedge", Utility::LoadSRV(device,context,"Default/hedge.jpg") });
+	defaultTexturesMap.insert({ "terrain2", Utility::LoadSRV(device,context,"grass.png") });
+	defaultTexturesMap.insert({ "terrain3", Utility::LoadSRV(device,context,"rocky.png") });
+	defaultTexturesMap.insert({ "terrain1", Utility::LoadSRV(device,context,"snow.jpg") });
+	defaultTexturesMap.insert({ "terrainNormal2", Utility::LoadSRV(device,context,"grass_normal.png") });
+	defaultTexturesMap.insert({ "terrainNormal3", Utility::LoadSRV(device,context,"rocky_normal.png") });
+	defaultTexturesMap.insert({ "terrainNormal1", Utility::LoadSRV(device,context,"snow_normal.jpg") });
+	defaultTexturesMap.insert({ "terrainBlendMap", Utility::LoadSRV(device,context,"blendMap.png") });
 }
 
 void Game::LoadDefaultMaterials()
@@ -306,6 +333,18 @@ void Game::LoadDefaultMaterials()
 	materialData = {};
 	materialData.DiffuseTextureMapSRV = defaultTexturesMap["Hedge"];
 	defaultMaterialsMap.insert({ "Hedge", new Material("Hedge", materialData, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], sampler) });
+
+	TerrainMaterialData terrainMaterialData = {};
+	terrainMaterialData.SurfaceTexture1 = defaultTexturesMap["terrain1"];
+	terrainMaterialData.SurfaceTexture2 = defaultTexturesMap["terrain2"];
+	terrainMaterialData.SurfaceTexture3 = defaultTexturesMap["terrain3"];
+	terrainMaterialData.SurfaceNormal1 = defaultTexturesMap["terrainNormal1"];
+	terrainMaterialData.SurfaceNormal2 = defaultTexturesMap["terrainNormal2"];
+	terrainMaterialData.SurfaceNormal3 = defaultTexturesMap["terrainNormal3"];
+	terrainMaterialData.uvScale = 50.0f;
+	terrainMaterialData.BlendMap = defaultTexturesMap["terrainBlendMap"];
+	defaultMaterialsMap.insert({ "Terrain", new TerrainMaterial("Terrain", terrainMaterialData, vertexShadersMap["DEFAULT"], pixelShadersMap["Terrain"], sampler) });
+
 }
 
 void Game::BuildDefaultEntity(string entityName, string objName, Entity* e)
@@ -752,11 +791,11 @@ void Game::Update(float deltaTime, float totalTime)
 	}
 
 	camera->Update();
-	if (!GetAsyncKeyState(VK_CONTROL))
+	/*if (!GetAsyncKeyState(VK_CONTROL))
 	{
 		testLight->Position = camera->position;
 		testLight->Direction = camera->direction;
-	}
+	}*/
 }
 
 void Game::Draw(float deltaTime, float totalTime)

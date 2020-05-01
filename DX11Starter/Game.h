@@ -15,7 +15,8 @@
 #include <atlbase.h>
 #include "WICTextureLoader.h"
 #include "DDSTextureLoader.h"
-//#include "EtherealEngine.h"
+#include "Terrain.h"
+#include "TerrainMaterial.h"
 
 using namespace std;
 
@@ -89,6 +90,9 @@ private:
 
 	Renderer* renderer;
 
+	//terrain example stuff
+	Terrain* terrain;
+	Entity* terrainEntity;
 	//testing
 	Light* testLight;
 };

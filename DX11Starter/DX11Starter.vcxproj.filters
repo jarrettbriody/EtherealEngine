@@ -51,6 +51,10 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="EtherealEngine.cpp">
+    <ClCompile Include="Terrain.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TerrainMaterial.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -101,6 +105,10 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="EtherealEngine.h">
+    <ClInclude Include="Terrain.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TerrainMaterial.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -130,6 +138,7 @@
       <Filter>Shaders</Filter>
     </FxCompile>
     <FxCompile Include="DebugLineVS.hlsl">
+    <FxCompile Include="TerrainPS.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
   </ItemGroup>

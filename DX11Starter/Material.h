@@ -34,20 +34,21 @@ struct MaterialData {
 
 class Material
 {
-private:
+protected:
 	SimpleVertexShader* vertexShader;
 	SimplePixelShader* pixelShader;
 	MaterialData materialData;
 	ID3D11SamplerState* samplerState;
 	string name;
 public:
+	Material();
 	Material(string n, MaterialData matData, SimpleVertexShader* vShader, SimplePixelShader* pShader, ID3D11SamplerState* sampler);
 	~Material();
 	SimpleVertexShader* GetVertexShader();
 	SimplePixelShader* GetPixelShader();
 	MaterialData GetMaterialData();
 	ID3D11SamplerState* GetSamplerState();
-	void Prepare();
+	virtual void Prepare();
 	string GetName();
 };
 
