@@ -199,6 +199,7 @@
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
+    <None Include="Lighting.hlsli" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
