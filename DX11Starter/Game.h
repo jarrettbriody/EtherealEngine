@@ -92,5 +92,7 @@ private:
 	//terrain example stuff
 	Terrain* terrain;
 	Entity* terrainEntity;
+	//testing
+	Light* testLight;
 };
 

@@ -1,7 +1,7 @@
+#include "Lighting.hlsli"
+
 #define MAX_LIGHTS 32
-#define LIGHT_TYPE_DIR 0
-#define LIGHT_TYPE_POINT 1
-#define LIGHT_TYPE_SPOT 2
+
 
 
 // Struct representing the data we expect to receive from earlier pipeline stages
@@ -19,19 +19,9 @@ struct VertexToPixel
 	float4 position		: SV_POSITION;
 	float3 normal       : NORMAL;
 	float2 uv           : TEXCOORD;
+	float3 worldPos		: POSITION;
 	float3 tangent		: TANGENT;
 	float4 posForShadow : SHADOW;
-};
-
-struct Light {
-	int Type;
-	float3 Direction;
-	float Range;
-	float3 Position;
-	float Intensity;
-	float3 Color;
-	float SpotFalloff;
-	float3 Padding;
 };
 
 cbuffer lightCBuffer : register(b0)
@@ -44,19 +34,18 @@ cbuffer uvRepeatCBuffer : register(b1) {
 	float2 uvMult;
 };
 
+cbuffer externalData : register(b2) {
+
+	int specularValue;
+	float3 cameraPosition;
+}
+
 Texture2D DiffuseTexture  :  register(t0);
 
 Texture2D ShadowMap		  : register(t1);
 
 SamplerState BasicSampler               : register(s0);
 SamplerComparisonState ShadowSampler	: register(s1);
-
-float4 CalcDirectionalLighting(float3 n, Light l) {
-	n = normalize(n);
-	float3 negatedLightDir = -l.Direction;
-	float lightAmt = saturate(dot(n, negatedLightDir));
-	return (float4(l.Color,1.0f) * lightAmt);
-}
 
 // --------------------------------------------------------
 // The entry point (main method) for our pixel shader
@@ -91,14 +80,26 @@ float4 main(VertexToPixel input) : SV_TARGET
 	
 	//return ShadowMap.Sample(BasicSampler, shadowUV);
 
-	float4 finalColor = float4(0,0,0,1);
+	float3 toCameraVector = normalize(cameraPosition - input.worldPos);
+	
+
+	float3 finalColor = float3(0.f,0.f,0.f);
 	for (int i = 0; i < lightCount; i++)
 	{
 		switch (lights[i].Type) {
 		case LIGHT_TYPE_DIR:
-			finalColor += (float4(0.25f, 0.25f, 0.25f, 1.0f) + CalcDirectionalLighting(input.normal, lights[i]) * shadowAmount) * surfaceColor;
+			finalColor += (CalcDirectionalLight(surfaceColor, input.normal, lights[i], toCameraVector, specularValue, shadowAmount));
+			break;
+		case LIGHT_TYPE_POINT:
+			finalColor += (CalcPointLight(surfaceColor, input.normal, lights[i], toCameraVector, specularValue, input.worldPos));
+			break;
+		case LIGHT_TYPE_SPOT:
+			finalColor += (CalcSpotLight(surfaceColor, input.normal, lights[i], toCameraVector, specularValue, input.worldPos));
 			break;
 		}
 	}
-	return finalColor;
+
+	float3 gammaCorrect = pow(abs(finalColor), 1.0f / 2.2f);
+
+	return float4(gammaCorrect, 1.f);
 }
