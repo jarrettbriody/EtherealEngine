@@ -205,7 +205,6 @@ void Game::Init()
 	renderer->SetCamera(camera);
 	renderer->SetShadowVertexShader(vertexShadersMap["Shadow"]);
 
-	sceneEntities.push_back(terrainEntity);
 
 	renderer->SetEntities(&sceneEntities);
 	renderer->AddLight("Sun", dLight);
@@ -219,8 +218,16 @@ void Game::Init()
 
 	//terrain -----------------
 
-	terrain = new Terrain(device, "../../Assets/valley.raw16", 513, 513, 1.0f, 1.0f, 1.0f);
+	terrain = new Terrain(device, "../../Assets/valley.raw16", 513, 513, 1.0f, 50.0f, 1.0f);
 	terrainEntity = new Entity("terrain", terrain);
+	terrainEntity->AddMaterial(defaultMaterialsMap["Grass"]);
+	terrainEntity->AddMaterialNameToMesh("Grass");
+	terrainEntity->SetPosition(0.f, -10.f, 0.f);
+	terrainEntity->SetRotation(0.f, 0.f, 0.f);
+	terrainEntity->SetScale(1.0f, 1.0f, 1.0f);
+	sceneEntitiesMap.insert({ "terrain", terrainEntity });
+	sceneEntities.push_back(terrainEntity);
+	terrainEntity->CalcWorldMatrix();
 }
 
 void Game::LoadShaders()
