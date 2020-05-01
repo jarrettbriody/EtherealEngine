@@ -4,6 +4,7 @@
 #include <map>
 #include "Mesh.h"
 #include "Material.h"
+#include "Collider.h"
 
 struct ShadowData {
 	DirectX::XMFLOAT4X4 shadowViewMatrix;
@@ -27,6 +28,7 @@ private:
 	string name;
 	vector<Entity*> children;
 	Entity* parent = nullptr;
+	Collider* collider = nullptr;
 
 	bool shadowsEnabled = true;
 	ShadowData shadowData;
@@ -58,5 +60,8 @@ public:
 	void AddMaterial(Material* mat);
 	string GetName();
 	void AddChildEntity(Entity* child);
+	void AddAutoBoxCollider();
+	bool CheckSATCollision(Entity* other);
+	Collider* GetCollider();
 };
 
