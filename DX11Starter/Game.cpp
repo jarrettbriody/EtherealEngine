@@ -1,7 +1,6 @@
 #include "Game.h"
 #include "Vertex.h"
 
-
 using namespace DirectX;
 
 Game::Game(HINSTANCE hInstance)
@@ -93,10 +92,15 @@ Game::~Game()
 
 void Game::Init()
 {
+	//EtherealEngine::GetInstance()->SetDevice(device);
+	//EtherealEngine::GetInstance()->SetContext(context);
+	DebugLines::device = device;
+
 	LoadShaders();
 
 	camera = new Camera();
 	camera->UpdateProjectionMatrix(width, height);
+	//EtherealEngine::GetInstance()->SetCamera(camera);
 
 	DirectX::CreateDDSTextureFromFile(device, L"../../Assets/Textures/SunnyCubeMap.dds", 0, &skySRV);
 
@@ -181,6 +185,11 @@ void Game::Init()
 
 	sphere1->CalcWorldMatrix();
 
+	sceneEntitiesMap["Rock"]->AddAutoBoxCollider();
+	sceneEntitiesMap["Rock"]->CalcWorldMatrix();
+	sceneEntitiesMap["Rock (1)"]->AddAutoBoxCollider();
+	sceneEntitiesMap["Rock (1)"]->CalcWorldMatrix();
+
 	//------------------------------------
 
 	prevMousePos.x = 0;
@@ -204,8 +213,8 @@ void Game::Init()
 	renderer = new Renderer(device, context, swapChain, backBufferRTV, depthStencilView, width, height);
 	renderer->SetCamera(camera);
 	renderer->SetShadowVertexShader(vertexShadersMap["Shadow"]);
-
-
+	renderer->SetDebugLineVertexShader(vertexShadersMap["DebugLine"]);
+	renderer->SetDebugLinePixelShader(pixelShadersMap["DebugLine"]);
 	renderer->SetEntities(&sceneEntities);
 	renderer->AddLight("Sun", dLight);
 	//renderer->AddLight("testLight", testLight);
@@ -213,6 +222,7 @@ void Game::Init()
 	renderer->SendAllLightsToShader(pixelShadersMap["Normal"]);
 	renderer->SetShadowMapResolution(4096);
 	renderer->InitShadows();
+	//EtherealEngine::GetInstance()->SetRenderer(renderer);
 
 	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
@@ -249,6 +259,10 @@ void Game::LoadShaders()
 	normalVS->LoadShaderFile(L"NormalVS.cso");
 	vertexShadersMap.insert({ "Normal", normalVS });
 
+	SimpleVertexShader* debugLineVS = new SimpleVertexShader(device, context);
+	debugLineVS->LoadShaderFile(L"DebugLineVS.cso");
+	vertexShadersMap.insert({ "DebugLine", debugLineVS });
+
 	//pixel shaders
 	SimplePixelShader* defaultPS = new SimplePixelShader(device, context);
 	defaultPS->LoadShaderFile(L"DefaultPS.cso");
@@ -262,6 +276,10 @@ void Game::LoadShaders()
 	normalPS->LoadShaderFile(L"NormalPS.cso");
 	pixelShadersMap.insert({ "Normal", normalPS });
 
+	SimplePixelShader* debugLinePS = new SimplePixelShader(device, context);
+	debugLinePS->LoadShaderFile(L"DebugLinePS.cso");
+	pixelShadersMap.insert({ "DebugLine", debugLinePS });
+  
 	SimplePixelShader* terrainPS = new SimplePixelShader(device, context);
 	terrainPS->LoadShaderFile(L"TerrainPS.cso");
 	pixelShadersMap.insert({ "Terrain", terrainPS });
@@ -736,6 +754,40 @@ void Game::Update(float deltaTime, float totalTime)
 		rot.y -= DirectX::XMConvertToRadians(2.0f);
 		sceneEntitiesMap["sphere1"]->SetRotation(rot.x, rot.y, rot.z);
 		sceneEntitiesMap["sphere1"]->CalcWorldMatrix();
+	}
+
+	if (GetAsyncKeyState(VK_LEFT))
+	{
+		DirectX::XMFLOAT3 trans = sceneEntitiesMap["Rock"]->GetPosition();
+		trans.x -= 0.1f;
+		sceneEntitiesMap["Rock"]->SetPosition(trans.x, trans.y, trans.z);
+		sceneEntitiesMap["Rock"]->CalcWorldMatrix();
+	}
+	if (GetAsyncKeyState(VK_RIGHT))
+	{
+		DirectX::XMFLOAT3 trans = sceneEntitiesMap["Rock"]->GetPosition();
+		trans.x += 0.1f;
+		sceneEntitiesMap["Rock"]->SetPosition(trans.x, trans.y, trans.z);
+		sceneEntitiesMap["Rock"]->CalcWorldMatrix();
+	}
+	if (GetAsyncKeyState(VK_UP))
+	{
+		DirectX::XMFLOAT3 trans = sceneEntitiesMap["Rock"]->GetPosition();
+		trans.z += 0.1f;
+		sceneEntitiesMap["Rock"]->SetPosition(trans.x, trans.y, trans.z);
+		sceneEntitiesMap["Rock"]->CalcWorldMatrix();
+	}
+	if (GetAsyncKeyState(VK_DOWN))
+	{
+		DirectX::XMFLOAT3 trans = sceneEntitiesMap["Rock"]->GetPosition();
+		trans.z -= 0.1f;
+		sceneEntitiesMap["Rock"]->SetPosition(trans.x, trans.y, trans.z);
+		sceneEntitiesMap["Rock"]->CalcWorldMatrix();
+	}
+
+	if (sceneEntitiesMap["Rock"]->CheckSATCollision(sceneEntitiesMap["Rock (1)"])) 
+	{
+		cout << "colliding" << endl;
 	}
 
 	camera->Update();

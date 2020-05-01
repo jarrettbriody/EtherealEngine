@@ -5,6 +5,11 @@
 #include "WICTextureLoader.h"
 #include "DDSTextureLoader.h"
 
+#define ZERO_VECTOR3 XMFLOAT3(0.0f,0.0f,0.0f);
+#define X_AXIS XMFLOAT3(1.0f,0.0f,0.0f);
+#define Y_AXIS XMFLOAT3(0.0f,1.0f,0.0f);
+#define Z_AXIS XMFLOAT3(0.0f,0.0f,1.0f);
+
 namespace Utility {
 	enum MESH_TYPE {
 		LOAD_FAILURE = -1,

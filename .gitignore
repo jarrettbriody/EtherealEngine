@@ -341,3 +341,5 @@ healthchecksdb
 
 # Backup folder for Package Reference Convert tool in Visual Studio 2017
 MigrationBackup/
+/DX11Starter/SceneManager.cpp
+/DX11Starter/SceneManager.h

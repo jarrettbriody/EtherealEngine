@@ -1,15 +1,15 @@
 #pragma once
 #include <DirectXMath.h>
-#include "Vertex.h"
-#include "Lights.h"
-//#include "Shadows.h"
-#include "SimpleShader.h"
-#include "Entity.h"
-#include "Camera.h"
 #include <map>
 #include <string>
 #include <cmath>
 #include <iostream>
+#include "Vertex.h"
+#include "Lights.h"
+#include "SimpleShader.h"
+#include "Entity.h"
+#include "Camera.h"
+#include "DebugLines.h"
 
 using namespace std;
 
@@ -34,12 +34,17 @@ private:
 	unsigned int lightCount = 0;
 	bool shadowsEnabled = true;
 
+	bool debugLinesEnabled = true;
+	vector<DebugLines*> debugLines;
+
 	unsigned int shadowMapResolution = 2048;
 	ID3D11DepthStencilView* shadowDSV;
 	ID3D11ShaderResourceView* shadowSRV;
 	ID3D11SamplerState* shadowSampler;
 	ID3D11RasterizerState* shadowRasterizer;
 	SimpleVertexShader* shadowVS = nullptr;
+	SimpleVertexShader* debugLineVS = nullptr;
+	SimplePixelShader* debugLinePS = nullptr;
 	DirectX::XMFLOAT4X4 shadowViewMatrix;
 	DirectX::XMFLOAT4X4 shadowProjectionMatrix;
 public:
@@ -49,9 +54,12 @@ public:
 	void SetEntities(vector<Entity*>* entities);
 	void SetCamera(Camera* camera);
 	void SetShadowVertexShader(SimpleVertexShader* shadowVS);
+	void SetDebugLineVertexShader(SimpleVertexShader* debugLineVS);
+	void SetDebugLinePixelShader(SimplePixelShader* debugLinePS);
 	void ClearFrame();
 	void RenderFrame();
 	void PresentFrame();
+	void RenderDebugLines
 	bool AddLight(std::string name, Light* newLight);
 	bool RemoveLight(std::string name);
 	void SendAllLightsToShader(SimplePixelShader* pixelShader);
@@ -59,5 +67,8 @@ public:
 	void ToggleShadows(bool toggle);
 	void SetShadowMapResolution(unsigned int res);
 	void RenderShadowMap();
+	void AddDebugLines(DebugLines* d);
+	ID3D11Device* GetDevice();
+	ID3D11DeviceContext* GetContext();
 };
 
