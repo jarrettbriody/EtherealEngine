@@ -15,6 +15,7 @@
 #include <atlbase.h>
 #include "WICTextureLoader.h"
 #include "DDSTextureLoader.h"
+//#include "EtherealEngine.h"
 
 using namespace std;
 

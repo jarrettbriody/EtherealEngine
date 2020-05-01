@@ -47,6 +47,16 @@ void Renderer::SetShadowVertexShader(SimpleVertexShader * shadowVS)
 	this->shadowVS = shadowVS;
 }
 
+void Renderer::SetDebugLineVertexShader(SimpleVertexShader* debugLineVS)
+{
+	this->debugLineVS = debugLineVS;
+}
+
+void Renderer::SetDebugLinePixelShader(SimplePixelShader* debugLinePS)
+{
+	this->debugLinePS = debugLinePS;
+}
+
 void Renderer::ClearFrame()
 {
 	// Background color
@@ -67,6 +77,8 @@ void Renderer::RenderFrame()
 {
 	if (!entities || !camera)
 		return;
+
+	if (debugLinesEnabled) debugLines.clear();
 
 	UINT stride = sizeof(Vertex);
 	UINT offset = 0;
@@ -100,14 +112,55 @@ void Renderer::RenderFrame()
 				0);											// Offset to add to each index when looking up vertices
 
 			e->GetMaterial(e->GetMeshMaterialName(j))->GetPixelShader()->SetShaderResourceView("ShadowMap", NULL);
+
+			if (debugLinesEnabled) {
+				if (e->GetCollider() != nullptr) {
+					DebugLines* dl = e->GetCollider()->GetDebugLines();
+					if (dl != nullptr)
+						AddDebugLines(dl);
+				}
+			}
 		}
 	}
+
+	if (debugLinesEnabled) RenderDebugLines();
 }
 
 void Renderer::PresentFrame()
 {
 	swapChain->Present(0, 0);
 	context->OMSetRenderTargets(1, &backBufferRTV, depthStencilView);
+}
+
+void Renderer::RenderDebugLines()
+{
+	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
+
+	UINT stride = sizeof(DebugLinesVertex);
+	UINT offset = 0;
+
+	for (size_t i = 0; i < debugLines.size(); i++)
+	{
+		context->IASetVertexBuffers(0, 1, &debugLines[i]->vertexBuffer, &stride, &offset);
+		context->IASetIndexBuffer(debugLines[i]->indexBuffer, DXGI_FORMAT_R32_UINT, 0);
+
+		debugLineVS->SetMatrix4x4("world", debugLines[i]->worldMatrix);
+		debugLineVS->SetMatrix4x4("view", camera->GetViewMatrix());
+		debugLineVS->SetMatrix4x4("projection", camera->GetProjMatrix());
+
+		debugLineVS->SetShader();
+		debugLinePS->SetShader();
+
+		debugLineVS->CopyAllBufferData();
+		debugLinePS->CopyAllBufferData();
+
+		context->DrawIndexed(
+			debugLines[i]->indexCount,		// The number of indices to use (we could draw a subset if we wanted)
+			0,											// Offset to the first index we want to use
+			0);											// Offset to add to each index when looking up vertices
+	}
+
+	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 }
 
 void Renderer::InitShadows()
@@ -310,4 +363,19 @@ void Renderer::RenderShadowMap()
 	vp.Height = (float)viewPortHeight;
 	context->RSSetViewports(1, &vp);
 	context->RSSetState(0);
+}
+
+void Renderer::AddDebugLines(DebugLines* d)
+{
+	debugLines.push_back(d);
+}
+
+ID3D11Device* Renderer::GetDevice()
+{
+	return device;
+}
+
+ID3D11DeviceContext* Renderer::GetContext()
+{
+	return context;
 }

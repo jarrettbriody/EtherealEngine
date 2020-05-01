@@ -18,6 +18,8 @@ Entity::Entity(string entityName, Mesh* entityMesh, Material* mat)
 
 Entity::~Entity()
 {
+	if(collider != nullptr)
+		delete collider;
 }
 
 DirectX::XMFLOAT4X4 Entity::GetWorldMatrix()
@@ -131,6 +133,7 @@ void Entity::CalcWorldMatrix()
 	{
 		children[i]->CalcWorldMatrix();
 	}
+	if (collider != nullptr) collider->SetWorldMatrix(worldMatrix);
 }
 
 void Entity::PrepareMaterial(string n, DirectX::XMFLOAT4X4 view, DirectX::XMFLOAT4X4 proj)
@@ -202,4 +205,21 @@ void Entity::AddChildEntity(Entity* child)
 {
 	children.push_back(child);
 	child->parent = this;
+}
+
+void Entity::AddAutoBoxCollider()
+{
+	collider = new Collider(mesh->GetVertices());
+}
+
+bool Entity::CheckSATCollision(Entity* other)
+{
+	unsigned int result = collider->CheckSATCollision(other->collider);
+	if (result == -1) return true;
+	else return false;
+}
+
+Collider* Entity::GetCollider()
+{
+	return collider;
 }
