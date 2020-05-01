@@ -16,6 +16,7 @@
 #include "WICTextureLoader.h"
 #include "DDSTextureLoader.h"
 #include "Terrain.h"
+#include "TerrainMaterial.h"
 
 using namespace std;
 

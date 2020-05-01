@@ -219,13 +219,13 @@ void Game::Init()
 	//terrain -----------------
 
 	terrain = new Terrain(device, "../../Assets/valley.raw16", 513, 513, 1.0f, 50.0f, 1.0f);
-	terrainEntity = new Entity("terrain", terrain);
-	terrainEntity->AddMaterial(defaultMaterialsMap["Grass"]);
-	terrainEntity->AddMaterialNameToMesh("Grass");
+	terrainEntity = new Entity("Terrain", terrain);
+	terrainEntity->AddMaterial(defaultMaterialsMap["Terrain"]);
+	terrainEntity->AddMaterialNameToMesh("Terrain");
 	terrainEntity->SetPosition(0.f, -10.f, 0.f);
 	terrainEntity->SetRotation(0.f, 0.f, 0.f);
 	terrainEntity->SetScale(1.0f, 1.0f, 1.0f);
-	sceneEntitiesMap.insert({ "terrain", terrainEntity });
+	sceneEntitiesMap.insert({ "Terrain", terrainEntity });
 	sceneEntities.push_back(terrainEntity);
 	terrainEntity->CalcWorldMatrix();
 }
@@ -261,6 +261,10 @@ void Game::LoadShaders()
 	SimplePixelShader* normalPS = new SimplePixelShader(device, context);
 	normalPS->LoadShaderFile(L"NormalPS.cso");
 	pixelShadersMap.insert({ "Normal", normalPS });
+
+	SimplePixelShader* terrainPS = new SimplePixelShader(device, context);
+	terrainPS->LoadShaderFile(L"TerrainPS.cso");
+	pixelShadersMap.insert({ "Terrain", terrainPS });
 }
 
 void Game::LoadDefaultMeshes()
@@ -281,6 +285,10 @@ void Game::LoadDefaultTextures()
 	defaultTexturesMap.insert({ "Red", Utility::LoadSRV(device,context,"Default/red.png") });
 	defaultTexturesMap.insert({ "Marble", Utility::LoadSRV(device,context,"Default/marble.png") });
 	defaultTexturesMap.insert({ "Hedge", Utility::LoadSRV(device,context,"Default/hedge.jpg") });
+	defaultTexturesMap.insert({ "terrain3", Utility::LoadSRV(device,context,"grass.png") });
+	defaultTexturesMap.insert({ "terrain2", Utility::LoadSRV(device,context,"rocky.png") });
+	defaultTexturesMap.insert({ "terrain1", Utility::LoadSRV(device,context,"snow.jpg") });
+	defaultTexturesMap.insert({ "terrainBlendMap", Utility::LoadSRV(device,context,"blendMap.png") });
 }
 
 void Game::LoadDefaultMaterials()
@@ -304,6 +312,15 @@ void Game::LoadDefaultMaterials()
 	materialData = {};
 	materialData.DiffuseTextureMapSRV = defaultTexturesMap["Hedge"];
 	defaultMaterialsMap.insert({ "Hedge", new Material("Hedge", materialData, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], sampler) });
+
+	TerrainMaterialData terrainMaterialData = {};
+	terrainMaterialData.SurfaceTexture1 = defaultTexturesMap["terrain1"];
+	terrainMaterialData.SurfaceTexture2 = defaultTexturesMap["terrain2"];
+	terrainMaterialData.SurfaceTexture3 = defaultTexturesMap["terrain3"];
+	terrainMaterialData.uvScale = 50.0f;
+	terrainMaterialData.BlendMap = defaultTexturesMap["terrainBlendMap"];
+	defaultMaterialsMap.insert({ "Terrain", new TerrainMaterial("Terrain", terrainMaterialData, vertexShadersMap["DEFAULT"], pixelShadersMap["Terrain"], sampler) });
+
 }
 
 void Game::BuildDefaultEntity(string entityName, string objName, Entity* e)

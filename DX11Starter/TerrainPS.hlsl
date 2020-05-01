@@ -1,143 +1,122 @@
+#include "Lighting.hlsli"
 
-// We want data from C++
-cbuffer externalData : register(b0)
-{
-	float3 surfaceColor;
-	float3 cameraPosition;
-
-	float uvScale0;
-	float uvScale1;
-	float uvScale2;
-
-	float3 dirLightDirection;
-	float3 dirLightDiffuseColor;
-	float3 dirLightAmbientColor;
-
-	float3 pointLightPosition;
-	float  pointLightRange;
-	float3 pointLightDiffuseColor;
-	float3 pointLightAmbientColor;
-}
+#define MAX_LIGHTS 32
 
 
-// Defines the input to this pixel shader
+// Struct representing the data we expect to receive from earlier pipeline stages
 // - Should match the output of our corresponding vertex shader
+// - The name of the struct itself is unimportant
+// - The variable names don't have to match other shaders (just the semantics)
+// - Each variable must have a semantic, which defines its usage
 struct VertexToPixel
 {
+	// Data type
+	//  |
+	//  |   Name          Semantic
+	//  |    |                |
+	//  v    v                v
 	float4 position		: SV_POSITION;
-	float2 uv			: TEXCOORD;
-	float3 normal		: NORMAL;
-	float3 tangent		: TANGENT;
+	float3 normal       : NORMAL;
+	float2 uv           : TEXCOORD;
 	float3 worldPos		: POSITION;
+	float3 tangent		: TANGENT;
+	float4 posForShadow : SHADOW;
 };
 
-// Textures and samplers
-Texture2D blendMap			: register(t0);
-
-Texture2D texture0			: register(t1);
-Texture2D texture1			: register(t2);
-Texture2D texture2			: register(t3);
-
-Texture2D normalMap0		: register(t4);
-Texture2D normalMap1		: register(t5);
-Texture2D normalMap2		: register(t6);
-
-SamplerState samplerOptions : register(s0);
-
-// Range-based attenuation function
-float Attenuate(float3 lightPos, float lightRange, float3 worldPos)
+cbuffer lightCBuffer : register(b0)
 {
-	float dist = distance(lightPos, worldPos);
+	Light lights[MAX_LIGHTS];
+	int lightCount;
+};
 
-	// Ranged-based attenuation
-	float att = saturate(1.0f - (dist * dist / (lightRange * lightRange)));
+cbuffer uvRepeatCBuffer : register(b1) {
+	float2 uvMult;
+};
 
-	// Soft falloff
-	return att * att;
+cbuffer externalData : register(b2) {
+
+	int specularValue;
+	float3 cameraPosition;
+	int textureCount;
+	float uvScale;
 }
 
-// Entry point for this pixel shader
+Texture2D SurfaceTexture1  :  register(t0);
+Texture2D SurfaceTexture2  :  register(t1);
+Texture2D SurfaceTexture3  :  register(t2);
+
+Texture2D BlendMap			:  register(t3);
+
+Texture2D ShadowMap		  : register(t4);
+
+SamplerState BasicSampler               : register(s0);
+SamplerComparisonState ShadowSampler	: register(s1);
+
+// --------------------------------------------------------
+// The entry point (main method) for our pixel shader
+// 
+// - Input is the data coming down the pipeline (defined by the struct)
+// - Output is a single color (float4)
+// - Has a special semantic (SV_TARGET), which means 
+//    "put the output of this into the current render target"
+// - Named "main" because that's the default the shader compiler looks for
+// --------------------------------------------------------
 float4 main(VertexToPixel input) : SV_TARGET
 {
-	
-	// Re-normalize interpolated normals!
-	input.normal = normalize(input.normal);
-	input.tangent = normalize(input.tangent);
+	input.uv = float2(input.uv.x * uvMult.x, input.uv.y * uvMult.y);
 
-	// Sample the texture, using the provided options, as
-	// the specified UV coordinates
-	float4 blend = blendMap.Sample(samplerOptions, input.uv);
-	
-	float4 color0 = texture0.Sample(samplerOptions, input.uv * uvScale0);
-	float4 color1 = texture1.Sample(samplerOptions, input.uv * uvScale1);
-	float4 color2 = texture2.Sample(samplerOptions, input.uv * uvScale2);
+	float4 surfaceColor1 = SurfaceTexture1.Sample(BasicSampler, input.uv * uvScale);
+	float4 surfaceColor2 = SurfaceTexture2.Sample(BasicSampler, input.uv * uvScale);
+	float4 surfaceColor3 = SurfaceTexture3.Sample(BasicSampler, input.uv * uvScale);
 
-	float3 normalFromMap0 = normalMap0.Sample(samplerOptions, input.uv * uvScale0).rgb * 2 - 1;
-	float3 normalFromMap1 = normalMap1.Sample(samplerOptions, input.uv * uvScale1).rgb * 2 - 1;
-	float3 normalFromMap2 = normalMap2.Sample(samplerOptions, input.uv * uvScale2).rgb * 2 - 1;
+	float4 blend = BlendMap.Sample(BasicSampler, input.uv);
 
-	// Blend the textures together
-	float4 textureColor =
-		color0 * blend.r +
-		color1 * blend.g +
-		color2 * blend.b;
 
-	float3 normalFromMap = 
-		normalize(
-			normalFromMap0 * blend.r +
-			normalFromMap1 * blend.g +
-			normalFromMap2 * blend.b);
-	
-	// === Normal mapping here!  We need a new normal for the rest of the lighting steps ===
-	float3 N = input.normal;
-	float3 T = normalize(input.tangent - N * dot(input.tangent, N)); // Orthogonalize!
-	float3 B = cross(T, N); // The bi-tangent
+	float4 surfaceColor =
+		surfaceColor1 * blend.r +
+		surfaceColor2 * blend.b +
+		surfaceColor3 * blend.g;
 
-	float3x3 TBN = float3x3(T, B, N);
+	// Just return the input color
+	// - This color (like most values passing through the rasterizer) is 
+	//   interpolated for each pixel between the corresponding vertices 
+	//   of the triangle we're rendering
 
-	// Rotate the normal from the normal map by our TBN rotation matrix
-	input.normal = normalize(mul(normalFromMap, TBN));
+	// Shadow calculations
+	float2 shadowUV = input.posForShadow.xy / input.posForShadow.w * 0.5f + 0.5f;
+	shadowUV.y = 1.0f - shadowUV.y;
 
-	// Calculations that don't depend on individual lights
+	// This pixel's actual depth from the light
+	float depthFromLight = input.posForShadow.z / input.posForShadow.w;
+
+	// Sample the shadow map in the same location to get
+	// the closest depth along that "ray" from the light
+	// (Samples the shadow map with comparison built in)
+	float shadowAmount = ShadowMap.SampleCmpLevelZero(ShadowSampler, shadowUV, depthFromLight);
+
+	//return ShadowMap.Sample(BasicSampler, shadowUV);
+
 	float3 toCameraVector = normalize(cameraPosition - input.worldPos);
 
+	return surfaceColor;
 
-	// DIRECTIONAL LIGHT CALCULATION =====================
+	float3 finalColor = float3(0.f,0.f,0.f);
+	for (int i = 0; i < lightCount; i++)
+	{
+		switch (lights[i].Type) {
+		case LIGHT_TYPE_DIR:
+			finalColor += (CalcDirectionalLight(surfaceColor, input.normal, lights[i], toCameraVector, specularValue, shadowAmount));
+			break;
+		case LIGHT_TYPE_POINT:
+			finalColor += (CalcPointLight(surfaceColor, input.normal, lights[i], toCameraVector, specularValue, input.worldPos));
+			break;
+		case LIGHT_TYPE_SPOT:
+			finalColor += (CalcSpotLight(surfaceColor, input.normal, lights[i], toCameraVector, specularValue, input.worldPos));
+			break;
+		}
+	}
 
-	// Diffuse calculation
-	// Note: Remember to REVERSE the light's direction (need dir TO the light)
-	// Note: Saturate() clamps values between 0 - 1
-	// Note: Our light direction is IDEALLY normalized already, but just incase...
-	float NdotL_dir = saturate(dot(input.normal, -normalize(dirLightDirection)));
+	float3 gammaCorrect = pow(abs(finalColor), 1.0f / 2.2f);
 
-	// Specular calculation (Blinn Phong)
-	float3 halfwayVector_dir = normalize(-dirLightDirection + toCameraVector);
-	float NdotH_dir = dot(input.normal, halfwayVector_dir);
-
-	// Final color for directional light
-	float3 finalColor_dir =
-		dirLightAmbientColor * textureColor.rgb +
-		dirLightDiffuseColor * textureColor.rgb * NdotL_dir;
-
-
-	// POINT LIGHT CALCULATIONS =======================
-
-	// Diffuse calculation
-	float3 dirToPointLight = normalize(pointLightPosition - input.worldPos);
-	float NdotL_point = saturate(dot(input.normal, dirToPointLight));
-
-	// Specular calculation (Blinn Phong)
-	float3 halfwayVector_point = normalize(dirToPointLight + toCameraVector);
-	float NdotH_point = dot(input.normal, halfwayVector_point);
-
-	float att = Attenuate(pointLightPosition, pointLightRange, input.worldPos);
-
-	// Final color for directional light
-	float3 finalColor_point =
-		pointLightAmbientColor * textureColor.rgb +
-		pointLightDiffuseColor * textureColor.rgb * NdotL_point * att;
-
-
-	// FINAL COLOR COMBINE =============================
-	return float4(finalColor_dir + finalColor_point, 1);
+	return float4(gammaCorrect, 1.f);
 }
