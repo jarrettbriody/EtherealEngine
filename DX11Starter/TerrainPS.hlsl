@@ -45,6 +45,10 @@ Texture2D SurfaceTexture1  :  register(t0);
 Texture2D SurfaceTexture2  :  register(t1);
 Texture2D SurfaceTexture3  :  register(t2);
 
+Texture2D SurfaceNormal1  :  register(t0);
+Texture2D SurfaceNormal2  :  register(t1);
+Texture2D SurfaceNormal3  :  register(t2);
+
 Texture2D BlendMap			:  register(t3);
 
 Texture2D ShadowMap		  : register(t4);
@@ -74,13 +78,34 @@ float4 main(VertexToPixel input) : SV_TARGET
 
 	float4 surfaceColor =
 		surfaceColor1 * blend.r +
-		surfaceColor2 * blend.b +
-		surfaceColor3 * blend.g;
+		surfaceColor2 * blend.g +
+		surfaceColor3 * blend.b;
 
 	// Just return the input color
 	// - This color (like most values passing through the rasterizer) is 
 	//   interpolated for each pixel between the corresponding vertices 
 	//   of the triangle we're rendering
+
+	float3 normal1 = SurfaceNormal1.Sample(BasicSampler, input.uv).rgb * 2 - 1;
+	float3 normal2 = SurfaceNormal2.Sample(BasicSampler, input.uv).rgb * 2 - 1;
+	float3 normal3 = SurfaceNormal3.Sample(BasicSampler, input.uv).rgb * 2 - 1;
+
+
+	float3 normalFromMap = normalize(
+		normal1 * blend.r +
+		normal2 * blend.g + 
+		normal3 * blend.b
+	);
+
+	//normals
+	// Calculate the matrix we'll use to convert from tangent to world space
+	float3 N = input.normal;
+	float3 T = normalize(input.tangent - N * dot(input.tangent, N));
+	float3 B = cross(T, N);
+	float3x3 TBN = float3x3(T, B, N);
+
+	// Use the normal from the map, after we've converted it to world space
+	input.normal = normalize(mul(normalFromMap, TBN));
 
 	// Shadow calculations
 	float2 shadowUV = input.posForShadow.xy / input.posForShadow.w * 0.5f + 0.5f;

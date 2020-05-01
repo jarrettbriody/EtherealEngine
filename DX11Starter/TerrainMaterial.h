@@ -17,6 +17,9 @@ struct TerrainMaterialData {
 	ID3D11ShaderResourceView* SurfaceTexture1;
 	ID3D11ShaderResourceView* SurfaceTexture2;
 	ID3D11ShaderResourceView* SurfaceTexture3;
+	ID3D11ShaderResourceView* SurfaceNormal1;
+	ID3D11ShaderResourceView* SurfaceNormal2;
+	ID3D11ShaderResourceView* SurfaceNormal3;
 	float uvScale;
 	ID3D11ShaderResourceView* BlendMap;
 	vector<string> SRVNames;

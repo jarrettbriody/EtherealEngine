@@ -31,6 +31,10 @@ void TerrainMaterial::Prepare()
 	pixelShader->SetShaderResourceView("SurfaceTexture2", terrainMaterialData.SurfaceTexture2);
 	pixelShader->SetShaderResourceView("SurfaceTexture3", terrainMaterialData.SurfaceTexture3);
 
+	pixelShader->SetShaderResourceView("SurfaceNormal1", terrainMaterialData.SurfaceNormal1);
+	pixelShader->SetShaderResourceView("SurfaceNormal2", terrainMaterialData.SurfaceNormal2);
+	pixelShader->SetShaderResourceView("SurfaceNormal3", terrainMaterialData.SurfaceNormal3);
+
 	pixelShader->SetShaderResourceView("BlendMap", terrainMaterialData.BlendMap);
 
 	pixelShader->SetFloat("uvScale", terrainMaterialData.uvScale);

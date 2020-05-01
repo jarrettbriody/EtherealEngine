@@ -192,14 +192,14 @@ void Game::Init()
 	dLight->Direction = XMFLOAT3(0.5f, -1.0f, 1.0f);
 	dLight->Intensity = 1.f;
 
-	testLight = new Light;
+	/*testLight = new Light;
 	testLight->Type = LIGHT_TYPE_SPOT;
 	testLight->Direction = camera->direction;
 	testLight->Intensity = 5.f;
 	testLight->Position = XMFLOAT3(-3.2f, 2.f, -5.f);
-	testLight->Color = XMFLOAT3(1.f, 0.f, 0.f);
+	testLight->Color = XMFLOAT3(1.f, 1.f, 1.f);
 	testLight->Range = 10.f;
-	testLight->SpotFalloff = 20.f;
+	testLight->SpotFalloff = 20.f;*/
 
 	renderer = new Renderer(device, context, swapChain, backBufferRTV, depthStencilView, width, height);
 	renderer->SetCamera(camera);
@@ -208,7 +208,7 @@ void Game::Init()
 
 	renderer->SetEntities(&sceneEntities);
 	renderer->AddLight("Sun", dLight);
-	renderer->AddLight("testLight", testLight);
+	//renderer->AddLight("testLight", testLight);
 	renderer->SendAllLightsToShader(pixelShadersMap["DEFAULT"]);
 	renderer->SendAllLightsToShader(pixelShadersMap["Normal"]);
 	renderer->SetShadowMapResolution(4096);
@@ -285,9 +285,12 @@ void Game::LoadDefaultTextures()
 	defaultTexturesMap.insert({ "Red", Utility::LoadSRV(device,context,"Default/red.png") });
 	defaultTexturesMap.insert({ "Marble", Utility::LoadSRV(device,context,"Default/marble.png") });
 	defaultTexturesMap.insert({ "Hedge", Utility::LoadSRV(device,context,"Default/hedge.jpg") });
-	defaultTexturesMap.insert({ "terrain3", Utility::LoadSRV(device,context,"grass.png") });
-	defaultTexturesMap.insert({ "terrain2", Utility::LoadSRV(device,context,"rocky.png") });
+	defaultTexturesMap.insert({ "terrain2", Utility::LoadSRV(device,context,"grass.png") });
+	defaultTexturesMap.insert({ "terrain3", Utility::LoadSRV(device,context,"rocky.png") });
 	defaultTexturesMap.insert({ "terrain1", Utility::LoadSRV(device,context,"snow.jpg") });
+	defaultTexturesMap.insert({ "terrainNormal2", Utility::LoadSRV(device,context,"grass_normal.png") });
+	defaultTexturesMap.insert({ "terrainNormal3", Utility::LoadSRV(device,context,"rocky_normal.png") });
+	defaultTexturesMap.insert({ "terrainNormal1", Utility::LoadSRV(device,context,"snow_normal.jpg") });
 	defaultTexturesMap.insert({ "terrainBlendMap", Utility::LoadSRV(device,context,"blendMap.png") });
 }
 
@@ -317,6 +320,9 @@ void Game::LoadDefaultMaterials()
 	terrainMaterialData.SurfaceTexture1 = defaultTexturesMap["terrain1"];
 	terrainMaterialData.SurfaceTexture2 = defaultTexturesMap["terrain2"];
 	terrainMaterialData.SurfaceTexture3 = defaultTexturesMap["terrain3"];
+	terrainMaterialData.SurfaceNormal1 = defaultTexturesMap["terrainNormal1"];
+	terrainMaterialData.SurfaceNormal2 = defaultTexturesMap["terrainNormal2"];
+	terrainMaterialData.SurfaceNormal3 = defaultTexturesMap["terrainNormal3"];
 	terrainMaterialData.uvScale = 50.0f;
 	terrainMaterialData.BlendMap = defaultTexturesMap["terrainBlendMap"];
 	defaultMaterialsMap.insert({ "Terrain", new TerrainMaterial("Terrain", terrainMaterialData, vertexShadersMap["DEFAULT"], pixelShadersMap["Terrain"], sampler) });
@@ -733,11 +739,11 @@ void Game::Update(float deltaTime, float totalTime)
 	}
 
 	camera->Update();
-	if (!GetAsyncKeyState(VK_CONTROL))
+	/*if (!GetAsyncKeyState(VK_CONTROL))
 	{
 		testLight->Position = camera->position;
 		testLight->Direction = camera->direction;
-	}
+	}*/
 }
 
 void Game::Draw(float deltaTime, float totalTime)
