@@ -17,6 +17,8 @@
 #include "DDSTextureLoader.h"
 #include "Terrain.h"
 #include "TerrainMaterial.h"
+#include "Water.h"
+#include "WaterMaterial.h"
 
 using namespace std;
 
@@ -92,7 +94,8 @@ private:
 
 	//terrain example stuff
 	Terrain* terrain;
-	Entity* terrainEntity;
+	Water* water;
+
 	//testing
 	Light* testLight;
 };
