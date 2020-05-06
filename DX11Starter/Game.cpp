@@ -182,12 +182,24 @@ void Game::Init()
 
 	sphere1->AddChildEntity(sphere2);
 
+	Entity* sphere3;
+	sphere3 = new Entity("sphere3", defaultMeshesMap["Sphere"]);
+	sphere3->AddMaterial(defaultMaterialsMap["DEFAULT"]);
+	sphere3->AddMaterialNameToMesh("DEFAULT");
+	sphere3->SetPosition(2.0f, 2.0f, 0.0f);
+	sphere3->SetRotation(0.0f, 0.0f, 90.0f);
+	sphere3->SetScale(1.0f, 1.0f, 1.0f);
+	sceneEntitiesMap.insert({ "sphere3", sphere3 });
+	sceneEntities.push_back(sphere3);
+
+	sphere2->AddChildEntity(sphere3);
+
 	sphere1->CalcWorldMatrix();
 
-	sceneEntitiesMap["Rock"]->AddAutoBoxCollider();
-	sceneEntitiesMap["Rock"]->CalcWorldMatrix();
-	sceneEntitiesMap["Rock (1)"]->AddAutoBoxCollider();
-	sceneEntitiesMap["Rock (1)"]->CalcWorldMatrix();
+	sceneEntitiesMap["barrel_1"]->AddAutoBoxCollider();
+	sceneEntitiesMap["barrel_1"]->CalcWorldMatrix();
+	sceneEntitiesMap["barrel_1 (1)"]->AddAutoBoxCollider();
+	sceneEntitiesMap["barrel_1 (1)"]->CalcWorldMatrix();
 
 	//------------------------------------
 
@@ -787,34 +799,34 @@ void Game::Update(float deltaTime, float totalTime)
 
 	if (GetAsyncKeyState(VK_LEFT))
 	{
-		DirectX::XMFLOAT3 trans = sceneEntitiesMap["Rock"]->GetPosition();
+		DirectX::XMFLOAT3 trans = sceneEntitiesMap["barrel_1"]->GetPosition();
 		trans.x -= 0.1f;
-		sceneEntitiesMap["Rock"]->SetPosition(trans.x, trans.y, trans.z);
-		sceneEntitiesMap["Rock"]->CalcWorldMatrix();
+		sceneEntitiesMap["barrel_1"]->SetPosition(trans.x, trans.y, trans.z);
+		sceneEntitiesMap["barrel_1"]->CalcWorldMatrix();
 	}
 	if (GetAsyncKeyState(VK_RIGHT))
 	{
-		DirectX::XMFLOAT3 trans = sceneEntitiesMap["Rock"]->GetPosition();
+		DirectX::XMFLOAT3 trans = sceneEntitiesMap["barrel_1"]->GetPosition();
 		trans.x += 0.1f;
-		sceneEntitiesMap["Rock"]->SetPosition(trans.x, trans.y, trans.z);
-		sceneEntitiesMap["Rock"]->CalcWorldMatrix();
+		sceneEntitiesMap["barrel_1"]->SetPosition(trans.x, trans.y, trans.z);
+		sceneEntitiesMap["barrel_1"]->CalcWorldMatrix();
 	}
 	if (GetAsyncKeyState(VK_UP))
 	{
-		DirectX::XMFLOAT3 trans = sceneEntitiesMap["Rock"]->GetPosition();
+		DirectX::XMFLOAT3 trans = sceneEntitiesMap["barrel_1"]->GetPosition();
 		trans.z += 0.1f;
-		sceneEntitiesMap["Rock"]->SetPosition(trans.x, trans.y, trans.z);
-		sceneEntitiesMap["Rock"]->CalcWorldMatrix();
+		sceneEntitiesMap["barrel_1"]->SetPosition(trans.x, trans.y, trans.z);
+		sceneEntitiesMap["barrel_1"]->CalcWorldMatrix();
 	}
 	if (GetAsyncKeyState(VK_DOWN))
 	{
-		DirectX::XMFLOAT3 trans = sceneEntitiesMap["Rock"]->GetPosition();
+		DirectX::XMFLOAT3 trans = sceneEntitiesMap["barrel_1"]->GetPosition();
 		trans.z -= 0.1f;
-		sceneEntitiesMap["Rock"]->SetPosition(trans.x, trans.y, trans.z);
-		sceneEntitiesMap["Rock"]->CalcWorldMatrix();
+		sceneEntitiesMap["barrel_1"]->SetPosition(trans.x, trans.y, trans.z);
+		sceneEntitiesMap["barrel_1"]->CalcWorldMatrix();
 	}
 
-	if (sceneEntitiesMap["Rock"]->CheckSATCollision(sceneEntitiesMap["Rock (1)"])) 
+	if (sceneEntitiesMap["barrel_1"]->CheckSATCollision(sceneEntitiesMap["barrel_1 (1)"])) 
 	{
 		cout << "colliding" << endl;
 	}

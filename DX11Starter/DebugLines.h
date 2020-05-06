@@ -1,9 +1,16 @@
 #pragma once
 #include <DirectXMath.h>
 #include <d3d11.h>
+#include <iostream>
 //#include "EtherealEngine.h"
 
 using namespace DirectX;
+using namespace std;
+
+enum DEBUGLINESTYPE {
+	CUBE,
+	LINE
+};
 
 struct DebugLinesVertex {
 	XMFLOAT3 Position;
