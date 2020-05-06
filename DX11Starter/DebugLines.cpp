@@ -45,12 +45,18 @@ void DebugLines::GenerateVertexBuffer(XMFLOAT3* verts, int vertCount)
 	indexCount = 24;
 	indices = new UINT[24];
 	UINT i[24] = { 0, 1, 1, 2, 2, 3, 3, 0, 3, 4, 4, 5, 5, 6, 6, 7, 7, 4, 7, 2, 6, 1, 0, 5 };
-	memcpy(indices, i, indexCount);
-
+	memcpy(indices, i, sizeof(UINT) * indexCount);
+	
+	/*
+	for (size_t i = 0; i < 24; i++)
+	{
+		cout << indices[i] << endl;
+	}
+	*/
 
 	D3D11_BUFFER_DESC ibd;
 	ibd.Usage = D3D11_USAGE_IMMUTABLE;
-	ibd.ByteWidth = sizeof(int) * indexCount;				// 3 = number of indices in the buffer
+	ibd.ByteWidth = sizeof(UINT) * indexCount;				// 3 = number of indices in the buffer
 	ibd.BindFlags = D3D11_BIND_INDEX_BUFFER;			// Tells DirectX this is an index buffer
 	ibd.CPUAccessFlags = 0;
 	ibd.MiscFlags = 0;
