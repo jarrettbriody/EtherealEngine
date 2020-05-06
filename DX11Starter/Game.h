@@ -15,7 +15,10 @@
 #include <atlbase.h>
 #include "WICTextureLoader.h"
 #include "DDSTextureLoader.h"
-//#include "EtherealEngine.h"
+#include "Terrain.h"
+#include "TerrainMaterial.h"
+#include "Water.h"
+#include "WaterMaterial.h"
 
 using namespace std;
 
@@ -88,6 +91,10 @@ private:
 	ID3D11DepthStencilState* skyDepthState;
 
 	Renderer* renderer;
+
+	//terrain example stuff
+	Terrain* terrain;
+	Water* water;
 
 	//testing
 	Light* testLight;

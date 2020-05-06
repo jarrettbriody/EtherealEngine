@@ -59,7 +59,7 @@ public:
 	void ClearFrame();
 	void RenderFrame();
 	void PresentFrame();
-	void RenderDebugLines
+	void RenderDebugLines();
 	bool AddLight(std::string name, Light* newLight);
 	bool RemoveLight(std::string name);
 	void SendAllLightsToShader(SimplePixelShader* pixelShader);

@@ -11,7 +11,7 @@ using namespace std;
 
 class Mesh
 {
-private:
+protected:
 	static vector<string> mtlPaths;
 	vector<DirectX::XMFLOAT3> vertices;
 	ID3D11Buffer* vertexBuffer = nullptr;
