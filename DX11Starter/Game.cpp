@@ -84,7 +84,6 @@ Game::~Game()
 	skyRasterState->Release();
 
 	delete terrain;
-	//delete terrainEntity;
 
 	delete camera;
 	delete renderer;
@@ -241,7 +240,7 @@ void Game::Init()
 	//terrain -----------------
 
 	terrain = new Terrain(device, "../../Assets/valley.raw16", 513, 513, 1.0f, 50.0f, 1.0f);
-	terrainEntity = new Entity("Terrain", terrain);
+	Entity* terrainEntity = new Entity("Terrain", terrain);
 	terrainEntity->AddMaterial(defaultMaterialsMap["Terrain"]);
 	terrainEntity->AddMaterialNameToMesh("Terrain");
 	terrainEntity->SetPosition(0.f, -10.f, 0.f);
@@ -250,6 +249,19 @@ void Game::Init()
 	sceneEntitiesMap.insert({ "Terrain", terrainEntity });
 	sceneEntities.push_back(terrainEntity);
 	terrainEntity->CalcWorldMatrix();
+
+	water = new Water(0.0002f, device, 513, 513, 1.f, 1.f, 1.f, pixelShadersMap["Water"]);
+	water->SetOffsets(0.2f, 0.1f, 0.1f, 0.2f);
+	Entity* waterEntity = new Entity("Water", water->terrain);
+	waterEntity->AddMaterial(defaultMaterialsMap["Water"]);
+	waterEntity->AddMaterialNameToMesh("Water");
+	waterEntity->SetPosition(0.f, -3.f, 0.f);
+	waterEntity->SetRotation(0.f, 0.f, 0.f);
+	waterEntity->SetScale(1.f, 1.f, 1.f);
+	sceneEntitiesMap.insert({ "Water", waterEntity });
+	sceneEntities.push_back(waterEntity);
+	waterEntity->CalcWorldMatrix();
+
 }
 
 void Game::LoadShaders()
@@ -295,6 +307,11 @@ void Game::LoadShaders()
 	SimplePixelShader* terrainPS = new SimplePixelShader(device, context);
 	terrainPS->LoadShaderFile(L"TerrainPS.cso");
 	pixelShadersMap.insert({ "Terrain", terrainPS });
+
+	SimplePixelShader* waterPS = new SimplePixelShader(device, context);
+	waterPS->LoadShaderFile(L"WaterPS.cso");
+	pixelShadersMap.insert({ "Water", waterPS });
+
 }
 
 void Game::LoadDefaultMeshes()
@@ -322,6 +339,10 @@ void Game::LoadDefaultTextures()
 	defaultTexturesMap.insert({ "terrainNormal3", Utility::LoadSRV(device,context,"rocky_normal.png") });
 	defaultTexturesMap.insert({ "terrainNormal1", Utility::LoadSRV(device,context,"snow_normal.jpg") });
 	defaultTexturesMap.insert({ "terrainBlendMap", Utility::LoadSRV(device,context,"blendMap.png") });
+	defaultTexturesMap.insert({ "waterBase", Utility::LoadSRV(device,context,"water_base.png") });
+	defaultTexturesMap.insert({ "waterFoam", Utility::LoadSRV(device,context,"water_foam.jpg") });
+	defaultTexturesMap.insert({ "waterNormal1", Utility::LoadSRV(device,context,"water_normal1.jpeg") });
+	defaultTexturesMap.insert({ "waterNormal2", Utility::LoadSRV(device,context,"water_normal2.png") });
 }
 
 void Game::LoadDefaultMaterials()
@@ -356,6 +377,14 @@ void Game::LoadDefaultMaterials()
 	terrainMaterialData.uvScale = 50.0f;
 	terrainMaterialData.BlendMap = defaultTexturesMap["terrainBlendMap"];
 	defaultMaterialsMap.insert({ "Terrain", new TerrainMaterial("Terrain", terrainMaterialData, vertexShadersMap["DEFAULT"], pixelShadersMap["Terrain"], sampler) });
+
+	WaterMaterialData waterMaterialData = {};
+	waterMaterialData.SurfaceTexture1 = defaultTexturesMap["waterBase"];
+	waterMaterialData.SurfaceTexture2 = defaultTexturesMap["waterFoam"];
+	waterMaterialData.SurfaceNormal1 = defaultTexturesMap["waterNormal1"];
+	waterMaterialData.SurfaceNormal2 = defaultTexturesMap["waterNormal2"];
+	waterMaterialData.uvScale = 20.0f;
+	defaultMaterialsMap.insert({ "Water", new WaterMaterial("Water", waterMaterialData, vertexShadersMap["DEFAULT"], pixelShadersMap["Water"], sampler) });
 
 }
 
@@ -803,6 +832,7 @@ void Game::Update(float deltaTime, float totalTime)
 	}
 
 	camera->Update();
+	water->Update();
 	/*if (!GetAsyncKeyState(VK_CONTROL))
 	{
 		testLight->Position = camera->position;
@@ -816,6 +846,8 @@ void Game::Draw(float deltaTime, float totalTime)
 
 	renderer->SendAllLightsToShader(pixelShadersMap["DEFAULT"]);
 	renderer->SendAllLightsToShader(pixelShadersMap["Normal"]);
+	renderer->SendAllLightsToShader(pixelShadersMap["Water"]);
+	renderer->SendAllLightsToShader(pixelShadersMap["Terrain"]);
 
 	renderer->RenderShadowMap();
 

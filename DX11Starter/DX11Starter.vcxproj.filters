@@ -11,6 +11,7 @@
     <FxCompile Include="SkyVS.hlsl" />
     <FxCompile Include="DefaultVS.hlsl" />
     <FxCompile Include="TerrainPS.hlsl" />
+    <FxCompile Include="WaterPS.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Camera.cpp" />
@@ -28,6 +29,8 @@
     <ClCompile Include="SimpleShader.cpp" />
     <ClCompile Include="Terrain.cpp" />
     <ClCompile Include="TerrainMaterial.cpp" />
+    <ClCompile Include="Water.cpp" />
+    <ClCompile Include="WaterMaterial.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h" />
@@ -48,6 +51,8 @@
     <ClInclude Include="TerrainMaterial.h" />
     <ClInclude Include="Utility.h" />
     <ClInclude Include="Vertex.h" />
+    <ClInclude Include="Water.h" />
+    <ClInclude Include="WaterMaterial.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="DX11Starter.rc" />

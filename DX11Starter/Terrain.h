@@ -35,6 +35,8 @@ public:
 
 	~Terrain();
 
+	float GetHeightAtPosition(float x, float y);
+
 private:
 
 	void LoadRaw16Bit(

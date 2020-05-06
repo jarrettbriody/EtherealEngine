@@ -37,17 +37,20 @@ cbuffer externalData : register(b2) {
 
 	int specularValue;
 	float3 cameraPosition;
-	int textureCount;
 	float uvScale;
+
+	float normalOffsetX1;
+	float normalOffsetY1;
+
+	float normalOffsetX2;
+	float normalOffsetY2;
 }
 
 Texture2D SurfaceTexture1  :  register(t0);
 Texture2D SurfaceTexture2  :  register(t1);
-Texture2D SurfaceTexture3  :  register(t2);
 
 Texture2D SurfaceNormal1  :  register(t3);
 Texture2D SurfaceNormal2  :  register(t4);
-Texture2D SurfaceNormal3  :  register(t5);
 
 Texture2D BlendMap			:  register(t6);
 
@@ -67,49 +70,31 @@ SamplerComparisonState ShadowSampler	: register(s1);
 // --------------------------------------------------------
 
 
-float3 CalcDirectionalLight1(float4 surfaceColor, float3 normal, Light light, float3 toCameraVector, float specularValue, float shadowAmount)
-{
-	float3 toLight = normalize(-light.Direction);
-	float diffuse = saturate(dot(normal, toLight));
-
-	float3 finalColor = diffuse * surfaceColor;
-
-	finalColor *= light.Intensity * light.Color;
-
-	return (finalColor * shadowAmount) + (surfaceColor * 0.05f);
-}
-
 float4 main(VertexToPixel input) : SV_TARGET
 {
 	input.uv = float2(input.uv.x * uvMult.x, input.uv.y * uvMult.y);
 
-	float4 surfaceColor1 = SurfaceTexture1.Sample(BasicSampler, input.uv * uvScale);
-	float4 surfaceColor2 = SurfaceTexture2.Sample(BasicSampler, input.uv * uvScale);
-	float4 surfaceColor3 = SurfaceTexture3.Sample(BasicSampler, input.uv * uvScale);
-
-	float4 blend = BlendMap.Sample(BasicSampler, input.uv);
+	float4 surfaceColor1 = SurfaceTexture1.Sample(BasicSampler, float2(input.uv * uvScale) + float2(normalOffsetX1, normalOffsetY1));
+	float4 surfaceColor2 = SurfaceTexture2.Sample(BasicSampler, float2(input.uv * uvScale) + float2(normalOffsetX2, normalOffsetY2));
 
 
-	float4 surfaceColor =
-		surfaceColor1 * blend.r +
-		surfaceColor2 * blend.g +
-		surfaceColor3 * blend.b;
+	float4 surfaceColor = surfaceColor1;
 
 	// Just return the input color
 	// - This color (like most values passing through the rasterizer) is 
 	//   interpolated for each pixel between the corresponding vertices 
 	//   of the triangle we're rendering
 
-	float3 normal1 = SurfaceNormal1.Sample(BasicSampler, input.uv).rgb * 2 - 1;
-	float3 normal2 = SurfaceNormal2.Sample(BasicSampler, input.uv).rgb * 2 - 1;
-	float3 normal3 = SurfaceNormal3.Sample(BasicSampler, input.uv).rgb * 2 - 1;
+		
+	float3 normal1 = SurfaceNormal1.Sample(BasicSampler, float2(input.uv) + float2(normalOffsetX1, normalOffsetY1)).rgb * 2 - 1;
+	float3 normal2 = SurfaceNormal2.Sample(BasicSampler, float2(input.uv) + float2(normalOffsetX2, normalOffsetY2)).rgb * 2 - 1;
 
 
 	float3 normalFromMap = normalize(
-		normal1 * blend.r +
-		normal2 * blend.g + 
-		normal3 * blend.b
+		normal1 +
+		normal2 
 	);
+
 
 	//normals
 	// Calculate the matrix we'll use to convert from tangent to world space
@@ -120,24 +105,24 @@ float4 main(VertexToPixel input) : SV_TARGET
 
 	// Use the normal from the map, after we've converted it to world space
 	input.normal = normalize(mul(normalFromMap, TBN));
-
-	// Shadow calculations
-	float2 shadowUV = input.posForShadow.xy / input.posForShadow.w * 0.5f + 0.5f;
-	shadowUV.y = 1.0f - shadowUV.y;
-
-	// This pixel's actual depth from the light
-	float depthFromLight = input.posForShadow.z / input.posForShadow.w;
-
-	// Sample the shadow map in the same location to get
-	// the closest depth along that "ray" from the light
-	// (Samples the shadow map with comparison built in)
-	float shadowAmount = ShadowMap.SampleCmpLevelZero(ShadowSampler, shadowUV, depthFromLight);
-
-	//return ShadowMap.Sample(BasicSampler, shadowUV);
 	
 	float3 toCameraVector = normalize(cameraPosition - input.worldPos);
 
+	float3 light_dir = -normalize(lights[0].Direction);
+	float lightAmount = saturate(dot(input.normal, light_dir));
 
-	return (surfaceColor * shadowAmount) + (surfaceColor * 0.1f);
+	//specular
+	float3 halfwayVector_dir = normalize(light_dir + toCameraVector);
+	float NdotH_dir = dot(input.normal, halfwayVector_dir);
+	float specLight = saturate(pow(NdotH_dir, 100.f));
+
+
+	float3 finalColor = lights[0].Color * surfaceColor +
+		lights[0].Color * surfaceColor * lightAmount +
+		specLight;
+
+	
+
+	return float4(finalColor, 1.f);
 }
 
