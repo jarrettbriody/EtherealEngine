@@ -31,6 +31,7 @@
     <ClCompile Include="TerrainMaterial.cpp" />
     <ClCompile Include="Water.cpp" />
     <ClCompile Include="WaterMaterial.cpp" />
+    <ClCompile Include="SceneLoader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h" />
@@ -53,6 +54,7 @@
     <ClInclude Include="Vertex.h" />
     <ClInclude Include="Water.h" />
     <ClInclude Include="WaterMaterial.h" />
+    <ClInclude Include="SceneLoader.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="DX11Starter.rc" />

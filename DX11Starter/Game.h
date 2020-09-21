@@ -19,6 +19,7 @@
 #include "TerrainMaterial.h"
 #include "Water.h"
 #include "WaterMaterial.h"
+#include "SceneLoader.h"
 
 using namespace std;
 
@@ -47,25 +48,30 @@ public:
 private:
 
 	// Initialization methods
+	/*
 	void LoadShaders();
 	void LoadDefaultMeshes();
 	void LoadDefaultTextures();
 	void LoadDefaultMaterials();
+	*/
 
-	void BuildDefaultEntity(string entityName, string objName, Entity* e);
+	//void BuildDefaultEntity(string entityName, string objName, Entity* e);
 
 	// Scene generation methods
-	Utility::MESH_TYPE AutoLoadOBJMTL(string name);
-	void LoadScene(string sceneName = "scene");
+	//Utility::MESH_TYPE AutoLoadOBJMTL(string name);
+	//void LoadScene(string sceneName = "scene");
 
 	// Wrappers for DirectX shaders to provide simplified functionality
+	/*
 	map<string, SimpleVertexShader*> vertexShadersMap;
 	map<string, SimplePixelShader*> pixelShadersMap;
+	*/
 
 	// Keeps track of the old mouse position for determining how far the mouse moved in a single frame
 	POINT prevMousePos;
 
 	//maps representing meshes, materials, and textures currently being used in the scene
+	/*
 	map<string, bool> utilizedMeshesMap;
 	map<string, bool> utilizedMaterialsMap;
 	map<string, bool> utilizedTexturesMap;
@@ -81,6 +87,9 @@ private:
 
 	map<string, Entity*> sceneEntitiesMap;
 	vector<Entity*> sceneEntities;
+	*/
+
+	SceneLoader* sceneLoader;
 
 	Camera* camera;
 

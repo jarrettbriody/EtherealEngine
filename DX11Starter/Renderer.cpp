@@ -114,8 +114,10 @@ void Renderer::RenderFrame()
 			e->GetMaterial(e->GetMeshMaterialName(j))->GetPixelShader()->SetShaderResourceView("ShadowMap", NULL);
 
 			if (debugLinesEnabled) {
-				if (e->GetCollider() != nullptr) {
-					DebugLines* dl = e->GetCollider()->GetDebugLines();
+				vector<Collider*> colliders = e->GetColliders();
+				for (size_t k = 0; k < colliders.size(); k++)
+				{
+					DebugLines* dl = colliders[k]->GetDebugLines();
 					if (dl != nullptr)
 						AddDebugLines(dl);
 				}

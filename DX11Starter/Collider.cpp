@@ -1,5 +1,9 @@
 #include "Collider.h"
 
+Collider::Collider()
+{
+}
+
 Collider::Collider(vector<XMFLOAT3> vertices)
 {
 	if(debugLinesEnabled)

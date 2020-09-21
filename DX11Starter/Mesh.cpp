@@ -198,6 +198,19 @@ Mesh::Mesh(string meshN, char * objFile, ID3D11Device* device, bool* success)
 			}
 		}
 		else if (chars[0] == 'g') {
+			if (isGroup) {
+				materialNameList.push_back(matName);
+				Mesh* childMesh = new Mesh(&verts[0], vertCounter, &indices[0], vertCounter, device, groupName, matName);
+				childMesh->SetVertices(positions);
+				children.push_back(childMesh);
+				childCount++;
+				//reset everything
+				matName = "";
+				verts.clear();
+				indices.clear();
+				positions.clear();
+				vertCounter = 0;
+			}
 			isGroup = true;
 			groupName = line.substr(2);
 		}

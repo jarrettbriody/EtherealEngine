@@ -18,8 +18,10 @@ Entity::Entity(string entityName, Mesh* entityMesh, Material* mat)
 
 Entity::~Entity()
 {
-	if(collider != nullptr)
-		delete collider;
+	for (size_t i = 0; i < colliders.size(); i++)
+	{
+		delete colliders[i];
+	}
 }
 
 DirectX::XMFLOAT4X4 Entity::GetWorldMatrix()
@@ -133,7 +135,10 @@ void Entity::CalcWorldMatrix()
 	{
 		children[i]->CalcWorldMatrix();
 	}
-	if (collider != nullptr) collider->SetWorldMatrix(worldMatrix);
+	for (size_t i = 0; i < colliders.size(); i++)
+	{
+		colliders[i]->SetWorldMatrix(worldMatrix);
+	} 
 }
 
 void Entity::PrepareMaterial(string n, DirectX::XMFLOAT4X4 view, DirectX::XMFLOAT4X4 proj)
@@ -209,17 +214,53 @@ void Entity::AddChildEntity(Entity* child)
 
 void Entity::AddAutoBoxCollider()
 {
-	collider = new Collider(mesh->GetVertices());
+	if (mesh->HasChildren()) {
+		vector<Mesh*> children = mesh->GetChildren();
+		for (size_t i = 0; i < mesh->GetChildCount(); i++)
+		{
+			colliders.push_back(new Collider(children[i]->GetVertices()));
+		}
+	}
+	else {
+		colliders.push_back(new Collider(mesh->GetVertices()));
+	}
 }
 
 bool Entity::CheckSATCollision(Entity* other)
 {
-	unsigned int result = collider->CheckSATCollision(other->collider);
+	bool otherHasChildren = other->MeshHasChildren();
+	unsigned int result;
+	if (mesh->HasChildren()) {
+		vector<Mesh*> children = mesh->GetChildren();
+		for (size_t i = 0; i < mesh->GetChildCount(); i++)
+		{
+			if(!otherHasChildren)
+				result = colliders[i]->CheckSATCollision(other->colliders[0]);
+			else {
+				for (size_t j = 0; j < other->GetMeshChildCount(); j++)
+				{
+					result = colliders[i]->CheckSATCollision(other->colliders[j]);
+					if (result == -1) return true;
+				}
+			}
+		}
+	}
+	else {
+		if (!otherHasChildren)
+			result = colliders[0]->CheckSATCollision(other->colliders[0]);
+		else {
+			for (size_t j = 0; j < other->GetMeshChildCount(); j++)
+			{
+				result = colliders[0]->CheckSATCollision(other->colliders[j]);
+				if (result == -1) return true;
+			}
+		}
+	}
 	if (result == -1) return true;
 	else return false;
 }
 
-Collider* Entity::GetCollider()
+vector<Collider*> Entity::GetColliders()
 {
-	return collider;
+	return colliders;
 }

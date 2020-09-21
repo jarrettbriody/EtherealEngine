@@ -30,6 +30,7 @@ private:
 	DebugLines* debugLines = nullptr;
 
 public:
+	Collider();
 	Collider(vector<XMFLOAT3> vertices);
 	~Collider();
 	void SetWorldMatrix(XMFLOAT4X4 worldMat);
