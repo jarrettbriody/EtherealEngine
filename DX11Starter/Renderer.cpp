@@ -30,6 +30,11 @@ Renderer::~Renderer()
 			delete lightMapIterator->second;
 		}
 	}
+
+	for (size_t i = 0; i < DebugLines::debugLines.size(); i++)
+	{
+		delete DebugLines::debugLines[i];
+	}
 }
 
 void Renderer::SetEntities(vector<Entity*>* entities)
@@ -78,8 +83,6 @@ void Renderer::RenderFrame()
 	if (!entities || !camera)
 		return;
 
-	if (debugLinesEnabled) debugLines.clear();
-
 	UINT stride = sizeof(Vertex);
 	UINT offset = 0;
 
@@ -112,16 +115,6 @@ void Renderer::RenderFrame()
 				0);											// Offset to add to each index when looking up vertices
 
 			e->GetMaterial(e->GetMeshMaterialName(j))->GetPixelShader()->SetShaderResourceView("ShadowMap", NULL);
-
-			if (debugLinesEnabled) {
-				vector<Collider*> colliders = e->GetColliders();
-				for (size_t k = 0; k < colliders.size(); k++)
-				{
-					DebugLines* dl = colliders[k]->GetDebugLines();
-					if (dl != nullptr)
-						AddDebugLines(dl);
-				}
-			}
 		}
 	}
 
@@ -141,12 +134,12 @@ void Renderer::RenderDebugLines()
 	UINT stride = sizeof(DebugLinesVertex);
 	UINT offset = 0;
 
-	for (size_t i = 0; i < debugLines.size(); i++)
+	for (size_t i = 0; i < DebugLines::debugLines.size(); i++)
 	{
-		context->IASetVertexBuffers(0, 1, &debugLines[i]->vertexBuffer, &stride, &offset);
-		context->IASetIndexBuffer(debugLines[i]->indexBuffer, DXGI_FORMAT_R32_UINT, 0);
+		context->IASetVertexBuffers(0, 1, &DebugLines::debugLines[i]->vertexBuffer, &stride, &offset);
+		context->IASetIndexBuffer(DebugLines::debugLines[i]->indexBuffer, DXGI_FORMAT_R32_UINT, 0);
 
-		debugLineVS->SetMatrix4x4("world", debugLines[i]->worldMatrix);
+		debugLineVS->SetMatrix4x4("world", DebugLines::debugLines[i]->worldMatrix);
 		debugLineVS->SetMatrix4x4("view", camera->GetViewMatrix());
 		debugLineVS->SetMatrix4x4("projection", camera->GetProjMatrix());
 
@@ -157,7 +150,7 @@ void Renderer::RenderDebugLines()
 		debugLinePS->CopyAllBufferData();
 
 		context->DrawIndexed(
-			debugLines[i]->indexCount,		// The number of indices to use (we could draw a subset if we wanted)
+			DebugLines::debugLines[i]->indexCount,		// The number of indices to use (we could draw a subset if we wanted)
 			0,											// Offset to the first index we want to use
 			0);											// Offset to add to each index when looking up vertices
 	}
@@ -365,11 +358,6 @@ void Renderer::RenderShadowMap()
 	vp.Height = (float)viewPortHeight;
 	context->RSSetViewports(1, &vp);
 	context->RSSetState(0);
-}
-
-void Renderer::AddDebugLines(DebugLines* d)
-{
-	debugLines.push_back(d);
 }
 
 ID3D11Device* Renderer::GetDevice()

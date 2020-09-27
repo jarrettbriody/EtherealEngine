@@ -264,3 +264,8 @@ vector<Collider*> Entity::GetColliders()
 {
 	return colliders;
 }
+
+Collider* Entity::GetCollider(int index)
+{
+	return colliders[index];
+}

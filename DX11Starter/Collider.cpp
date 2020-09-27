@@ -6,9 +6,6 @@ Collider::Collider()
 
 Collider::Collider(vector<XMFLOAT3> vertices)
 {
-	if(debugLinesEnabled)
-		debugLines = new DebugLines();
-
 	//Count the points of the incoming list
 	unsigned int vertCount = vertices.size();
 
@@ -38,21 +35,16 @@ Collider::Collider(vector<XMFLOAT3> vertices)
 
 	//Calculate the 8 corners of the cube
 	//Back square
-	colliderCorners[0] = minLocal;
-	colliderCorners[1] = XMFLOAT3(maxLocal.x, minLocal.y, minLocal.z);
-	colliderCorners[2] = XMFLOAT3(maxLocal.x, maxLocal.y, minLocal.z);
-	colliderCorners[3] = XMFLOAT3(minLocal.x, maxLocal.y, minLocal.z);
+	untransformedColliderCorners[0] = colliderCorners[0] = minLocal;
+	untransformedColliderCorners[1] = colliderCorners[1] = XMFLOAT3(maxLocal.x, minLocal.y, minLocal.z);
+	untransformedColliderCorners[2] = colliderCorners[2] = XMFLOAT3(maxLocal.x, maxLocal.y, minLocal.z);
+	untransformedColliderCorners[3] = colliderCorners[3] = XMFLOAT3(minLocal.x, maxLocal.y, minLocal.z);
 
 	//Front square
-	colliderCorners[4] = XMFLOAT3(minLocal.x, maxLocal.y, maxLocal.z);
-	colliderCorners[5] = XMFLOAT3(minLocal.x, minLocal.y, maxLocal.z);
-	colliderCorners[6] = XMFLOAT3(maxLocal.x, minLocal.y, maxLocal.z);
-	colliderCorners[7] = maxLocal;
-
-	if (debugLinesEnabled) {
-		debugLines->color = XMFLOAT3(1.0f, 0.0f, 0.0f);
-		debugLines->GenerateVertexBuffer(colliderCorners, 8);
-	}
+	untransformedColliderCorners[4] = colliderCorners[4] = XMFLOAT3(minLocal.x, maxLocal.y, maxLocal.z);
+	untransformedColliderCorners[5] = colliderCorners[5] = XMFLOAT3(minLocal.x, minLocal.y, maxLocal.z);
+	untransformedColliderCorners[6] = colliderCorners[6] = XMFLOAT3(maxLocal.x, minLocal.y, maxLocal.z);
+	untransformedColliderCorners[7] = colliderCorners[7] = maxLocal;
 	
 	XMVECTOR minLoc = XMLoadFloat3(&minLocal);
 	XMVECTOR maxLoc = XMLoadFloat3(&maxLocal);
@@ -69,8 +61,6 @@ Collider::Collider(vector<XMFLOAT3> vertices)
 
 Collider::~Collider()
 {
-	if(debugLinesEnabled)
-		delete debugLines;
 }
 
 void Collider::SetWorldMatrix(XMFLOAT4X4 worldMat)
@@ -79,9 +69,6 @@ void Collider::SetWorldMatrix(XMFLOAT4X4 worldMat)
 	worldMatrix = worldMat;
 
 	XMMATRIX calculableWorldMatrix = XMMatrixTranspose(XMLoadFloat4x4(&worldMat));
-
-	if(debugLinesEnabled)
-		debugLines->worldMatrix = worldMat;
 
 	//back square
 	colliderCorners[0] = minLocal;
@@ -219,12 +206,17 @@ unsigned int Collider::CheckSATCollision(Collider* other)
 	return -1;
 }
 
-void Collider::SetDebugLines(bool dl)
+XMFLOAT3* Collider::GetColliderCorners()
 {
-	debugLinesEnabled = dl;
+	return colliderCorners;
 }
 
-DebugLines* Collider::GetDebugLines()
+XMFLOAT3* Collider::GetUntransformedColliderCorners()
 {
-	return debugLines;
+	return untransformedColliderCorners;
+}
+
+XMFLOAT4X4 Collider::GetWorldMatrix()
+{
+	return worldMatrix;
 }

@@ -1,10 +1,7 @@
 #include "SceneLoader.h"
 
-SceneLoader::SceneLoader(ID3D11Device * device, ID3D11DeviceContext * context, ID3D11SamplerState * sampler)
+SceneLoader::SceneLoader()
 {
-	this->device = device;
-	this->context = context;
-	this->sampler = sampler;
 }
 
 SceneLoader::~SceneLoader()
@@ -69,48 +66,48 @@ SceneLoader::~SceneLoader()
 void SceneLoader::LoadShaders()
 {
 	//vertex shaders
-	SimpleVertexShader* defaultVS = new SimpleVertexShader(device, context);
+	SimpleVertexShader* defaultVS = new SimpleVertexShader(Config::Device, Config::Context);
 	defaultVS->LoadShaderFile(L"DefaultVS.cso");
 	vertexShadersMap.insert({ "DEFAULT", defaultVS });
 
-	SimpleVertexShader* shadowVS = new SimpleVertexShader(device, context);
+	SimpleVertexShader* shadowVS = new SimpleVertexShader(Config::Device, Config::Context);
 	shadowVS->LoadShaderFile(L"ShadowVS.cso");
 	vertexShadersMap.insert({ "Shadow", shadowVS });
 
-	SimpleVertexShader* skyVS = new SimpleVertexShader(device, context);
+	SimpleVertexShader* skyVS = new SimpleVertexShader(Config::Device, Config::Context);
 	skyVS->LoadShaderFile(L"SkyVS.cso");
 	vertexShadersMap.insert({ "Sky", skyVS });
 
-	SimpleVertexShader* normalVS = new SimpleVertexShader(device, context);
+	SimpleVertexShader* normalVS = new SimpleVertexShader(Config::Device, Config::Context);
 	normalVS->LoadShaderFile(L"NormalVS.cso");
 	vertexShadersMap.insert({ "Normal", normalVS });
 
-	SimpleVertexShader* debugLineVS = new SimpleVertexShader(device, context);
+	SimpleVertexShader* debugLineVS = new SimpleVertexShader(Config::Device, Config::Context);
 	debugLineVS->LoadShaderFile(L"DebugLineVS.cso");
 	vertexShadersMap.insert({ "DebugLine", debugLineVS });
 
 	//pixel shaders
-	SimplePixelShader* defaultPS = new SimplePixelShader(device, context);
+	SimplePixelShader* defaultPS = new SimplePixelShader(Config::Device, Config::Context);
 	defaultPS->LoadShaderFile(L"DefaultPS.cso");
 	pixelShadersMap.insert({ "DEFAULT", defaultPS });
 
-	SimplePixelShader* skyPS = new SimplePixelShader(device, context);
+	SimplePixelShader* skyPS = new SimplePixelShader(Config::Device, Config::Context);
 	skyPS->LoadShaderFile(L"SkyPS.cso");
 	pixelShadersMap.insert({ "Sky", skyPS });
 
-	SimplePixelShader* normalPS = new SimplePixelShader(device, context);
+	SimplePixelShader* normalPS = new SimplePixelShader(Config::Device, Config::Context);
 	normalPS->LoadShaderFile(L"NormalPS.cso");
 	pixelShadersMap.insert({ "Normal", normalPS });
 
-	SimplePixelShader* debugLinePS = new SimplePixelShader(device, context);
+	SimplePixelShader* debugLinePS = new SimplePixelShader(Config::Device, Config::Context);
 	debugLinePS->LoadShaderFile(L"DebugLinePS.cso");
 	pixelShadersMap.insert({ "DebugLine", debugLinePS });
 
-	SimplePixelShader* terrainPS = new SimplePixelShader(device, context);
+	SimplePixelShader* terrainPS = new SimplePixelShader(Config::Device, Config::Context);
 	terrainPS->LoadShaderFile(L"TerrainPS.cso");
 	pixelShadersMap.insert({ "Terrain", terrainPS });
 
-	SimplePixelShader* waterPS = new SimplePixelShader(device, context);
+	SimplePixelShader* waterPS = new SimplePixelShader(Config::Device, Config::Context);
 	waterPS->LoadShaderFile(L"WaterPS.cso");
 	pixelShadersMap.insert({ "Water", waterPS });
 
@@ -118,57 +115,58 @@ void SceneLoader::LoadShaders()
 
 void SceneLoader::LoadDefaultMeshes()
 {
-	defaultMeshesMap.insert({ "Cube", new Mesh("Cube", "../../Assets/Models/Default/cube.obj", device) });
-	defaultMeshesMap.insert({ "Cylinder", new Mesh("Cylinder", "../../Assets/Models/Default/cylinder.obj", device) });
-	defaultMeshesMap.insert({ "Cone", new Mesh("Cone", "../../Assets/Models/Default/cone.obj", device) });
-	defaultMeshesMap.insert({ "Sphere", new Mesh("Sphere", "../../Assets/Models/Default/sphere.obj", device) });
-	defaultMeshesMap.insert({ "Helix", new Mesh("Helix", "../../Assets/Models/Default/helix.obj", device) });
-	defaultMeshesMap.insert({ "Torus", new Mesh("Torus", "../../Assets/Models/Default/torus.obj", device) });
+	defaultMeshesMap.insert({ "Cube", new Mesh("Cube", "../../Assets/Models/Default/cube.obj", Config::Device) });
+	defaultMeshesMap.insert({ "Cylinder", new Mesh("Cylinder", "../../Assets/Models/Default/cylinder.obj", Config::Device) });
+	defaultMeshesMap.insert({ "Cone", new Mesh("Cone", "../../Assets/Models/Default/cone.obj", Config::Device) });
+	defaultMeshesMap.insert({ "Sphere", new Mesh("Sphere", "../../Assets/Models/Default/sphere.obj", Config::Device) });
+	defaultMeshesMap.insert({ "Helix", new Mesh("Helix", "../../Assets/Models/Default/helix.obj", Config::Device) });
+	defaultMeshesMap.insert({ "Torus", new Mesh("Torus", "../../Assets/Models/Default/torus.obj", Config::Device) });
 	defaultMeshesMap.insert({ "Ground", defaultMeshesMap["Cube"] });
 }
 
 void SceneLoader::LoadDefaultTextures()
 {
-	defaultTexturesMap.insert({ "GrassDiffuse", Utility::LoadSRV(device,context,"Default/Grass/DefaultGrassDiffuse.jpg") });
-	defaultTexturesMap.insert({ "GrassNormal", Utility::LoadSRV(device,context,"Default/Grass/DefaultGrassNormal.jpg") });
-	defaultTexturesMap.insert({ "Red", Utility::LoadSRV(device,context,"Default/red.png") });
-	defaultTexturesMap.insert({ "Marble", Utility::LoadSRV(device,context,"Default/marble.png") });
-	defaultTexturesMap.insert({ "Hedge", Utility::LoadSRV(device,context,"Default/hedge.jpg") });
-	defaultTexturesMap.insert({ "terrain2", Utility::LoadSRV(device,context,"grass.png") });
-	defaultTexturesMap.insert({ "terrain3", Utility::LoadSRV(device,context,"rocky.png") });
-	defaultTexturesMap.insert({ "terrain1", Utility::LoadSRV(device,context,"snow.jpg") });
-	defaultTexturesMap.insert({ "terrainNormal2", Utility::LoadSRV(device,context,"grass_normal.png") });
-	defaultTexturesMap.insert({ "terrainNormal3", Utility::LoadSRV(device,context,"rocky_normal.png") });
-	defaultTexturesMap.insert({ "terrainNormal1", Utility::LoadSRV(device,context,"snow_normal.jpg") });
-	defaultTexturesMap.insert({ "terrainBlendMap", Utility::LoadSRV(device,context,"blendMap.png") });
-	defaultTexturesMap.insert({ "waterBase", Utility::LoadSRV(device,context,"water_base.png") });
-	defaultTexturesMap.insert({ "waterFoam", Utility::LoadSRV(device,context,"water_foam.jpg") });
-	defaultTexturesMap.insert({ "waterNormal1", Utility::LoadSRV(device,context,"water_normal1.jpeg") });
-	defaultTexturesMap.insert({ "waterNormal2", Utility::LoadSRV(device,context,"water_normal2.png") });
+	defaultTexturesMap.insert({ "GrassDiffuse", Utility::LoadSRV("Default/Grass/DefaultGrassDiffuse.jpg") });
+	defaultTexturesMap.insert({ "GrassNormal", Utility::LoadSRV("Default/Grass/DefaultGrassNormal.jpg") });
+	defaultTexturesMap.insert({ "Red", Utility::LoadSRV("Default/red.png") });
+	defaultTexturesMap.insert({ "Marble", Utility::LoadSRV("Default/marble.png") });
+	defaultTexturesMap.insert({ "Hedge", Utility::LoadSRV("Default/hedge.jpg") });
+	defaultTexturesMap.insert({ "terrain2", Utility::LoadSRV("grass.png") });
+	defaultTexturesMap.insert({ "terrain3", Utility::LoadSRV("rocky.png") });
+	defaultTexturesMap.insert({ "terrain1", Utility::LoadSRV("snow.jpg") });
+	defaultTexturesMap.insert({ "terrainNormal2", Utility::LoadSRV("grass_normal.png") });
+	defaultTexturesMap.insert({ "terrainNormal3", Utility::LoadSRV("rocky_normal.png") });
+	defaultTexturesMap.insert({ "terrainNormal1", Utility::LoadSRV("snow_normal.jpg") });
+	defaultTexturesMap.insert({ "terrainBlendMap", Utility::LoadSRV("blendMap.png") });
+	defaultTexturesMap.insert({ "waterBase", Utility::LoadSRV("water_base.png") });
+	defaultTexturesMap.insert({ "waterFoam", Utility::LoadSRV("water_foam.jpg") });
+	defaultTexturesMap.insert({ "waterNormal1", Utility::LoadSRV("water_normal1.jpeg") });
+	defaultTexturesMap.insert({ "waterNormal2", Utility::LoadSRV("water_normal2.png") });
 }
 
 void SceneLoader::LoadDefaultMaterials()
 {
 	MaterialData materialData = {};
-	defaultMaterialsMap.insert({ "DEFAULT", new Material("DEFAULT", materialData, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], sampler) });
+	defaultMaterialsMap.insert({ "DEFAULT", new Material("DEFAULT", materialData, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler) });
 
 	materialData = {};
 	materialData.DiffuseTextureMapSRV = defaultTexturesMap["GrassDiffuse"];
 	materialData.NormalTextureMapSRV = defaultTexturesMap["GrassNormal"];
-	defaultMaterialsMap.insert({ "Grass", new Material("Grass", materialData, vertexShadersMap["Normal"], pixelShadersMap["Normal"], sampler) });
+	defaultMaterialsMap.insert({ "Grass", new Material("Grass", materialData, vertexShadersMap["Normal"], pixelShadersMap["Normal"], Config::Sampler) });
 
 	materialData = {};
 	materialData.DiffuseTextureMapSRV = defaultTexturesMap["Red"];
-	defaultMaterialsMap.insert({ "Red", new Material("Red", materialData, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], sampler) });
+	defaultMaterialsMap.insert({ "Red", new Material("Red", materialData, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler) });
 
 	materialData = {};
 	materialData.DiffuseTextureMapSRV = defaultTexturesMap["Marble"];
-	defaultMaterialsMap.insert({ "Marble", new Material("Marble", materialData, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], sampler) });
+	defaultMaterialsMap.insert({ "Marble", new Material("Marble", materialData, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler) });
 
 	materialData = {};
 	materialData.DiffuseTextureMapSRV = defaultTexturesMap["Hedge"];
-	defaultMaterialsMap.insert({ "Hedge", new Material("Hedge", materialData, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], sampler) });
+	defaultMaterialsMap.insert({ "Hedge", new Material("Hedge", materialData, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler) });
 
+	/*
 	TerrainMaterialData terrainMaterialData = {};
 	terrainMaterialData.SurfaceTexture1 = defaultTexturesMap["terrain1"];
 	terrainMaterialData.SurfaceTexture2 = defaultTexturesMap["terrain2"];
@@ -178,7 +176,7 @@ void SceneLoader::LoadDefaultMaterials()
 	terrainMaterialData.SurfaceNormal3 = defaultTexturesMap["terrainNormal3"];
 	terrainMaterialData.uvScale = 50.0f;
 	terrainMaterialData.BlendMap = defaultTexturesMap["terrainBlendMap"];
-	defaultMaterialsMap.insert({ "Terrain", new TerrainMaterial("Terrain", terrainMaterialData, vertexShadersMap["DEFAULT"], pixelShadersMap["Terrain"], sampler) });
+	defaultMaterialsMap.insert({ "Terrain", new TerrainMaterial("Terrain", terrainMaterialData, vertexShadersMap["DEFAULT"], pixelShadersMap["Terrain"], Config::Sampler) });
 
 	WaterMaterialData waterMaterialData = {};
 	waterMaterialData.SurfaceTexture1 = defaultTexturesMap["waterBase"];
@@ -186,7 +184,8 @@ void SceneLoader::LoadDefaultMaterials()
 	waterMaterialData.SurfaceNormal1 = defaultTexturesMap["waterNormal1"];
 	waterMaterialData.SurfaceNormal2 = defaultTexturesMap["waterNormal2"];
 	waterMaterialData.uvScale = 20.0f;
-	defaultMaterialsMap.insert({ "Water", new WaterMaterial("Water", waterMaterialData, vertexShadersMap["DEFAULT"], pixelShadersMap["Water"], sampler) });
+	defaultMaterialsMap.insert({ "Water", new WaterMaterial("Water", waterMaterialData, vertexShadersMap["DEFAULT"], pixelShadersMap["Water"], Config::Sampler) });
+	*/
 
 }
 
@@ -237,7 +236,7 @@ Utility::MESH_TYPE SceneLoader::AutoLoadOBJMTL(string name)
 
 	//Mesh will change bool ref to false if OBJ file does not exist, otherwise it will generate it and add to map
 	bool success;
-	generatedMeshesMap.insert({ name, new Mesh(name, (char*)objPath.c_str(), device, &success) });
+	generatedMeshesMap.insert({ name, new Mesh(name, (char*)objPath.c_str(), Config::Device, &success) });
 	if (!success) {
 		cout << "Cannot load Object (OBJ) file: " + string(objPath) << endl;
 		return Utility::MESH_TYPE::LOAD_FAILURE;
@@ -293,10 +292,10 @@ Utility::MESH_TYPE SceneLoader::AutoLoadOBJMTL(string name)
 				if (ongoingMat) {
 					//Different shaders based on matData values
 					if (matData.NormalTextureMapSRV) {
-						generatedMaterialsMap.insert({ ongoingMatName, new Material(ongoingMatName, matData, vertexShadersMap["Normal"], pixelShadersMap["Normal"], sampler) });
+						generatedMaterialsMap.insert({ ongoingMatName, new Material(ongoingMatName, matData, vertexShadersMap["Normal"], pixelShadersMap["Normal"], Config::Sampler) });
 					}
 					else {
-						generatedMaterialsMap.insert({ ongoingMatName, new Material(ongoingMatName, matData, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], sampler) });
+						generatedMaterialsMap.insert({ ongoingMatName, new Material(ongoingMatName, matData, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler) });
 					}
 					matData = {};
 				}
@@ -346,7 +345,7 @@ Utility::MESH_TYPE SceneLoader::AutoLoadOBJMTL(string name)
 			else if (regex_search(line, match, ambientTextureRgx)) {
 				line = regex_replace(line, ambientTextureRgx, "");
 				if (!generatedTexturesMap.count(line)) {
-					generatedTexturesMap.insert({ line, LoadSRV(device,context,line) });
+					generatedTexturesMap.insert({ line, Utility::LoadSRV(line) });
 
 					//record texture as utilized
 					utilizedTexturesMap.insert({ line,true });
@@ -358,7 +357,7 @@ Utility::MESH_TYPE SceneLoader::AutoLoadOBJMTL(string name)
 			else if (regex_search(line, match, diffuseTextureRgx)) {
 				line = regex_replace(line, diffuseTextureRgx, "");
 				if (!generatedTexturesMap.count(line)) {
-					generatedTexturesMap.insert({ line, LoadSRV(device,context,line) });
+					generatedTexturesMap.insert({ line, Utility::LoadSRV(line) });
 
 					//record texture as utilized
 					utilizedTexturesMap.insert({ line,true });
@@ -370,7 +369,7 @@ Utility::MESH_TYPE SceneLoader::AutoLoadOBJMTL(string name)
 			else if (regex_search(line, match, specularColorTextureRgx)) {
 				line = regex_replace(line, specularColorTextureRgx, "");
 				if (!generatedTexturesMap.count(line)) {
-					generatedTexturesMap.insert({ line, LoadSRV(device,context,line) });
+					generatedTexturesMap.insert({ line, Utility::LoadSRV(line) });
 
 					//record texture as utilized
 					utilizedTexturesMap.insert({ line,true });
@@ -382,7 +381,7 @@ Utility::MESH_TYPE SceneLoader::AutoLoadOBJMTL(string name)
 			else if (regex_search(line, match, specularHighlightTextureRgx)) {
 				line = regex_replace(line, specularHighlightTextureRgx, "");
 				if (!generatedTexturesMap.count(line)) {
-					generatedTexturesMap.insert({ line, LoadSRV(device,context,line) });
+					generatedTexturesMap.insert({ line, Utility::LoadSRV(line) });
 
 					//record texture as utilized
 					utilizedTexturesMap.insert({ line,true });
@@ -394,7 +393,7 @@ Utility::MESH_TYPE SceneLoader::AutoLoadOBJMTL(string name)
 			else if (regex_search(line, match, alphaTextureRgx)) {
 				line = regex_replace(line, alphaTextureRgx, "");
 				if (!generatedTexturesMap.count(line)) {
-					generatedTexturesMap.insert({ line, LoadSRV(device,context,line) });
+					generatedTexturesMap.insert({ line, Utility::LoadSRV(line) });
 
 					//record texture as utilized
 					utilizedTexturesMap.insert({ line,true });
@@ -406,7 +405,7 @@ Utility::MESH_TYPE SceneLoader::AutoLoadOBJMTL(string name)
 			else if (regex_search(line, match, normalTextureRgx)) {
 				line = regex_replace(line, normalTextureRgx, "");
 				if (!generatedTexturesMap.count(line)) {
-					generatedTexturesMap.insert({ line, LoadSRV(device,context,line) });
+					generatedTexturesMap.insert({ line, Utility::LoadSRV(line) });
 
 					//record texture as utilized
 					utilizedTexturesMap.insert({ line,true });
@@ -419,10 +418,10 @@ Utility::MESH_TYPE SceneLoader::AutoLoadOBJMTL(string name)
 	//basically only executes if the end of the file is reached and there was an ongoing material being created
 	if (ongoingMat) {
 		if (matData.NormalTextureMapSRV) {
-			generatedMaterialsMap.insert({ ongoingMatName, new Material(ongoingMatName, matData, vertexShadersMap["Normal"], pixelShadersMap["Normal"], sampler) });
+			generatedMaterialsMap.insert({ ongoingMatName, new Material(ongoingMatName, matData, vertexShadersMap["Normal"], pixelShadersMap["Normal"], Config::Sampler) });
 		}
 		else {
-			generatedMaterialsMap.insert({ ongoingMatName, new Material(ongoingMatName, matData, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], sampler) });
+			generatedMaterialsMap.insert({ ongoingMatName, new Material(ongoingMatName, matData, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler) });
 		}
 		matData = {};
 		ongoingMat = false;
@@ -515,11 +514,24 @@ void SceneLoader::LoadScene(string sceneName)
 					}
 					counter++;
 				}
-				someEntity->AddAutoBoxCollider();
+				if(someEntity->collisionsEnabled)
+					someEntity->AddAutoBoxCollider();
 				someEntity->SetPosition(parsedNumbers[0], parsedNumbers[1], parsedNumbers[2]);
 				someEntity->SetRotation(DirectX::XMConvertToRadians(parsedNumbers[3]), DirectX::XMConvertToRadians(parsedNumbers[4]), DirectX::XMConvertToRadians(parsedNumbers[5]));
 				someEntity->SetScale(parsedNumbers[6], parsedNumbers[7], parsedNumbers[8]);
 				someEntity->CalcWorldMatrix();
+				if (someEntity->collisionsEnabled && someEntity->colliderDebugLinesEnabled) {
+					vector<Collider*> colliders = someEntity->GetColliders();
+					for (size_t d = 0; d < colliders.size(); d++)
+					{
+						DebugLines* dl = new DebugLines(entityName, d);
+						XMFLOAT3 c = XMFLOAT3(1.0f, 0.0f, 0.0f);
+						dl->color = c;
+						dl->worldMatrix = colliders[d]->GetWorldMatrix();
+						XMFLOAT3* colliderCorners = colliders[d]->GetUntransformedColliderCorners();
+						dl->GenerateCuboidVertexBuffer(colliderCorners, 8);
+					}
+				}
 
 				if (meshType == Utility::DEFAULT_MESH)
 					BuildDefaultEntity(entityName, objName, someEntity);

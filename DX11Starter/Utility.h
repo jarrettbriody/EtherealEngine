@@ -4,6 +4,7 @@
 #include <regex>
 #include "WICTextureLoader.h"
 #include "DDSTextureLoader.h"
+#include "Config.h"
 
 #define ZERO_VECTOR3 XMFLOAT3(0.0f,0.0f,0.0f);
 #define X_AXIS XMFLOAT3(1.0f,0.0f,0.0f);
@@ -63,12 +64,12 @@ namespace Utility {
 		return rval;
 	}
 
-	static ID3D11ShaderResourceView* LoadSRV(ID3D11Device* device, ID3D11DeviceContext*	context, string texture){
+	static ID3D11ShaderResourceView* LoadSRV(std::string texture){
 		ID3D11ShaderResourceView* srv;
 		wchar_t path[100] = L"../../Assets/Textures/";
 		wchar_t fileName[50];
 		::MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, &texture.c_str()[0], -1, &fileName[0], 50);
-		DirectX::CreateWICTextureFromFile(device, context, wcsncat(path, fileName, 100), 0, &srv);
+		DirectX::CreateWICTextureFromFile(Config::Device, Config::Context, wcsncat(path, fileName, 100), 0, &srv);
 		return srv;
 	}
 }

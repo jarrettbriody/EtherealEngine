@@ -1,4 +1,6 @@
 #pragma once
+#include "DebugLines.h"
+#include "Utility.h"
 #include "Mesh.h"
 #include "Material.h"
 #include "Terrain.h"
@@ -8,13 +10,14 @@
 #include "Entity.h"
 #include <map>
 #include <vector>
+#include <string>
+#include "Config.h"
+
+using namespace Utility;
 
 class SceneLoader
 {
 private:
-	ID3D11Device* device;
-	ID3D11DeviceContext* context;
-	ID3D11SamplerState* sampler;
 public:
 	map<string, SimpleVertexShader*> vertexShadersMap;
 	map<string, SimplePixelShader*> pixelShadersMap;
@@ -35,7 +38,7 @@ public:
 	map<string, Entity*> sceneEntitiesMap;
 	vector<Entity*> sceneEntities;
 
-	SceneLoader(ID3D11Device* device, ID3D11DeviceContext*	context, ID3D11SamplerState* sampler);
+	SceneLoader();
 	~SceneLoader();
 
 	void LoadShaders();

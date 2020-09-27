@@ -1,8 +1,6 @@
 #pragma once
 #include "Mesh.h"
 #include "Utility.h"
-//#include "EtherealEngine.h"
-#include "DebugLines.h"
 
 using namespace DirectX;
 
@@ -11,6 +9,7 @@ class Collider
 protected:
 	XMFLOAT3 collisionProjVecs[3];
 	XMFLOAT3 colliderCorners[8];
+	XMFLOAT3 untransformedColliderCorners[8];
 	bool collisionsEnabled = true;
 
 private:
@@ -26,16 +25,15 @@ private:
 	XMFLOAT3 span = ZERO_VECTOR3;
 	float radius = 0.0f;
 
-	bool debugLinesEnabled = true;
-	DebugLines* debugLines = nullptr;
-
 public:
+	bool debugLinesEnabled = false;
 	Collider();
 	Collider(vector<XMFLOAT3> vertices);
 	~Collider();
 	void SetWorldMatrix(XMFLOAT4X4 worldMat);
 	unsigned int CheckSATCollision(Collider* other);
-	void SetDebugLines(bool dl);
-	DebugLines* GetDebugLines();
+	XMFLOAT3* GetColliderCorners();
+	XMFLOAT3* GetUntransformedColliderCorners();
+	XMFLOAT4X4 GetWorldMatrix();
 };
 

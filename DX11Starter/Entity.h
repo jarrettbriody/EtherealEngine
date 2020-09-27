@@ -33,6 +33,8 @@ private:
 	bool shadowsEnabled = true;
 	ShadowData shadowData;
 public:
+	bool collisionsEnabled = true;
+	bool colliderDebugLinesEnabled = true;
 	Entity(string entityName, Mesh* entityMesh, Material* mat = nullptr);
 	~Entity();
 	DirectX::XMFLOAT4X4 GetWorldMatrix();
@@ -63,5 +65,6 @@ public:
 	void AddAutoBoxCollider();
 	bool CheckSATCollision(Entity* other);
 	vector<Collider*> GetColliders();
+	Collider* GetCollider(int index = 0);
 };
 
