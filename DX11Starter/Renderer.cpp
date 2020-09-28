@@ -107,7 +107,7 @@ void Renderer::RenderFrame()
 			context->IASetVertexBuffers(0, 1, &vbo, &stride, &offset);
 			context->IASetIndexBuffer(e->GetMeshIndexBuffer(j), DXGI_FORMAT_R32_UINT, 0);
 
-			e->PrepareMaterial(e->GetMeshMaterialName(j), camera->GetViewMatrix(), camera->GetProjMatrix());
+			e->PrepareMaterialForDraw(e->GetMeshMaterialName(j), camera->GetViewMatrix(), camera->GetProjMatrix());
 
 			context->DrawIndexed(
 				e->GetMeshIndexCount(j),		// The number of indices to use (we could draw a subset if we wanted)
@@ -327,28 +327,28 @@ void Renderer::RenderShadowMap()
 	UINT stride = sizeof(Vertex);
 	UINT offset = 0;
 
-	for (unsigned int i = 0; i < entities->size(); i++)
+	for (unsigned int entityIndex = 0; entityIndex < entities->size(); entityIndex++)
 	{
 		// Grab the data from the first entity's mesh
-		Entity* e = (*entities)[i];
-		for (int j = -1; j < e->GetMeshChildCount(); j++)
+		Entity* currentEntity = (*entities)[entityIndex];
+		for (int entityMeshChildIndex = -1; entityMeshChildIndex < currentEntity->GetMeshChildCount(); entityMeshChildIndex++)
 		{
-			if (e->MeshHasChildren() && j == -1)
-				j++;
+			if (currentEntity->MeshHasChildren() && entityMeshChildIndex == -1)
+				entityMeshChildIndex++;
 
-			ID3D11Buffer* vb = e->GetMeshVertexBuffer(j);
-			ID3D11Buffer* ib = e->GetMeshIndexBuffer(j);
+			ID3D11Buffer* vb = currentEntity->GetMeshVertexBuffer(entityMeshChildIndex);
+			ID3D11Buffer* ib = currentEntity->GetMeshIndexBuffer(entityMeshChildIndex);
 
 			// Set buffers in the input assembler
 			context->IASetVertexBuffers(0, 1, &vb, &stride, &offset);
 			context->IASetIndexBuffer(ib, DXGI_FORMAT_R32_UINT, 0);
 
 
-			shadowVS->SetMatrix4x4("world", e->GetWorldMatrix());
+			shadowVS->SetMatrix4x4("world", currentEntity->GetWorldMatrix());
 			shadowVS->CopyAllBufferData();
 
 			// Finally do the actual drawing
-			context->DrawIndexed(e->GetMeshIndexCount(j), 0, 0);
+			context->DrawIndexed(currentEntity->GetMeshIndexCount(entityMeshChildIndex), 0, 0);
 		}
 	}
 

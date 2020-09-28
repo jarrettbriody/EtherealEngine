@@ -141,7 +141,7 @@ void Entity::CalcWorldMatrix()
 	} 
 }
 
-void Entity::PrepareMaterial(string n, DirectX::XMFLOAT4X4 view, DirectX::XMFLOAT4X4 proj)
+void Entity::PrepareMaterialForDraw(string n, DirectX::XMFLOAT4X4 view, DirectX::XMFLOAT4X4 proj)
 {
 	SimpleVertexShader* vs = materialMap[n]->GetVertexShader();
 	SimplePixelShader* ps = materialMap[n]->GetPixelShader();

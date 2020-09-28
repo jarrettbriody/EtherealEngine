@@ -53,7 +53,7 @@ public:
 	int GetMeshIndexCount(int i = -1);
 	string GetMeshMaterialName(int i = -1);
 	void CalcWorldMatrix();
-	void PrepareMaterial(string n, DirectX::XMFLOAT4X4 view, DirectX::XMFLOAT4X4 proj);
+	void PrepareMaterialForDraw(string n, DirectX::XMFLOAT4X4 view, DirectX::XMFLOAT4X4 proj);
 	Material* GetMaterial(string n);
 	bool MeshHasChildren();
 	int GetMeshChildCount();
