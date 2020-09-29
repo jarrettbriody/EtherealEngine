@@ -20,9 +20,9 @@
 #include "Water.h"
 #include "WaterMaterial.h"
 #include "SceneLoader.h"
-#include "soloud/include/soloud.h"
-#include "soloud/include/soloud_thread.h"
-#include "soloud/include/soloud_wav.h"
+#include "soloud.h"
+#include "soloud_thread.h"
+#include "soloud_wav.h"
 
 using namespace std;
 
