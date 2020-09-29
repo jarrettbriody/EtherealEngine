@@ -20,6 +20,9 @@
 #include "Water.h"
 #include "WaterMaterial.h"
 #include "SceneLoader.h"
+#include "soloud/include/soloud.h"
+#include "soloud/include/soloud_thread.h"
+#include "soloud/include/soloud_wav.h"
 
 using namespace std;
 
@@ -107,5 +110,9 @@ private:
 
 	//testing
 	Light* testLight;
+
+	//audio
+	SoLoud::Soloud sLoud;
+	SoLoud::Wav testAudio1;
 };
 

@@ -204,6 +204,10 @@ void Game::Init()
 	sceneLoader->sceneEntities.push_back(waterEntity);
 	waterEntity->CalcWorldMatrix();
 
+	//audio -----------------
+
+	sLoud.init();
+	//testAudio1.load("Audio/wow.wav");
 }
 
 void Game::OnResize()
@@ -229,6 +233,10 @@ void Game::Update(float deltaTime, float totalTime)
 		rot.y -= DirectX::XMConvertToRadians(2.0f);
 		sceneLoader->sceneEntitiesMap["sphere1"]->SetRotation(rot.x, rot.y, rot.z);
 		sceneLoader->sceneEntitiesMap["sphere1"]->CalcWorldMatrix();
+	}
+
+	if (GetAsyncKeyState('M') & 0x8000) {
+
 	}
 
 	if (GetAsyncKeyState(VK_LEFT))
