@@ -29,6 +29,7 @@ private:
 	vector<Entity*> children;
 	Entity* parent = nullptr;
 	vector<Collider*> colliders;
+	bool isStatic = true;
 
 	bool shadowsEnabled = true;
 	ShadowData shadowData;
@@ -64,6 +65,7 @@ public:
 	void AddChildEntity(Entity* child);
 	void AddAutoBoxCollider();
 	bool CheckSATCollision(Entity* other);
+	bool CheckSATCollisionAndCorrect(Entity* other);
 	vector<Collider*> GetColliders();
 	Collider* GetCollider(int index = 0);
 };

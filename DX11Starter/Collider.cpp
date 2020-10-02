@@ -206,6 +206,82 @@ unsigned int Collider::CheckSATCollision(Collider* other)
 	return -1;
 }
 
+XMFLOAT3 Collider::CheckSATCollisionForCorrection(Collider* other)
+{
+	if (!collisionsEnabled || !other->collisionsEnabled) return XMFLOAT3(0);
+
+	XMFLOAT3 axes[15];
+
+	int index = 0;
+	for (size_t i = 0; i < 3; i++)
+	{
+		axes[index] = collisionProjVecs[i];
+		index++;
+		axes[index] = other->collisionProjVecs[i];
+		index++;
+		for (size_t j = 0; j < 3; j++)
+		{
+			XMVECTOR vecThis = XMLoadFloat3(&collisionProjVecs[i]);
+			XMVECTOR vecOther = XMLoadFloat3(&(other->collisionProjVecs[j]));
+			XMVECTOR cross = XMVector3Cross(vecThis, vecOther);
+			cross = XMVector3Normalize(cross);
+			XMStoreFloat3(&axes[index], cross);
+			index++;
+		}
+	}
+
+	XMVECTOR axis;
+	float objAMin;
+	float objAMax;
+	float objBMin;
+	float objBMax;
+	XMVECTOR corner;
+	XMVECTOR dot;
+	float proj;
+
+	for (size_t i = 0; i < 15; i++)
+	{
+		if (axes[i].x == 0.0f && axes[i].y == 0.0f && axes[i].z == 0.0f) {
+			continue;
+		}
+
+		axis = XMLoadFloat3(&axes[i]);
+
+		corner = XMLoadFloat3(&colliderCorners[0]);
+		dot = XMVector3Dot(corner, axis);
+		XMStoreFloat(&objAMin, dot);
+
+		corner = XMLoadFloat3(&other->colliderCorners[0]);
+		dot = XMVector3Dot(corner, axis);
+		XMStoreFloat(&objBMin, dot);
+
+		objAMax = objAMin;
+		objBMax = objBMin;
+
+		for (size_t j = 1; j < 8; j++)
+		{
+			corner = XMLoadFloat3(&colliderCorners[j]);
+			dot = XMVector3Dot(corner, axis);
+			XMStoreFloat(&proj, dot);
+			if (proj > objAMax) objAMax = proj;
+			else if (proj < objAMin) objAMin = proj;
+
+			corner = XMLoadFloat3(&other->colliderCorners[j]);
+			dot = XMVector3Dot(corner, axis);
+			XMStoreFloat(&proj, dot);
+			if (proj > objBMax) objBMax = proj;
+			else if (proj < objBMin) objBMin = proj;
+		}
+
+		if (objAMin > objBMax || objAMax < objBMin) {
+			return XMFLOAT3(0);
+		}
+	}
+
+	//there is no axis test that separates these two objects
+	return XMFLOAT3(0);
+}
+
 XMFLOAT3* Collider::GetColliderCorners()
 {
 	return colliderCorners;

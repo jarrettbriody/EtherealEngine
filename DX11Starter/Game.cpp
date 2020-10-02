@@ -236,6 +236,13 @@ void Game::Update(float deltaTime, float totalTime)
 		EESceneLoader->sceneEntitiesMap["sphere1"]->CalcWorldMatrix();
 	}
 
+	if (GetAsyncKeyState('B') & 0x8000) {
+		DirectX::XMFLOAT3 rot = EESceneLoader->sceneEntitiesMap["Ruin"]->GetRotation();
+		rot.y -= DirectX::XMConvertToRadians(2.0f);
+		EESceneLoader->sceneEntitiesMap["Ruin"]->SetRotation(rot.x, rot.y, rot.z);
+		EESceneLoader->sceneEntitiesMap["Ruin"]->CalcWorldMatrix();
+	}
+
 	if (GetAsyncKeyState(VK_LEFT))
 	{
 		DirectX::XMFLOAT3 trans = EESceneLoader->sceneEntitiesMap["barrel_1"]->GetPosition();
@@ -265,7 +272,7 @@ void Game::Update(float deltaTime, float totalTime)
 		EESceneLoader->sceneEntitiesMap["barrel_1"]->CalcWorldMatrix();
 	}
 
-	if (EESceneLoader->sceneEntitiesMap["barrel_1"]->CheckSATCollision(EESceneLoader->sceneEntitiesMap["barrel_1 (1)"]))
+	if (EESceneLoader->sceneEntitiesMap["barrel_1"]->CheckSATCollision(EESceneLoader->sceneEntitiesMap["Ruin"]))
 	{
 		cout << "colliding" << endl;
 	}

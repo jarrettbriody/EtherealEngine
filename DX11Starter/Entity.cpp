@@ -230,33 +230,28 @@ bool Entity::CheckSATCollision(Entity* other)
 {
 	bool otherHasChildren = other->MeshHasChildren();
 	unsigned int result;
-	if (mesh->HasChildren()) {
-		vector<Mesh*> children = mesh->GetChildren();
-		for (size_t i = 0; i < mesh->GetChildCount(); i++)
+	for (size_t i = 0; i < (mesh->HasChildren() ? mesh->GetChildCount() : 1); i++)
+	{
+		for (size_t j = 0; j < (other->MeshHasChildren() ? other->GetMeshChildCount() : 1); j++)
 		{
-			if(!otherHasChildren)
-				result = colliders[i]->CheckSATCollision(other->colliders[0]);
-			else {
-				for (size_t j = 0; j < other->GetMeshChildCount(); j++)
-				{
-					result = colliders[i]->CheckSATCollision(other->colliders[j]);
-					if (result == -1) return true;
-				}
-			}
+			if(colliders[i]->CheckSATCollision(other->colliders[j]) == -1) return true;
 		}
 	}
-	else {
-		if (!otherHasChildren)
-			result = colliders[0]->CheckSATCollision(other->colliders[0]);
-		else {
-			for (size_t j = 0; j < other->GetMeshChildCount(); j++)
-			{
-				result = colliders[0]->CheckSATCollision(other->colliders[j]);
-				if (result == -1) return true;
-			}
+	return false;
+}
+
+bool Entity::CheckSATCollisionAndCorrect(Entity* other)
+{
+	if (isStatic) return false;
+	XMFLOAT3 result;
+	for (size_t i = 0; i < (mesh->HasChildren() ? mesh->GetChildCount() : 1); i++)
+	{
+		for (size_t j = 0; j < (other->MeshHasChildren() ? other->GetMeshChildCount() : 1); j++)
+		{
+			result = colliders[i]->CheckSATCollisionForCorrection(other->colliders[j]);
 		}
 	}
-	if (result == -1) return true;
+	if (result.x != 0 && result.y != 0 && result.z != 0) return true;
 	else return false;
 }
 
