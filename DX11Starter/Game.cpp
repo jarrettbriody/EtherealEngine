@@ -29,6 +29,11 @@ Game::~Game()
 	skyDepthState->Release();
 	skyRasterState->Release();
 
+	sound3D->release();
+	sound2D->release();
+	fmodSystem->close();
+	fmodSystem->release();
+
 	delete terrain;
 	delete water;
 
@@ -204,10 +209,47 @@ void Game::Init()
 	sceneLoader->sceneEntities.push_back(waterEntity);
 	waterEntity->CalcWorldMatrix();
 
-	//audio -----------------
+	// Audio -----------------
 
-	sLoud.init();
-	//testAudio1.load("Audio/wow.wav");
+	// Basic set-up for sound. Audio and error functionality will probably be moved to their own class, but it is kept inline until then
+
+	fmodResult = FMOD::System_Create(&fmodSystem); // Create the Studio System object
+	if (fmodResult != FMOD_OK)
+	{
+		printf("FMOD error! (%d) %s\n", fmodResult, FMOD_ErrorString(fmodResult));
+		exit(-1);
+	}
+
+	fmodResult = fmodSystem->init(512, FMOD_INIT_NORMAL, 0); // Initialize FMOD
+	if (fmodResult != FMOD_OK)
+	{
+		printf("FMOD error! (%d) %s\n", fmodResult, FMOD_ErrorString(fmodResult));
+		exit(-1);
+	}
+
+	// Test to see if 3D/2D audio works
+
+	fmodResult = fmodSystem->createSound("../../Assets/Audio/CityofDawn.wav", FMOD_3D | FMOD_LOOP_NORMAL, 0, &sound3D); // Create a 3D/Looping sound
+	if (fmodResult != FMOD_OK)
+	{
+		printf("FMOD error! (%d) %s\n", fmodResult, FMOD_ErrorString(fmodResult));
+	}
+
+	fmodResult = fmodSystem->createSound("../../Assets/Audio/wow.wav", FMOD_2D | FMOD_LOOP_OFF, 0, &sound2D); // Create a non-looping 2D sound
+	if (fmodResult != FMOD_OK)
+	{
+		printf("FMOD error! (%d) %s\n", fmodResult, FMOD_ErrorString(fmodResult));
+	}
+
+	fmodResult = fmodSystem->playSound(sound3D, 0, false, &channel1); // Start playing the 3D sound
+	if (fmodResult != FMOD_OK)
+	{
+		printf("FMOD error! (%d) %s\n", fmodResult, FMOD_ErrorString(fmodResult));
+	}
+
+	//channel->set3DAttributes(0, 0); // If you want to change the position/velocity
+	//channel->setPaused(false);
+	//FMOD_DEFAULT | FMOD_LOOP_OFF
 }
 
 void Game::OnResize()
@@ -235,8 +277,13 @@ void Game::Update(float deltaTime, float totalTime)
 		sceneLoader->sceneEntitiesMap["sphere1"]->CalcWorldMatrix();
 	}
 
-	if (GetAsyncKeyState('M') & 0x8000) {
-
+	// Play the 2D sound only if the channel is not playing something
+	if (GetAsyncKeyState('M') & 0x8000 && channel2->isPlaying(&isPlaying) == FMOD_ERR_INVALID_HANDLE) {
+		fmodResult = fmodSystem->playSound(sound2D, 0, false, &channel2);
+		if (fmodResult != FMOD_OK)
+		{
+			printf("FMOD error! (%d) %s\n", fmodResult, FMOD_ErrorString(fmodResult));
+		}
 	}
 
 	if (GetAsyncKeyState(VK_LEFT))
@@ -275,6 +322,25 @@ void Game::Update(float deltaTime, float totalTime)
 
 	camera->Update();
 	water->Update();
+
+	// Set our listener position as the camera's position for now
+	listener_pos.x = camera->position.x;
+	listener_pos.y = camera->position.y;
+	listener_pos.z = camera->position.z;
+
+	// Set the listener forward to the camera's forward
+	listener_forward.x = camera->GetViewMatrix()._13;
+	listener_forward.y = camera->GetViewMatrix()._23;
+	listener_forward.z = camera->GetViewMatrix()._33;
+
+	// Set the listener up to the camera's up
+	listener_up.x = camera->GetViewMatrix()._12;
+	listener_up.y = camera->GetViewMatrix()._22;
+	listener_up.z = camera->GetViewMatrix()._32;
+
+	fmodSystem->set3DListenerAttributes(0, &listener_pos, 0, &listener_forward, &listener_up); // Update 'ears'
+	fmodSystem->update();
+
 	/*if (!GetAsyncKeyState(VK_CONTROL))
 	{
 		testLight->Position = camera->position;

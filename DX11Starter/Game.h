@@ -20,9 +20,8 @@
 #include "Water.h"
 #include "WaterMaterial.h"
 #include "SceneLoader.h"
-#include "soloud.h"
-#include "soloud_thread.h"
-#include "soloud_wav.h"
+#include "fmod.hpp"
+#include "fmod_errors.h"
 
 using namespace std;
 
@@ -111,8 +110,21 @@ private:
 	//testing
 	Light* testLight;
 
-	//audio
-	SoLoud::Soloud sLoud;
-	SoLoud::Wav testAudio1;
+	// Audio
+	FMOD_RESULT fmodResult;
+	FMOD::System* fmodSystem = NULL;
+
+	FMOD::Sound* sound3D;
+	FMOD::Sound* sound2D;
+
+	FMOD::Channel* channel1 = 0;
+	FMOD::Channel* channel2 = 0;
+
+	bool isPlaying = 0;
+
+	FMOD_VECTOR listener_pos;
+	//FMOD_VECTOR listener_vel; // If we want a doppler effect
+	FMOD_VECTOR listener_forward;
+	FMOD_VECTOR listener_up;
 };
 
