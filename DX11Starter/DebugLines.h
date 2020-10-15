@@ -3,6 +3,7 @@
 #include <d3d11.h>
 #include <iostream>
 #include <vector>
+#include <map>
 #include "Utility.h"
 #include "Config.h"
 //#include "EtherealEngine.h"
@@ -24,6 +25,7 @@ class DebugLines {
 
 public:
 	static vector<DebugLines*> debugLines;
+	static map<string, DebugLines*> debugLinesMap;
 	ID3D11Buffer* vertexBuffer = nullptr;
 	ID3D11Buffer* indexBuffer = nullptr;
 	DebugLinesVertex* vertices = nullptr;

@@ -32,7 +32,7 @@ public:
 	~Collider();
 	void SetWorldMatrix(XMFLOAT4X4 worldMat);
 	unsigned int CheckSATCollision(Collider* other);
-	XMFLOAT3 CheckSATCollisionForCorrection(Collider* other);
+	bool CheckSATCollisionForCorrection(Collider* other, XMFLOAT3& result);
 	XMFLOAT3* GetColliderCorners();
 	XMFLOAT3* GetUntransformedColliderCorners();
 	XMFLOAT4X4 GetWorldMatrix();

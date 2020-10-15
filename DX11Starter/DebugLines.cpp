@@ -1,6 +1,7 @@
 #include "DebugLines.h"
 
 vector<DebugLines*> DebugLines::debugLines;
+map<string, DebugLines*> DebugLines::debugLinesMap;
 
 DebugLines::DebugLines(string entityName, int colliderID, bool willUpdate)
 {
@@ -64,4 +65,5 @@ void DebugLines::GenerateCuboidVertexBuffer(XMFLOAT3* verts, int vertCount)
 	Config::Device->CreateBuffer(&ibd, &initialIndexData, &indexBuffer);
 
 	debugLines.push_back(this);
+	debugLinesMap.insert({ entityName,this });
 }

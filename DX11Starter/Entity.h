@@ -29,11 +29,11 @@ private:
 	vector<Entity*> children;
 	Entity* parent = nullptr;
 	vector<Collider*> colliders;
-	bool isStatic = true;
 
 	bool shadowsEnabled = true;
 	ShadowData shadowData;
 public:
+	bool isStatic = true;
 	bool collisionsEnabled = true;
 	bool colliderDebugLinesEnabled = true;
 	Entity(string entityName, Mesh* entityMesh, Material* mat = nullptr);
@@ -48,6 +48,7 @@ public:
 	void SetRepeatTexture(float x, float y);
 	void SetShadowData(ShadowData shadowData);
 	void ToggleShadows(bool toggle);
+	void Move(XMFLOAT3 f);
 	void Move(float x, float y, float z);
 	ID3D11Buffer* GetMeshVertexBuffer(int i = -1);
 	ID3D11Buffer* GetMeshIndexBuffer(int i = -1);

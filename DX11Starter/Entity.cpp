@@ -80,6 +80,14 @@ void Entity::ToggleShadows(bool toggle)
 	shadowsEnabled = toggle;
 }
 
+void Entity::Move(XMFLOAT3 f)
+{
+	position.x += f.x;
+	position.y += f.y;
+	position.z += f.z;
+	CalcWorldMatrix();
+}
+
 void Entity::Move(float x, float y, float z)
 {
 	position.x += x;
@@ -243,15 +251,41 @@ bool Entity::CheckSATCollision(Entity* other)
 bool Entity::CheckSATCollisionAndCorrect(Entity* other)
 {
 	if (isStatic) return false;
+	bool isColliding;
 	XMFLOAT3 result;
 	for (size_t i = 0; i < (mesh->HasChildren() ? mesh->GetChildCount() : 1); i++)
 	{
 		for (size_t j = 0; j < (other->MeshHasChildren() ? other->GetMeshChildCount() : 1); j++)
 		{
-			result = colliders[i]->CheckSATCollisionForCorrection(other->colliders[j]);
+			isColliding = colliders[i]->CheckSATCollisionForCorrection(other->colliders[j], result);
+			if (isColliding) break;
 		}
 	}
-	if (result.x != 0 && result.y != 0 && result.z != 0) return true;
+	
+	if (isColliding) {
+		XMVECTOR modifiedVec = XMLoadFloat3(&result);
+		XMVECTOR dist;
+		XMVECTOR thisPos = XMLoadFloat3(&position);
+		XMVECTOR otherPos = XMLoadFloat3(&other->position);
+		dist = thisPos - otherPos;
+		XMVECTOR dotV = XMVector3Dot(modifiedVec, dist);
+		float dot;
+		XMStoreFloat(&dot, dotV);
+		if (dot < 0.0f) {
+			modifiedVec = XMVectorScale(modifiedVec, -1.0f);
+		}
+		if (!other->isStatic) {
+			XMFLOAT3 otherResult;
+			modifiedVec = XMVectorScale(modifiedVec, 0.5f);
+			XMVECTOR otherResultVec = XMVectorScale(modifiedVec, -1.0f);
+			XMStoreFloat3(&otherResult, otherResultVec);
+			other->Move(otherResult);
+		}
+		XMFLOAT3 modifiedResult;
+		XMStoreFloat3(&modifiedResult, modifiedVec);
+		Move(modifiedResult);
+		return true;
+	}
 	else return false;
 }
 

@@ -206,9 +206,9 @@ unsigned int Collider::CheckSATCollision(Collider* other)
 	return -1;
 }
 
-XMFLOAT3 Collider::CheckSATCollisionForCorrection(Collider* other)
+bool Collider::CheckSATCollisionForCorrection(Collider* other, XMFLOAT3& result)
 {
-	if (!collisionsEnabled || !other->collisionsEnabled) return XMFLOAT3(0);
+	if (!collisionsEnabled || !other->collisionsEnabled) return false;
 
 	XMFLOAT3 axes[15];
 
@@ -238,6 +238,9 @@ XMFLOAT3 Collider::CheckSATCollisionForCorrection(Collider* other)
 	XMVECTOR corner;
 	XMVECTOR dot;
 	float proj;
+
+	float scalar = 0.0f;
+	XMVECTOR scalarAxis;
 
 	for (size_t i = 0; i < 15; i++)
 	{
@@ -274,12 +277,30 @@ XMFLOAT3 Collider::CheckSATCollisionForCorrection(Collider* other)
 		}
 
 		if (objAMin > objBMax || objAMax < objBMin) {
-			return XMFLOAT3(0);
+			return false;
+		}
+		else if(objAMin < objBMax || objAMax > objBMin){
+			if (scalar == 0.0f) {
+				scalar = objBMax - objAMin;
+				scalarAxis = axis;
+			}
+			else if (abs(objBMax - objAMin) < abs(scalar)) {
+				scalar = objBMax - objAMin;
+				scalarAxis = axis;
+			}
+			else if (abs(objAMax - objBMin) < abs(scalar)) {
+				scalar = objAMax - objBMin;
+				scalarAxis = axis;
+			}
 		}
 	}
 
 	//there is no axis test that separates these two objects
-	return XMFLOAT3(0);
+	XMFLOAT3 dist;
+	XMVECTOR vs = XMVectorScale(scalarAxis, (scalar + 0.0001f));
+	XMStoreFloat3(&dist, vs);
+	result = dist;
+	return true;
 }
 
 XMFLOAT3* Collider::GetColliderCorners()

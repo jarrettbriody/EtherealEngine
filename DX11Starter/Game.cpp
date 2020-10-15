@@ -83,6 +83,9 @@ void Game::Init()
 
 	EESceneLoader->LoadScene("ArenaV2");
 
+	EESceneLoader->sceneEntitiesMap["barrel_1"]->isStatic = false;
+	EESceneLoader->sceneEntitiesMap["barrel_1 (2)"]->isStatic = false;
+
 	//test area --------------------------
 	/*
 	CUBE ALWAYS TRIES TO APPLY GRASS MATERIAL BECAUSE OF GROUND NEED TO FIX
@@ -246,35 +249,35 @@ void Game::Update(float deltaTime, float totalTime)
 	if (GetAsyncKeyState(VK_LEFT))
 	{
 		DirectX::XMFLOAT3 trans = EESceneLoader->sceneEntitiesMap["barrel_1"]->GetPosition();
-		trans.x -= 0.1f;
+		trans.x -= 0.05f;
 		EESceneLoader->sceneEntitiesMap["barrel_1"]->SetPosition(trans.x, trans.y, trans.z);
 		EESceneLoader->sceneEntitiesMap["barrel_1"]->CalcWorldMatrix();
 	}
 	if (GetAsyncKeyState(VK_RIGHT))
 	{
 		DirectX::XMFLOAT3 trans = EESceneLoader->sceneEntitiesMap["barrel_1"]->GetPosition();
-		trans.x += 0.1f;
+		trans.x += 0.05f;
 		EESceneLoader->sceneEntitiesMap["barrel_1"]->SetPosition(trans.x, trans.y, trans.z);
 		EESceneLoader->sceneEntitiesMap["barrel_1"]->CalcWorldMatrix();
 	}
 	if (GetAsyncKeyState(VK_UP))
 	{
 		DirectX::XMFLOAT3 trans = EESceneLoader->sceneEntitiesMap["barrel_1"]->GetPosition();
-		trans.z += 0.1f;
+		trans.z += 0.05f;
 		EESceneLoader->sceneEntitiesMap["barrel_1"]->SetPosition(trans.x, trans.y, trans.z);
 		EESceneLoader->sceneEntitiesMap["barrel_1"]->CalcWorldMatrix();
 	}
 	if (GetAsyncKeyState(VK_DOWN))
 	{
 		DirectX::XMFLOAT3 trans = EESceneLoader->sceneEntitiesMap["barrel_1"]->GetPosition();
-		trans.z -= 0.1f;
+		trans.z -= 0.05f;
 		EESceneLoader->sceneEntitiesMap["barrel_1"]->SetPosition(trans.x, trans.y, trans.z);
 		EESceneLoader->sceneEntitiesMap["barrel_1"]->CalcWorldMatrix();
 	}
 
-	if (EESceneLoader->sceneEntitiesMap["barrel_1"]->CheckSATCollision(EESceneLoader->sceneEntitiesMap["Ruin"]))
+	if (EESceneLoader->sceneEntitiesMap["barrel_1"]->CheckSATCollisionAndCorrect(EESceneLoader->sceneEntitiesMap["barrel_1 (2)"]))
 	{
-		cout << "colliding" << endl;
+		cout << "Barrels are colliding" << endl;
 	}
 
 	EECamera->Update();
