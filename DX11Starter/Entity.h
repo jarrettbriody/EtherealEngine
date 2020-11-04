@@ -5,6 +5,7 @@
 #include "Mesh.h"
 #include "Material.h"
 #include "Collider.h"
+#include "btBulletDynamicsCommon.h"
 
 struct ShadowData {
 	DirectX::XMFLOAT4X4 shadowViewMatrix;
@@ -32,6 +33,11 @@ private:
 
 	bool shadowsEnabled = true;
 	ShadowData shadowData;
+
+	float isStatic;
+
+	btCollisionShape* collShape;
+	btRigidBody* rBody;
 public:
 	Entity(string entityName, Mesh* entityMesh, Material* mat = nullptr);
 	~Entity();
@@ -63,5 +69,6 @@ public:
 	void AddAutoBoxCollider();
 	bool CheckSATCollision(Entity* other);
 	vector<Collider*> GetColliders();
+
 };
 

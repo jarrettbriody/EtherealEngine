@@ -13,6 +13,33 @@ Entity::Entity(string entityName, Mesh* entityMesh, Material* mat)
 	DirectX::XMStoreFloat4x4(&worldMatrix, XMMatrixTranspose(W));
 	if (mat != nullptr)
 		materialMap.insert({ mat->GetName(), mat });
+
+	// Physics set-up
+
+	//this->collShape = new btBoxShape(btVector3(btScalar(scale.x / 2.0f), btScalar(scale.y / 2.0f), btScalar(scale.z / 2.0f)));
+
+	btTransform groundTransform;
+	groundTransform.setIdentity();
+	groundTransform.setOrigin(btVector3(position.x, position.y, position.z));
+
+	//btScalar mass(isStatic);
+	btScalar mass(0.0f);
+
+	//rigidbody is dynamic if and only if mass is non zero, otherwise static
+	bool isDynamic = (mass != 0.0f);
+
+	btVector3 localInertia(0, 0, 0);
+	if (isDynamic)
+		collShape->calculateLocalInertia(mass, localInertia);
+
+	btDefaultMotionState* myMotionState = new btDefaultMotionState(groundTransform);
+	btRigidBody::btRigidBodyConstructionInfo rbInfo(mass, myMotionState, collShape, localInertia);
+	this->rBody = new btRigidBody(rbInfo);
+
+	rBody->setLinearFactor(btVector3(1, 1, 0));
+	rBody->setAngularFactor(btVector3(0, 1, 1));
+
+	rBody->setAnisotropicFriction(btVector3(2.0f, 0.0f, 0.0f));
 }
 
 

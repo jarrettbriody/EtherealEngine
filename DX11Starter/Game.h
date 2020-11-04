@@ -40,7 +40,11 @@ public:
 	void Update(float deltaTime, float totalTime);
 	void Draw(float deltaTime, float totalTime);
 
+	void PhysicsStep();
+	void AudioStep();
 	void DrawSky();
+
+	void FmodErrorCheck(FMOD_RESULT result); // Define it here because current file structure wont let me put it in utility
 
 	// Overridden mouse input helper methods
 	void OnMouseDown (WPARAM buttonState, int x, int y);
@@ -110,15 +114,23 @@ private:
 	//testing
 	Light* testLight;
 
+	// Physics
+	btDefaultCollisionConfiguration* collisionConfiguration;
+	btCollisionDispatcher* dispatcher;
+	btBroadphaseInterface* broadphase;
+	btSequentialImpulseConstraintSolver* solver;
+	btDiscreteDynamicsWorld* dynamicsWorld;
+
 	// Audio
 	FMOD_RESULT fmodResult;
 	FMOD::System* fmodSystem = NULL;
 
-	FMOD::Sound* sound3D;
-	FMOD::Sound* sound2D;
+	FMOD::Sound* backgroundMusic;
+	FMOD::Sound* sound[12];
 
-	FMOD::Channel* channel1 = 0;
-	FMOD::Channel* channel2 = 0;
+	FMOD::Channel* musicChannel = 0;
+	FMOD::Channel* channel[12];
+	FMOD::ChannelGroup* masterGroup, * sfxGroup;
 
 	bool isPlaying = 0;
 

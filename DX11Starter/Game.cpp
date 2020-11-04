@@ -29,8 +29,10 @@ Game::~Game()
 	skyDepthState->Release();
 	skyRasterState->Release();
 
-	sound3D->release();
-	sound2D->release();
+	// FMOD
+	sound[0]->release(); // For now just release the one sound we have assigned
+	backgroundMusic->release();
+	sfxGroup->release();
 	fmodSystem->close();
 	fmodSystem->release();
 
@@ -209,9 +211,19 @@ void Game::Init()
 	sceneLoader->sceneEntities.push_back(waterEntity);
 	waterEntity->CalcWorldMatrix();
 
+	// Physics -----------------
+
+	collisionConfiguration = new btDefaultCollisionConfiguration();
+	dispatcher = new  btCollisionDispatcher(collisionConfiguration);
+	broadphase = new  btDbvtBroadphase();
+	solver = new  btSequentialImpulseConstraintSolver;
+	dynamicsWorld = new btDiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
+
+	dynamicsWorld->setGravity(btVector3(0, -3.0f, 0));
+
 	// Audio -----------------
 
-	// Basic set-up for sound. Audio and error functionality will probably be moved to their own class, but it is kept inline until then
+	// Basic set-up for sound
 
 	fmodResult = FMOD::System_Create(&fmodSystem); // Create the Studio System object
 	if (fmodResult != FMOD_OK)
@@ -220,36 +232,40 @@ void Game::Init()
 		exit(-1);
 	}
 
-	fmodResult = fmodSystem->init(512, FMOD_INIT_NORMAL, 0); // Initialize FMOD
+	fmodResult = fmodSystem->init(32, FMOD_INIT_NORMAL, 0); // Initialize FMOD with 32 max channels
 	if (fmodResult != FMOD_OK)
 	{
 		printf("FMOD error! (%d) %s\n", fmodResult, FMOD_ErrorString(fmodResult));
 		exit(-1);
 	}
 
-	// Test to see if 3D/2D audio works
+	// Test to see if 3D/2D audio works - EXAMPLE CODE
 
-	fmodResult = fmodSystem->createSound("../../Assets/Audio/CityofDawn.wav", FMOD_3D | FMOD_LOOP_NORMAL, 0, &sound3D); // Create a 3D/Looping sound
-	if (fmodResult != FMOD_OK)
-	{
-		printf("FMOD error! (%d) %s\n", fmodResult, FMOD_ErrorString(fmodResult));
-	}
+	fmodResult = fmodSystem->createSound("../../Assets/Audio/CityofDawn.wav", FMOD_3D | FMOD_3D_LINEARROLLOFF | FMOD_LOOP_NORMAL, 0, &backgroundMusic); // Create a 3D/Looping sound with linear roll off
+	FmodErrorCheck(fmodResult);
 
-	fmodResult = fmodSystem->createSound("../../Assets/Audio/wow.wav", FMOD_2D | FMOD_LOOP_OFF, 0, &sound2D); // Create a non-looping 2D sound
-	if (fmodResult != FMOD_OK)
-	{
-		printf("FMOD error! (%d) %s\n", fmodResult, FMOD_ErrorString(fmodResult));
-	}
+	fmodResult = fmodSystem->createSound("../../Assets/Audio/wow.wav", FMOD_2D | FMOD_LOOP_OFF, 0, &sound[0]); // Create a non-looping 2D sound in the first slot
+	FmodErrorCheck(fmodResult);
 
-	fmodResult = fmodSystem->playSound(sound3D, 0, false, &channel1); // Start playing the 3D sound
-	if (fmodResult != FMOD_OK)
-	{
-		printf("FMOD error! (%d) %s\n", fmodResult, FMOD_ErrorString(fmodResult));
-	}
+	fmodResult = fmodSystem->createChannelGroup("SFX Group", &sfxGroup); // Create a channel group for sound effects
+	FmodErrorCheck(fmodResult);
 
-	//channel->set3DAttributes(0, 0); // If you want to change the position/velocity
-	//channel->setPaused(false);
-	//FMOD_DEFAULT | FMOD_LOOP_OFF
+	fmodResult = fmodSystem->getMasterChannelGroup(&masterGroup); // Assign masterGroup as the master channel
+	FmodErrorCheck(fmodResult);
+
+	// Add the SFX group as a child of the master group as an example. Technically doesn't need to be done because the master group already controls everything
+	fmodResult = masterGroup->addGroup(sfxGroup); 
+	FmodErrorCheck(fmodResult);
+
+	fmodResult = fmodSystem->playSound(backgroundMusic, 0, false, &musicChannel); // Start playing the 3D sound
+	FmodErrorCheck(fmodResult);
+
+	FMOD_VECTOR pos = { 1.0f, 1.0f, 1.0f };
+	FMOD_VECTOR vel = { 0, 0, 0 };
+
+	// Set the 3D values for the channel
+	musicChannel->set3DAttributes(&pos, &vel);
+	musicChannel->set3DMinMaxDistance(0, 15.0f);
 }
 
 void Game::OnResize()
@@ -277,13 +293,19 @@ void Game::Update(float deltaTime, float totalTime)
 		sceneLoader->sceneEntitiesMap["sphere1"]->CalcWorldMatrix();
 	}
 
-	// Play the 2D sound only if the channel is not playing something
-	if (GetAsyncKeyState('M') & 0x8000 && channel2->isPlaying(&isPlaying) == FMOD_ERR_INVALID_HANDLE) {
-		fmodResult = fmodSystem->playSound(sound2D, 0, false, &channel2);
-		if (fmodResult != FMOD_OK)
-		{
-			printf("FMOD error! (%d) %s\n", fmodResult, FMOD_ErrorString(fmodResult));
-		}
+	// Play the 2D sound only if the channel group is not playing something
+	sfxGroup->isPlaying(&isPlaying);
+	if (GetAsyncKeyState('P') & 0x8000 && !isPlaying) {
+		fmodResult = fmodSystem->playSound(sound[0], sfxGroup, false, 0); // Play the sound using any channel in the sfx group (free channels are used first)
+		FmodErrorCheck(fmodResult);
+	}
+
+	// Mute/unmute the master group
+	if (GetAsyncKeyState('M') & 0x8000)
+	{
+		bool mute = true;
+		masterGroup->getMute(&mute);
+		masterGroup->setMute(!mute);
 	}
 
 	if (GetAsyncKeyState(VK_LEFT))
@@ -323,6 +345,41 @@ void Game::Update(float deltaTime, float totalTime)
 	camera->Update();
 	water->Update();
 
+	AudioStep();
+
+	/*if (!GetAsyncKeyState(VK_CONTROL))
+	{
+		testLight->Position = camera->position;
+		testLight->Direction = camera->direction;
+	}*/
+}
+
+void Game::PhysicsStep()
+{
+	for (int i = dynamicsWorld->getNumCollisionObjects() - 1; i >= 0; i--)
+	{
+		btCollisionObject* obj = dynamicsWorld->getCollisionObjectArray()[i];
+		btRigidBody* body = btRigidBody::upcast(obj);
+
+		btTransform transform = body->getWorldTransform();
+		transform.setOrigin(btVector3(sceneLoader->sceneEntities[i]->GetPosition().x, sceneLoader->sceneEntities[i]->GetPosition().y, sceneLoader->sceneEntities[i]->GetPosition().z));
+		transform.setRotation(btQuaternion(sceneLoader->sceneEntities[i]->GetRotation().y, sceneLoader->sceneEntities[i]->GetRotation().z, sceneLoader->sceneEntities[i]->GetRotation().x));
+		body->getMotionState()->setWorldTransform(transform);
+
+		//dynamicsWorld->stepSimulation(deltaTime * 0.5f);
+
+		body->getMotionState()->getWorldTransform(transform);
+
+		sceneLoader->sceneEntities[i]->SetPosition(transform.getOrigin().getX(), transform.getOrigin().getY(), transform.getOrigin().getZ());
+		sceneLoader->sceneEntities[i]->SetRotation(transform.getRotation().getX(), transform.getRotation().getY(), transform.getRotation().getZ());
+		//sceneEntities[i].SetWorldMatrix();
+	}
+
+	//sceneEntities[0].GetRBody()->setLinearVelocity(btVector3(0.0f, sceneEntities[0].GetRBody()->getLinearVelocity().getY(), 0.0f));
+}
+
+void Game::AudioStep()
+{
 	// Set our listener position as the camera's position for now
 	listener_pos.x = camera->position.x;
 	listener_pos.y = camera->position.y;
@@ -338,14 +395,10 @@ void Game::Update(float deltaTime, float totalTime)
 	listener_up.y = camera->GetViewMatrix()._22;
 	listener_up.z = camera->GetViewMatrix()._32;
 
+	printf("Listener forward = x: %f y: %f z: %f \n", listener_forward.x, listener_forward.y, listener_forward.z);
+
 	fmodSystem->set3DListenerAttributes(0, &listener_pos, 0, &listener_forward, &listener_up); // Update 'ears'
 	fmodSystem->update();
-
-	/*if (!GetAsyncKeyState(VK_CONTROL))
-	{
-		testLight->Position = camera->position;
-		testLight->Direction = camera->direction;
-	}*/
 }
 
 void Game::Draw(float deltaTime, float totalTime)
@@ -422,5 +475,13 @@ void Game::OnMouseMove(WPARAM buttonState, int x, int y)
 void Game::OnMouseWheel(float wheelDelta, int x, int y)
 {
 	
+}
+
+void Game::FmodErrorCheck(FMOD_RESULT result)
+{
+	if (result != FMOD_OK)
+	{
+		printf("FMOD error! (%d) %s\n", result, FMOD_ErrorString(result));
+	}
 }
 #pragma endregion
