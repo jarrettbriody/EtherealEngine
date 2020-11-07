@@ -69,6 +69,6 @@ public:
 	void AddAutoBoxCollider();
 	bool CheckSATCollision(Entity* other);
 	vector<Collider*> GetColliders();
-
+	btRigidBody* GetRBody();
 };
 

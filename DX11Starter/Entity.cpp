@@ -291,3 +291,8 @@ vector<Collider*> Entity::GetColliders()
 {
 	return colliders;
 }
+
+btRigidBody* Entity::GetRBody()
+{
+	return rBody;
+}

@@ -40,7 +40,7 @@ public:
 	void Update(float deltaTime, float totalTime);
 	void Draw(float deltaTime, float totalTime);
 
-	void PhysicsStep();
+	void PhysicsStep(float deltaTime);
 	void AudioStep();
 	void DrawSky();
 

@@ -346,6 +346,7 @@ void Game::Update(float deltaTime, float totalTime)
 	water->Update();
 
 	AudioStep();
+	//PhysicsStep(deltaTime);
 
 	/*if (!GetAsyncKeyState(VK_CONTROL))
 	{
@@ -354,7 +355,7 @@ void Game::Update(float deltaTime, float totalTime)
 	}*/
 }
 
-void Game::PhysicsStep()
+void Game::PhysicsStep(float deltaTime)
 {
 	for (int i = dynamicsWorld->getNumCollisionObjects() - 1; i >= 0; i--)
 	{
@@ -366,16 +367,16 @@ void Game::PhysicsStep()
 		transform.setRotation(btQuaternion(sceneLoader->sceneEntities[i]->GetRotation().y, sceneLoader->sceneEntities[i]->GetRotation().z, sceneLoader->sceneEntities[i]->GetRotation().x));
 		body->getMotionState()->setWorldTransform(transform);
 
-		//dynamicsWorld->stepSimulation(deltaTime * 0.5f);
+		dynamicsWorld->stepSimulation(deltaTime * 0.5f);
 
 		body->getMotionState()->getWorldTransform(transform);
 
 		sceneLoader->sceneEntities[i]->SetPosition(transform.getOrigin().getX(), transform.getOrigin().getY(), transform.getOrigin().getZ());
 		sceneLoader->sceneEntities[i]->SetRotation(transform.getRotation().getX(), transform.getRotation().getY(), transform.getRotation().getZ());
-		//sceneEntities[i].SetWorldMatrix();
+		sceneLoader->sceneEntities[i]->CalcWorldMatrix();
 	}
 
-	//sceneEntities[0].GetRBody()->setLinearVelocity(btVector3(0.0f, sceneEntities[0].GetRBody()->getLinearVelocity().getY(), 0.0f));
+	//sceneLoader->sceneEntities[0]->GetRBody()->setLinearVelocity(btVector3(0.0f, sceneLoader->sceneEntities[0]->GetRBody()->getLinearVelocity().getY(), 0.0f));
 }
 
 void Game::AudioStep()
