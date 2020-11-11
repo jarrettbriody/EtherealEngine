@@ -34,13 +34,20 @@ Game::~Game()
 
 	delete EECamera;
 	delete EERenderer;
+
+	for (size_t i = 0; i < ScriptManager::scriptFunctions.size(); i++)
+	{
+		delete ScriptManager::scriptFunctions[i];
+	}
+
+	//delete barrel;//(Barrel*)
 }
 
 void Game::Init()
 {
 	//dont delete this, its for finding mem leaks
 	//_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-	//_CrtSetBreakAlloc(56596);
+	//_CrtSetBreakAlloc(298157);
 	//_CrtSetBreakAlloc(56580);
 
 	Config::Device = device;
@@ -85,6 +92,8 @@ void Game::Init()
 
 	EESceneLoader->sceneEntitiesMap["barrel_1"]->isStatic = false;
 	EESceneLoader->sceneEntitiesMap["barrel_1 (2)"]->isStatic = false;
+
+	ScriptManager::sceneEntitiesMap = &EESceneLoader->sceneEntitiesMap;
 
 	//test area --------------------------
 	/*
@@ -212,6 +221,14 @@ void Game::Init()
 	waterEntity->CalcWorldMatrix();
 	*/
 
+	barrel = new Barrel();
+	barrel->Setup("barrel_1", EESceneLoader->sceneEntitiesMap["barrel_1"]);
+
+	for (size_t i = 0; i < ScriptManager::scriptFunctions.size(); i++)
+	{
+		ScriptManager* sf = ScriptManager::scriptFunctions[i];
+		sf->CallInit();
+	}
 }
 
 void Game::OnResize()
@@ -246,40 +263,6 @@ void Game::Update(float deltaTime, float totalTime)
 		EESceneLoader->sceneEntitiesMap["Ruin"]->CalcWorldMatrix();
 	}
 
-	if (GetAsyncKeyState(VK_LEFT))
-	{
-		DirectX::XMFLOAT3 trans = EESceneLoader->sceneEntitiesMap["barrel_1"]->GetPosition();
-		trans.x -= 0.05f;
-		EESceneLoader->sceneEntitiesMap["barrel_1"]->SetPosition(trans.x, trans.y, trans.z);
-		EESceneLoader->sceneEntitiesMap["barrel_1"]->CalcWorldMatrix();
-	}
-	if (GetAsyncKeyState(VK_RIGHT))
-	{
-		DirectX::XMFLOAT3 trans = EESceneLoader->sceneEntitiesMap["barrel_1"]->GetPosition();
-		trans.x += 0.05f;
-		EESceneLoader->sceneEntitiesMap["barrel_1"]->SetPosition(trans.x, trans.y, trans.z);
-		EESceneLoader->sceneEntitiesMap["barrel_1"]->CalcWorldMatrix();
-	}
-	if (GetAsyncKeyState(VK_UP))
-	{
-		DirectX::XMFLOAT3 trans = EESceneLoader->sceneEntitiesMap["barrel_1"]->GetPosition();
-		trans.z += 0.05f;
-		EESceneLoader->sceneEntitiesMap["barrel_1"]->SetPosition(trans.x, trans.y, trans.z);
-		EESceneLoader->sceneEntitiesMap["barrel_1"]->CalcWorldMatrix();
-	}
-	if (GetAsyncKeyState(VK_DOWN))
-	{
-		DirectX::XMFLOAT3 trans = EESceneLoader->sceneEntitiesMap["barrel_1"]->GetPosition();
-		trans.z -= 0.05f;
-		EESceneLoader->sceneEntitiesMap["barrel_1"]->SetPosition(trans.x, trans.y, trans.z);
-		EESceneLoader->sceneEntitiesMap["barrel_1"]->CalcWorldMatrix();
-	}
-
-	if (EESceneLoader->sceneEntitiesMap["barrel_1"]->CheckSATCollisionAndCorrect(EESceneLoader->sceneEntitiesMap["barrel_1 (2)"]))
-	{
-		cout << "Barrels are colliding" << endl;
-	}
-
 	EECamera->Update();
 	//water->Update();
 	
@@ -290,7 +273,15 @@ void Game::Update(float deltaTime, float totalTime)
 			dbl->worldMatrix = EESceneLoader->sceneEntitiesMap[dbl->entityName]->GetCollider(dbl->colliderID)->GetWorldMatrix();
 		}
 	}
+
+	for (size_t i = 0; i < ScriptManager::scriptFunctions.size(); i++)
+	{
+		ScriptManager* sf = ScriptManager::scriptFunctions[i];
+		sf->CallUpdate();
+	}
 	
+	GarbageCollect();
+
 	/*if (!GetAsyncKeyState(VK_CONTROL))
 	{
 		testLight->Position = camera->position;
@@ -342,6 +333,38 @@ void Game::DrawSky() {
 
 	context->RSSetState(0);
 	context->OMSetDepthStencilState(0, 0);
+}
+
+void Game::GarbageCollect()
+{
+	int start = EESceneLoader->sceneEntities.size() - 1;
+	for (int i = start; i >= 0; i--)
+	{
+		Entity* e = EESceneLoader->sceneEntities[i];
+		if (e->destroyed) {
+			string name = e->GetName();
+			EESceneLoader->sceneEntitiesMap.erase(name);
+			EESceneLoader->sceneEntities.erase(EESceneLoader->sceneEntities.begin() + i);
+			delete e;
+
+			vector<ScriptManager*> scriptFuncs = ScriptManager::scriptFunctionsMap[name];
+			for (size_t j = scriptFuncs.size() - 1; j >= 0; j--)
+			{
+				scriptFuncs[j]->destroyed = true;
+			}
+			ScriptManager::scriptFunctionsMap.erase(name);
+		}
+	}
+
+	start = ScriptManager::scriptFunctions.size() - 1;
+	for (int i = start; i >= 0; i--)
+	{
+		ScriptManager* s = ScriptManager::scriptFunctions[i];
+		if (s->destroyed) {
+			ScriptManager::scriptFunctions.erase(ScriptManager::scriptFunctions.begin() + i);
+			delete s;
+		}
+	}
 }
 
 #pragma region Mouse Input

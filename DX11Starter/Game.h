@@ -22,6 +22,8 @@
 //#include "WaterMaterial.h"
 #include "SceneLoader.h"
 #include "DebugLines.h"
+#include "ScriptManager.h"
+#include "Scripts.h"
 
 using namespace std;
 
@@ -42,6 +44,8 @@ public:
 
 	void DrawSky();
 
+	void GarbageCollect();
+
 	// Overridden mouse input helper methods
 	void OnMouseDown (WPARAM buttonState, int x, int y);
 	void OnMouseUp	 (WPARAM buttonState, int x, int y);
@@ -58,6 +62,8 @@ private:
 	Camera* EECamera = nullptr;
 	Renderer* EERenderer = nullptr;
 	SceneLoader* EESceneLoader = nullptr;
+
+	ScriptManager* barrel;
 
 	//terrain example stuff
 	//Terrain* terrain;

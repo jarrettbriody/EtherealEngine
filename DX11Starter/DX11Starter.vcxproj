@@ -112,6 +112,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Barrel.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Collider.cpp" />
     <ClCompile Include="Config.cpp" />
@@ -125,6 +126,7 @@
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="RigidBody.cpp" />
     <ClCompile Include="SceneLoader.cpp" />
+    <ClCompile Include="ScriptManager.cpp" />
     <ClCompile Include="SimpleShader.cpp" />
     <ClCompile Include="Terrain.cpp" />
     <ClCompile Include="TerrainMaterial.cpp" />
@@ -132,6 +134,7 @@
     <ClCompile Include="WaterMaterial.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Barrel.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Collider.h" />
     <ClInclude Include="Config.h" />
@@ -145,6 +148,8 @@
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="RigidBody.h" />
     <ClInclude Include="SceneLoader.h" />
+    <ClInclude Include="ScriptManager.h" />
+    <ClInclude Include="Scripts.h" />
     <ClInclude Include="Shadows.h" />
     <ClInclude Include="SimpleShader.h" />
     <ClInclude Include="Terrain.h" />

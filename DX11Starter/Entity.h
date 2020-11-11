@@ -33,6 +33,7 @@ private:
 	bool shadowsEnabled = true;
 	ShadowData shadowData;
 public:
+	bool destroyed = false;
 	bool isStatic = true;
 	bool collisionsEnabled = true;
 	bool colliderDebugLinesEnabled = true;
@@ -69,5 +70,6 @@ public:
 	bool CheckSATCollisionAndCorrect(Entity* other);
 	vector<Collider*> GetColliders();
 	Collider* GetCollider(int index = 0);
+	void Destroy();
 };
 

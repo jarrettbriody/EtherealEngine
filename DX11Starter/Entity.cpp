@@ -298,3 +298,12 @@ Collider* Entity::GetCollider(int index)
 {
 	return colliders[index];
 }
+
+void Entity::Destroy()
+{
+	this->destroyed = true;
+	for (size_t i = 0; i < children.size(); i++)
+	{
+		children[i]->Destroy();
+	}
+}
