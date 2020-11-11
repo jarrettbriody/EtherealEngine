@@ -284,7 +284,7 @@ bool Entity::CheckSATCollision(Entity* other)
 
 bool Entity::CheckSATCollisionAndCorrect(Entity* other)
 {
-	if (isStatic) return false;
+	if (isCollisionStatic) return false;
 	bool isColliding;
 	XMFLOAT3 result;
 	for (size_t i = 0; i < (mesh->HasChildren() ? mesh->GetChildCount() : 1); i++)
@@ -301,14 +301,14 @@ bool Entity::CheckSATCollisionAndCorrect(Entity* other)
 		XMVECTOR dist;
 		XMVECTOR thisPos = XMLoadFloat3(&position);
 		XMVECTOR otherPos = XMLoadFloat3(&other->position);
-		dist = thisPos - otherPos;
+		dist = XMVectorSubtract(thisPos, otherPos);
 		XMVECTOR dotV = XMVector3Dot(modifiedVec, dist);
 		float dot;
 		XMStoreFloat(&dot, dotV);
 		if (dot < 0.0f) {
 			modifiedVec = XMVectorScale(modifiedVec, -1.0f);
 		}
-		if (!other->isStatic) {
+		if (!other->isCollisionStatic) {
 			XMFLOAT3 otherResult;
 			modifiedVec = XMVectorScale(modifiedVec, 0.5f);
 			XMVECTOR otherResultVec = XMVectorScale(modifiedVec, -1.0f);

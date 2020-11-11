@@ -38,6 +38,13 @@ Game::~Game()
 	//delete terrain;
 	//delete water;
 
+	delete collisionConfiguration;
+	delete dispatcher;
+	delete broadphase;
+	delete solver;
+	delete dynamicsWorld;
+
+
 	delete EECamera;
 	delete EERenderer;
 
@@ -53,7 +60,7 @@ void Game::Init()
 {
 	//dont delete this, its for finding mem leaks
 	//_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-	//_CrtSetBreakAlloc(298157);
+	//_CrtSetBreakAlloc(298575);
 	//_CrtSetBreakAlloc(56580);
 
 	// Physics -----------------
@@ -106,8 +113,8 @@ void Game::Init()
 
 	EESceneLoader->LoadScene("ArenaV2");
 
-	EESceneLoader->sceneEntitiesMap["barrel_1"]->isStatic = false;
-	EESceneLoader->sceneEntitiesMap["barrel_1 (2)"]->isStatic = false;
+	EESceneLoader->sceneEntitiesMap["barrel_1"]->isCollisionStatic = false;
+	EESceneLoader->sceneEntitiesMap["barrel_1 (2)"]->isCollisionStatic = false;
 
 	ScriptManager::sceneEntitiesMap = &EESceneLoader->sceneEntitiesMap;
 
@@ -335,25 +342,32 @@ void Game::Update(float deltaTime, float totalTime)
 
 	if (GetAsyncKeyState(VK_LEFT))
 	{
-		DirectX::XMFLOAT3 trans = sceneLoader->sceneEntitiesMap["barrel_1"]->GetPosition();
+		DirectX::XMFLOAT3 trans = EESceneLoader->sceneEntitiesMap["barrel_1"]->GetPosition();
 		trans.x -= 0.1f;
-		sceneLoader->sceneEntitiesMap["barrel_1"]->SetPosition(trans.x, trans.y, trans.z);
-		sceneLoader->sceneEntitiesMap["barrel_1"]->CalcWorldMatrix();
+		EESceneLoader->sceneEntitiesMap["barrel_1"]->SetPosition(trans.x, trans.y, trans.z);
+		EESceneLoader->sceneEntitiesMap["barrel_1"]->CalcWorldMatrix();
 	}
 	if (GetAsyncKeyState(VK_RIGHT))
 	{
-		DirectX::XMFLOAT3 trans = sceneLoader->sceneEntitiesMap["barrel_1"]->GetPosition();
+		DirectX::XMFLOAT3 trans = EESceneLoader->sceneEntitiesMap["barrel_1"]->GetPosition();
 		trans.x += 0.1f;
-		sceneLoader->sceneEntitiesMap["barrel_1"]->SetPosition(trans.x, trans.y, trans.z);
-		sceneLoader->sceneEntitiesMap["barrel_1"]->CalcWorldMatrix();
+		EESceneLoader->sceneEntitiesMap["barrel_1"]->SetPosition(trans.x, trans.y, trans.z);
+		EESceneLoader->sceneEntitiesMap["barrel_1"]->CalcWorldMatrix();
 	}
 	if (GetAsyncKeyState(VK_UP))
 	{
-		DirectX::XMFLOAT3 trans = sceneLoader->sceneEntitiesMap["barrel_1"]->GetPosition();
+		DirectX::XMFLOAT3 trans = EESceneLoader->sceneEntitiesMap["barrel_1"]->GetPosition();
 		trans.z += 0.1f;
-		sceneLoader->sceneEntitiesMap["barrel_1"]->SetPosition(trans.x, trans.y, trans.z);
-		sceneLoader->sceneEntitiesMap["barrel_1"]->CalcWorldMatrix();
-  }
+		EESceneLoader->sceneEntitiesMap["barrel_1"]->SetPosition(trans.x, trans.y, trans.z);
+		EESceneLoader->sceneEntitiesMap["barrel_1"]->CalcWorldMatrix();
+	}
+	if (GetAsyncKeyState(VK_DOWN))
+	{
+		DirectX::XMFLOAT3 trans = EESceneLoader->sceneEntitiesMap["barrel_1"]->GetPosition();
+		trans.z -= 0.1f;
+		EESceneLoader->sceneEntitiesMap["barrel_1"]->SetPosition(trans.x, trans.y, trans.z);
+		EESceneLoader->sceneEntitiesMap["barrel_1"]->CalcWorldMatrix();
+	}
 	if (GetAsyncKeyState('B') & 0x8000) {
 		DirectX::XMFLOAT3 rot = EESceneLoader->sceneEntitiesMap["Ruin"]->GetRotation();
 		rot.y -= DirectX::XMConvertToRadians(2.0f);
@@ -398,38 +412,38 @@ void Game::PhysicsStep(float deltaTime)
 		btRigidBody* body = btRigidBody::upcast(obj);
 
 		btTransform transform = body->getWorldTransform();
-		transform.setOrigin(btVector3(sceneLoader->sceneEntities[i]->GetPosition().x, sceneLoader->sceneEntities[i]->GetPosition().y, sceneLoader->sceneEntities[i]->GetPosition().z));
-		transform.setRotation(btQuaternion(sceneLoader->sceneEntities[i]->GetRotation().y, sceneLoader->sceneEntities[i]->GetRotation().z, sceneLoader->sceneEntities[i]->GetRotation().x));
+		transform.setOrigin(btVector3(EESceneLoader->sceneEntities[i]->GetPosition().x, EESceneLoader->sceneEntities[i]->GetPosition().y, EESceneLoader->sceneEntities[i]->GetPosition().z));
+		transform.setRotation(btQuaternion(EESceneLoader->sceneEntities[i]->GetRotation().y, EESceneLoader->sceneEntities[i]->GetRotation().z, EESceneLoader->sceneEntities[i]->GetRotation().x));
 		body->getMotionState()->setWorldTransform(transform);
 
 		dynamicsWorld->stepSimulation(deltaTime * 0.5f);
 
 		body->getMotionState()->getWorldTransform(transform);
 
-		sceneLoader->sceneEntities[i]->SetPosition(transform.getOrigin().getX(), transform.getOrigin().getY(), transform.getOrigin().getZ());
-		sceneLoader->sceneEntities[i]->SetRotation(transform.getRotation().getX(), transform.getRotation().getY(), transform.getRotation().getZ());
-		sceneLoader->sceneEntities[i]->CalcWorldMatrix();
+		EESceneLoader->sceneEntities[i]->SetPosition(transform.getOrigin().getX(), transform.getOrigin().getY(), transform.getOrigin().getZ());
+		EESceneLoader->sceneEntities[i]->SetRotation(transform.getRotation().getX(), transform.getRotation().getY(), transform.getRotation().getZ());
+		EESceneLoader->sceneEntities[i]->CalcWorldMatrix();
 	}
 
-	//sceneLoader->sceneEntities[0]->GetRBody()->setLinearVelocity(btVector3(0.0f, sceneLoader->sceneEntities[0]->GetRBody()->getLinearVelocity().getY(), 0.0f));
+	//EESceneLoader->sceneEntities[0]->GetRBody()->setLinearVelocity(btVector3(0.0f, EESceneLoader->sceneEntities[0]->GetRBody()->getLinearVelocity().getY(), 0.0f));
 }
 
 void Game::AudioStep()
 {
 	// Set our listener position as the camera's position for now
-	listener_pos.x = camera->position.x;
-	listener_pos.y = camera->position.y;
-	listener_pos.z = camera->position.z;
+	listener_pos.x = EECamera->position.x;
+	listener_pos.y = EECamera->position.y;
+	listener_pos.z = EECamera->position.z;
 
 	// Set the listener forward to the camera's forward
-	listener_forward.x = camera->GetViewMatrix()._13;
-	listener_forward.y = camera->GetViewMatrix()._23;
-	listener_forward.z = camera->GetViewMatrix()._33;
+	listener_forward.x = EECamera->GetViewMatrix()._13;
+	listener_forward.y = EECamera->GetViewMatrix()._23;
+	listener_forward.z = EECamera->GetViewMatrix()._33;
 
 	// Set the listener up to the camera's up
-	listener_up.x = camera->GetViewMatrix()._12;
-	listener_up.y = camera->GetViewMatrix()._22;
-	listener_up.z = camera->GetViewMatrix()._32;
+	listener_up.x = EECamera->GetViewMatrix()._12;
+	listener_up.y = EECamera->GetViewMatrix()._22;
+	listener_up.z = EECamera->GetViewMatrix()._32;
 
 	printf("Listener forward = x: %f y: %f z: %f \n", listener_forward.x, listener_forward.y, listener_forward.z);
 

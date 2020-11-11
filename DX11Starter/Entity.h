@@ -15,6 +15,7 @@ struct ShadowData {
 };
 
 using namespace std;
+//using namespace DirectX;
 
 class Entity
 {
@@ -41,11 +42,11 @@ private:
 	btDiscreteDynamicsWorld* dynamicsWorld;
 public:
 	bool destroyed = false;
-	bool isStatic = true;
+	bool isCollisionStatic = true;
 	bool collisionsEnabled = true;
 	bool colliderDebugLinesEnabled = true;
 	Entity(string entityName, Mesh* entityMesh, Material* mat = nullptr);
-  Entity(string entityName, btDiscreteDynamicsWorld* dw, Mesh* entityMesh, Material* mat = nullptr);
+	Entity(string entityName, btDiscreteDynamicsWorld* dw, Mesh* entityMesh, Material* mat = nullptr);
 	~Entity();
 	DirectX::XMFLOAT4X4 GetWorldMatrix();
 	DirectX::XMFLOAT3 GetPosition();
