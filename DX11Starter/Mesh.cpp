@@ -11,6 +11,10 @@ Mesh::Mesh()
 
 Mesh::Mesh(Vertex * vertexObjects, int vertexCount, unsigned int * indices, int indexCnt, ID3D11Device * device, string meshN, string matName)
 {
+	for (size_t i = 0; i < vertexCount; i++)
+	{
+		vertices.push_back(vertexObjects[i].Position);
+	}
 	meshName = meshN;
 	materialNameList.push_back(matName);
 	CreateBuffers(vertexObjects, vertexCount, indices, indexCnt, device);
@@ -54,22 +58,27 @@ Mesh::Mesh(string meshN, char * objFile, ID3D11Device* device, bool* success)
 
 		line = string(chars);
 
-		//new group, push current group to children
-		if (isGroup && chars[0] == 'v') {
-			materialNameList.push_back(matName);
-			children.push_back(new Mesh(&verts[0], vertCounter, &indices[0], vertCounter, device, groupName, matName));
-			childCount++;
-			//reset everything
-			isGroup = false;
-			groupName = "";
-			matName = "";
-			verts.clear();
-			indices.clear();
-			vertCounter = 0;
-		}
-
 		// Check the type of line
-		if (chars[0] == 'v' && chars[1] == 'n')
+		if (chars[0] == 'g') {
+			if (!isGroup && line != "g default") {
+				isGroup = true;
+				groupName = line.substr(2);
+			}
+			else if (isGroup && line != "g default") {
+				materialNameList.push_back(matName);
+				groupName = line.substr(2);
+				children.push_back(new Mesh(&verts[0], vertCounter, &indices[0], vertCounter, device, groupName, matName));
+				childCount++;
+				//reset everything
+				matName = "";
+				verts.clear();
+				indices.clear();
+				vertCounter = 0;
+				isGroup = true;
+				groupName = line.substr(2);
+			}
+		}
+		else if (chars[0] == 'v' && chars[1] == 'n')
 		{
 			// Read the 3 numbers directly into an XMFLOAT3
 			XMFLOAT3 norm;
@@ -197,10 +206,6 @@ Mesh::Mesh(string meshN, char * objFile, ID3D11Device* device, bool* success)
 				indices.push_back(vertCounter); vertCounter += 1;
 			}
 		}
-		else if (chars[0] == 'g') {
-			isGroup = true;
-			groupName = line.substr(2);
-		}
 		else if (regex_search(line, match, useMatRgx)) {
 			matName = regex_replace(line, useMatRgx, "");
 			materialNameList.push_back(matName);
@@ -215,9 +220,7 @@ Mesh::Mesh(string meshN, char * objFile, ID3D11Device* device, bool* success)
 
 	if (isGroup && groupName != "" && matName != "" && childCount > 0) {
 		materialNameList.push_back(matName);
-		Mesh* childMesh = new Mesh(&verts[0], vertCounter, &indices[0], vertCounter, device, groupName, matName);
-		childMesh->SetVertices(positions);
-		children.push_back(childMesh);
+		children.push_back(new Mesh(&verts[0], vertCounter, &indices[0], vertCounter, device, groupName, matName));
 		childCount++;
 	}
 	else if (childCount == 0) {

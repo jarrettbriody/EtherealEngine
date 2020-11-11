@@ -18,8 +18,10 @@ Entity::Entity(string entityName, Mesh* entityMesh, Material* mat)
 
 Entity::~Entity()
 {
-	if(collider != nullptr)
-		delete collider;
+	for (size_t i = 0; i < colliders.size(); i++)
+	{
+		delete colliders[i];
+	}
 }
 
 DirectX::XMFLOAT4X4 Entity::GetWorldMatrix()
@@ -78,6 +80,14 @@ void Entity::ToggleShadows(bool toggle)
 	shadowsEnabled = toggle;
 }
 
+void Entity::Move(XMFLOAT3 f)
+{
+	position.x += f.x;
+	position.y += f.y;
+	position.z += f.z;
+	CalcWorldMatrix();
+}
+
 void Entity::Move(float x, float y, float z)
 {
 	position.x += x;
@@ -133,10 +143,13 @@ void Entity::CalcWorldMatrix()
 	{
 		children[i]->CalcWorldMatrix();
 	}
-	if (collider != nullptr) collider->SetWorldMatrix(worldMatrix);
+	for (size_t i = 0; i < colliders.size(); i++)
+	{
+		colliders[i]->SetWorldMatrix(worldMatrix);
+	} 
 }
 
-void Entity::PrepareMaterial(string n, DirectX::XMFLOAT4X4 view, DirectX::XMFLOAT4X4 proj)
+void Entity::PrepareMaterialForDraw(string n, DirectX::XMFLOAT4X4 view, DirectX::XMFLOAT4X4 proj)
 {
 	SimpleVertexShader* vs = materialMap[n]->GetVertexShader();
 	SimplePixelShader* ps = materialMap[n]->GetPixelShader();
@@ -209,17 +222,88 @@ void Entity::AddChildEntity(Entity* child)
 
 void Entity::AddAutoBoxCollider()
 {
-	collider = new Collider(mesh->GetVertices());
+	if (mesh->HasChildren()) {
+		vector<Mesh*> children = mesh->GetChildren();
+		for (size_t i = 0; i < mesh->GetChildCount(); i++)
+		{
+			colliders.push_back(new Collider(children[i]->GetVertices()));
+		}
+	}
+	else {
+		colliders.push_back(new Collider(mesh->GetVertices()));
+	}
 }
 
 bool Entity::CheckSATCollision(Entity* other)
 {
-	unsigned int result = collider->CheckSATCollision(other->collider);
-	if (result == -1) return true;
+	bool otherHasChildren = other->MeshHasChildren();
+	unsigned int result;
+	for (size_t i = 0; i < (mesh->HasChildren() ? mesh->GetChildCount() : 1); i++)
+	{
+		for (size_t j = 0; j < (other->MeshHasChildren() ? other->GetMeshChildCount() : 1); j++)
+		{
+			if(colliders[i]->CheckSATCollision(other->colliders[j]) == -1) return true;
+		}
+	}
+	return false;
+}
+
+bool Entity::CheckSATCollisionAndCorrect(Entity* other)
+{
+	if (isStatic) return false;
+	bool isColliding;
+	XMFLOAT3 result;
+	for (size_t i = 0; i < (mesh->HasChildren() ? mesh->GetChildCount() : 1); i++)
+	{
+		for (size_t j = 0; j < (other->MeshHasChildren() ? other->GetMeshChildCount() : 1); j++)
+		{
+			isColliding = colliders[i]->CheckSATCollisionForCorrection(other->colliders[j], result);
+			if (isColliding) break;
+		}
+	}
+	
+	if (isColliding) {
+		XMVECTOR modifiedVec = XMLoadFloat3(&result);
+		XMVECTOR dist;
+		XMVECTOR thisPos = XMLoadFloat3(&position);
+		XMVECTOR otherPos = XMLoadFloat3(&other->position);
+		dist = thisPos - otherPos;
+		XMVECTOR dotV = XMVector3Dot(modifiedVec, dist);
+		float dot;
+		XMStoreFloat(&dot, dotV);
+		if (dot < 0.0f) {
+			modifiedVec = XMVectorScale(modifiedVec, -1.0f);
+		}
+		if (!other->isStatic) {
+			XMFLOAT3 otherResult;
+			modifiedVec = XMVectorScale(modifiedVec, 0.5f);
+			XMVECTOR otherResultVec = XMVectorScale(modifiedVec, -1.0f);
+			XMStoreFloat3(&otherResult, otherResultVec);
+			other->Move(otherResult);
+		}
+		XMFLOAT3 modifiedResult;
+		XMStoreFloat3(&modifiedResult, modifiedVec);
+		Move(modifiedResult);
+		return true;
+	}
 	else return false;
 }
 
-Collider* Entity::GetCollider()
+vector<Collider*> Entity::GetColliders()
 {
-	return collider;
+	return colliders;
+}
+
+Collider* Entity::GetCollider(int index)
+{
+	return colliders[index];
+}
+
+void Entity::Destroy()
+{
+	this->destroyed = true;
+	for (size_t i = 0; i < children.size(); i++)
+	{
+		children[i]->Destroy();
+	}
 }

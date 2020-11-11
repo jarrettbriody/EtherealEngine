@@ -284,7 +284,7 @@ void DXCore::OnResize()
 
 	// Resize the underlying swap chain buffers
 	swapChain->ResizeBuffers(
-		1,
+		2,
 		width,
 		height,
 		DXGI_FORMAT_R8G8B8A8_UNORM,

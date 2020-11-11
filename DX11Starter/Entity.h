@@ -28,11 +28,15 @@ private:
 	string name;
 	vector<Entity*> children;
 	Entity* parent = nullptr;
-	Collider* collider = nullptr;
+	vector<Collider*> colliders;
 
 	bool shadowsEnabled = true;
 	ShadowData shadowData;
 public:
+	bool destroyed = false;
+	bool isStatic = true;
+	bool collisionsEnabled = true;
+	bool colliderDebugLinesEnabled = true;
 	Entity(string entityName, Mesh* entityMesh, Material* mat = nullptr);
 	~Entity();
 	DirectX::XMFLOAT4X4 GetWorldMatrix();
@@ -45,13 +49,14 @@ public:
 	void SetRepeatTexture(float x, float y);
 	void SetShadowData(ShadowData shadowData);
 	void ToggleShadows(bool toggle);
+	void Move(XMFLOAT3 f);
 	void Move(float x, float y, float z);
 	ID3D11Buffer* GetMeshVertexBuffer(int i = -1);
 	ID3D11Buffer* GetMeshIndexBuffer(int i = -1);
 	int GetMeshIndexCount(int i = -1);
 	string GetMeshMaterialName(int i = -1);
 	void CalcWorldMatrix();
-	void PrepareMaterial(string n, DirectX::XMFLOAT4X4 view, DirectX::XMFLOAT4X4 proj);
+	void PrepareMaterialForDraw(string n, DirectX::XMFLOAT4X4 view, DirectX::XMFLOAT4X4 proj);
 	Material* GetMaterial(string n);
 	bool MeshHasChildren();
 	int GetMeshChildCount();
@@ -62,6 +67,9 @@ public:
 	void AddChildEntity(Entity* child);
 	void AddAutoBoxCollider();
 	bool CheckSATCollision(Entity* other);
-	Collider* GetCollider();
+	bool CheckSATCollisionAndCorrect(Entity* other);
+	vector<Collider*> GetColliders();
+	Collider* GetCollider(int index = 0);
+	void Destroy();
 };
 

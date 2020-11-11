@@ -35,7 +35,6 @@ private:
 	bool shadowsEnabled = true;
 
 	bool debugLinesEnabled = true;
-	vector<DebugLines*> debugLines;
 
 	unsigned int shadowMapResolution = 2048;
 	ID3D11DepthStencilView* shadowDSV;
@@ -67,7 +66,6 @@ public:
 	void ToggleShadows(bool toggle);
 	void SetShadowMapResolution(unsigned int res);
 	void RenderShadowMap();
-	void AddDebugLines(DebugLines* d);
 	ID3D11Device* GetDevice();
 	ID3D11DeviceContext* GetContext();
 };
