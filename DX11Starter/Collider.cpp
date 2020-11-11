@@ -6,9 +6,6 @@ Collider::Collider()
 
 Collider::Collider(vector<XMFLOAT3> vertices)
 {
-	if(debugLinesEnabled)
-		debugLines = new DebugLines();
-
 	//Count the points of the incoming list
 	unsigned int vertCount = vertices.size();
 
@@ -38,21 +35,16 @@ Collider::Collider(vector<XMFLOAT3> vertices)
 
 	//Calculate the 8 corners of the cube
 	//Back square
-	colliderCorners[0] = minLocal;
-	colliderCorners[1] = XMFLOAT3(maxLocal.x, minLocal.y, minLocal.z);
-	colliderCorners[2] = XMFLOAT3(maxLocal.x, maxLocal.y, minLocal.z);
-	colliderCorners[3] = XMFLOAT3(minLocal.x, maxLocal.y, minLocal.z);
+	untransformedColliderCorners[0] = colliderCorners[0] = minLocal;
+	untransformedColliderCorners[1] = colliderCorners[1] = XMFLOAT3(maxLocal.x, minLocal.y, minLocal.z);
+	untransformedColliderCorners[2] = colliderCorners[2] = XMFLOAT3(maxLocal.x, maxLocal.y, minLocal.z);
+	untransformedColliderCorners[3] = colliderCorners[3] = XMFLOAT3(minLocal.x, maxLocal.y, minLocal.z);
 
 	//Front square
-	colliderCorners[4] = XMFLOAT3(minLocal.x, maxLocal.y, maxLocal.z);
-	colliderCorners[5] = XMFLOAT3(minLocal.x, minLocal.y, maxLocal.z);
-	colliderCorners[6] = XMFLOAT3(maxLocal.x, minLocal.y, maxLocal.z);
-	colliderCorners[7] = maxLocal;
-
-	if (debugLinesEnabled) {
-		debugLines->color = XMFLOAT3(1.0f, 0.0f, 0.0f);
-		debugLines->GenerateVertexBuffer(colliderCorners, 8);
-	}
+	untransformedColliderCorners[4] = colliderCorners[4] = XMFLOAT3(minLocal.x, maxLocal.y, maxLocal.z);
+	untransformedColliderCorners[5] = colliderCorners[5] = XMFLOAT3(minLocal.x, minLocal.y, maxLocal.z);
+	untransformedColliderCorners[6] = colliderCorners[6] = XMFLOAT3(maxLocal.x, minLocal.y, maxLocal.z);
+	untransformedColliderCorners[7] = colliderCorners[7] = maxLocal;
 	
 	XMVECTOR minLoc = XMLoadFloat3(&minLocal);
 	XMVECTOR maxLoc = XMLoadFloat3(&maxLocal);
@@ -69,8 +61,6 @@ Collider::Collider(vector<XMFLOAT3> vertices)
 
 Collider::~Collider()
 {
-	if(debugLinesEnabled)
-		delete debugLines;
 }
 
 void Collider::SetWorldMatrix(XMFLOAT4X4 worldMat)
@@ -79,9 +69,6 @@ void Collider::SetWorldMatrix(XMFLOAT4X4 worldMat)
 	worldMatrix = worldMat;
 
 	XMMATRIX calculableWorldMatrix = XMMatrixTranspose(XMLoadFloat4x4(&worldMat));
-
-	if(debugLinesEnabled)
-		debugLines->worldMatrix = worldMat;
 
 	//back square
 	colliderCorners[0] = minLocal;
@@ -219,12 +206,114 @@ unsigned int Collider::CheckSATCollision(Collider* other)
 	return -1;
 }
 
-void Collider::SetDebugLines(bool dl)
+bool Collider::CheckSATCollisionForCorrection(Collider* other, XMFLOAT3& result)
 {
-	debugLinesEnabled = dl;
+	if (!collisionsEnabled || !other->collisionsEnabled) return false;
+
+	XMFLOAT3 axes[15];
+
+	int index = 0;
+	for (size_t i = 0; i < 3; i++)
+	{
+		axes[index] = collisionProjVecs[i];
+		index++;
+		axes[index] = other->collisionProjVecs[i];
+		index++;
+		for (size_t j = 0; j < 3; j++)
+		{
+			XMVECTOR vecThis = XMLoadFloat3(&collisionProjVecs[i]);
+			XMVECTOR vecOther = XMLoadFloat3(&(other->collisionProjVecs[j]));
+			XMVECTOR cross = XMVector3Cross(vecThis, vecOther);
+			cross = XMVector3Normalize(cross);
+			XMStoreFloat3(&axes[index], cross);
+			index++;
+		}
+	}
+
+	XMVECTOR axis;
+	float objAMin;
+	float objAMax;
+	float objBMin;
+	float objBMax;
+	XMVECTOR corner;
+	XMVECTOR dot;
+	float proj;
+
+	float scalar = 0.0f;
+	XMVECTOR scalarAxis;
+
+	for (size_t i = 0; i < 15; i++)
+	{
+		if (axes[i].x == 0.0f && axes[i].y == 0.0f && axes[i].z == 0.0f) {
+			continue;
+		}
+
+		axis = XMLoadFloat3(&axes[i]);
+
+		corner = XMLoadFloat3(&colliderCorners[0]);
+		dot = XMVector3Dot(corner, axis);
+		XMStoreFloat(&objAMin, dot);
+
+		corner = XMLoadFloat3(&other->colliderCorners[0]);
+		dot = XMVector3Dot(corner, axis);
+		XMStoreFloat(&objBMin, dot);
+
+		objAMax = objAMin;
+		objBMax = objBMin;
+
+		for (size_t j = 1; j < 8; j++)
+		{
+			corner = XMLoadFloat3(&colliderCorners[j]);
+			dot = XMVector3Dot(corner, axis);
+			XMStoreFloat(&proj, dot);
+			if (proj > objAMax) objAMax = proj;
+			else if (proj < objAMin) objAMin = proj;
+
+			corner = XMLoadFloat3(&other->colliderCorners[j]);
+			dot = XMVector3Dot(corner, axis);
+			XMStoreFloat(&proj, dot);
+			if (proj > objBMax) objBMax = proj;
+			else if (proj < objBMin) objBMin = proj;
+		}
+
+		if (objAMin > objBMax || objAMax < objBMin) {
+			return false;
+		}
+		else if(objAMin < objBMax || objAMax > objBMin){
+			if (scalar == 0.0f) {
+				scalar = objBMax - objAMin;
+				scalarAxis = axis;
+			}
+			else if (abs(objBMax - objAMin) < abs(scalar)) {
+				scalar = objBMax - objAMin;
+				scalarAxis = axis;
+			}
+			else if (abs(objAMax - objBMin) < abs(scalar)) {
+				scalar = objAMax - objBMin;
+				scalarAxis = axis;
+			}
+		}
+	}
+
+	//there is no axis test that separates these two objects
+	XMFLOAT3 dist;
+	XMVECTOR vs = XMVectorScale(scalarAxis, (scalar + 0.0001f));
+	XMStoreFloat3(&dist, vs);
+	result = dist;
+	return true;
 }
 
-DebugLines* Collider::GetDebugLines()
+XMFLOAT3* Collider::GetColliderCorners()
 {
-	return debugLines;
+	return colliderCorners;
+}
+
+XMFLOAT3* Collider::GetUntransformedColliderCorners()
+{
+	return untransformedColliderCorners;
+}
+
+XMFLOAT4X4 Collider::GetWorldMatrix()
+{
+	return worldMatrix;
 }

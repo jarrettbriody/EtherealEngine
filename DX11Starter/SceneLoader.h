@@ -1,4 +1,6 @@
 #pragma once
+#include "DebugLines.h"
+#include "Utility.h"
 #include "Mesh.h"
 #include "Material.h"
 #include "Terrain.h"
@@ -9,13 +11,14 @@
 #include "btBulletDynamicsCommon.h"
 #include <map>
 #include <vector>
+#include <string>
+#include "Config.h"
+
+using namespace Utility;
 
 class SceneLoader
 {
 private:
-	ID3D11Device* device;
-	ID3D11DeviceContext* context;
-	ID3D11SamplerState* sampler;
 	btDiscreteDynamicsWorld* dynamicsWorld;
 public:
 	map<string, SimpleVertexShader*> vertexShadersMap;
@@ -37,7 +40,7 @@ public:
 	map<string, Entity*> sceneEntitiesMap;
 	vector<Entity*> sceneEntities;
 
-	SceneLoader(ID3D11Device* device, ID3D11DeviceContext*	context, ID3D11SamplerState* sampler, btDiscreteDynamicsWorld* dw);
+	SceneLoader(btDiscreteDynamicsWorld* dw);
 	~SceneLoader();
 
 	void LoadShaders();
