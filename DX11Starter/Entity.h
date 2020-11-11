@@ -5,6 +5,7 @@
 #include "Mesh.h"
 #include "Material.h"
 #include "Collider.h"
+#include "btBulletDynamicsCommon.h"
 
 struct ShadowData {
 	DirectX::XMFLOAT4X4 shadowViewMatrix;
@@ -32,12 +33,19 @@ private:
 
 	bool shadowsEnabled = true;
 	ShadowData shadowData;
+
+	float isStatic;
+
+	btCollisionShape* collShape;
+	btRigidBody* rBody;
+	btDiscreteDynamicsWorld* dynamicsWorld;
 public:
 	bool destroyed = false;
 	bool isStatic = true;
 	bool collisionsEnabled = true;
 	bool colliderDebugLinesEnabled = true;
 	Entity(string entityName, Mesh* entityMesh, Material* mat = nullptr);
+  Entity(string entityName, btDiscreteDynamicsWorld* dw, Mesh* entityMesh, Material* mat = nullptr);
 	~Entity();
 	DirectX::XMFLOAT4X4 GetWorldMatrix();
 	DirectX::XMFLOAT3 GetPosition();
@@ -69,6 +77,7 @@ public:
 	bool CheckSATCollision(Entity* other);
 	bool CheckSATCollisionAndCorrect(Entity* other);
 	vector<Collider*> GetColliders();
+	btRigidBody* GetRBody();
 	Collider* GetCollider(int index = 0);
 	void Destroy();
 };

@@ -29,6 +29,12 @@ Game::~Game()
 	skyDepthState->Release();
 	skyRasterState->Release();
 
+	// FMOD
+	sound[0]->release(); // For now just release the one sound we have assigned
+	backgroundMusic->release();
+	sfxGroup->release();
+	fmodSystem->close();
+	fmodSystem->release();
 	//delete terrain;
 	//delete water;
 
@@ -49,6 +55,16 @@ void Game::Init()
 	//_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 	//_CrtSetBreakAlloc(298157);
 	//_CrtSetBreakAlloc(56580);
+
+	// Physics -----------------
+
+	collisionConfiguration = new btDefaultCollisionConfiguration();
+	dispatcher = new  btCollisionDispatcher(collisionConfiguration);
+	broadphase = new  btDbvtBroadphase();
+	solver = new  btSequentialImpulseConstraintSolver;
+	dynamicsWorld = new btDiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
+
+	dynamicsWorld->setGravity(btVector3(0, -3.0f, 0));
 
 	Config::Device = device;
 	Config::Context = context;
@@ -80,7 +96,7 @@ void Game::Init()
 	skyDS.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
 	device->CreateDepthStencilState(&skyDS, &skyDepthState);
 
-	EESceneLoader = new SceneLoader();
+	EESceneLoader = new SceneLoader(dynamicsWorld);
 
 	EESceneLoader->LoadShaders();
 
@@ -125,7 +141,7 @@ void Game::Init()
 	*/
 
 	Entity* sphere1;
-	sphere1 = new Entity("sphere1", EESceneLoader->defaultMeshesMap["Sphere"]);
+	sphere1 = new Entity("sphere1", dynamicsWorld, EESceneLoader->defaultMeshesMap["Sphere"]);
 	sphere1->AddMaterial(EESceneLoader->defaultMaterialsMap["DEFAULT"]);
 	sphere1->AddMaterialNameToMesh("DEFAULT");
 	sphere1->SetPosition(8.0f, 8.0f, 8.0f);
@@ -135,7 +151,7 @@ void Game::Init()
 	EESceneLoader->sceneEntities.push_back(sphere1);
 
 	Entity* sphere2;
-	sphere2 = new Entity("sphere2", EESceneLoader->defaultMeshesMap["Sphere"]);
+	sphere2 = new Entity("sphere2", dynamicsWorld, EESceneLoader->defaultMeshesMap["Sphere"]);
 	sphere2->AddMaterial(EESceneLoader->defaultMaterialsMap["DEFAULT"]);
 	sphere2->AddMaterialNameToMesh("DEFAULT");
 	sphere2->SetPosition(2.0f, 2.0f, 2.0f);
@@ -147,7 +163,7 @@ void Game::Init()
 	sphere1->AddChildEntity(sphere2);
 
 	Entity* sphere3;
-	sphere3 = new Entity("sphere3", EESceneLoader->defaultMeshesMap["Sphere"]);
+	sphere3 = new Entity("sphere3", dynamicsWorld, EESceneLoader->defaultMeshesMap["Sphere"]);
 	sphere3->AddMaterial(EESceneLoader->defaultMaterialsMap["DEFAULT"]);
 	sphere3->AddMaterialNameToMesh("DEFAULT");
 	sphere3->SetPosition(2.0f, 2.0f, 0.0f);
@@ -198,7 +214,7 @@ void Game::Init()
 	//terrain -----------------
 	/*
 	terrain = new Terrain(device, "../../Assets/valley.raw16", 513, 513, 1.0f, 50.0f, 1.0f);
-	Entity* terrainEntity = new Entity("Terrain", terrain);
+	Entity* terrainEntity = new Entity("Terrain", dynamicsWorld, terrain);
 	terrainEntity->AddMaterial(EESceneLoader->defaultMaterialsMap["Terrain"]);
 	terrainEntity->AddMaterialNameToMesh("Terrain");
 	terrainEntity->SetPosition(0.f, -10.f, 0.f);
@@ -210,7 +226,7 @@ void Game::Init()
 
 	water = new Water(0.0002f, device, 513, 513, 1.f, 1.f, 1.f, EESceneLoader->pixelShadersMap["Water"]);
 	water->SetOffsets(0.2f, 0.1f, 0.1f, 0.2f);
-	Entity* waterEntity = new Entity("Water", water->terrain);
+	Entity* waterEntity = new Entity("Water", dynamicsWorld, water->terrain);
 	waterEntity->AddMaterial(EESceneLoader->defaultMaterialsMap["Water"]);
 	waterEntity->AddMaterialNameToMesh("Water");
 	waterEntity->SetPosition(0.f, -3.f, 0.f);
@@ -221,6 +237,52 @@ void Game::Init()
 	waterEntity->CalcWorldMatrix();
 	*/
 
+	// Audio -----------------
+
+	// Basic set-up for sound
+
+	fmodResult = FMOD::System_Create(&fmodSystem); // Create the Studio System object
+	if (fmodResult != FMOD_OK)
+	{
+		printf("FMOD error! (%d) %s\n", fmodResult, FMOD_ErrorString(fmodResult));
+		exit(-1);
+	}
+
+	fmodResult = fmodSystem->init(32, FMOD_INIT_NORMAL, 0); // Initialize FMOD with 32 max channels
+	if (fmodResult != FMOD_OK)
+	{
+		printf("FMOD error! (%d) %s\n", fmodResult, FMOD_ErrorString(fmodResult));
+		exit(-1);
+	}
+
+	// Test to see if 3D/2D audio works - EXAMPLE CODE
+
+	fmodResult = fmodSystem->createSound("../../Assets/Audio/CityofDawn.wav", FMOD_3D | FMOD_3D_LINEARROLLOFF | FMOD_LOOP_NORMAL, 0, &backgroundMusic); // Create a 3D/Looping sound with linear roll off
+	FmodErrorCheck(fmodResult);
+
+	fmodResult = fmodSystem->createSound("../../Assets/Audio/wow.wav", FMOD_2D | FMOD_LOOP_OFF, 0, &sound[0]); // Create a non-looping 2D sound in the first slot
+	FmodErrorCheck(fmodResult);
+
+	fmodResult = fmodSystem->createChannelGroup("SFX Group", &sfxGroup); // Create a channel group for sound effects
+	FmodErrorCheck(fmodResult);
+
+	fmodResult = fmodSystem->getMasterChannelGroup(&masterGroup); // Assign masterGroup as the master channel
+	FmodErrorCheck(fmodResult);
+
+	// Add the SFX group as a child of the master group as an example. Technically doesn't need to be done because the master group already controls everything
+	fmodResult = masterGroup->addGroup(sfxGroup); 
+	FmodErrorCheck(fmodResult);
+
+	fmodResult = fmodSystem->playSound(backgroundMusic, 0, false, &musicChannel); // Start playing the 3D sound
+	FmodErrorCheck(fmodResult);
+
+	FMOD_VECTOR pos = { 1.0f, 1.0f, 1.0f };
+	FMOD_VECTOR vel = { 0, 0, 0 };
+
+	// Set the 3D values for the channel
+	musicChannel->set3DAttributes(&pos, &vel);
+	musicChannel->set3DMinMaxDistance(0, 15.0f);
+  
 	barrel = new Barrel();
 	barrel->Setup("barrel_1", EESceneLoader->sceneEntitiesMap["barrel_1"]);
 
@@ -256,6 +318,42 @@ void Game::Update(float deltaTime, float totalTime)
 		EESceneLoader->sceneEntitiesMap["sphere1"]->CalcWorldMatrix();
 	}
 
+	// Play the 2D sound only if the channel group is not playing something
+	sfxGroup->isPlaying(&isPlaying);
+	if (GetAsyncKeyState('P') & 0x8000 && !isPlaying) {
+		fmodResult = fmodSystem->playSound(sound[0], sfxGroup, false, 0); // Play the sound using any channel in the sfx group (free channels are used first)
+		FmodErrorCheck(fmodResult);
+	}
+
+	// Mute/unmute the master group
+	if (GetAsyncKeyState('M') & 0x8000)
+	{
+		bool mute = true;
+		masterGroup->getMute(&mute);
+		masterGroup->setMute(!mute);
+	}
+
+	if (GetAsyncKeyState(VK_LEFT))
+	{
+		DirectX::XMFLOAT3 trans = sceneLoader->sceneEntitiesMap["barrel_1"]->GetPosition();
+		trans.x -= 0.1f;
+		sceneLoader->sceneEntitiesMap["barrel_1"]->SetPosition(trans.x, trans.y, trans.z);
+		sceneLoader->sceneEntitiesMap["barrel_1"]->CalcWorldMatrix();
+	}
+	if (GetAsyncKeyState(VK_RIGHT))
+	{
+		DirectX::XMFLOAT3 trans = sceneLoader->sceneEntitiesMap["barrel_1"]->GetPosition();
+		trans.x += 0.1f;
+		sceneLoader->sceneEntitiesMap["barrel_1"]->SetPosition(trans.x, trans.y, trans.z);
+		sceneLoader->sceneEntitiesMap["barrel_1"]->CalcWorldMatrix();
+	}
+	if (GetAsyncKeyState(VK_UP))
+	{
+		DirectX::XMFLOAT3 trans = sceneLoader->sceneEntitiesMap["barrel_1"]->GetPosition();
+		trans.z += 0.1f;
+		sceneLoader->sceneEntitiesMap["barrel_1"]->SetPosition(trans.x, trans.y, trans.z);
+		sceneLoader->sceneEntitiesMap["barrel_1"]->CalcWorldMatrix();
+  }
 	if (GetAsyncKeyState('B') & 0x8000) {
 		DirectX::XMFLOAT3 rot = EESceneLoader->sceneEntitiesMap["Ruin"]->GetRotation();
 		rot.y -= DirectX::XMConvertToRadians(2.0f);
@@ -282,11 +380,61 @@ void Game::Update(float deltaTime, float totalTime)
 	
 	GarbageCollect();
 
+	AudioStep();
+	PhysicsStep(deltaTime);
+
 	/*if (!GetAsyncKeyState(VK_CONTROL))
 	{
 		testLight->Position = camera->position;
 		testLight->Direction = camera->direction;
 	}*/
+}
+
+void Game::PhysicsStep(float deltaTime)
+{
+	for (int i = dynamicsWorld->getNumCollisionObjects() - 1; i >= 0; i--)
+	{
+		btCollisionObject* obj = dynamicsWorld->getCollisionObjectArray()[i];
+		btRigidBody* body = btRigidBody::upcast(obj);
+
+		btTransform transform = body->getWorldTransform();
+		transform.setOrigin(btVector3(sceneLoader->sceneEntities[i]->GetPosition().x, sceneLoader->sceneEntities[i]->GetPosition().y, sceneLoader->sceneEntities[i]->GetPosition().z));
+		transform.setRotation(btQuaternion(sceneLoader->sceneEntities[i]->GetRotation().y, sceneLoader->sceneEntities[i]->GetRotation().z, sceneLoader->sceneEntities[i]->GetRotation().x));
+		body->getMotionState()->setWorldTransform(transform);
+
+		dynamicsWorld->stepSimulation(deltaTime * 0.5f);
+
+		body->getMotionState()->getWorldTransform(transform);
+
+		sceneLoader->sceneEntities[i]->SetPosition(transform.getOrigin().getX(), transform.getOrigin().getY(), transform.getOrigin().getZ());
+		sceneLoader->sceneEntities[i]->SetRotation(transform.getRotation().getX(), transform.getRotation().getY(), transform.getRotation().getZ());
+		sceneLoader->sceneEntities[i]->CalcWorldMatrix();
+	}
+
+	//sceneLoader->sceneEntities[0]->GetRBody()->setLinearVelocity(btVector3(0.0f, sceneLoader->sceneEntities[0]->GetRBody()->getLinearVelocity().getY(), 0.0f));
+}
+
+void Game::AudioStep()
+{
+	// Set our listener position as the camera's position for now
+	listener_pos.x = camera->position.x;
+	listener_pos.y = camera->position.y;
+	listener_pos.z = camera->position.z;
+
+	// Set the listener forward to the camera's forward
+	listener_forward.x = camera->GetViewMatrix()._13;
+	listener_forward.y = camera->GetViewMatrix()._23;
+	listener_forward.z = camera->GetViewMatrix()._33;
+
+	// Set the listener up to the camera's up
+	listener_up.x = camera->GetViewMatrix()._12;
+	listener_up.y = camera->GetViewMatrix()._22;
+	listener_up.z = camera->GetViewMatrix()._32;
+
+	printf("Listener forward = x: %f y: %f z: %f \n", listener_forward.x, listener_forward.y, listener_forward.z);
+
+	fmodSystem->set3DListenerAttributes(0, &listener_pos, 0, &listener_forward, &listener_up); // Update 'ears'
+	fmodSystem->update();
 }
 
 void Game::Draw(float deltaTime, float totalTime)
@@ -395,5 +543,13 @@ void Game::OnMouseMove(WPARAM buttonState, int x, int y)
 void Game::OnMouseWheel(float wheelDelta, int x, int y)
 {
 	
+}
+
+void Game::FmodErrorCheck(FMOD_RESULT result)
+{
+	if (result != FMOD_OK)
+	{
+		printf("FMOD error! (%d) %s\n", result, FMOD_ErrorString(result));
+	}
 }
 #pragma endregion

@@ -8,6 +8,7 @@
 #include "Water.h"
 #include "WaterMaterial.h"
 #include "Entity.h"
+#include "btBulletDynamicsCommon.h"
 #include <map>
 #include <vector>
 #include <string>
@@ -18,6 +19,7 @@ using namespace Utility;
 class SceneLoader
 {
 private:
+	btDiscreteDynamicsWorld* dynamicsWorld;
 public:
 	map<string, SimpleVertexShader*> vertexShadersMap;
 	map<string, SimplePixelShader*> pixelShadersMap;
@@ -38,7 +40,7 @@ public:
 	map<string, Entity*> sceneEntitiesMap;
 	vector<Entity*> sceneEntities;
 
-	SceneLoader();
+	SceneLoader(btDiscreteDynamicsWorld* dw);
 	~SceneLoader();
 
 	void LoadShaders();

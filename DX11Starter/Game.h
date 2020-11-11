@@ -21,6 +21,8 @@
 //#include "Water.h"
 //#include "WaterMaterial.h"
 #include "SceneLoader.h"
+#include "fmod.hpp"
+#include "fmod_errors.h"
 #include "DebugLines.h"
 #include "ScriptManager.h"
 #include "Scripts.h"
@@ -42,8 +44,11 @@ public:
 	void Update(float deltaTime, float totalTime);
 	void Draw(float deltaTime, float totalTime);
 
+	void PhysicsStep(float deltaTime);
+	void AudioStep();
 	void DrawSky();
 
+	void FmodErrorCheck(FMOD_RESULT result); // Define it here because current file structure wont let me put it in utility
 	void GarbageCollect();
 
 	// Overridden mouse input helper methods
@@ -71,5 +76,30 @@ private:
 	
 	//testing
 	Light* testLight;
+
+	// Physics
+	btDefaultCollisionConfiguration* collisionConfiguration;
+	btCollisionDispatcher* dispatcher;
+	btBroadphaseInterface* broadphase;
+	btSequentialImpulseConstraintSolver* solver;
+	btDiscreteDynamicsWorld* dynamicsWorld;
+
+	// Audio
+	FMOD_RESULT fmodResult;
+	FMOD::System* fmodSystem = NULL;
+
+	FMOD::Sound* backgroundMusic;
+	FMOD::Sound* sound[12];
+
+	FMOD::Channel* musicChannel = 0;
+	FMOD::Channel* channel[12];
+	FMOD::ChannelGroup* masterGroup, * sfxGroup;
+
+	bool isPlaying = 0;
+
+	FMOD_VECTOR listener_pos;
+	//FMOD_VECTOR listener_vel; // If we want a doppler effect
+	FMOD_VECTOR listener_forward;
+	FMOD_VECTOR listener_up;
 };
 
