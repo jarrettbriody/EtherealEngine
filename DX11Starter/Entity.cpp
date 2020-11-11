@@ -23,7 +23,7 @@ Entity::Entity(string entityName, btDiscreteDynamicsWorld* dw, Mesh* entityMesh,
 	groundTransform.setOrigin(btVector3(position.x, position.y, position.z));
 
 	//btScalar mass(isStatic);
-	btScalar mass(1.0f);
+	btScalar mass(0.0f);
 
 	//rigidbody is dynamic if and only if mass is non zero, otherwise static
 	bool isDynamic = (mass != 0.0f);
