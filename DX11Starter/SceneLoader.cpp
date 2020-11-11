@@ -1,10 +1,11 @@
 #include "SceneLoader.h"
 
-SceneLoader::SceneLoader(ID3D11Device * device, ID3D11DeviceContext * context, ID3D11SamplerState * sampler)
+SceneLoader::SceneLoader(ID3D11Device * device, ID3D11DeviceContext * context, ID3D11SamplerState * sampler, btDiscreteDynamicsWorld * dw)
 {
 	this->device = device;
 	this->context = context;
 	this->sampler = sampler;
+	this->dynamicsWorld = dw;
 }
 
 SceneLoader::~SceneLoader()
@@ -480,10 +481,10 @@ void SceneLoader::LoadScene(string sceneName)
 				case Utility::LOAD_FAILURE:
 					continue;
 				case Utility::DEFAULT_MESH:
-					someEntity = new Entity(entityName, defaultMeshesMap[objName]);
+					someEntity = new Entity(entityName, dynamicsWorld, defaultMeshesMap[objName]);
 					break;
 				case Utility::GENERATED_MESH: {
-					someEntity = new Entity(entityName, generatedMeshesMap[objName]);
+					someEntity = new Entity(entityName, dynamicsWorld, generatedMeshesMap[objName]);
 
 					//generated meshes should have a list of required materials,
 					//add them if they do or add the default (just black) if they dont

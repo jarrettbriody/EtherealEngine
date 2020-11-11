@@ -49,6 +49,16 @@ void Game::Init()
 	//EtherealEngine::GetInstance()->SetContext(context);
 	DebugLines::device = device;
 
+	// Physics -----------------
+
+	collisionConfiguration = new btDefaultCollisionConfiguration();
+	dispatcher = new  btCollisionDispatcher(collisionConfiguration);
+	broadphase = new  btDbvtBroadphase();
+	solver = new  btSequentialImpulseConstraintSolver;
+	dynamicsWorld = new btDiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
+
+	dynamicsWorld->setGravity(btVector3(0, -3.0f, 0));
+
 	camera = new Camera();
 	camera->UpdateProjectionMatrix(width, height);
 	//EtherealEngine::GetInstance()->SetCamera(camera);
@@ -77,7 +87,7 @@ void Game::Init()
 	skyDS.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
 	device->CreateDepthStencilState(&skyDS, &skyDepthState);
 
-	sceneLoader = new SceneLoader(device, context, sampler);
+	sceneLoader = new SceneLoader(device, context, sampler, dynamicsWorld);
 
 	sceneLoader->LoadShaders();
 
@@ -117,7 +127,7 @@ void Game::Init()
 	*/
 
 	Entity* sphere1;
-	sphere1 = new Entity("sphere1", sceneLoader->defaultMeshesMap["Sphere"]);
+	sphere1 = new Entity("sphere1", dynamicsWorld, sceneLoader->defaultMeshesMap["Sphere"]);
 	sphere1->AddMaterial(sceneLoader->defaultMaterialsMap["DEFAULT"]);
 	sphere1->AddMaterialNameToMesh("DEFAULT");
 	sphere1->SetPosition(8.0f, 8.0f, 8.0f);
@@ -127,7 +137,7 @@ void Game::Init()
 	sceneLoader->sceneEntities.push_back(sphere1);
 
 	Entity* sphere2;
-	sphere2 = new Entity("sphere2", sceneLoader->defaultMeshesMap["Sphere"]);
+	sphere2 = new Entity("sphere2", dynamicsWorld, sceneLoader->defaultMeshesMap["Sphere"]);
 	sphere2->AddMaterial(sceneLoader->defaultMaterialsMap["DEFAULT"]);
 	sphere2->AddMaterialNameToMesh("DEFAULT");
 	sphere2->SetPosition(2.0f, 2.0f, 2.0f);
@@ -139,7 +149,7 @@ void Game::Init()
 	sphere1->AddChildEntity(sphere2);
 
 	Entity* sphere3;
-	sphere3 = new Entity("sphere3", sceneLoader->defaultMeshesMap["Sphere"]);
+	sphere3 = new Entity("sphere3", dynamicsWorld, sceneLoader->defaultMeshesMap["Sphere"]);
 	sphere3->AddMaterial(sceneLoader->defaultMaterialsMap["DEFAULT"]);
 	sphere3->AddMaterialNameToMesh("DEFAULT");
 	sphere3->SetPosition(2.0f, 2.0f, 0.0f);
@@ -189,7 +199,7 @@ void Game::Init()
 	//terrain -----------------
 
 	terrain = new Terrain(device, "../../Assets/valley.raw16", 513, 513, 1.0f, 50.0f, 1.0f);
-	Entity* terrainEntity = new Entity("Terrain", terrain);
+	Entity* terrainEntity = new Entity("Terrain", dynamicsWorld, terrain);
 	terrainEntity->AddMaterial(sceneLoader->defaultMaterialsMap["Terrain"]);
 	terrainEntity->AddMaterialNameToMesh("Terrain");
 	terrainEntity->SetPosition(0.f, -10.f, 0.f);
@@ -201,7 +211,7 @@ void Game::Init()
 
 	water = new Water(0.0002f, device, 513, 513, 1.f, 1.f, 1.f, sceneLoader->pixelShadersMap["Water"]);
 	water->SetOffsets(0.2f, 0.1f, 0.1f, 0.2f);
-	Entity* waterEntity = new Entity("Water", water->terrain);
+	Entity* waterEntity = new Entity("Water", dynamicsWorld, water->terrain);
 	waterEntity->AddMaterial(sceneLoader->defaultMaterialsMap["Water"]);
 	waterEntity->AddMaterialNameToMesh("Water");
 	waterEntity->SetPosition(0.f, -3.f, 0.f);
@@ -210,16 +220,6 @@ void Game::Init()
 	sceneLoader->sceneEntitiesMap.insert({ "Water", waterEntity });
 	sceneLoader->sceneEntities.push_back(waterEntity);
 	waterEntity->CalcWorldMatrix();
-
-	// Physics -----------------
-
-	collisionConfiguration = new btDefaultCollisionConfiguration();
-	dispatcher = new  btCollisionDispatcher(collisionConfiguration);
-	broadphase = new  btDbvtBroadphase();
-	solver = new  btSequentialImpulseConstraintSolver;
-	dynamicsWorld = new btDiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
-
-	dynamicsWorld->setGravity(btVector3(0, -3.0f, 0));
 
 	// Audio -----------------
 
@@ -346,7 +346,7 @@ void Game::Update(float deltaTime, float totalTime)
 	water->Update();
 
 	AudioStep();
-	//PhysicsStep(deltaTime);
+	PhysicsStep(deltaTime);
 
 	/*if (!GetAsyncKeyState(VK_CONTROL))
 	{

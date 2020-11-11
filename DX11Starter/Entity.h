@@ -38,8 +38,9 @@ private:
 
 	btCollisionShape* collShape;
 	btRigidBody* rBody;
+	btDiscreteDynamicsWorld* dynamicsWorld;
 public:
-	Entity(string entityName, Mesh* entityMesh, Material* mat = nullptr);
+	Entity(string entityName, btDiscreteDynamicsWorld* dw, Mesh* entityMesh, Material* mat = nullptr);
 	~Entity();
 	DirectX::XMFLOAT4X4 GetWorldMatrix();
 	DirectX::XMFLOAT3 GetPosition();

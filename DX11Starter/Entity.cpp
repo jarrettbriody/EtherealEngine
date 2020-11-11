@@ -1,8 +1,9 @@
 #include "Entity.h"
 
 
-Entity::Entity(string entityName, Mesh* entityMesh, Material* mat)
+Entity::Entity(string entityName, btDiscreteDynamicsWorld* dw, Mesh* entityMesh, Material* mat)
 {
+	dynamicsWorld = dw;
 	name = entityName;
 	mesh = entityMesh;
 	position = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
@@ -15,15 +16,14 @@ Entity::Entity(string entityName, Mesh* entityMesh, Material* mat)
 		materialMap.insert({ mat->GetName(), mat });
 
 	// Physics set-up
-
-	//this->collShape = new btBoxShape(btVector3(btScalar(scale.x / 2.0f), btScalar(scale.y / 2.0f), btScalar(scale.z / 2.0f)));
+	this->collShape = new btBoxShape(btVector3(btScalar(scale.x / 2.0f), btScalar(scale.y / 2.0f), btScalar(scale.z / 2.0f)));
 
 	btTransform groundTransform;
 	groundTransform.setIdentity();
 	groundTransform.setOrigin(btVector3(position.x, position.y, position.z));
 
 	//btScalar mass(isStatic);
-	btScalar mass(0.0f);
+	btScalar mass(1.0f);
 
 	//rigidbody is dynamic if and only if mass is non zero, otherwise static
 	bool isDynamic = (mass != 0.0f);
@@ -40,6 +40,8 @@ Entity::Entity(string entityName, Mesh* entityMesh, Material* mat)
 	rBody->setAngularFactor(btVector3(0, 1, 1));
 
 	rBody->setAnisotropicFriction(btVector3(2.0f, 0.0f, 0.0f));
+
+	dynamicsWorld->addRigidBody(rBody);
 }
 
 
@@ -49,6 +51,11 @@ Entity::~Entity()
 	{
 		delete colliders[i];
 	}
+
+	dynamicsWorld->removeCollisionObject(rBody);
+	delete rBody->getMotionState();
+	delete rBody;
+	delete collShape;
 }
 
 DirectX::XMFLOAT4X4 Entity::GetWorldMatrix()

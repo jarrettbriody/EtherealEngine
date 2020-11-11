@@ -6,6 +6,7 @@
 #include "Water.h"
 #include "WaterMaterial.h"
 #include "Entity.h"
+#include "btBulletDynamicsCommon.h"
 #include <map>
 #include <vector>
 
@@ -15,6 +16,7 @@ private:
 	ID3D11Device* device;
 	ID3D11DeviceContext* context;
 	ID3D11SamplerState* sampler;
+	btDiscreteDynamicsWorld* dynamicsWorld;
 public:
 	map<string, SimpleVertexShader*> vertexShadersMap;
 	map<string, SimplePixelShader*> pixelShadersMap;
@@ -35,7 +37,7 @@ public:
 	map<string, Entity*> sceneEntitiesMap;
 	vector<Entity*> sceneEntities;
 
-	SceneLoader(ID3D11Device* device, ID3D11DeviceContext*	context, ID3D11SamplerState* sampler);
+	SceneLoader(ID3D11Device* device, ID3D11DeviceContext*	context, ID3D11SamplerState* sampler, btDiscreteDynamicsWorld* dw);
 	~SceneLoader();
 
 	void LoadShaders();
