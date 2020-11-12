@@ -1,43 +1,55 @@
 #include "Barrel.h"
 
-void Barrel::Init()
+void TestScript::Init()
 {
 	cout << "initializing barrel" << endl;
 }
 
-void Barrel::Update()
+void TestScript::Update()
 {
+	//collision barrels
 	if (GetAsyncKeyState(VK_LEFT))
 	{
-		DirectX::XMFLOAT3 trans = entity->GetPosition();
-		trans.x -= 0.05f;
-		entity->SetPosition(trans.x, trans.y, trans.z);
+		entity->Move(-0.05f, 0, 0);
 		entity->CalcWorldMatrix();
 	}
 	if (GetAsyncKeyState(VK_RIGHT))
 	{
-		DirectX::XMFLOAT3 trans = entity->GetPosition();
-		trans.x += 0.05f;
-		entity->SetPosition(trans.x, trans.y, trans.z);
+		entity->Move(0.05f, 0, 0);
 		entity->CalcWorldMatrix();
 	}
 	if (GetAsyncKeyState(VK_UP))
 	{
-		DirectX::XMFLOAT3 trans = entity->GetPosition();
-		trans.z += 0.05f;
-		entity->SetPosition(trans.x, trans.y, trans.z);
+		entity->Move(0, 0, 0.05f);
 		entity->CalcWorldMatrix();
 	}
 	if (GetAsyncKeyState(VK_DOWN))
 	{
-		DirectX::XMFLOAT3 trans = entity->GetPosition();
-		trans.z -= 0.05f;
-		entity->SetPosition(trans.x, trans.y, trans.z);
+		entity->Move(0, 0, -0.05f);
 		entity->CalcWorldMatrix();
 	}
-
-	if (entity->CheckSATCollisionAndCorrect((*ScriptManager::sceneEntitiesMap)["barrel_1 (2)"]))
+	if (entity->CheckSATCollisionAndCorrect((*eMap)["barrel_1 (2)"]))
 	{
 		cout << test << endl;
+	}
+
+	//ruin
+	if (GetAsyncKeyState('B') & 0x8000) {
+		(*eMap)["Ruin"]->RotateAroundAxis(Y_AXIS, -0.05f);
+		(*eMap)["Ruin"]->CalcWorldMatrix();
+	}
+	if (GetAsyncKeyState('N') & 0x8000) {
+		(*eMap)["Ruin"]->RotateAroundAxis(Y_AXIS, 0.05f);
+		(*eMap)["Ruin"]->CalcWorldMatrix();
+	}
+
+	//transform hierarchy spheres
+	if (GetAsyncKeyState('F') & 0x8000) {
+		(*eMap)["sphere1"]->RotateAroundAxis(Y_AXIS, 0.05f);
+		(*eMap)["sphere1"]->CalcWorldMatrix();
+	}
+	if (GetAsyncKeyState('G') & 0x8000) {
+		(*eMap)["sphere1"]->RotateAroundAxis(Y_AXIS, -0.05f);
+		(*eMap)["sphere1"]->CalcWorldMatrix();
 	}
 }

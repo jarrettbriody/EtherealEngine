@@ -4,8 +4,10 @@
 
 using namespace std;
 
-class Barrel : public ScriptManager
+class TestScript : public ScriptManager
 {
+	map<string, Entity*>* eMap = ScriptManager::sceneEntitiesMap;
+
 	string test = "Scope";
 
 	void Init();

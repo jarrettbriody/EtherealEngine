@@ -1,19 +1,39 @@
 #include "Entity.h"
 
 
-Entity::Entity(string entityName, btDiscreteDynamicsWorld* dw, Mesh* entityMesh, Material* mat)
+Entity::Entity(string entityName, Mesh* entityMesh, Material* mat)
 {
-	dynamicsWorld = dw;
 	name = entityName;
 	mesh = entityMesh;
 	position = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
 	scale = DirectX::XMFLOAT3(1.0f, 1.0f, 1.0f);
 	rotation = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
+	rotationInDegrees = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
+	quaternion = DirectX::XMFLOAT4(0.0f, 0.0f, 0.0f, 0.0f);
 	repeatTex = XMFLOAT2(1.0f, 1.0f);
 	DirectX::XMMATRIX W = DirectX::XMMatrixIdentity();
 	DirectX::XMStoreFloat4x4(&worldMatrix, XMMatrixTranspose(W));
 	if (mat != nullptr)
 		materialMap.insert({ mat->GetName(), mat });
+}
+
+
+Entity::~Entity()
+{
+	for (size_t i = 0; i < colliders.size(); i++)
+	{
+		delete colliders[i];
+	}
+
+	dynamicsWorld->removeCollisionObject(rBody);
+	delete rBody->getMotionState();
+	delete rBody;
+	delete collShape;
+}
+
+void Entity::InitRigidBody(btDiscreteDynamicsWorld* dw)
+{
+	dynamicsWorld = dw;
 
 	// Physics set-up
 	this->collShape = new btBoxShape(btVector3(btScalar(scale.x / 2.0f), btScalar(scale.y / 2.0f), btScalar(scale.z / 2.0f)));
@@ -21,6 +41,12 @@ Entity::Entity(string entityName, btDiscreteDynamicsWorld* dw, Mesh* entityMesh,
 	btTransform groundTransform;
 	groundTransform.setIdentity();
 	groundTransform.setOrigin(btVector3(position.x, position.y, position.z));
+	btQuaternion qx = btQuaternion(btVector3(1.0f, 0.0f, 0.0f), rotation.x);
+	btQuaternion qy = btQuaternion(btVector3(0.0f, 1.0f, 0.0f), rotation.y);
+	btQuaternion qz = btQuaternion(btVector3(0.0f, 0.0f, 1.0f), rotation.z);
+	btQuaternion res = qz * qy * qx;
+	groundTransform.setRotation(res);
+	//groundTransform.setRotation(btQuaternion(rotation.y, rotation.x, rotation.z));
 
 	//btScalar mass(isStatic);
 	btScalar mass(0.0f);
@@ -36,26 +62,14 @@ Entity::Entity(string entityName, btDiscreteDynamicsWorld* dw, Mesh* entityMesh,
 	btRigidBody::btRigidBodyConstructionInfo rbInfo(mass, myMotionState, collShape, localInertia);
 	this->rBody = new btRigidBody(rbInfo);
 
-	rBody->setLinearFactor(btVector3(1, 1, 0));
-	rBody->setAngularFactor(btVector3(0, 1, 1));
+	//rBody->setLinearFactor(btVector3(1, 1, 0));
+	//rBody->setAngularFactor(btVector3(0, 1, 1));
 
 	rBody->setAnisotropicFriction(btVector3(2.0f, 0.0f, 0.0f));
 
+	//rBody->setCollisionFlags(btCollisionObject::CF_KINEMATIC_OBJECT);
+
 	dynamicsWorld->addRigidBody(rBody);
-}
-
-
-Entity::~Entity()
-{
-	for (size_t i = 0; i < colliders.size(); i++)
-	{
-		delete colliders[i];
-	}
-
-	dynamicsWorld->removeCollisionObject(rBody);
-	delete rBody->getMotionState();
-	delete rBody;
-	delete collShape;
 }
 
 DirectX::XMFLOAT4X4 Entity::GetWorldMatrix()
@@ -73,9 +87,19 @@ DirectX::XMFLOAT3 Entity::GetScale()
 	return scale;
 }
 
-DirectX::XMFLOAT3 Entity::GetRotation()
+DirectX::XMFLOAT3 Entity::GetEulerAngles()
 {
 	return rotation;
+}
+
+DirectX::XMFLOAT3 Entity::GetEulerAnglesDegrees()
+{
+	return rotationInDegrees;
+}
+
+DirectX::XMFLOAT4 Entity::GetRotationQuaternion()
+{
+	return quaternion;
 }
 
 void Entity::SetPosition(float x, float y, float z)
@@ -97,6 +121,46 @@ void Entity::SetRotation(float x, float y, float z)
 	rotation.x = x;
 	rotation.y = y;
 	rotation.z = z;
+
+	rotationInDegrees.x = DirectX::XMConvertToDegrees(x);
+	rotationInDegrees.y = DirectX::XMConvertToDegrees(y);
+	rotationInDegrees.z = DirectX::XMConvertToDegrees(z);
+
+	XMVECTOR quat = XMQuaternionRotationRollPitchYaw(x, y, z);
+	XMStoreFloat4(&quaternion, quat);
+}
+
+void Entity::SetRotation(XMFLOAT4 quat)
+{
+	quaternion = quat;
+	CalcEulerAngles();
+}
+
+void Entity::RotateAroundAxis(XMFLOAT3 axis, float scalar)
+{
+	XMVECTOR a = XMLoadFloat3(&axis);
+	XMVECTOR quat = XMQuaternionRotationAxis(a, scalar);
+	XMVECTOR existingQuat = XMLoadFloat4(&quaternion);
+	XMVECTOR result = XMQuaternionMultiply(existingQuat, quat);
+	XMStoreFloat4(&quaternion, result);
+	CalcEulerAngles();
+}
+
+void Entity::CalcEulerAngles()
+{
+	XMVECTOR q = XMLoadFloat4(&quaternion);
+
+	XMFLOAT3 x = X_AXIS;
+	XMFLOAT3 y = X_AXIS;
+	XMFLOAT3 z = X_AXIS;
+
+	XMVECTOR xs = XMLoadFloat3(&x);
+	XMVECTOR ys = XMLoadFloat3(&y);
+	XMVECTOR zs = XMLoadFloat3(&z);
+
+	XMQuaternionToAxisAngle(&xs, &rotation.x, q);
+	XMQuaternionToAxisAngle(&ys, &rotation.y, q);
+	XMQuaternionToAxisAngle(&zs, &rotation.z, q);
 }
 
 void Entity::SetRepeatTexture(float x, float y)
@@ -165,7 +229,9 @@ string Entity::GetMeshMaterialName(int i)
 void Entity::CalcWorldMatrix()
 {
 	DirectX::XMMATRIX trans = DirectX::XMMatrixTranslation(position.x, position.y, position.z);
-	DirectX::XMMATRIX rot   = DirectX::XMMatrixRotationRollPitchYaw(rotation.x, rotation.y, rotation.z);
+	//DirectX::XMMATRIX rot   = DirectX::XMMatrixRotationRollPitchYaw(rotation.x, rotation.y, rotation.z);
+	XMVECTOR quat = XMLoadFloat4(&quaternion);
+	DirectX::XMMATRIX rot = DirectX::XMMatrixRotationQuaternion(quat);
 	DirectX::XMMATRIX scl   = DirectX::XMMatrixScaling(scale.x, scale.y, scale.z);
 	DirectX::XMMATRIX world = scl * rot * trans;
 	if (parent != nullptr) {

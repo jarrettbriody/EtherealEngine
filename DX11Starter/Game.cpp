@@ -147,35 +147,39 @@ void Game::Init()
 	cube1->CalcWorldMatrix();
 	*/
 
+
 	Entity* sphere1;
-	sphere1 = new Entity("sphere1", dynamicsWorld, EESceneLoader->defaultMeshesMap["Sphere"]);
+	sphere1 = new Entity("sphere1", EESceneLoader->defaultMeshesMap["Sphere"]);
 	sphere1->AddMaterial(EESceneLoader->defaultMaterialsMap["DEFAULT"]);
 	sphere1->AddMaterialNameToMesh("DEFAULT");
 	sphere1->SetPosition(8.0f, 8.0f, 8.0f);
 	sphere1->SetRotation(DirectX::XMConvertToRadians(30), DirectX::XMConvertToRadians(30), DirectX::XMConvertToRadians(30));
 	sphere1->SetScale(1.0f, 2.0f, 1.0f);
+	sphere1->InitRigidBody(dynamicsWorld);
 	EESceneLoader->sceneEntitiesMap.insert({ "sphere1", sphere1 });
 	EESceneLoader->sceneEntities.push_back(sphere1);
 
 	Entity* sphere2;
-	sphere2 = new Entity("sphere2", dynamicsWorld, EESceneLoader->defaultMeshesMap["Sphere"]);
+	sphere2 = new Entity("sphere2", EESceneLoader->defaultMeshesMap["Sphere"]);
 	sphere2->AddMaterial(EESceneLoader->defaultMaterialsMap["DEFAULT"]);
 	sphere2->AddMaterialNameToMesh("DEFAULT");
 	sphere2->SetPosition(2.0f, 2.0f, 2.0f);
 	sphere2->SetRotation(0.0f, 0.0f, 0.0f);
 	sphere2->SetScale(1.0f, 1.0f, 2.0f);
+	sphere2->InitRigidBody(dynamicsWorld);
 	EESceneLoader->sceneEntitiesMap.insert({ "sphere2", sphere2 });
 	EESceneLoader->sceneEntities.push_back(sphere2);
 
 	sphere1->AddChildEntity(sphere2);
 
 	Entity* sphere3;
-	sphere3 = new Entity("sphere3", dynamicsWorld, EESceneLoader->defaultMeshesMap["Sphere"]);
+	sphere3 = new Entity("sphere3", EESceneLoader->defaultMeshesMap["Sphere"]);
 	sphere3->AddMaterial(EESceneLoader->defaultMaterialsMap["DEFAULT"]);
 	sphere3->AddMaterialNameToMesh("DEFAULT");
 	sphere3->SetPosition(2.0f, 2.0f, 0.0f);
 	sphere3->SetRotation(0.0f, 0.0f, 90.0f);
 	sphere3->SetScale(1.0f, 1.0f, 1.0f);
+	sphere3->InitRigidBody(dynamicsWorld);
 	EESceneLoader->sceneEntitiesMap.insert({ "sphere3", sphere3 });
 	EESceneLoader->sceneEntities.push_back(sphere3);
 
@@ -290,7 +294,7 @@ void Game::Init()
 	musicChannel->set3DAttributes(&pos, &vel);
 	musicChannel->set3DMinMaxDistance(0, 15.0f);
   
-	barrel = new Barrel();
+	barrel = new TestScript();
 	barrel->Setup("barrel_1", EESceneLoader->sceneEntitiesMap["barrel_1"]);
 
 	for (size_t i = 0; i < ScriptManager::scriptFunctions.size(); i++)
@@ -311,20 +315,6 @@ void Game::Update(float deltaTime, float totalTime)
 	if (GetAsyncKeyState(VK_ESCAPE))
 		Quit();
 
-	if (GetAsyncKeyState('F') & 0x8000) {
-		DirectX::XMFLOAT3 rot = EESceneLoader->sceneEntitiesMap["sphere1"]->GetRotation();
-		rot.y += DirectX::XMConvertToRadians(2.0f);
-		EESceneLoader->sceneEntitiesMap["sphere1"]->SetRotation(rot.x,rot.y,rot.z);
-		EESceneLoader->sceneEntitiesMap["sphere1"]->CalcWorldMatrix();
-	}
-
-	if (GetAsyncKeyState('G') & 0x8000) {
-		DirectX::XMFLOAT3 rot = EESceneLoader->sceneEntitiesMap["sphere1"]->GetRotation();
-		rot.y -= DirectX::XMConvertToRadians(2.0f);
-		EESceneLoader->sceneEntitiesMap["sphere1"]->SetRotation(rot.x, rot.y, rot.z);
-		EESceneLoader->sceneEntitiesMap["sphere1"]->CalcWorldMatrix();
-	}
-
 	// Play the 2D sound only if the channel group is not playing something
 	sfxGroup->isPlaying(&isPlaying);
 	if (GetAsyncKeyState('P') & 0x8000 && !isPlaying) {
@@ -338,41 +328,6 @@ void Game::Update(float deltaTime, float totalTime)
 		bool mute = true;
 		masterGroup->getMute(&mute);
 		masterGroup->setMute(!mute);
-	}
-
-	if (GetAsyncKeyState(VK_LEFT))
-	{
-		DirectX::XMFLOAT3 trans = EESceneLoader->sceneEntitiesMap["barrel_1"]->GetPosition();
-		trans.x -= 0.1f;
-		EESceneLoader->sceneEntitiesMap["barrel_1"]->SetPosition(trans.x, trans.y, trans.z);
-		EESceneLoader->sceneEntitiesMap["barrel_1"]->CalcWorldMatrix();
-	}
-	if (GetAsyncKeyState(VK_RIGHT))
-	{
-		DirectX::XMFLOAT3 trans = EESceneLoader->sceneEntitiesMap["barrel_1"]->GetPosition();
-		trans.x += 0.1f;
-		EESceneLoader->sceneEntitiesMap["barrel_1"]->SetPosition(trans.x, trans.y, trans.z);
-		EESceneLoader->sceneEntitiesMap["barrel_1"]->CalcWorldMatrix();
-	}
-	if (GetAsyncKeyState(VK_UP))
-	{
-		DirectX::XMFLOAT3 trans = EESceneLoader->sceneEntitiesMap["barrel_1"]->GetPosition();
-		trans.z += 0.1f;
-		EESceneLoader->sceneEntitiesMap["barrel_1"]->SetPosition(trans.x, trans.y, trans.z);
-		EESceneLoader->sceneEntitiesMap["barrel_1"]->CalcWorldMatrix();
-	}
-	if (GetAsyncKeyState(VK_DOWN))
-	{
-		DirectX::XMFLOAT3 trans = EESceneLoader->sceneEntitiesMap["barrel_1"]->GetPosition();
-		trans.z -= 0.1f;
-		EESceneLoader->sceneEntitiesMap["barrel_1"]->SetPosition(trans.x, trans.y, trans.z);
-		EESceneLoader->sceneEntitiesMap["barrel_1"]->CalcWorldMatrix();
-	}
-	if (GetAsyncKeyState('B') & 0x8000) {
-		DirectX::XMFLOAT3 rot = EESceneLoader->sceneEntitiesMap["Ruin"]->GetRotation();
-		rot.y -= DirectX::XMConvertToRadians(2.0f);
-		EESceneLoader->sceneEntitiesMap["Ruin"]->SetRotation(rot.x, rot.y, rot.z);
-		EESceneLoader->sceneEntitiesMap["Ruin"]->CalcWorldMatrix();
 	}
 
 	EECamera->Update();
@@ -391,11 +346,11 @@ void Game::Update(float deltaTime, float totalTime)
 		ScriptManager* sf = ScriptManager::scriptFunctions[i];
 		sf->CallUpdate();
 	}
-	
-	GarbageCollect();
 
 	AudioStep();
 	PhysicsStep(deltaTime);
+	
+	GarbageCollect();
 
 	/*if (!GetAsyncKeyState(VK_CONTROL))
 	{
@@ -406,22 +361,67 @@ void Game::Update(float deltaTime, float totalTime)
 
 void Game::PhysicsStep(float deltaTime)
 {
-	for (int i = dynamicsWorld->getNumCollisionObjects() - 1; i >= 0; i--)
+	btScalar xRot = 0.0f;
+	btScalar yRot = 0.0f;
+	btScalar zRot = 0.0f;
+	btTransform transform;
+	for (int i = 0; i < dynamicsWorld->getNumCollisionObjects(); i++)
 	{
 		btCollisionObject* obj = dynamicsWorld->getCollisionObjectArray()[i];
 		btRigidBody* body = btRigidBody::upcast(obj);
 
-		btTransform transform = body->getWorldTransform();
-		transform.setOrigin(btVector3(EESceneLoader->sceneEntities[i]->GetPosition().x, EESceneLoader->sceneEntities[i]->GetPosition().y, EESceneLoader->sceneEntities[i]->GetPosition().z));
-		transform.setRotation(btQuaternion(EESceneLoader->sceneEntities[i]->GetRotation().y, EESceneLoader->sceneEntities[i]->GetRotation().z, EESceneLoader->sceneEntities[i]->GetRotation().x));
+		transform = body->getWorldTransform();
+		XMFLOAT3 pos = EESceneLoader->sceneEntities[i]->GetPosition();
+		XMFLOAT4 rot = EESceneLoader->sceneEntities[i]->GetRotationQuaternion();
+		//transform.setIdentity();
+		transform.setOrigin(btVector3(pos.x, pos.y, pos.z));
+
+		//btQuaternion qx = btQuaternion(btVector3(1.0f, 0.0f, 0.0f), rot.x);
+		//btQuaternion qy = btQuaternion(btVector3(0.0f, 1.0f, 0.0f), rot.y);
+		//btQuaternion qz = btQuaternion(btVector3(0.0f, 0.0f, 1.0f), rot.z);
+		//btQuaternion res = qz * qy * qx;
+
+		btQuaternion res = btQuaternion(rot.x, rot.y, rot.z, rot.w);
+		transform.setRotation(res);
+
 		body->getMotionState()->setWorldTransform(transform);
 
 		dynamicsWorld->stepSimulation(deltaTime * 0.5f);
 
 		body->getMotionState()->getWorldTransform(transform);
 
+
+		/*
+		btQuaternion q = transform.getRotation();
+		btScalar w = q.getW();
+		btScalar x = q.getX();
+		btScalar y = q.getY();
+		btScalar z = q.getZ();
+
+		double sinr_cosp = 2 * (w * x + y * z);
+		double cosr_cosp = 1 - 2 * (x * x + y * y);
+		xRot = std::atan2(sinr_cosp, cosr_cosp);
+
+		double sinp = 2 * (w * y - z * x);
+		if (std::abs(sinp) >= 1)
+			yRot = std::copysign(DirectX::XM_PI / 2, sinp); // use 90 degrees if out of range
+		else
+			yRot = std::asin(sinp);
+
+		double siny_cosp = 2 * (w * z + x * y);
+		double cosy_cosp = 1 - 2 * (y * y + z * z);
+		zRot = std::atan2(siny_cosp, cosy_cosp);
+		*/
+
+		//transform.getRotation().getEulerZYX(zRot, yRot, xRot);
+		/*
+		if (i == 19) {
+			cout << yRot << endl;
+		}
+		*/
+		btQuaternion q = transform.getRotation();
 		EESceneLoader->sceneEntities[i]->SetPosition(transform.getOrigin().getX(), transform.getOrigin().getY(), transform.getOrigin().getZ());
-		EESceneLoader->sceneEntities[i]->SetRotation(transform.getRotation().getX(), transform.getRotation().getY(), transform.getRotation().getZ());
+		EESceneLoader->sceneEntities[i]->SetRotation(XMFLOAT4(q.getX(), q.getY(), q.getZ(), q.getW()));
 		EESceneLoader->sceneEntities[i]->CalcWorldMatrix();
 	}
 
@@ -436,16 +436,17 @@ void Game::AudioStep()
 	listener_pos.z = EECamera->position.z;
 
 	// Set the listener forward to the camera's forward
-	listener_forward.x = EECamera->GetViewMatrix()._13;
-	listener_forward.y = EECamera->GetViewMatrix()._23;
-	listener_forward.z = EECamera->GetViewMatrix()._33;
+	listener_forward.x = EECamera->direction.x;
+	listener_forward.y = EECamera->direction.y;
+	listener_forward.z = EECamera->direction.z;
 
 	// Set the listener up to the camera's up
-	listener_up.x = EECamera->GetViewMatrix()._12;
-	listener_up.y = EECamera->GetViewMatrix()._22;
-	listener_up.z = EECamera->GetViewMatrix()._32;
+	XMFLOAT3 yAxis = Y_AXIS;
+	listener_up.x = yAxis.x;
+	listener_up.y = yAxis.y;
+	listener_up.z = yAxis.z;
 
-	printf("Listener forward = x: %f y: %f z: %f \n", listener_forward.x, listener_forward.y, listener_forward.z);
+	//printf("Listener forward = x: %f y: %f z: %f \n", listener_forward.x, listener_forward.y, listener_forward.z);
 
 	fmodSystem->set3DListenerAttributes(0, &listener_pos, 0, &listener_forward, &listener_up); // Update 'ears'
 	fmodSystem->update();

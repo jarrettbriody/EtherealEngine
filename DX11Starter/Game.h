@@ -29,6 +29,8 @@
 
 using namespace std;
 
+//#define BT_EULER_DEFAULT_ZYX = true;
+
 class Game 
 	: public DXCore
 {

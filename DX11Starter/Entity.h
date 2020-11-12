@@ -6,6 +6,7 @@
 #include "Material.h"
 #include "Collider.h"
 #include "btBulletDynamicsCommon.h"
+#include <iostream>
 
 struct ShadowData {
 	DirectX::XMFLOAT4X4 shadowViewMatrix;
@@ -25,6 +26,8 @@ private:
 	DirectX::XMFLOAT3 position;
 	DirectX::XMFLOAT3 scale;
 	DirectX::XMFLOAT3 rotation;
+	DirectX::XMFLOAT3 rotationInDegrees;
+	DirectX::XMFLOAT4 quaternion;
 	DirectX::XMFLOAT2 repeatTex;
 	map<string, Material*> materialMap;
 	string name;
@@ -38,7 +41,7 @@ private:
 	float isStatic;
 
 	btCollisionShape* collShape;
-	btRigidBody* rBody;
+	btRigidBody* rBody = nullptr;
 	btDiscreteDynamicsWorld* dynamicsWorld;
 public:
 	bool destroyed = false;
@@ -46,15 +49,20 @@ public:
 	bool collisionsEnabled = true;
 	bool colliderDebugLinesEnabled = true;
 	Entity(string entityName, Mesh* entityMesh, Material* mat = nullptr);
-	Entity(string entityName, btDiscreteDynamicsWorld* dw, Mesh* entityMesh, Material* mat = nullptr);
 	~Entity();
+	void InitRigidBody(btDiscreteDynamicsWorld* dw);
 	DirectX::XMFLOAT4X4 GetWorldMatrix();
 	DirectX::XMFLOAT3 GetPosition();
 	DirectX::XMFLOAT3 GetScale();
-	DirectX::XMFLOAT3 GetRotation();
+	DirectX::XMFLOAT3 GetEulerAngles();
+	DirectX::XMFLOAT3 GetEulerAnglesDegrees();
+	DirectX::XMFLOAT4 GetRotationQuaternion();
 	void SetPosition(float x, float y, float z);
 	void SetScale(float x, float y, float z);
 	void SetRotation(float x, float y, float z);
+	void SetRotation(XMFLOAT4 quat);
+	void RotateAroundAxis(XMFLOAT3 axis, float scalar);
+	void CalcEulerAngles();
 	void SetRepeatTexture(float x, float y);
 	void SetShadowData(ShadowData shadowData);
 	void ToggleShadows(bool toggle);

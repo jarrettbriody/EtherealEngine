@@ -480,10 +480,10 @@ void SceneLoader::LoadScene(string sceneName)
 				case Utility::LOAD_FAILURE:
 					continue;
 				case Utility::DEFAULT_MESH:
-					someEntity = new Entity(entityName, dynamicsWorld, defaultMeshesMap[objName]);
+					someEntity = new Entity(entityName, defaultMeshesMap[objName]);
 					break;
 				case Utility::GENERATED_MESH: {
-					someEntity = new Entity(entityName, dynamicsWorld, generatedMeshesMap[objName]);
+					someEntity = new Entity(entityName, generatedMeshesMap[objName]);
 
 					//generated meshes should have a list of required materials,
 					//add them if they do or add the default (just black) if they dont
@@ -521,6 +521,7 @@ void SceneLoader::LoadScene(string sceneName)
 				someEntity->SetRotation(DirectX::XMConvertToRadians(parsedNumbers[3]), DirectX::XMConvertToRadians(parsedNumbers[4]), DirectX::XMConvertToRadians(parsedNumbers[5]));
 				someEntity->SetScale(parsedNumbers[6], parsedNumbers[7], parsedNumbers[8]);
 				someEntity->CalcWorldMatrix();
+				someEntity->InitRigidBody(dynamicsWorld);
 				if (someEntity->collisionsEnabled && someEntity->colliderDebugLinesEnabled) {
 					vector<Collider*> colliders = someEntity->GetColliders();
 					for (size_t d = 0; d < colliders.size(); d++)

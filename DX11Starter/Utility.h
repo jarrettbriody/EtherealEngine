@@ -6,10 +6,10 @@
 #include "DDSTextureLoader.h"
 #include "Config.h"
 
-#define ZERO_VECTOR3 XMFLOAT3(0.0f,0.0f,0.0f);
-#define X_AXIS XMFLOAT3(1.0f,0.0f,0.0f);
-#define Y_AXIS XMFLOAT3(0.0f,1.0f,0.0f);
-#define Z_AXIS XMFLOAT3(0.0f,0.0f,1.0f);
+#define ZERO_VECTOR3 XMFLOAT3(0.0f,0.0f,0.0f)
+#define X_AXIS XMFLOAT3(1.0f,0.0f,0.0f)
+#define Y_AXIS XMFLOAT3(0.0f,1.0f,0.0f)
+#define Z_AXIS XMFLOAT3(0.0f,0.0f,1.0f)
 
 namespace Utility {
 	enum MESH_TYPE {
@@ -71,5 +71,13 @@ namespace Utility {
 		::MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, &texture.c_str()[0], -1, &fileName[0], 50);
 		DirectX::CreateWICTextureFromFile(Config::Device, Config::Context, wcsncat(path, fileName, 100), 0, &srv);
 		return srv;
+	}
+
+	static float DegToRad(float deg) {
+		return (deg * DirectX::XM_PI) / 180.0f;
+	}
+
+	static float RadToDeg(float rad) {
+		return (rad * 180.0f) / DirectX::XM_PI;
 	}
 }
