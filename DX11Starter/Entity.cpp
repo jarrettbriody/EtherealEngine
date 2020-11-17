@@ -1,10 +1,23 @@
 #include "Entity.h"
 
 
-Entity::Entity(string entityName, Mesh* entityMesh, Material* mat)
+Entity::Entity(string entityName)
 {
 	name = entityName;
+	position = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
+	scale = DirectX::XMFLOAT3(1.0f, 1.0f, 1.0f);
+	rotation = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
+	rotationInDegrees = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
+	quaternion = DirectX::XMFLOAT4(0.0f, 0.0f, 0.0f, 0.0f);
+	repeatTex = XMFLOAT2(1.0f, 1.0f);
+	DirectX::XMMATRIX W = DirectX::XMMatrixIdentity();
+	DirectX::XMStoreFloat4x4(&worldMatrix, XMMatrixTranspose(W));
+}
+
+Entity::Entity(string entityName, Mesh* entityMesh, Material* mat)
+{
 	mesh = entityMesh;
+	name = entityName;
 	position = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
 	scale = DirectX::XMFLOAT3(1.0f, 1.0f, 1.0f);
 	rotation = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
@@ -171,6 +184,13 @@ void Entity::SetRepeatTexture(float x, float y)
 void Entity::SetShadowData(ShadowData shadowData)
 {
 	this->shadowData = shadowData;
+}
+
+void Entity::SetMeshAndMaterial(Mesh* mesh, Material* mat)
+{
+	this->mesh = mesh;
+	if (mat != nullptr)
+		materialMap.insert({ mat->GetName(), mat });
 }
 
 void Entity::ToggleShadows(bool toggle)

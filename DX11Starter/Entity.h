@@ -48,6 +48,7 @@ public:
 	bool isCollisionStatic = true;
 	bool collisionsEnabled = true;
 	bool colliderDebugLinesEnabled = true;
+	Entity(string entityName);
 	Entity(string entityName, Mesh* entityMesh, Material* mat = nullptr);
 	~Entity();
 	void InitRigidBody(btDiscreteDynamicsWorld* dw);
@@ -65,6 +66,7 @@ public:
 	void CalcEulerAngles();
 	void SetRepeatTexture(float x, float y);
 	void SetShadowData(ShadowData shadowData);
+	void SetMeshAndMaterial(Mesh* mesh, Material* mat = nullptr);
 	void ToggleShadows(bool toggle);
 	void Move(XMFLOAT3 f);
 	void Move(float x, float y, float z);
