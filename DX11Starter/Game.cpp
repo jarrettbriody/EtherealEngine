@@ -155,7 +155,7 @@ void Game::Init()
 	sphere1->SetPosition(8.0f, 8.0f, 8.0f);
 	sphere1->SetRotation(DirectX::XMConvertToRadians(30), DirectX::XMConvertToRadians(30), DirectX::XMConvertToRadians(30));
 	sphere1->SetScale(1.0f, 2.0f, 1.0f);
-	sphere1->InitRigidBody(dynamicsWorld);
+	sphere1->InitRigidBody(dynamicsWorld, 0.0f);
 	EESceneLoader->sceneEntitiesMap.insert({ "sphere1", sphere1 });
 	EESceneLoader->sceneEntities.push_back(sphere1);
 
@@ -166,7 +166,7 @@ void Game::Init()
 	sphere2->SetPosition(2.0f, 2.0f, 2.0f);
 	sphere2->SetRotation(0.0f, 0.0f, 0.0f);
 	sphere2->SetScale(1.0f, 1.0f, 2.0f);
-	sphere2->InitRigidBody(dynamicsWorld);
+	sphere2->InitRigidBody(dynamicsWorld, 0.0f);
 	EESceneLoader->sceneEntitiesMap.insert({ "sphere2", sphere2 });
 	EESceneLoader->sceneEntities.push_back(sphere2);
 
@@ -179,7 +179,7 @@ void Game::Init()
 	sphere3->SetPosition(2.0f, 2.0f, 0.0f);
 	sphere3->SetRotation(0.0f, 0.0f, 90.0f);
 	sphere3->SetScale(1.0f, 1.0f, 1.0f);
-	sphere3->InitRigidBody(dynamicsWorld);
+	sphere3->InitRigidBody(dynamicsWorld, 0.0f);
 	EESceneLoader->sceneEntitiesMap.insert({ "sphere3", sphere3 });
 	EESceneLoader->sceneEntities.push_back(sphere3);
 
@@ -373,13 +373,7 @@ void Game::PhysicsStep(float deltaTime)
 		transform = body->getWorldTransform();
 		XMFLOAT3 pos = EESceneLoader->sceneEntities[i]->GetPosition();
 		XMFLOAT4 rot = EESceneLoader->sceneEntities[i]->GetRotationQuaternion();
-		//transform.setIdentity();
 		transform.setOrigin(btVector3(pos.x, pos.y, pos.z));
-
-		//btQuaternion qx = btQuaternion(btVector3(1.0f, 0.0f, 0.0f), rot.x);
-		//btQuaternion qy = btQuaternion(btVector3(0.0f, 1.0f, 0.0f), rot.y);
-		//btQuaternion qz = btQuaternion(btVector3(0.0f, 0.0f, 1.0f), rot.z);
-		//btQuaternion res = qz * qy * qx;
 
 		btQuaternion res = btQuaternion(rot.x, rot.y, rot.z, rot.w);
 		transform.setRotation(res);
@@ -390,35 +384,6 @@ void Game::PhysicsStep(float deltaTime)
 
 		body->getMotionState()->getWorldTransform(transform);
 
-
-		/*
-		btQuaternion q = transform.getRotation();
-		btScalar w = q.getW();
-		btScalar x = q.getX();
-		btScalar y = q.getY();
-		btScalar z = q.getZ();
-
-		double sinr_cosp = 2 * (w * x + y * z);
-		double cosr_cosp = 1 - 2 * (x * x + y * y);
-		xRot = std::atan2(sinr_cosp, cosr_cosp);
-
-		double sinp = 2 * (w * y - z * x);
-		if (std::abs(sinp) >= 1)
-			yRot = std::copysign(DirectX::XM_PI / 2, sinp); // use 90 degrees if out of range
-		else
-			yRot = std::asin(sinp);
-
-		double siny_cosp = 2 * (w * z + x * y);
-		double cosy_cosp = 1 - 2 * (y * y + z * z);
-		zRot = std::atan2(siny_cosp, cosy_cosp);
-		*/
-
-		//transform.getRotation().getEulerZYX(zRot, yRot, xRot);
-		/*
-		if (i == 19) {
-			cout << yRot << endl;
-		}
-		*/
 		btQuaternion q = transform.getRotation();
 		EESceneLoader->sceneEntities[i]->SetPosition(transform.getOrigin().getX(), transform.getOrigin().getY(), transform.getOrigin().getZ());
 		EESceneLoader->sceneEntities[i]->SetRotation(XMFLOAT4(q.getX(), q.getY(), q.getZ(), q.getW()));
@@ -535,6 +500,34 @@ void Game::OnMouseDown(WPARAM buttonState, int x, int y)
 {
 	prevMousePos.x = x;
 	prevMousePos.y = y;
+
+	printf("Mouse Pos: %d, %d\n", x, y);
+
+	DebugLines* dl = new DebugLines("TestRay", 0, false);
+	XMFLOAT3 c = XMFLOAT3(0.0f, 1.0f, 0.0f);
+	dl->color = c;
+	XMFLOAT4X4 wm;
+	XMStoreFloat4x4(&wm, XMMatrixTranspose(DirectX::XMMatrixIdentity()));
+	dl->worldMatrix = wm;
+
+	XMFLOAT3 start = EECamera->position;
+	XMFLOAT3 end = DirectX::XMFLOAT3(x, y, 1.0f);
+	XMFLOAT3* rayPoints = new XMFLOAT3[8];
+	rayPoints[0] = start;
+	rayPoints[1] = start;
+	rayPoints[2] = start;
+	rayPoints[3] = start;
+	rayPoints[4] = end;
+	rayPoints[5] = end;
+	rayPoints[6] = end;
+	rayPoints[7] = end;
+	dl->GenerateCuboidVertexBuffer(rayPoints, 8);
+
+	XMMATRIX proj = XMLoadFloat4x4(&(EECamera->GetProjMatrix()));
+	XMMATRIX view = XMLoadFloat4x4(&(EECamera->GetViewMatrix()));
+	XMMATRIX world = XMLoadFloat4x4(&wm);
+
+	XMVECTOR endVector = XMVector3Unproject(XMVectorSet(x, y, 1.0f, 1.0f), 0, 0, 1600, 900, 0.1f, 10000.0f, proj, view, world);
 
 	SetCapture(hWnd);
 }
