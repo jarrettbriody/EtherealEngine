@@ -31,6 +31,18 @@ Renderer::~Renderer()
 		}
 	}
 
+	map<string, Camera*>::iterator cameraMapIterator;
+	for (int i = 0; i < cameraCount; i++)
+	{
+		cameraMapIterator = cameras.begin();
+		std::advance(cameraMapIterator, i);
+
+		if (cameraMapIterator->second != nullptr)
+		{
+			delete cameraMapIterator->second;
+		}
+	}
+
 	for (size_t i = 0; i < DebugLines::debugLines.size(); i++)
 	{
 		delete DebugLines::debugLines[i];
@@ -40,11 +52,6 @@ Renderer::~Renderer()
 void Renderer::SetEntities(vector<Entity*>* entities)
 {
 	this->entities = entities;
-}
-
-void Renderer::SetCamera(Camera * camera)
-{
-	this->camera = camera;
 }
 
 void Renderer::SetShadowVertexShader(SimpleVertexShader * shadowVS)
@@ -89,6 +96,7 @@ void Renderer::RenderFrame()
 	for (size_t i = 0; i < entities->size(); i++)
 	{
 		Entity* e = (*entities)[i];
+		if (e->isEmptyObj) continue;
 		e->ToggleShadows(shadowsEnabled);
 		if (shadowsEnabled) {
 			ShadowData d;
@@ -156,6 +164,43 @@ void Renderer::RenderDebugLines()
 	}
 
 	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+}
+
+bool Renderer::AddCamera(string name, Camera* newCamera)
+{
+	if (cameras.count(name)) {
+		return false;
+	}
+	cameras.insert({ name, newCamera });
+	cameraCount++;
+	return true;
+}
+
+bool Renderer::RemoveCamera(string name)
+{
+	if (!cameras.count(name)) {
+		return false;
+	}
+	cameras.erase(name);
+	cameraCount--;
+	return true;
+}
+
+Camera* Renderer::GetCamera(string name)
+{
+	if (!cameras.count(name)) {
+		return nullptr;
+	}
+	return cameras[name];
+}
+
+bool Renderer::EnableCamera(string name)
+{
+	if (!cameras.count(name)) {
+		return false;
+	}
+	camera = cameras[name];
+	return true;
 }
 
 void Renderer::InitShadows()
@@ -331,6 +376,7 @@ void Renderer::RenderShadowMap()
 	{
 		// Grab the data from the first entity's mesh
 		Entity* currentEntity = (*entities)[entityIndex];
+		if (currentEntity->isEmptyObj) continue;
 		for (int entityMeshChildIndex = -1; entityMeshChildIndex < currentEntity->GetMeshChildCount(); entityMeshChildIndex++)
 		{
 			if (currentEntity->MeshHasChildren() && entityMeshChildIndex == -1)

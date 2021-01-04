@@ -11,7 +11,7 @@ SceneLoader::~SceneLoader()
 	for (auto texMapIter = defaultTexturesMap.begin(); texMapIter != defaultTexturesMap.end(); ++texMapIter)
 	{
 		texMapIter->second->Release();
-		//cout << "Releasing " << texMapIter->first << endl;
+		//cout << "Deleting " << texMapIter->first << endl;
 	}
 
 	for (auto matMapIter = defaultMaterialsMap.begin(); matMapIter != defaultMaterialsMap.end(); ++matMapIter)
@@ -22,7 +22,10 @@ SceneLoader::~SceneLoader()
 
 	for (auto meshMapIter = defaultMeshesMap.begin(); meshMapIter != defaultMeshesMap.end(); ++meshMapIter)
 	{
-		if (meshMapIter->first != "Ground") {
+		if (meshMapIter->first != "Ground" &&
+			meshMapIter->first != "BloodButton" &&
+			meshMapIter->first != "Graybox" &&
+			meshMapIter->first != "BloodFountain") {
 			delete meshMapIter->second;
 			//cout << "Deleting " << meshMapIter->first << endl;
 		}
@@ -123,6 +126,9 @@ void SceneLoader::LoadDefaultMeshes()
 	defaultMeshesMap.insert({ "Helix", new Mesh("Helix", "../../Assets/Models/Default/helix.obj", Config::Device) });
 	defaultMeshesMap.insert({ "Torus", new Mesh("Torus", "../../Assets/Models/Default/torus.obj", Config::Device) });
 	defaultMeshesMap.insert({ "Ground", defaultMeshesMap["Cube"] });
+	defaultMeshesMap.insert({ "BloodButton", defaultMeshesMap["Cube"] });
+	defaultMeshesMap.insert({ "Graybox", defaultMeshesMap["Cube"] });
+	defaultMeshesMap.insert({ "BloodFountain", defaultMeshesMap["Cylinder"] });
 }
 
 void SceneLoader::LoadDefaultTextures()
@@ -143,6 +149,7 @@ void SceneLoader::LoadDefaultTextures()
 	defaultTexturesMap.insert({ "waterFoam", Utility::LoadSRV("water_foam.jpg") });
 	defaultTexturesMap.insert({ "waterNormal1", Utility::LoadSRV("water_normal1.jpeg") });
 	defaultTexturesMap.insert({ "waterNormal2", Utility::LoadSRV("water_normal2.png") });
+	defaultTexturesMap.insert({ "Grey", Utility::LoadSRV("Default/grey.png") });
 }
 
 void SceneLoader::LoadDefaultMaterials()
@@ -166,6 +173,10 @@ void SceneLoader::LoadDefaultMaterials()
 	materialData = {};
 	materialData.DiffuseTextureMapSRV = defaultTexturesMap["Hedge"];
 	defaultMaterialsMap.insert({ "Hedge", new Material("Hedge", materialData, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler) });
+
+	materialData = {};
+	materialData.DiffuseTextureMapSRV = defaultTexturesMap["Grey"];
+	defaultMaterialsMap.insert({ "Grey", new Material("Grey", materialData, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler) });
 
 	/*
 	TerrainMaterialData terrainMaterialData = {};
@@ -197,6 +208,18 @@ void SceneLoader::BuildDefaultEntity(string entityName, string objName, Entity* 
 		e->AddMaterialNameToMesh("Grass");
 		XMFLOAT3 s = e->GetScale();
 		e->SetRepeatTexture(s.x / 2.0f, s.z / 2.0f);
+	}
+	if (objName == "BloodButton") {
+		e->AddMaterial(defaultMaterialsMap["Grey"]);
+		e->AddMaterialNameToMesh("Grey");
+	}
+	if (objName == "Graybox") {
+		e->AddMaterial(defaultMaterialsMap["Grey"]);
+		e->AddMaterialNameToMesh("Grey");
+	}
+	if (objName == "BloodFountain") {
+		e->AddMaterial(defaultMaterialsMap["Red"]);
+		e->AddMaterialNameToMesh("Red");
 	}
 }
 
@@ -262,20 +285,20 @@ Utility::MESH_TYPE SceneLoader::AutoLoadOBJMTL(string name)
 
 	using namespace Utility;
 
-	regex newMtlRgx("^(newmtl )");
-	regex ambientColorRgx("^(Ka )");
-	regex diffuseColorRgx("^(Kd )");
-	regex specularColorRgx("^(Ks )");
-	regex specularExpRgx("^(Ns )");
-	regex dTransparencyRgx("^(d )");
-	regex trTransparencyRgx("^(Tr )");
-	regex illuminationRgx("^(illum )");
-	regex ambientTextureRgx("^(map_Ka )");
-	regex diffuseTextureRgx("^(map_Kd )");
-	regex specularColorTextureRgx("^(map_Ks )");
-	regex specularHighlightTextureRgx("^(map_Ns )");
-	regex alphaTextureRgx("^(map_d )");
-	regex normalTextureRgx("^(map_Bump )");
+	regex newMtlRgx("^(newmtl\\s+)");
+	regex ambientColorRgx("^(Ka\\s+)");
+	regex diffuseColorRgx("^(Kd\\s+)");
+	regex specularColorRgx("^(Ks\\s+)");
+	regex specularExpRgx("^(Ns\\s+)");
+	regex dTransparencyRgx("^(d\\s+)");
+	regex trTransparencyRgx("^(Tr\\s+)");
+	regex illuminationRgx("^(illum\\s+)");
+	regex ambientTextureRgx("^(map_Ka\\s+)");
+	regex diffuseTextureRgx("^(map_Kd\\s+)");
+	regex specularColorTextureRgx("^(map_Ks\\s+)");
+	regex specularHighlightTextureRgx("^(map_Ns\\s+)");
+	regex alphaTextureRgx("^(map_d\\s+)");
+	regex normalTextureRgx("^(map_Bump\\s+)");
 
 	bool ongoingMat = false;
 	string ongoingMatName = "";
@@ -293,11 +316,12 @@ Utility::MESH_TYPE SceneLoader::AutoLoadOBJMTL(string name)
 				if (ongoingMat) {
 					//Different shaders based on matData values
 					if (matData.NormalTextureMapSRV) {
-						generatedMaterialsMap.insert({ ongoingMatName, new Material(ongoingMatName, matData, vertexShadersMap["Normal"], pixelShadersMap["Normal"], Config::Sampler) });
+						if(!generatedMaterialsMap.count(ongoingMatName))
+							generatedMaterialsMap.insert({ ongoingMatName, new Material(ongoingMatName, matData, vertexShadersMap["Normal"], pixelShadersMap["Normal"], Config::Sampler) });
 					}
-					else {
-						generatedMaterialsMap.insert({ ongoingMatName, new Material(ongoingMatName, matData, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler) });
-					}
+					else if (!generatedMaterialsMap.count(ongoingMatName))
+							generatedMaterialsMap.insert({ ongoingMatName, new Material(ongoingMatName, matData, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler) });
+					
 					matData = {};
 				}
 				ongoingMat = true;
@@ -419,11 +443,11 @@ Utility::MESH_TYPE SceneLoader::AutoLoadOBJMTL(string name)
 	//basically only executes if the end of the file is reached and there was an ongoing material being created
 	if (ongoingMat) {
 		if (matData.NormalTextureMapSRV) {
-			generatedMaterialsMap.insert({ ongoingMatName, new Material(ongoingMatName, matData, vertexShadersMap["Normal"], pixelShadersMap["Normal"], Config::Sampler) });
+			if (!generatedMaterialsMap.count(ongoingMatName))
+				generatedMaterialsMap.insert({ ongoingMatName, new Material(ongoingMatName, matData, vertexShadersMap["Normal"], pixelShadersMap["Normal"], Config::Sampler) });
 		}
-		else {
+		else if (!generatedMaterialsMap.count(ongoingMatName))
 			generatedMaterialsMap.insert({ ongoingMatName, new Material(ongoingMatName, matData, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler) });
-		}
 		matData = {};
 		ongoingMat = false;
 	}
@@ -587,4 +611,13 @@ void SceneLoader::LoadScene(string sceneName)
 		delete generatedMaterialsMap[materialsToDelete[i]];
 		generatedMaterialsMap.erase(materialsToDelete[i]);
 	}
+}
+
+bool SceneLoader::AddEntity(Entity* e)
+{
+	if (sceneEntitiesMap.count(e->GetName()))
+		return false;
+	sceneEntitiesMap.insert({ e->GetName(), e });
+	sceneEntities.push_back(e);
+	return true;
 }

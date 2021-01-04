@@ -94,6 +94,7 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Barrel.cpp" />
+    <ClCompile Include="FPSController.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h">
@@ -166,6 +167,7 @@
     <ClInclude Include="Scripts.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="FPSController.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Lighting.hlsli">

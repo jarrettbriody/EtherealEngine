@@ -49,6 +49,11 @@ void Camera::RotateCamera(int x, int y)
 	if (yRotation < -XM_2PI) yRotation = yRotation + XM_2PI;
 }
 
+void Camera::SetPosition(XMFLOAT3 pos)
+{
+	position = pos;
+}
+
 void Camera::UpdateProjectionMatrix(int w, int h)
 {
 	// Create the Projection matrix
@@ -71,22 +76,26 @@ void Camera::Update()
 	XMVECTOR dir = XMLoadFloat3(&direction);
 	XMVECTOR right = XMVector3Cross(dir, XMLoadFloat3(&yAxis));
 
+	float scalar = 10;
+
 	if (GetAsyncKeyState('W') & 0x8000) {
-		pos = XMVectorAdd(pos, XMVectorScale(dir,0.05f));
+		pos = XMVectorAdd(pos, XMVectorScale(dir, 0.05f * scalar));
 		XMStoreFloat3(&position, pos);
 	}
 	if (GetAsyncKeyState('S') & 0x8000) {
-		pos = XMVectorAdd(pos, XMVectorScale(dir, -0.05f));
+		pos = XMVectorAdd(pos, XMVectorScale(dir, -0.05f * scalar));
 		XMStoreFloat3(&position, pos);
 	}
 	if (GetAsyncKeyState('A') & 0x8000) {
-		pos = XMVectorAdd(pos, XMVectorScale(right, 0.05f));
+		pos = XMVectorAdd(pos, XMVectorScale(right, 0.05f * scalar));
 		XMStoreFloat3(&position, pos);
 	}
 	if (GetAsyncKeyState('D') & 0x8000) {
-		pos = XMVectorAdd(pos, XMVectorScale(right, -0.05f));
+		pos = XMVectorAdd(pos, XMVectorScale(right, -0.05f * scalar));
 		XMStoreFloat3(&position, pos);
 	}
+
+	/*
 	if (GetAsyncKeyState(VK_SPACE) & 0x8000) {
 		pos = XMVectorAdd(pos, XMVectorScale(XMLoadFloat3(&yAxis), 0.05f));
 		XMStoreFloat3(&position, pos);
@@ -95,10 +104,11 @@ void Camera::Update()
 		pos = XMVectorAdd(pos, XMVectorScale(XMLoadFloat3(&yAxis), -0.05f));
 		XMStoreFloat3(&position, pos);
 	}
+	*/
 
 	XMVECTOR quat = XMQuaternionRotationRollPitchYaw(xRotation,yRotation,0.0f);
 	XMVECTOR newDir = XMVector3Rotate(XMLoadFloat3(&zAxis), quat);
-	XMMATRIX view = XMMatrixLookToLH(XMLoadFloat3(&position), dir, XMLoadFloat3(&yAxis));
+	XMMATRIX view = XMMatrixLookToLH(pos, dir, XMLoadFloat3(&yAxis));
 
 	XMStoreFloat4x4(&viewMatrix, XMMatrixTranspose(view));
 	XMStoreFloat3(&direction, newDir);

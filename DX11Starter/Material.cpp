@@ -42,12 +42,20 @@ ID3D11SamplerState * Material::GetSamplerState()
 
 void Material::Prepare()
 {
+	static SimpleVertexShader* lastVertShader = nullptr;
+	static SimplePixelShader* lastPixelShader = nullptr;
 	// Set the vertex and pixel shaders to use for the next Draw() command
 	//  - These don't technically need to be set every frame...YET
 	//  - Once you start applying different shaders to different objects,
 	//    you'll need to swap the current shaders before each draw
-	vertexShader->SetShader();
-	pixelShader->SetShader();
+	if (vertexShader != lastVertShader) {
+		vertexShader->SetShader();
+		lastVertShader = vertexShader;
+	}
+	if (pixelShader != lastPixelShader) {
+		pixelShader->SetShader();
+		lastPixelShader = pixelShader;
+	}
 
 	pixelShader->SetSamplerState("BasicSampler", samplerState);
 	pixelShader->SetShaderResourceView("DiffuseTexture", materialData.DiffuseTextureMapSRV);

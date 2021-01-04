@@ -45,7 +45,7 @@ Game::~Game()
 	delete dynamicsWorld;
 
 
-	delete EECamera;
+	//delete EECamera;
 	delete EERenderer;
 
 	for (size_t i = 0; i < ScriptManager::scriptFunctions.size(); i++)
@@ -112,11 +112,14 @@ void Game::Init()
 	EESceneLoader->LoadDefaultMaterials();
 
 	EESceneLoader->LoadScene("ArenaV2");
+	//EESceneLoader->LoadScene("Tutorial");
 
 	EESceneLoader->sceneEntitiesMap["barrel_1"]->isCollisionStatic = false;
 	EESceneLoader->sceneEntitiesMap["barrel_1 (2)"]->isCollisionStatic = false;
 
 	ScriptManager::sceneEntitiesMap = &EESceneLoader->sceneEntitiesMap;
+	ScriptManager::sceneEntities = &EESceneLoader->sceneEntities;
+	ScriptManager::sceneLoader = EESceneLoader;
 
 	//test area --------------------------
 	/*
@@ -145,6 +148,7 @@ void Game::Init()
 	cube1->AddChildEntity(cube2);
 
 	cube1->CalcWorldMatrix();
+
 	*/
 
 
@@ -208,7 +212,8 @@ void Game::Init()
 	testLight->SpotFalloff = 20.f;*/
 
 	EERenderer = new Renderer(device, context, swapChain, backBufferRTV, depthStencilView, width, height);
-	EERenderer->SetCamera(EECamera);
+	EERenderer->AddCamera("main", EECamera);
+	EERenderer->EnableCamera("main");
 	EERenderer->SetShadowVertexShader(EESceneLoader->vertexShadersMap["Shadow"]);
 	EERenderer->SetDebugLineVertexShader(EESceneLoader->vertexShadersMap["DebugLine"]);
 	EERenderer->SetDebugLinePixelShader(EESceneLoader->pixelShadersMap["DebugLine"]);
@@ -219,6 +224,8 @@ void Game::Init()
 	EERenderer->SendAllLightsToShader(EESceneLoader->pixelShadersMap["Normal"]);
 	EERenderer->SetShadowMapResolution(4096);
 	EERenderer->InitShadows();
+
+	ScriptManager::renderer = EERenderer;
 
 	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
@@ -296,6 +303,14 @@ void Game::Init()
   
 	barrel = new TestScript();
 	barrel->Setup("barrel_1", EESceneLoader->sceneEntitiesMap["barrel_1"]);
+
+	/*
+	Entity* fpsController = new Entity("FPSController");
+	fpsController->SetPosition(0.0f, 5.0f, -10.0f);
+	EESceneLoader->AddEntity(fpsController);
+	ScriptManager* playerScript = new FPSController();
+	playerScript->Setup("FPSController", EESceneLoader->sceneEntitiesMap["FPSController"]);
+	*/
 
 	for (size_t i = 0; i < ScriptManager::scriptFunctions.size(); i++)
 	{
@@ -536,17 +551,36 @@ void Game::OnMouseDown(WPARAM buttonState, int x, int y)
 	prevMousePos.x = x;
 	prevMousePos.y = y;
 
+	for (size_t i = 0; i < ScriptManager::scriptFunctions.size(); i++)
+	{
+		ScriptManager* sf = ScriptManager::scriptFunctions[i];
+		if (!sf->inputEnabled) continue;
+		sf->CallOnMouseDown(buttonState, x, y);
+	}
+
 	SetCapture(hWnd);
 }
 
 void Game::OnMouseUp(WPARAM buttonState, int x, int y)
 {
+	for (size_t i = 0; i < ScriptManager::scriptFunctions.size(); i++)
+	{
+		ScriptManager* sf = ScriptManager::scriptFunctions[i];
+		if (!sf->inputEnabled) continue;
+		sf->CallOnMouseUp(buttonState, x, y);
+	}
 
 	ReleaseCapture();
 }
 
 void Game::OnMouseMove(WPARAM buttonState, int x, int y)
 {
+	for (size_t i = 0; i < ScriptManager::scriptFunctions.size(); i++)
+	{
+		ScriptManager* sf = ScriptManager::scriptFunctions[i];
+		if (!sf->inputEnabled) continue;
+		sf->CallOnMouseMove(buttonState, x, y);
+	}
 	if (buttonState & 0x0001) {
 		EECamera->RotateCamera(x - (int)prevMousePos.x, y - (int)prevMousePos.y);
 
@@ -557,7 +591,12 @@ void Game::OnMouseMove(WPARAM buttonState, int x, int y)
 
 void Game::OnMouseWheel(float wheelDelta, int x, int y)
 {
-	
+	for (size_t i = 0; i < ScriptManager::scriptFunctions.size(); i++)
+	{
+		ScriptManager* sf = ScriptManager::scriptFunctions[i];
+		if (!sf->inputEnabled) continue;
+		sf->CallOnMouseWheel(wheelDelta, x, y);
+	}
 }
 
 void Game::FmodErrorCheck(FMOD_RESULT result)

@@ -27,7 +27,10 @@ private:
 	unsigned int viewPortHeight;
 
 	vector<Entity*>* entities = nullptr;
+
 	Camera* camera = nullptr;
+	map<string, Camera*> cameras;
+	unsigned int cameraCount = 0;
 
 	map<string, Light*> lights;
 	//map<string, Shadow> shadows;
@@ -51,7 +54,6 @@ public:
 	~Renderer();
 	void InitShadows();
 	void SetEntities(vector<Entity*>* entities);
-	void SetCamera(Camera* camera);
 	void SetShadowVertexShader(SimpleVertexShader* shadowVS);
 	void SetDebugLineVertexShader(SimpleVertexShader* debugLineVS);
 	void SetDebugLinePixelShader(SimplePixelShader* debugLinePS);
@@ -59,6 +61,10 @@ public:
 	void RenderFrame();
 	void PresentFrame();
 	void RenderDebugLines();
+	bool AddCamera(string name, Camera* newCamera);
+	bool RemoveCamera(string name);
+	Camera* GetCamera(string name);
+	bool EnableCamera(string name);
 	bool AddLight(std::string name, Light* newLight);
 	bool RemoveLight(std::string name);
 	void SendAllLightsToShader(SimplePixelShader* pixelShader);

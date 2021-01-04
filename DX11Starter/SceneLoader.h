@@ -52,5 +52,7 @@ public:
 
 	Utility::MESH_TYPE AutoLoadOBJMTL(string name);
 	void LoadScene(string sceneName = "scene");
+
+	bool AddEntity(Entity* e);
 };
 

@@ -48,6 +48,7 @@ public:
 	bool isCollisionStatic = true;
 	bool collisionsEnabled = true;
 	bool colliderDebugLinesEnabled = true;
+	bool isEmptyObj = false;
 	Entity(string entityName);
 	Entity(string entityName, Mesh* entityMesh, Material* mat = nullptr);
 	~Entity();

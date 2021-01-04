@@ -12,6 +12,7 @@ Entity::Entity(string entityName)
 	repeatTex = XMFLOAT2(1.0f, 1.0f);
 	DirectX::XMMATRIX W = DirectX::XMMatrixIdentity();
 	DirectX::XMStoreFloat4x4(&worldMatrix, XMMatrixTranspose(W));
+	isEmptyObj = true;
 }
 
 Entity::Entity(string entityName, Mesh* entityMesh, Material* mat)

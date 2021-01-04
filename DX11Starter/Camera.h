@@ -23,6 +23,7 @@ public:
 	void SetProjMatrix(XMFLOAT4X4 pm);
 	void SetViewMatrix(XMFLOAT4X4 vm);
 	void RotateCamera(int x, int y);
+	void SetPosition(XMFLOAT3 pos);
 	void UpdateProjectionMatrix(int w, int h);
 	void Update();
 };
