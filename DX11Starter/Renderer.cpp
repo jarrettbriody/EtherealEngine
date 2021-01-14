@@ -47,11 +47,14 @@ Renderer::~Renderer()
 	{
 		delete DebugLines::debugLines[i];
 	}
+
+	delete[] renderObjects;
 }
 
 void Renderer::SetEntities(vector<Entity*>* entities)
 {
 	this->entities = entities;
+	renderObjects = new RenderObject[entities->size() + 100];
 }
 
 void Renderer::SetShadowVertexShader(SimpleVertexShader * shadowVS)
@@ -87,6 +90,7 @@ void Renderer::ClearFrame()
 
 void Renderer::RenderFrame()
 {
+	/*
 	if (!entities || !camera)
 		return;
 
@@ -124,6 +128,57 @@ void Renderer::RenderFrame()
 
 			e->GetMaterial(e->GetMeshMaterialName(j))->GetPixelShader()->SetShaderResourceView("ShadowMap", NULL);
 		}
+	}
+
+	if (debugLinesEnabled) RenderDebugLines();
+	*/
+
+	if (!entities || !camera)
+		return;
+
+	UINT stride = sizeof(Vertex);
+	UINT offset = 0;
+
+	for (size_t i = renderObjectCount - 1; i > 0; i--)
+	{
+		RenderObject renderObject = renderObjects[i];
+		Entity* e = renderObject.entity;
+		Mesh* mesh = renderObject.mesh;
+		Material* mat = renderObject.material;
+
+		if (e->destroyed) {
+			if (i == renderObjectCount - 1) { 
+				renderObjectCount--;
+			}
+			else {
+				renderObjects[i] = renderObjects[renderObjectCount - 1];
+				renderObjectCount--;
+			}
+		}
+
+		if (e->isEmptyObj) continue;
+		e->ToggleShadows(shadowsEnabled);
+		if (shadowsEnabled) {
+			ShadowData d;
+			d.shadowViewMatrix = shadowViewMatrix;
+			d.shadowProjectionMatrix = shadowProjectionMatrix;
+			d.shadowSRV = shadowSRV;
+			d.shadowSampler = shadowSampler;
+			e->SetShadowData(d);
+		}
+		
+		ID3D11Buffer* vbo = mesh->GetVertexBuffer();
+		context->IASetVertexBuffers(0, 1, &vbo, &stride, &offset);
+		context->IASetIndexBuffer(mesh->GetIndexBuffer(), DXGI_FORMAT_R32_UINT, 0);
+
+		e->PrepareMaterialForDraw(mat->GetName(), camera->GetViewMatrix(), camera->GetProjMatrix());
+
+		context->DrawIndexed(
+			mesh->GetIndexCount(),		// The number of indices to use (we could draw a subset if we wanted)
+			0,											// Offset to the first index we want to use
+			0);											// Offset to add to each index when looking up vertices
+
+		mat->GetPixelShader()->SetShaderResourceView("ShadowMap", NULL);
 	}
 
 	if (debugLinesEnabled) RenderDebugLines();
@@ -372,6 +427,7 @@ void Renderer::RenderShadowMap()
 	UINT stride = sizeof(Vertex);
 	UINT offset = 0;
 
+	/*
 	for (unsigned int entityIndex = 0; entityIndex < entities->size(); entityIndex++)
 	{
 		// Grab the data from the first entity's mesh
@@ -397,6 +453,29 @@ void Renderer::RenderShadowMap()
 			context->DrawIndexed(currentEntity->GetMeshIndexCount(entityMeshChildIndex), 0, 0);
 		}
 	}
+	*/
+	for (size_t i = renderObjectCount - 1; i > 0; i--)
+	{
+		RenderObject renderObject = renderObjects[i];
+		Entity* e = renderObject.entity;
+		Mesh* mesh = renderObject.mesh;
+
+		if (e->isEmptyObj) continue;
+
+		ID3D11Buffer* vb = mesh->GetVertexBuffer();
+		ID3D11Buffer* ib = mesh->GetIndexBuffer();
+
+		// Set buffers in the input assembler
+		context->IASetVertexBuffers(0, 1, &vb, &stride, &offset);
+		context->IASetIndexBuffer(ib, DXGI_FORMAT_R32_UINT, 0);
+
+
+		shadowVS->SetMatrix4x4("world", e->GetWorldMatrix());
+		shadowVS->CopyAllBufferData();
+
+		// Finally do the actual drawing
+		context->DrawIndexed(mesh->GetIndexCount(), 0, 0);
+	}
 
 	// Revert to original pipeline state
 	context->OMSetRenderTargets(1, &backBufferRTV, depthStencilView);
@@ -414,4 +493,23 @@ ID3D11Device* Renderer::GetDevice()
 ID3D11DeviceContext* Renderer::GetContext()
 {
 	return context;
+}
+
+void Renderer::AddRenderObject(Entity* e, Mesh* mesh, Material* mat)
+{
+	RenderObject r;
+	if (!mesh->HasChildren()) {
+		r = { e, mesh, mat };
+		renderObjects[renderObjectCount] = r;
+		renderObjectCount++;
+	}
+	else {
+		Mesh* children = mesh->GetChildren();
+		for (size_t i = 0; i < mesh->GetChildCount(); i++)
+		{
+			r = { e, &children[i], e->GetMaterial(children[i].GetFirstMaterialName()) };
+			renderObjects[renderObjectCount] = r;
+			renderObjectCount++;
+		}
+	}
 }

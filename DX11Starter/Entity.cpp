@@ -123,6 +123,11 @@ void Entity::SetPosition(float x, float y, float z)
 	position.z = z;
 }
 
+void Entity::SetPosition(XMFLOAT3 p)
+{
+	position = p;
+}
+
 void Entity::SetScale(float x, float y, float z)
 {
 	scale.x = x;
@@ -130,6 +135,14 @@ void Entity::SetScale(float x, float y, float z)
 	scale.z = z;
 }
 
+void Entity::SetScale(XMFLOAT3 s)
+{
+	scale = s;
+}
+
+///<summary>
+///Rotation in Radians
+///</summary>
 void Entity::SetRotation(float x, float y, float z)
 {
 	rotation.x = x;
@@ -148,6 +161,21 @@ void Entity::SetRotation(XMFLOAT4 quat)
 {
 	quaternion = quat;
 	CalcEulerAngles();
+}
+
+///<summary>
+///Rotation in Radians
+///</summary>
+void Entity::SetRotation(XMFLOAT3 rotRadians)
+{
+	rotation = rotRadians;
+
+	rotationInDegrees.x = DirectX::XMConvertToDegrees(rotation.x);
+	rotationInDegrees.y = DirectX::XMConvertToDegrees(rotation.y);
+	rotationInDegrees.z = DirectX::XMConvertToDegrees(rotation.z);
+
+	XMVECTOR quat = XMQuaternionRotationRollPitchYaw(rotation.x, rotation.y, rotation.z);
+	XMStoreFloat4(&quaternion, quat);
 }
 
 void Entity::RotateAroundAxis(XMFLOAT3 axis, float scalar)
@@ -220,7 +248,7 @@ ID3D11Buffer * Entity::GetMeshVertexBuffer(int i)
 	if(i == -1)
 		return mesh->GetVertexBuffer();
 	else
-		return mesh->GetChildren()[i]->GetVertexBuffer();
+		return mesh->GetChildren()[i].GetVertexBuffer();
 }
 
 ID3D11Buffer * Entity::GetMeshIndexBuffer(int i)
@@ -228,7 +256,7 @@ ID3D11Buffer * Entity::GetMeshIndexBuffer(int i)
 	if (i == -1)
 		return mesh->GetIndexBuffer();
 	else
-		return mesh->GetChildren()[i]->GetIndexBuffer();
+		return mesh->GetChildren()[i].GetIndexBuffer();
 }
 
 int Entity::GetMeshIndexCount(int i)
@@ -236,7 +264,7 @@ int Entity::GetMeshIndexCount(int i)
 	if (i == -1)
 		return mesh->GetIndexCount();
 	else
-		return mesh->GetChildren()[i]->GetIndexCount();
+		return mesh->GetChildren()[i].GetIndexCount();
 }
 
 string Entity::GetMeshMaterialName(int i)
@@ -244,7 +272,7 @@ string Entity::GetMeshMaterialName(int i)
 	if (i == -1)
 		return mesh->GetFirstMaterialName();
 	else
-		return mesh->GetChildren()[i]->GetFirstMaterialName();
+		return mesh->GetChildren()[i].GetFirstMaterialName();
 }
 
 void Entity::CalcWorldMatrix()
@@ -315,6 +343,11 @@ int Entity::GetMeshChildCount()
 	return mesh->GetChildCount();
 }
 
+Mesh* Entity::GetMesh()
+{
+	return mesh;
+}
+
 vector<string> Entity::GetMaterialNameList()
 {
 	return mesh->GetMaterialNameList();
@@ -344,10 +377,10 @@ void Entity::AddChildEntity(Entity* child)
 void Entity::AddAutoBoxCollider()
 {
 	if (mesh->HasChildren()) {
-		vector<Mesh*> children = mesh->GetChildren();
+		Mesh* children = mesh->GetChildren();
 		for (size_t i = 0; i < mesh->GetChildCount(); i++)
 		{
-			colliders.push_back(new Collider(children[i]->GetVertices()));
+			colliders.push_back(new Collider(children[i].GetVertices()));
 		}
 	}
 	else {

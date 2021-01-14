@@ -67,7 +67,7 @@ Mesh::Mesh(string meshN, char * objFile, ID3D11Device* device, bool* success)
 			else if (isGroup && line != "g default") {
 				materialNameList.push_back(matName);
 				groupName = line.substr(2);
-				children.push_back(new Mesh(&verts[0], vertCounter, &indices[0], vertCounter, device, groupName, matName));
+				childrenVec.push_back(new Mesh(&verts[0], vertCounter, &indices[0], vertCounter, device, groupName, matName));
 				childCount++;
 				//reset everything
 				matName = "";
@@ -220,12 +220,19 @@ Mesh::Mesh(string meshN, char * objFile, ID3D11Device* device, bool* success)
 
 	if (isGroup && groupName != "" && matName != "" && childCount > 0) {
 		materialNameList.push_back(matName);
-		children.push_back(new Mesh(&verts[0], vertCounter, &indices[0], vertCounter, device, groupName, matName));
+		childrenVec.push_back(new Mesh(&verts[0], vertCounter, &indices[0], vertCounter, device, groupName, matName));
 		childCount++;
 	}
 	else if (childCount == 0) {
 		vertices = positions;
 		CreateBuffers(&verts[0], vertCounter, &indices[0], vertCounter, device);
+	}
+	if (childCount > 0) {
+		children = (Mesh*)malloc(childCount * sizeof(Mesh));
+		for (size_t i = 0; i < childCount; i++)
+		{
+			memcpy(&children[i], childrenVec[i], sizeof(Mesh));
+		}
 	}
 	if (success != nullptr)
 		*success = true;
@@ -240,8 +247,10 @@ Mesh::~Mesh()
 		indexBuffer->Release();
 	for (size_t i = 0; i < childCount; i++)
 	{
-		delete children[i];
+		delete childrenVec[i];
 	}
+	if (children != nullptr)
+		free(children);
 }
 
 ID3D11Buffer * Mesh::GetVertexBuffer()
@@ -389,7 +398,7 @@ bool Mesh::HasChildren()
 	return childCount != 0;
 }
 
-vector<Mesh*> Mesh::GetChildren()
+Mesh* Mesh::GetChildren()
 {
 	return children;
 }

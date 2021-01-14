@@ -17,7 +17,8 @@ protected:
 	ID3D11Buffer* vertexBuffer = nullptr;
 	ID3D11Buffer* indexBuffer = nullptr;
 	int indexCount = 0;
-	vector<Mesh*> children;
+	vector<Mesh*> childrenVec;
+	Mesh* children = nullptr;
 	string mtlPath = "";
 	vector<string> materialNameList;
 	string meshName = "";
@@ -36,7 +37,7 @@ public:
 	string GetFirstMaterialName();
 	void AddMaterialName(string nm);
 	bool HasChildren();
-	vector<Mesh*> GetChildren();
+	Mesh* GetChildren();
 	int GetChildCount();
 	string GetMTLPath();
 	static vector<string> GetMTLPaths();

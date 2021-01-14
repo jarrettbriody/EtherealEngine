@@ -60,7 +60,7 @@ void Game::Init()
 {
 	//dont delete this, its for finding mem leaks
 	//_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-	//_CrtSetBreakAlloc(298575);
+	//_CrtSetBreakAlloc(211524);
 	//_CrtSetBreakAlloc(56580);
 
 	// Physics -----------------
@@ -224,6 +224,13 @@ void Game::Init()
 	EERenderer->SendAllLightsToShader(EESceneLoader->pixelShadersMap["Normal"]);
 	EERenderer->SetShadowMapResolution(4096);
 	EERenderer->InitShadows();
+	
+	Entity* e;
+	for (size_t i = 0; i < EESceneLoader->sceneEntities.size(); i++)
+	{
+		e = EESceneLoader->sceneEntities[i];
+		EERenderer->AddRenderObject(e, e->GetMesh(), e->GetMaterial(e->GetMeshMaterialName()));
+	}
 
 	ScriptManager::renderer = EERenderer;
 
@@ -330,6 +337,8 @@ void Game::Update(float deltaTime, float totalTime)
 	if (GetAsyncKeyState(VK_ESCAPE))
 		Quit();
 
+	GarbageCollect();
+
 	// Play the 2D sound only if the channel group is not playing something
 	sfxGroup->isPlaying(&isPlaying);
 	if (GetAsyncKeyState('P') & 0x8000 && !isPlaying) {
@@ -364,8 +373,6 @@ void Game::Update(float deltaTime, float totalTime)
 
 	AudioStep();
 	PhysicsStep(deltaTime);
-	
-	GarbageCollect();
 
 	/*if (!GetAsyncKeyState(VK_CONTROL))
 	{

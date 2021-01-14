@@ -60,9 +60,12 @@ public:
 	DirectX::XMFLOAT3 GetEulerAnglesDegrees();
 	DirectX::XMFLOAT4 GetRotationQuaternion();
 	void SetPosition(float x, float y, float z);
+	void SetPosition(XMFLOAT3 p);
 	void SetScale(float x, float y, float z);
+	void SetScale(XMFLOAT3 s);
 	void SetRotation(float x, float y, float z);
 	void SetRotation(XMFLOAT4 quat);
+	void SetRotation(XMFLOAT3 rotRadians);
 	void RotateAroundAxis(XMFLOAT3 axis, float scalar);
 	void CalcEulerAngles();
 	void SetRepeatTexture(float x, float y);
@@ -80,6 +83,7 @@ public:
 	Material* GetMaterial(string n);
 	bool MeshHasChildren();
 	int GetMeshChildCount();
+	Mesh* GetMesh();
 	vector<string> GetMaterialNameList();
 	void AddMaterialNameToMesh(string nm);
 	void AddMaterial(Material* mat);

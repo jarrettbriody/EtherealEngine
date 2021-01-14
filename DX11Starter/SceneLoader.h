@@ -18,9 +18,9 @@ using namespace Utility;
 
 class SceneLoader
 {
-private:
-	btDiscreteDynamicsWorld* dynamicsWorld;
 public:
+	btDiscreteDynamicsWorld* dynamicsWorld;
+
 	map<string, SimpleVertexShader*> vertexShadersMap;
 	map<string, SimplePixelShader*> pixelShadersMap;
 

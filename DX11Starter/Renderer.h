@@ -15,6 +15,12 @@ using namespace std;
 
 #define MAX_LIGHTS 32
 
+struct RenderObject{
+	Entity* entity;
+	Mesh* mesh;
+	Material* material;
+};
+
 class Renderer
 {
 private:
@@ -27,6 +33,8 @@ private:
 	unsigned int viewPortHeight;
 
 	vector<Entity*>* entities = nullptr;
+	RenderObject* renderObjects;
+	unsigned int renderObjectCount = 0;
 
 	Camera* camera = nullptr;
 	map<string, Camera*> cameras;
@@ -74,5 +82,6 @@ public:
 	void RenderShadowMap();
 	ID3D11Device* GetDevice();
 	ID3D11DeviceContext* GetContext();
+	void AddRenderObject(Entity* e, Mesh* mesh, Material* mat = nullptr);
 };
 
