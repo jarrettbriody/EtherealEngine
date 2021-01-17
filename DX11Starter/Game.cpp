@@ -510,31 +510,37 @@ void Game::OnMouseDown(WPARAM buttonState, int x, int y)
 	XMStoreFloat4x4(&wm, XMMatrixTranspose(DirectX::XMMatrixIdentity()));
 	dl->worldMatrix = wm;
 
+	XMMATRIX proj = XMMatrixTranspose(XMLoadFloat4x4(&(EECamera->GetProjMatrix())));
+	XMMATRIX view = XMMatrixTranspose(XMLoadFloat4x4(&(EECamera->GetViewMatrix())));
+	XMMATRIX world = XMMatrixTranspose(XMLoadFloat4x4(&wm));
+
+	//XMVECTOR endVector = XMVector3Unproject(XMVectorSet(x, y, 1.0f, 1.0f), 0, 0, 1600, 900, 0.1f, 10000.0f, proj, view, world);
+	XMVECTOR unprojVec = XMVector3Unproject(XMVectorSet(x, y, 1.0f, 1.0f), 0, 0, 1600, 900, 0.0f, 1.0f, proj, view, world);
+	XMFLOAT3 end = XMFLOAT3(XMVectorGetX(unprojVec), XMVectorGetY(unprojVec), XMVectorGetZ(unprojVec));
+	printf("Projected values|- X: %f, Y: %f, Z: %f\n", end.x, end.y, end.z);
+
 	XMFLOAT3 start = EECamera->position;
-	XMFLOAT3 end = DirectX::XMFLOAT3(x, y, 1.0f);
+	//XMFLOAT3 end = XMFLOAT3(x, y, 1.0f);
 	XMFLOAT3* rayPoints = new XMFLOAT3[8];
 	rayPoints[0] = start;
 	rayPoints[1] = start;
 	rayPoints[2] = start;
 	rayPoints[3] = start;
+	/*rayPoints[4] = end;
+	rayPoints[5] = end;
+	rayPoints[6] = end;
+	rayPoints[7] = end;*/
 	rayPoints[4] = end;
 	rayPoints[5] = end;
 	rayPoints[6] = end;
 	rayPoints[7] = end;
 	dl->GenerateCuboidVertexBuffer(rayPoints, 8);
 
-	XMMATRIX proj = XMLoadFloat4x4(&(EECamera->GetProjMatrix()));
-	XMMATRIX view = XMLoadFloat4x4(&(EECamera->GetViewMatrix()));
-	XMMATRIX world = XMLoadFloat4x4(&wm);
-
-	XMVECTOR endVector = XMVector3Unproject(XMVectorSet(x, y, 1.0f, 1.0f), 0, 0, 1600, 900, 0.1f, 10000.0f, proj, view, world);
-
 	SetCapture(hWnd);
 }
 
 void Game::OnMouseUp(WPARAM buttonState, int x, int y)
 {
-
 	ReleaseCapture();
 }
 
