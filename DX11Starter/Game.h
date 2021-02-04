@@ -1,28 +1,19 @@
 #pragma once
 
 #include "DXCore.h"
+#include "pch.h"
 #include "Config.h"
-#include "SimpleShader.h"
-#include <DirectXMath.h>
 #include "Mesh.h"
 #include "Entity.h"
 #include "Camera.h"
 #include "Lights.h"
 #include "Renderer.h"
-#include <regex>
-#include <iostream>
-#include <map>
 #include "Utility.h"
-#include <atlbase.h>
-#include "WICTextureLoader.h"
-#include "DDSTextureLoader.h"
 //#include "Terrain.h"
 //#include "TerrainMaterial.h"
 //#include "Water.h"
 //#include "WaterMaterial.h"
 #include "SceneLoader.h"
-#include "fmod.hpp"
-#include "fmod_errors.h"
 #include "DebugLines.h"
 #include "ScriptManager.h"
 #include "Scripts.h"
@@ -69,6 +60,7 @@ private:
 	Camera* EECamera = nullptr;
 	Renderer* EERenderer = nullptr;
 	SceneLoader* EESceneLoader = nullptr;
+	MemoryAllocator* EEMemoryAllocator = nullptr;
 
 	ScriptManager* barrel;
 

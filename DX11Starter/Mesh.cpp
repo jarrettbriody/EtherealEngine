@@ -1,5 +1,4 @@
 #include "Mesh.h"
-#include <iostream>
 
 using namespace DirectX;
 
@@ -369,7 +368,7 @@ void Mesh::CalculateTangents(Vertex* verts, int numVerts, unsigned int* indices,
 
 		// Use Gram-Schmidt orthogonalize
 		tangent = XMVector3Normalize(
-			tangent - normal * XMVector3Dot(normal, tangent));
+			XMVectorSubtract(tangent, XMVectorMultiply(normal, XMVector3Dot(normal, tangent))));
 
 		// Store the tangent
 		XMStoreFloat3(&verts[i].Tangent, tangent);

@@ -1,6 +1,5 @@
 #include "Entity.h"
 
-
 Entity::Entity(string entityName)
 {
 	name = entityName;
@@ -39,10 +38,17 @@ Entity::~Entity()
 		delete colliders[i];
 	}
 
-	dynamicsWorld->removeCollisionObject(rBody);
-	delete rBody->getMotionState();
-	delete rBody;
-	delete collShape;
+	if(dynamicsWorld != nullptr)
+		dynamicsWorld->removeCollisionObject(rBody);
+	if (rBody != nullptr) {
+		delete rBody->getMotionState();
+		delete rBody;
+	}
+	
+	if(collShape != nullptr)
+		delete collShape;
+
+	materialMap.clear();
 }
 
 void Entity::InitRigidBody(btDiscreteDynamicsWorld* dw)
@@ -275,6 +281,7 @@ string Entity::GetMeshMaterialName(int i)
 		return mesh->GetChildren()[i].GetFirstMaterialName();
 }
 
+//Calculate after every transformation
 void Entity::CalcWorldMatrix()
 {
 	DirectX::XMMATRIX trans = DirectX::XMMatrixTranslation(position.x, position.y, position.z);
@@ -360,6 +367,7 @@ void Entity::AddMaterialNameToMesh(string nm)
 
 void Entity::AddMaterial(Material * mat)
 {
+	if (materialMap.size() == 0) materialMap = map<string, Material*>();
 	materialMap.insert({ mat->GetName(),mat });
 }
 
@@ -464,5 +472,19 @@ void Entity::Destroy()
 	for (size_t i = 0; i < children.size(); i++)
 	{
 		children[i]->Destroy();
+	}
+}
+
+void Entity::CopyCollections(Entity* e)
+{
+	//std::copy(e->children.begin(), e->children.end(), std::back_inserter(children));
+	//std::copy(e->colliders.begin(), e->colliders.end(), std::back_inserter(colliders));
+	children = vector<Entity*>(e->children);
+	colliders = vector<Collider*>(e->colliders);
+	materialMap = map<string, Material*>(e->materialMap);
+
+	for (size_t i = 0; i < e->colliders.size(); i++)
+	{
+		e->colliders[i] = nullptr;
 	}
 }

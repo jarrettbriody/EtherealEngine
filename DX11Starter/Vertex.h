@@ -1,6 +1,6 @@
 #pragma once
 
-#include <DirectXMath.h>
+#include "pch.h"
 
 // --------------------------------------------------------
 // A custom vertex definition

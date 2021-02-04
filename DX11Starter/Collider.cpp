@@ -50,10 +50,10 @@ Collider::Collider(vector<XMFLOAT3> vertices)
 	XMVECTOR maxLoc = XMLoadFloat3(&maxLocal);
 
 	//with the max and the min we calculate the center
-	XMStoreFloat3(&centerLocal, (maxLoc + minLoc) / 2.0f);
+	XMStoreFloat3(&centerLocal, XMVectorAdd(maxLoc, minLoc) / 2.0f);
 
 	//we calculate the distance between min and max vectors
-	XMStoreFloat3(&halfWidth, (maxLoc - minLoc) / 2.0f);
+	XMStoreFloat3(&halfWidth, XMVectorSubtract(maxLoc, minLoc) / 2.0f);
 
 	//Get the distance between the center and either the min or the max
 	XMStoreFloat(&radius, XMVector3Length(XMLoadFloat3(&halfWidth)));
@@ -107,7 +107,7 @@ void Collider::SetWorldMatrix(XMFLOAT4X4 worldMat)
 	}
 
 	//we calculate the distance between min and max vectors
-	XMStoreFloat3(&span, XMLoadFloat3(&maxGlobal) - XMLoadFloat3(&minGlobal));
+	XMStoreFloat3(&span, XMVectorSubtract(XMLoadFloat3(&maxGlobal), XMLoadFloat3(&minGlobal)));
 
 	XMFLOAT3 x = X_AXIS;
 	XMFLOAT3 y = Y_AXIS;

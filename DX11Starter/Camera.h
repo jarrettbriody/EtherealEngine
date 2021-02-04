@@ -1,7 +1,5 @@
 #pragma once
-#include <d3d11.h>
-#include <DirectXMath.h>
-#include <iostream>
+#include "pch.h"
 
 using namespace DirectX;
 using namespace std;

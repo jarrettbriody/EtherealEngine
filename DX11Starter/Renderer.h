@@ -1,9 +1,5 @@
 #pragma once
-#include <DirectXMath.h>
-#include <map>
-#include <string>
-#include <cmath>
-#include <iostream>
+#include "pch.h"
 #include "Vertex.h"
 #include "Lights.h"
 #include "SimpleShader.h"

@@ -1,6 +1,5 @@
 #pragma once
-#include "SimpleShader.h"
-#include <string>
+#include "pch.h"
 
 using namespace std;
 using namespace DirectX;

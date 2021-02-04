@@ -1,8 +1,9 @@
 #include "SceneLoader.h"
 
-SceneLoader::SceneLoader(btDiscreteDynamicsWorld * dw)
+SceneLoader::SceneLoader(MemoryAllocator* memAlloc, btDiscreteDynamicsWorld * dw)
 {
-  this->dynamicsWorld = dw;
+	this->EEMemoryAllocator = memAlloc;
+	this->dynamicsWorld = dw;
 }
 
 SceneLoader::~SceneLoader()
@@ -50,10 +51,12 @@ SceneLoader::~SceneLoader()
 		//cout << "Deleting " << meshMapIter->first << endl;
 	}
 
+	/*
 	for (size_t i = 0; i < sceneEntities.size(); i++)
 	{
 		delete sceneEntities[i];
 	}
+	*/
 
 	//delete shaders
 	for (auto vertSIter = vertexShadersMap.begin(); vertSIter != vertexShadersMap.end(); ++vertSIter)
@@ -460,7 +463,8 @@ void SceneLoader::LoadScene(string sceneName)
 	//remove all current entities loaded
 	for (size_t i = 0; i < sceneEntities.size(); i++)
 	{
-		delete sceneEntities[i];
+		//delete sceneEntities[i];
+		EEMemoryAllocator->DeallocateFromPool(Utility::ENTITY_POOL, sceneEntities[i], sizeof(Entity));
 	}
 	sceneEntities.clear();
 	sceneEntitiesMap.clear();
@@ -489,7 +493,7 @@ void SceneLoader::LoadScene(string sceneName)
 				//load mesh, material, and textures, and if they already exist then mark them as utilized
 				Utility::MESH_TYPE meshType = AutoLoadOBJMTL(objName);
 
-				Entity* someEntity;
+				Entity someEntity;
 
 				//naming of entity internally
 				string entityName = objName; //temporary, should have entity name in scene file
@@ -504,29 +508,43 @@ void SceneLoader::LoadScene(string sceneName)
 				case Utility::LOAD_FAILURE:
 					continue;
 				case Utility::DEFAULT_MESH:
-					someEntity = new Entity(entityName, defaultMeshesMap[objName]);
+					someEntity = Entity(entityName, defaultMeshesMap[objName]);
 					break;
 				case Utility::GENERATED_MESH: {
-					someEntity = new Entity(entityName, generatedMeshesMap[objName]);
-
-					//generated meshes should have a list of required materials,
-					//add them if they do or add the default (just black) if they dont
-					vector<string> requiredMaterials = someEntity->GetMaterialNameList();
-					for (int i = 0; i < requiredMaterials.size(); i++)
-					{
-						string requiredMat = requiredMaterials[i];
-						if (generatedMaterialsMap.count(requiredMat))
-							someEntity->AddMaterial(generatedMaterialsMap[requiredMat]);
-					}
-					if (requiredMaterials.size() == 0) {
-						someEntity->AddMaterial(defaultMaterialsMap["DEFAULT"]);
-						someEntity->AddMaterialNameToMesh("DEFAULT");
-					}
+					someEntity = Entity(entityName, generatedMeshesMap[objName]);
 					break;
 				}
 				default:
 					break;
 				}
+
+				//finally add the entity to the appropriate lists
+				bool success = false;
+				Entity* allocatedEntity = (Entity*)EEMemoryAllocator->AllocateToPool(Utility::ENTITY_POOL, &someEntity, sizeof(Entity), success);
+				if (success) {
+					//allocatedEntity->CopyCollections(&someEntity);
+					sceneEntitiesMap.insert({ entityName, allocatedEntity });
+					sceneEntities.push_back(allocatedEntity);
+				}
+
+				if (meshType == Utility::GENERATED_MESH) {
+					//generated meshes should have a list of required materials,
+					//add them if they do or add the default (just black) if they dont
+					vector<string> requiredMaterials = allocatedEntity->GetMaterialNameList();
+					for (int i = 0; i < requiredMaterials.size(); i++)
+					{
+						string requiredMat = requiredMaterials[i];
+						if (generatedMaterialsMap.count(requiredMat))
+							allocatedEntity->AddMaterial(generatedMaterialsMap[requiredMat]);
+					}
+					if (requiredMaterials.size() == 0) {
+						allocatedEntity->AddMaterial(defaultMaterialsMap["DEFAULT"]);
+						allocatedEntity->AddMaterialNameToMesh("DEFAULT");
+					}
+				}
+
+				if (meshType == Utility::DEFAULT_MESH)
+					BuildDefaultEntity(entityName, objName, allocatedEntity);
 
 				//get the transformation data associated with this entity
 				line = regex_replace(line, regex("^(\\S+ )"), "");
@@ -539,15 +557,15 @@ void SceneLoader::LoadScene(string sceneName)
 					}
 					counter++;
 				}
-				if(someEntity->collisionsEnabled)
-					someEntity->AddAutoBoxCollider();
-				someEntity->SetPosition(parsedNumbers[0], parsedNumbers[1], parsedNumbers[2]);
-				someEntity->SetRotation(DirectX::XMConvertToRadians(parsedNumbers[3]), DirectX::XMConvertToRadians(parsedNumbers[4]), DirectX::XMConvertToRadians(parsedNumbers[5]));
-				someEntity->SetScale(parsedNumbers[6], parsedNumbers[7], parsedNumbers[8]);
-				someEntity->CalcWorldMatrix();
-				someEntity->InitRigidBody(dynamicsWorld);
-				if (someEntity->collisionsEnabled && someEntity->colliderDebugLinesEnabled) {
-					vector<Collider*> colliders = someEntity->GetColliders();
+				if(allocatedEntity->collisionsEnabled)
+					allocatedEntity->AddAutoBoxCollider();
+				allocatedEntity->SetPosition(parsedNumbers[0], parsedNumbers[1], parsedNumbers[2]);
+				allocatedEntity->SetRotation(DirectX::XMConvertToRadians(parsedNumbers[3]), DirectX::XMConvertToRadians(parsedNumbers[4]), DirectX::XMConvertToRadians(parsedNumbers[5]));
+				allocatedEntity->SetScale(parsedNumbers[6], parsedNumbers[7], parsedNumbers[8]);
+				allocatedEntity->CalcWorldMatrix();
+				allocatedEntity->InitRigidBody(dynamicsWorld);
+				if (allocatedEntity->collisionsEnabled && allocatedEntity->colliderDebugLinesEnabled) {
+					vector<Collider*> colliders = allocatedEntity->GetColliders();
 					for (size_t d = 0; d < colliders.size(); d++)
 					{
 						DebugLines* dl = new DebugLines(entityName, d);
@@ -558,13 +576,6 @@ void SceneLoader::LoadScene(string sceneName)
 						dl->GenerateCuboidVertexBuffer(colliderCorners, 8);
 					}
 				}
-
-				if (meshType == Utility::DEFAULT_MESH)
-					BuildDefaultEntity(entityName, objName, someEntity);
-
-				//finally add the entity to the appropriate lists
-				sceneEntitiesMap.insert({ entityName,someEntity });
-				sceneEntities.push_back(someEntity);
 			}
 		}
 	}
@@ -617,7 +628,14 @@ bool SceneLoader::AddEntity(Entity* e)
 {
 	if (sceneEntitiesMap.count(e->GetName()))
 		return false;
-	sceneEntitiesMap.insert({ e->GetName(), e });
-	sceneEntities.push_back(e);
-	return true;
+
+	bool success = false;
+	Entity* allocatedEntity = (Entity*)EEMemoryAllocator->AllocateToPool(Utility::ENTITY_POOL, e, sizeof(Entity), success);
+	if (success) {
+		sceneEntitiesMap.insert({ e->GetName(), allocatedEntity });
+		sceneEntities.push_back(allocatedEntity);
+		return true;
+	}
+
+	return false;
 }

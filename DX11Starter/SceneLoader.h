@@ -1,4 +1,5 @@
 #pragma once
+#include "pch.h"
 #include "DebugLines.h"
 #include "Utility.h"
 #include "Mesh.h"
@@ -8,17 +9,16 @@
 #include "Water.h"
 #include "WaterMaterial.h"
 #include "Entity.h"
-#include "btBulletDynamicsCommon.h"
-#include <map>
-#include <vector>
-#include <string>
 #include "Config.h"
+#include "MemoryAllocator.h"
 
 using namespace Utility;
 
 class SceneLoader
 {
 public:
+	MemoryAllocator* EEMemoryAllocator = nullptr;
+
 	btDiscreteDynamicsWorld* dynamicsWorld;
 
 	map<string, SimpleVertexShader*> vertexShadersMap;
@@ -40,7 +40,7 @@ public:
 	map<string, Entity*> sceneEntitiesMap;
 	vector<Entity*> sceneEntities;
 
-	SceneLoader(btDiscreteDynamicsWorld* dw);
+	SceneLoader(MemoryAllocator* memAlloc, btDiscreteDynamicsWorld* dw);
 	~SceneLoader();
 
 	void LoadShaders();

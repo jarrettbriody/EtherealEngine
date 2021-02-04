@@ -103,7 +103,13 @@ void Game::Init()
 	skyDS.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
 	device->CreateDepthStencilState(&skyDS, &skyDepthState);
 
-	EESceneLoader = new SceneLoader(dynamicsWorld);
+	EEMemoryAllocator = new MemoryAllocator(Config::MemoryAllocatorSize, Config::MemoryAllocatorAlignment);
+	EEMemoryAllocator->CreatePool(Utility::ENTITY_POOL, Config::MemoryAllocatorEntityPoolSize, sizeof(Entity));
+
+	EESceneLoader = new SceneLoader(EEMemoryAllocator, dynamicsWorld);
+
+	cout << sizeof(Entity) << endl;
+	cout << sizeof(map<string, Material*>) << endl;
 
 	EESceneLoader->LoadShaders();
 
@@ -324,6 +330,8 @@ void Game::Init()
 		ScriptManager* sf = ScriptManager::scriptFunctions[i];
 		sf->CallInit();
 	}
+
+	//cout << sizeof(Entity);
 }
 
 void Game::OnResize()

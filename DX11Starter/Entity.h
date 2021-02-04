@@ -1,12 +1,8 @@
 #pragma once
-#include <d3d11.h>
-#include <DirectXMath.h>
-#include <map>
+#include "pch.h"
 #include "Mesh.h"
 #include "Material.h"
 #include "Collider.h"
-#include "btBulletDynamicsCommon.h"
-#include <iostream>
 
 struct ShadowData {
 	DirectX::XMFLOAT4X4 shadowViewMatrix;
@@ -21,13 +17,13 @@ using namespace std;
 class Entity
 {
 private:
-	Mesh* mesh;
 	DirectX::XMFLOAT4X4 worldMatrix;
+	Mesh* mesh;
+	DirectX::XMFLOAT4 quaternion;
 	DirectX::XMFLOAT3 position;
 	DirectX::XMFLOAT3 scale;
 	DirectX::XMFLOAT3 rotation;
 	DirectX::XMFLOAT3 rotationInDegrees;
-	DirectX::XMFLOAT4 quaternion;
 	DirectX::XMFLOAT2 repeatTex;
 	map<string, Material*> materialMap;
 	string name;
@@ -40,15 +36,16 @@ private:
 
 	float isStatic;
 
-	btCollisionShape* collShape;
+	btCollisionShape* collShape = nullptr;
 	btRigidBody* rBody = nullptr;
-	btDiscreteDynamicsWorld* dynamicsWorld;
+	btDiscreteDynamicsWorld* dynamicsWorld = nullptr;
 public:
 	bool destroyed = false;
 	bool isCollisionStatic = true;
 	bool collisionsEnabled = true;
 	bool colliderDebugLinesEnabled = true;
 	bool isEmptyObj = false;
+	Entity() {}; //please dont call this
 	Entity(string entityName);
 	Entity(string entityName, Mesh* entityMesh, Material* mat = nullptr);
 	~Entity();
@@ -96,5 +93,6 @@ public:
 	btRigidBody* GetRBody();
 	Collider* GetCollider(int index = 0);
 	void Destroy();
+	void CopyCollections(Entity* e);
 };
 

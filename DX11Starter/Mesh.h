@@ -1,11 +1,7 @@
 #pragma once
 
-#include <d3d11.h>
+#include "pch.h"
 #include "Vertex.h"
-#include <DirectXMath.h>
-#include <vector>
-#include <fstream>
-#include <regex>
 
 using namespace std;
 

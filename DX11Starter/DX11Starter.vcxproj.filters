@@ -95,6 +95,7 @@
     </ClCompile>
     <ClCompile Include="Barrel.cpp" />
     <ClCompile Include="FPSController.cpp" />
+    <ClCompile Include="MemoryAllocator.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h">
@@ -168,6 +169,10 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="FPSController.h" />
+    <ClInclude Include="MemoryAllocator.h" />
+    <ClInclude Include="pch.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Lighting.hlsli">

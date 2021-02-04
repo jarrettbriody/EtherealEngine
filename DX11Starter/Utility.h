@@ -1,21 +1,18 @@
 #pragma once
-#include <DirectXMath.h>
-#include <string>
-#include <regex>
-#include "WICTextureLoader.h"
-#include "DDSTextureLoader.h"
+#include "pch.h"
 #include "Config.h"
-
-#define ZERO_VECTOR3 XMFLOAT3(0.0f,0.0f,0.0f)
-#define X_AXIS XMFLOAT3(1.0f,0.0f,0.0f)
-#define Y_AXIS XMFLOAT3(0.0f,1.0f,0.0f)
-#define Z_AXIS XMFLOAT3(0.0f,0.0f,1.0f)
 
 namespace Utility {
 	enum MESH_TYPE {
 		LOAD_FAILURE = -1,
 		DEFAULT_MESH = 0,
 		GENERATED_MESH = 1,
+	};
+
+	enum MEMORY_POOL {
+		ENTITY_POOL = 0,
+		MESH_POOL = 1,
+		MATERIAL_POOL = 2,
 	};
 
 	static void ParseFloat3FromString(std::string s, DirectX::XMFLOAT3& f) {

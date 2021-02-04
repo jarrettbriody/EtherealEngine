@@ -1,9 +1,5 @@
 #pragma once
-#include <DirectXMath.h>
-#include <d3d11.h>
-#include <iostream>
-#include <vector>
-#include <map>
+#include "pch.h"
 #include "Utility.h"
 #include "Config.h"
 //#include "EtherealEngine.h"

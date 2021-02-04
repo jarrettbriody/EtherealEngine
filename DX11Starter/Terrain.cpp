@@ -53,8 +53,8 @@ Terrain::Terrain(ID3D11Device* device,
 			XMFLOAT3 normal0;
 			XMFLOAT3 normal1;
 
-			XMStoreFloat3(&normal0, XMVector3Normalize(XMVector3Cross(pos1 - pos0, pos2 - pos0)));
-			XMStoreFloat3(&normal1, XMVector3Normalize(XMVector3Cross(pos4 - pos3, pos5 - pos3)));
+			XMStoreFloat3(&normal0, XMVector3Normalize(XMVector3Cross(XMVectorSubtract(pos1, pos0), XMVectorSubtract(pos2, pos0))));
+			XMStoreFloat3(&normal1, XMVector3Normalize(XMVector3Cross(XMVectorSubtract(pos4, pos3), XMVectorSubtract(pos5, pos3))));
 
 			triangleNormals.push_back(normal0);
 			triangleNormals.push_back(normal1);
@@ -164,8 +164,8 @@ Terrain::Terrain(ID3D11Device* device,
 			XMFLOAT3 normal0;
 			XMFLOAT3 normal1;
 
-			XMStoreFloat3(&normal0, XMVector3Normalize(XMVector3Cross(pos1 - pos0, pos2 - pos0)));
-			XMStoreFloat3(&normal1, XMVector3Normalize(XMVector3Cross(pos4 - pos3, pos5 - pos3)));
+			XMStoreFloat3(&normal0, XMVector3Normalize(XMVector3Cross(XMVectorSubtract(pos1, pos0), XMVectorSubtract(pos2, pos0))));
+			XMStoreFloat3(&normal1, XMVector3Normalize(XMVector3Cross(XMVectorSubtract(pos4, pos3), XMVectorSubtract(pos5, pos3))));
 
 			triangleNormals.push_back(normal0);
 			triangleNormals.push_back(normal1);
