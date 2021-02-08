@@ -11,9 +11,13 @@ class FPSController : public ScriptManager
 	XMFLOAT3 position;
 	XMFLOAT3 direction;
 
+	btRigidBody* playerRBody;
+
 	void Init();
 
 	void Update();
+
+	void Move();
 
 	void OnMouseMove(WPARAM buttonState, int x, int y);
 };

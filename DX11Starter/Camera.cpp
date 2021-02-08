@@ -78,7 +78,7 @@ void Camera::Update()
 
 	float scalar = 10;
 
-	if (GetAsyncKeyState('W') & 0x8000) {
+	/*if (GetAsyncKeyState('W') & 0x8000) {
 		pos = XMVectorAdd(pos, XMVectorScale(dir, 0.05f * scalar));
 		XMStoreFloat3(&position, pos);
 	}
@@ -93,7 +93,7 @@ void Camera::Update()
 	if (GetAsyncKeyState('D') & 0x8000) {
 		pos = XMVectorAdd(pos, XMVectorScale(right, -0.05f * scalar));
 		XMStoreFloat3(&position, pos);
-	}
+	}*/
 
 	/*
 	if (GetAsyncKeyState(VK_SPACE) & 0x8000) {
