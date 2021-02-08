@@ -25,11 +25,11 @@ private:
 	DirectX::XMFLOAT3 rotation;
 	DirectX::XMFLOAT3 rotationInDegrees;
 	DirectX::XMFLOAT2 repeatTex;
-	map<string, Material*> materialMap;
-	string name;
-	vector<Entity*> children;
+	map<string, Material*>* materialMap = nullptr;
+	string* name;
+	vector<Entity*>* children = nullptr;
 	Entity* parent = nullptr;
-	vector<Collider*> colliders;
+	vector<Collider*>* colliders = nullptr;
 
 	bool shadowsEnabled = true;
 	ShadowData shadowData;
@@ -45,10 +45,11 @@ public:
 	bool collisionsEnabled = true;
 	bool colliderDebugLinesEnabled = true;
 	bool isEmptyObj = false;
-	Entity() {}; //please dont call this
+	Entity();
 	Entity(string entityName);
 	Entity(string entityName, Mesh* entityMesh, Material* mat = nullptr);
 	~Entity();
+	void operator= (const Entity& e);
 	void InitRigidBody(btDiscreteDynamicsWorld* dw);
 	DirectX::XMFLOAT4X4 GetWorldMatrix();
 	DirectX::XMFLOAT3 GetPosition();
@@ -93,6 +94,6 @@ public:
 	btRigidBody* GetRBody();
 	Collider* GetCollider(int index = 0);
 	void Destroy();
-	void CopyCollections(Entity* e);
+	void FreeMemory();
 };
 

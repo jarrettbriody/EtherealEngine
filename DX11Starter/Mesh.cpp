@@ -10,19 +10,30 @@ Mesh::Mesh()
 
 Mesh::Mesh(Vertex * vertexObjects, int vertexCount, unsigned int * indices, int indexCnt, ID3D11Device * device, string meshN, string matName)
 {
+	vertices = new vector<DirectX::XMFLOAT3>();
+	childrenVec = new vector<Mesh*>();
+	mtlPath = new string();
+	materialNameList = new vector<string>();
+	meshName = new string();
 	for (size_t i = 0; i < vertexCount; i++)
 	{
-		vertices.push_back(vertexObjects[i].Position);
+		vertices->push_back(vertexObjects[i].Position);
 	}
-	meshName = meshN;
-	materialNameList.push_back(matName);
+	*meshName = meshN;
+	materialNameList->push_back(matName);
 	CreateBuffers(vertexObjects, vertexCount, indices, indexCnt, device);
 	childCount = 0;
 }
 
 Mesh::Mesh(string meshN, char * objFile, ID3D11Device* device, bool* success)
 {
-	meshName = meshN;
+	vertices = new vector<DirectX::XMFLOAT3>();
+	childrenVec = new vector<Mesh*>();
+	mtlPath = new string();
+	materialNameList = new vector<string>();
+	meshName = new string();
+
+	*meshName = meshN;
 	// File input object
 	std::ifstream obj(objFile);
 
@@ -64,9 +75,9 @@ Mesh::Mesh(string meshN, char * objFile, ID3D11Device* device, bool* success)
 				groupName = line.substr(2);
 			}
 			else if (isGroup && line != "g default") {
-				materialNameList.push_back(matName);
+				materialNameList->push_back(matName);
 				groupName = line.substr(2);
-				childrenVec.push_back(new Mesh(&verts[0], vertCounter, &indices[0], vertCounter, device, groupName, matName));
+				childrenVec->push_back(new Mesh(&verts[0], vertCounter, &indices[0], vertCounter, device, groupName, matName));
 				childCount++;
 				//reset everything
 				matName = "";
@@ -207,30 +218,30 @@ Mesh::Mesh(string meshN, char * objFile, ID3D11Device* device, bool* success)
 		}
 		else if (regex_search(line, match, useMatRgx)) {
 			matName = regex_replace(line, useMatRgx, "");
-			materialNameList.push_back(matName);
+			materialNameList->push_back(matName);
 		}
 		else if (regex_search(line, match, mtllibRgx)) {
-			mtlPath = regex_replace(line, mtllibRgx, "");
-			mtlPaths.push_back(mtlPath);
+			*mtlPath = regex_replace(line, mtllibRgx, "");
+			mtlPaths.push_back(*mtlPath);
 		}
 	}
 
 	obj.close();
 
 	if (isGroup && groupName != "" && matName != "" && childCount > 0) {
-		materialNameList.push_back(matName);
-		childrenVec.push_back(new Mesh(&verts[0], vertCounter, &indices[0], vertCounter, device, groupName, matName));
+		materialNameList->push_back(matName);
+		childrenVec->push_back(new Mesh(&verts[0], vertCounter, &indices[0], vertCounter, device, groupName, matName));
 		childCount++;
 	}
 	else if (childCount == 0) {
-		vertices = positions;
+		*vertices = positions;
 		CreateBuffers(&verts[0], vertCounter, &indices[0], vertCounter, device);
 	}
 	if (childCount > 0) {
-		children = (Mesh*)malloc(childCount * sizeof(Mesh));
+		children = new Mesh[childCount];
 		for (size_t i = 0; i < childCount; i++)
 		{
-			memcpy(&children[i], childrenVec[i], sizeof(Mesh));
+			children[i] = *(*childrenVec)[i];
 		}
 	}
 	if (success != nullptr)
@@ -246,10 +257,45 @@ Mesh::~Mesh()
 		indexBuffer->Release();
 	for (size_t i = 0; i < childCount; i++)
 	{
-		delete childrenVec[i];
+		delete (*childrenVec)[i];
 	}
 	if (children != nullptr)
-		free(children);
+		delete[] children;
+
+	delete vertices;
+	delete childrenVec;
+	delete mtlPath;
+	delete materialNameList;
+	delete meshName;
+}
+
+void Mesh::operator=(const Mesh& m)
+{
+	vertices = new vector<DirectX::XMFLOAT3>();
+	childrenVec = new vector<Mesh*>();
+	mtlPath = new string();
+	materialNameList = new vector<string>();
+	meshName = new string();
+
+	*vertices = vector<DirectX::XMFLOAT3>(*m.vertices);
+	vertexBuffer = m.vertexBuffer;
+	indexBuffer = m.indexBuffer;
+	indexCount = m.indexCount;
+	*childrenVec = vector<Mesh*>(*m.childrenVec);
+	*mtlPath = *m.mtlPath;
+	*materialNameList = vector<string>(*m.materialNameList);
+	*meshName = *m.meshName;
+	childCount = m.childCount;
+	children = nullptr;
+
+	if (childCount > 0) {
+		children = new Mesh[childCount];
+		for (size_t i = 0; i < childCount; i++)
+		{
+			children[i] = *(*childrenVec)[i];
+		}
+	}
+	
 }
 
 ID3D11Buffer * Mesh::GetVertexBuffer()
@@ -377,19 +423,19 @@ void Mesh::CalculateTangents(Vertex* verts, int numVerts, unsigned int* indices,
 
 vector<string> Mesh::GetMaterialNameList()
 {
-	return materialNameList;
+	return *materialNameList;
 }
 
 string Mesh::GetFirstMaterialName()
 {
-	if (materialNameList.size() > 0)
-		return materialNameList[0];
+	if (materialNameList->size() > 0)
+		return (*materialNameList)[0];
 	else return "There are no materials assigned to this mesh.";
 }
 
 void Mesh::AddMaterialName(string nm)
 {
-	materialNameList.push_back(nm);
+	materialNameList->push_back(nm);
 }
 
 bool Mesh::HasChildren()
@@ -409,7 +455,7 @@ int Mesh::GetChildCount()
 
 string Mesh::GetMTLPath()
 {
-	return mtlPath;
+	return *mtlPath;
 }
 
 vector<string> Mesh::GetMTLPaths()
@@ -419,10 +465,19 @@ vector<string> Mesh::GetMTLPaths()
 
 void Mesh::SetVertices(vector<DirectX::XMFLOAT3> verts)
 {
-	vertices = verts;
+	*vertices = verts;
 }
 
 vector<DirectX::XMFLOAT3> Mesh::GetVertices()
 {
-	return vertices;
+	return *vertices;
+}
+
+void Mesh::FreeMemory()
+{
+	delete vertices;
+	delete childrenVec;
+	delete mtlPath;
+	delete materialNameList;
+	delete meshName;
 }

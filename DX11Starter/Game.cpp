@@ -53,6 +53,8 @@ Game::~Game()
 		delete ScriptManager::scriptFunctions[i];
 	}
 
+	delete EEMemoryAllocator;
+
 	//delete barrel;//(Barrel*)
 }
 
@@ -105,6 +107,8 @@ void Game::Init()
 
 	EEMemoryAllocator = new MemoryAllocator(Config::MemoryAllocatorSize, Config::MemoryAllocatorAlignment);
 	EEMemoryAllocator->CreatePool(Utility::ENTITY_POOL, Config::MemoryAllocatorEntityPoolSize, sizeof(Entity));
+	EEMemoryAllocator->CreatePool(Utility::MESH_POOL, Config::MemoryAllocatorMeshPoolSize, sizeof(Mesh));
+	EEMemoryAllocator->CreatePool(Utility::MATERIAL_POOL, Config::MemoryAllocatorMaterialPoolSize, sizeof(Material));
 
 	EESceneLoader = new SceneLoader(EEMemoryAllocator, dynamicsWorld);
 
@@ -157,9 +161,10 @@ void Game::Init()
 
 	*/
 
-
+	/*
 	Entity* sphere1;
 	sphere1 = new Entity("sphere1", EESceneLoader->defaultMeshesMap["Sphere"]);
+	sphere1->SetupCollections();
 	sphere1->AddMaterial(EESceneLoader->defaultMaterialsMap["DEFAULT"]);
 	sphere1->AddMaterialNameToMesh("DEFAULT");
 	sphere1->SetPosition(8.0f, 8.0f, 8.0f);
@@ -171,6 +176,7 @@ void Game::Init()
 
 	Entity* sphere2;
 	sphere2 = new Entity("sphere2", EESceneLoader->defaultMeshesMap["Sphere"]);
+	sphere2->SetupCollections();
 	sphere2->AddMaterial(EESceneLoader->defaultMaterialsMap["DEFAULT"]);
 	sphere2->AddMaterialNameToMesh("DEFAULT");
 	sphere2->SetPosition(2.0f, 2.0f, 2.0f);
@@ -184,6 +190,7 @@ void Game::Init()
 
 	Entity* sphere3;
 	sphere3 = new Entity("sphere3", EESceneLoader->defaultMeshesMap["Sphere"]);
+	sphere3->SetupCollections();
 	sphere3->AddMaterial(EESceneLoader->defaultMaterialsMap["DEFAULT"]);
 	sphere3->AddMaterialNameToMesh("DEFAULT");
 	sphere3->SetPosition(2.0f, 2.0f, 0.0f);
@@ -196,6 +203,7 @@ void Game::Init()
 	sphere2->AddChildEntity(sphere3);
 
 	sphere1->CalcWorldMatrix();
+	*/
 
 	prevMousePos.x = 0;
 	prevMousePos.y = 0;

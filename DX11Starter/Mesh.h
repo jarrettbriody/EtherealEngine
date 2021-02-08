@@ -9,21 +9,22 @@ class Mesh
 {
 protected:
 	static vector<string> mtlPaths;
-	vector<DirectX::XMFLOAT3> vertices;
+	vector<DirectX::XMFLOAT3>* vertices = nullptr;
 	ID3D11Buffer* vertexBuffer = nullptr;
 	ID3D11Buffer* indexBuffer = nullptr;
 	int indexCount = 0;
-	vector<Mesh*> childrenVec;
+	vector<Mesh*>* childrenVec = nullptr;
 	Mesh* children = nullptr;
-	string mtlPath = "";
-	vector<string> materialNameList;
-	string meshName = "";
+	string* mtlPath = nullptr;
+	vector<string>* materialNameList = nullptr;
+	string* meshName = nullptr;
 	int childCount = 0;
 public:
 	Mesh();
 	Mesh(Vertex* vertexObjects, int vertexCount, unsigned int* indices, int indexCnt, ID3D11Device* device, string meshN, string matName = "DEFAULT_MATERIAL");
 	Mesh(string meshN, char* objFile, ID3D11Device* device, bool* success = nullptr);
 	~Mesh();
+	void operator= (const Mesh& m);
 	ID3D11Buffer* GetVertexBuffer();
 	ID3D11Buffer* GetIndexBuffer();
 	int GetIndexCount();
@@ -39,5 +40,6 @@ public:
 	static vector<string> GetMTLPaths();
 	void SetVertices(vector<DirectX::XMFLOAT3> verts);
 	vector<DirectX::XMFLOAT3> GetVertices();
+	void FreeMemory();
 };
 

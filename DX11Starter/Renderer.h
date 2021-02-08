@@ -30,7 +30,8 @@ private:
 
 	vector<Entity*>* entities = nullptr;
 	RenderObject* renderObjects;
-	unsigned int renderObjectCount = 0;
+	int renderObjectCount = 0;
+	int maxRenderObjects = 0;
 
 	Camera* camera = nullptr;
 	map<string, Camera*> cameras;

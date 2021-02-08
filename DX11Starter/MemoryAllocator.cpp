@@ -58,7 +58,7 @@ bool MemoryAllocator::CreatePool(unsigned int pool, unsigned int size, unsigned 
 	return true;
 }
 
-void* MemoryAllocator::AllocateToPool(unsigned int pool, void* memoryLocation, unsigned int memorySize, bool& success)
+void* MemoryAllocator::AllocateToPool(unsigned int pool, unsigned int memorySize, bool& success)
 {
 	if (pool > maxPools || pool < 0)
 		return false;
@@ -72,7 +72,7 @@ void* MemoryAllocator::AllocateToPool(unsigned int pool, void* memoryLocation, u
 	}
 
 	char* writeMemoryLoc = (char*)pools[pool].currentPtr + (pools[pool].blockSize - memorySize);
-	memcpy(writeMemoryLoc, memoryLocation, memorySize);
+	//memcpy(writeMemoryLoc, memoryLocation, memorySize);
 	uintptr_t castedPtr;
 	memcpy(&castedPtr, pools[pool].currentPtr, sizeof(char*));
 	void* castedPtrToRetrieve = reinterpret_cast<void*>(castedPtr);

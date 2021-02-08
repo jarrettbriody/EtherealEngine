@@ -54,7 +54,8 @@ Renderer::~Renderer()
 void Renderer::SetEntities(vector<Entity*>* entities)
 {
 	this->entities = entities;
-	renderObjects = new RenderObject[entities->size() + 100];
+	maxRenderObjects = entities->size() + 100;
+	renderObjects = new RenderObject[maxRenderObjects];
 }
 
 void Renderer::SetShadowVertexShader(SimpleVertexShader * shadowVS)
@@ -133,13 +134,13 @@ void Renderer::RenderFrame()
 	if (debugLinesEnabled) RenderDebugLines();
 	*/
 
-	if (!entities || !camera)
+	if (!entities || !camera || renderObjectCount == 0)
 		return;
 
 	UINT stride = sizeof(Vertex);
 	UINT offset = 0;
 
-	for (size_t i = renderObjectCount - 1; i > 0; i--)
+	for (int i = renderObjectCount - 1; i >= 0; i--)
 	{
 		RenderObject renderObject = renderObjects[i];
 		Entity* e = renderObject.entity;
@@ -154,6 +155,7 @@ void Renderer::RenderFrame()
 				renderObjects[i] = renderObjects[renderObjectCount - 1];
 				renderObjectCount--;
 			}
+			continue;
 		}
 
 		if (e->isEmptyObj) continue;
@@ -398,7 +400,7 @@ void Renderer::SetShadowMapResolution(unsigned int res)
 
 void Renderer::RenderShadowMap()
 {
-	if (!entities || !shadowVS || !shadowsEnabled)
+	if (!entities || !shadowVS || !shadowsEnabled || renderObjectCount == 0)
 		return;
 
 	// Initial setup - No RTV necessary - Clear shadow map
@@ -454,7 +456,7 @@ void Renderer::RenderShadowMap()
 		}
 	}
 	*/
-	for (size_t i = renderObjectCount - 1; i > 0; i--)
+	for (int i = renderObjectCount - 1; i >= 0; i--)
 	{
 		RenderObject renderObject = renderObjects[i];
 		Entity* e = renderObject.entity;
@@ -502,6 +504,13 @@ void Renderer::AddRenderObject(Entity* e, Mesh* mesh, Material* mat)
 		r = { e, mesh, mat };
 		renderObjects[renderObjectCount] = r;
 		renderObjectCount++;
+		if (renderObjectCount >= maxRenderObjects) {
+			RenderObject* old = renderObjects;
+			renderObjects = new RenderObject[(size_t)maxRenderObjects * 2];
+			memcpy(renderObjects, old, sizeof(RenderObject) * maxRenderObjects);
+			maxRenderObjects *= 2;
+			delete[] old;
+		}
 	}
 	else {
 		Mesh* children = mesh->GetChildren();
@@ -510,6 +519,13 @@ void Renderer::AddRenderObject(Entity* e, Mesh* mesh, Material* mat)
 			r = { e, &children[i], e->GetMaterial(children[i].GetFirstMaterialName()) };
 			renderObjects[renderObjectCount] = r;
 			renderObjectCount++;
+			if (renderObjectCount >= maxRenderObjects) {
+				RenderObject* old = renderObjects;
+				renderObjects = new RenderObject[(size_t)maxRenderObjects * 2];
+				memcpy(renderObjects, old, sizeof(RenderObject) * maxRenderObjects);
+				maxRenderObjects *= 2;
+				delete[] old;
+			}
 		}
 	}
 }
