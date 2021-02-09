@@ -6,6 +6,7 @@
 #include "Material.h"
 #include "Collider.h"
 #include "btBulletDynamicsCommon.h"
+#include "BulletCollision/NarrowPhaseCollision/btRaycastCallback.h"
 #include <iostream>
 
 struct ShadowData {

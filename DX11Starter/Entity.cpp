@@ -70,6 +70,9 @@ void Entity::InitRigidBody(btDiscreteDynamicsWorld* dw, float entityMass)
 
 	//rBody->setCollisionFlags(btCollisionObject::CF_KINEMATIC_OBJECT);
 
+	// Have the rigid body register a pointer to the entity it belongs to so we can access it
+	rBody->setUserPointer((void*)(this));
+
 	dynamicsWorld->addRigidBody(rBody);
 }
 
