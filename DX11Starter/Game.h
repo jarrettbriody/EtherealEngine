@@ -71,6 +71,7 @@ private:
 	SceneLoader* EESceneLoader = nullptr;
 
 	ScriptManager* barrel;
+	ScriptManager* fpsController;
 
 	//terrain example stuff
 	//Terrain* terrain;

@@ -311,13 +311,13 @@ void Game::Init()
 	barrel = new TestScript();
 	barrel->Setup("barrel_1", EESceneLoader->sceneEntitiesMap["barrel_1"]);
 
-	/*
+
 	Entity* fpsController = new Entity("FPSController");
-	fpsController->SetPosition(0.0f, 5.0f, -10.0f);
+	fpsController->SetPosition(0.0f, 10.0f, -10.0f);
+	fpsController->InitRigidBody(dynamicsWorld);
 	EESceneLoader->AddEntity(fpsController);
 	ScriptManager* playerScript = new FPSController();
 	playerScript->Setup("FPSController", EESceneLoader->sceneEntitiesMap["FPSController"]);
-	*/
 
 	for (size_t i = 0; i < ScriptManager::scriptFunctions.size(); i++)
 	{
