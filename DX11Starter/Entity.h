@@ -6,6 +6,7 @@
 #include "Material.h"
 #include "Collider.h"
 #include "btBulletDynamicsCommon.h"
+#include "BulletCollision/NarrowPhaseCollision/btRaycastCallback.h"
 #include <iostream>
 
 struct ShadowData {
@@ -38,7 +39,7 @@ private:
 	bool shadowsEnabled = true;
 	ShadowData shadowData;
 
-	float isStatic;
+	float mass;
 
 	btCollisionShape* collShape;
 	btRigidBody* rBody = nullptr;
@@ -52,7 +53,7 @@ public:
 	Entity(string entityName);
 	Entity(string entityName, Mesh* entityMesh, Material* mat = nullptr);
 	~Entity();
-	void InitRigidBody(btDiscreteDynamicsWorld* dw);
+	void InitRigidBody(btDiscreteDynamicsWorld* dw, float entityMass);
 	DirectX::XMFLOAT4X4 GetWorldMatrix();
 	DirectX::XMFLOAT3 GetPosition();
 	DirectX::XMFLOAT3 GetScale();

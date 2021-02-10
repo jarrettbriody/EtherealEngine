@@ -159,7 +159,7 @@ void Game::Init()
 	sphere1->SetPosition(8.0f, 8.0f, 8.0f);
 	sphere1->SetRotation(DirectX::XMConvertToRadians(30), DirectX::XMConvertToRadians(30), DirectX::XMConvertToRadians(30));
 	sphere1->SetScale(1.0f, 2.0f, 1.0f);
-	sphere1->InitRigidBody(dynamicsWorld);
+	sphere1->InitRigidBody(dynamicsWorld, 0.0f);
 	EESceneLoader->sceneEntitiesMap.insert({ "sphere1", sphere1 });
 	EESceneLoader->sceneEntities.push_back(sphere1);
 
@@ -170,7 +170,7 @@ void Game::Init()
 	sphere2->SetPosition(2.0f, 2.0f, 2.0f);
 	sphere2->SetRotation(0.0f, 0.0f, 0.0f);
 	sphere2->SetScale(1.0f, 1.0f, 2.0f);
-	sphere2->InitRigidBody(dynamicsWorld);
+	sphere2->InitRigidBody(dynamicsWorld, 0.0f);
 	EESceneLoader->sceneEntitiesMap.insert({ "sphere2", sphere2 });
 	EESceneLoader->sceneEntities.push_back(sphere2);
 
@@ -183,7 +183,7 @@ void Game::Init()
 	sphere3->SetPosition(2.0f, 2.0f, 0.0f);
 	sphere3->SetRotation(0.0f, 0.0f, 90.0f);
 	sphere3->SetScale(1.0f, 1.0f, 1.0f);
-	sphere3->InitRigidBody(dynamicsWorld);
+	sphere3->InitRigidBody(dynamicsWorld, 0.0f);
 	EESceneLoader->sceneEntitiesMap.insert({ "sphere3", sphere3 });
 	EESceneLoader->sceneEntities.push_back(sphere3);
 
@@ -383,9 +383,6 @@ void Game::Update(float deltaTime, float totalTime)
 
 void Game::PhysicsStep(float deltaTime)
 {
-	btScalar xRot = 0.0f;
-	btScalar yRot = 0.0f;
-	btScalar zRot = 0.0f;
 	btTransform transform;
 	for (int i = 0; i < dynamicsWorld->getNumCollisionObjects(); i++)
 	{
@@ -393,15 +390,10 @@ void Game::PhysicsStep(float deltaTime)
 		btRigidBody* body = btRigidBody::upcast(obj);
 
 		transform = body->getWorldTransform();
-		XMFLOAT3 pos = EESceneLoader->sceneEntities[i]->GetPosition();
-		XMFLOAT4 rot = EESceneLoader->sceneEntities[i]->GetRotationQuaternion();
-		//transform.setIdentity();
+		Entity* entity = (Entity*)body->getUserPointer();
+		XMFLOAT3 pos = entity->GetPosition();
+		XMFLOAT4 rot = entity->GetRotationQuaternion();
 		transform.setOrigin(btVector3(pos.x, pos.y, pos.z));
-
-		//btQuaternion qx = btQuaternion(btVector3(1.0f, 0.0f, 0.0f), rot.x);
-		//btQuaternion qy = btQuaternion(btVector3(0.0f, 1.0f, 0.0f), rot.y);
-		//btQuaternion qz = btQuaternion(btVector3(0.0f, 0.0f, 1.0f), rot.z);
-		//btQuaternion res = qz * qy * qx;
 
 		btQuaternion res = btQuaternion(rot.x, rot.y, rot.z, rot.w);
 		transform.setRotation(res);
@@ -412,39 +404,10 @@ void Game::PhysicsStep(float deltaTime)
 
 		body->getMotionState()->getWorldTransform(transform);
 
-
-		/*
 		btQuaternion q = transform.getRotation();
-		btScalar w = q.getW();
-		btScalar x = q.getX();
-		btScalar y = q.getY();
-		btScalar z = q.getZ();
-
-		double sinr_cosp = 2 * (w * x + y * z);
-		double cosr_cosp = 1 - 2 * (x * x + y * y);
-		xRot = std::atan2(sinr_cosp, cosr_cosp);
-
-		double sinp = 2 * (w * y - z * x);
-		if (std::abs(sinp) >= 1)
-			yRot = std::copysign(DirectX::XM_PI / 2, sinp); // use 90 degrees if out of range
-		else
-			yRot = std::asin(sinp);
-
-		double siny_cosp = 2 * (w * z + x * y);
-		double cosy_cosp = 1 - 2 * (y * y + z * z);
-		zRot = std::atan2(siny_cosp, cosy_cosp);
-		*/
-
-		//transform.getRotation().getEulerZYX(zRot, yRot, xRot);
-		/*
-		if (i == 19) {
-			cout << yRot << endl;
-		}
-		*/
-		btQuaternion q = transform.getRotation();
-		EESceneLoader->sceneEntities[i]->SetPosition(transform.getOrigin().getX(), transform.getOrigin().getY(), transform.getOrigin().getZ());
-		EESceneLoader->sceneEntities[i]->SetRotation(XMFLOAT4(q.getX(), q.getY(), q.getZ(), q.getW()));
-		EESceneLoader->sceneEntities[i]->CalcWorldMatrix();
+		entity->SetPosition(transform.getOrigin().getX(), transform.getOrigin().getY(), transform.getOrigin().getZ());
+		entity->SetRotation(XMFLOAT4(q.getX(), q.getY(), q.getZ(), q.getW()));
+		entity->CalcWorldMatrix();
 	}
 
 	//EESceneLoader->sceneEntities[0]->GetRBody()->setLinearVelocity(btVector3(0.0f, EESceneLoader->sceneEntities[0]->GetRBody()->getLinearVelocity().getY(), 0.0f));
@@ -558,13 +521,99 @@ void Game::OnMouseDown(WPARAM buttonState, int x, int y)
 	prevMousePos.x = x;
 	prevMousePos.y = y;
 
-	for (size_t i = 0; i < ScriptManager::scriptFunctions.size(); i++)
+for (size_t i = 0; i < ScriptManager::scriptFunctions.size(); i++)
 	{
 		ScriptManager* sf = ScriptManager::scriptFunctions[i];
 		if (!sf->inputEnabled) continue;
 		sf->CallOnMouseDown(buttonState, x, y);
 	}
 
+	printf("Mouse Pos: %d, %d\n", x, y);
+
+	// Create debug line
+	DebugLines* dl = new DebugLines("TestRay", 0, false);
+	XMFLOAT3 c = XMFLOAT3(0.0f, 1.0f, 0.0f);
+	dl->color = c;
+
+	// Create the world matrix for the debug line
+	XMFLOAT4X4 wm;
+	XMStoreFloat4x4(&wm, XMMatrixTranspose(DirectX::XMMatrixIdentity()));
+	dl->worldMatrix = wm;
+
+	// Create the transformation matrices for our raycast
+	XMMATRIX proj = XMMatrixTranspose(XMLoadFloat4x4(&(EECamera->GetProjMatrix())));
+	XMMATRIX view = XMMatrixTranspose(XMLoadFloat4x4(&(EECamera->GetViewMatrix())));
+	XMMATRIX world = XMMatrixTranspose(XMLoadFloat4x4(&wm));
+
+	// Get the unprojected vector of the mouse click position in world space
+	XMVECTOR unprojVec = XMVector3Unproject(XMVectorSet(x, y, 1.0f, 1.0f), 0, 0, 1600, 900, 0.0f, 1.0f, proj, view, world);
+	XMFLOAT3 end = XMFLOAT3(XMVectorGetX(unprojVec), XMVectorGetY(unprojVec), XMVectorGetZ(unprojVec));
+	printf("Projected values|- X: %f, Y: %f, Z: %f\n", end.x, end.y, end.z);
+
+	// Draw the debug line to show the raycast
+	XMFLOAT3 start = EECamera->position;
+	XMFLOAT3* rayPoints = new XMFLOAT3[8];
+	rayPoints[0] = start;
+	rayPoints[1] = start;
+	rayPoints[2] = start;
+	rayPoints[3] = start;
+	rayPoints[4] = end;
+	rayPoints[5] = end;
+	rayPoints[6] = end;
+	rayPoints[7] = end;
+	dl->GenerateCuboidVertexBuffer(rayPoints, 8);
+
+	if (dynamicsWorld)
+	{
+		// Update physics
+		dynamicsWorld->updateAabbs();
+		dynamicsWorld->computeOverlappingPairs();
+
+		// Redefine our vectors using bullet's silly types
+		btVector3 from(start.x, start.y, start.z);
+		btVector3 to(end.x, end.y, end.z);
+
+		// Create variable to store the ray hit and set flags
+		btCollisionWorld::ClosestRayResultCallback closestResult(from, to);
+		closestResult.m_flags |= btTriangleRaycastCallback::kF_FilterBackfaces;
+
+		dynamicsWorld->rayTest(from, to, closestResult); // Raycast
+
+		if (closestResult.hasHit())
+		{
+			// Get the entity associated with the rigid body we hit
+			Entity* hit = (Entity *)(closestResult.m_collisionObject->getUserPointer());
+			printf("Hit: %s\n", hit->GetName().c_str());
+			btRigidBody* rigidBody = hit->GetRBody();
+
+			// In order to update the values associated with the rigid body we need to remove it from the dynamics world first
+			dynamicsWorld->removeRigidBody(rigidBody);
+			btVector3 inertia(0, 0, 0);
+			float mass = 1.0f;
+			rigidBody->getCollisionShape()->calculateLocalInertia(mass, inertia);
+			rigidBody->setActivationState(DISABLE_DEACTIVATION);
+			rigidBody->setMassProps(mass, inertia);
+			
+			// Useful functions for updating an object in motion, but not really needed here
+			/*rigidBody->setLinearFactor(btVector3(1, 1, 1));
+			rigidBody->setAngularFactor(btVector3(1, 1, 1));
+			rigidBody->updateInertiaTensor();
+			rigidBody->clearForces();
+			btTransform transform;
+			transform.setIdentity();
+			rigidBody->getMotionState()->getWorldTransform(transform);
+			float x = transform.getOrigin().getX();
+			float y = transform.getOrigin().getY();
+			float z = transform.getOrigin().getZ();
+			transform.setOrigin(btVector3(x, y, z));
+			rigidBody->getCollisionShape()->setLocalScaling(btVector3(1, 1, 1));
+			rigidBody->setWorldTransform(transform);*/
+			
+			dynamicsWorld->addRigidBody(rigidBody); // Add the rigid body back into bullet
+		}
+	}
+
+	
 	SetCapture(hWnd);
 }
 

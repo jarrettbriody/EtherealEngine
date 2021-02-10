@@ -45,25 +45,26 @@ Entity::~Entity()
 	delete collShape;
 }
 
-void Entity::InitRigidBody(btDiscreteDynamicsWorld* dw)
+void Entity::InitRigidBody(btDiscreteDynamicsWorld* dw, float entityMass)
 {
 	dynamicsWorld = dw;
+	mass = entityMass;
 
 	// Physics set-up
 	this->collShape = new btBoxShape(btVector3(btScalar(scale.x / 2.0f), btScalar(scale.y / 2.0f), btScalar(scale.z / 2.0f)));
 
-	btTransform groundTransform;
-	groundTransform.setIdentity();
-	groundTransform.setOrigin(btVector3(position.x, position.y, position.z));
+	btTransform transform;
+	transform.setIdentity();
+	transform.setOrigin(btVector3(position.x, position.y, position.z));
 	btQuaternion qx = btQuaternion(btVector3(1.0f, 0.0f, 0.0f), rotation.x);
 	btQuaternion qy = btQuaternion(btVector3(0.0f, 1.0f, 0.0f), rotation.y);
 	btQuaternion qz = btQuaternion(btVector3(0.0f, 0.0f, 1.0f), rotation.z);
 	btQuaternion res = qz * qy * qx;
-	groundTransform.setRotation(res);
+	transform.setRotation(res);
 	//groundTransform.setRotation(btQuaternion(rotation.y, rotation.x, rotation.z));
 
 	//btScalar mass(isStatic);
-	btScalar mass(0.0f);
+	//btScalar mass(0.0f);
 
 	//rigidbody is dynamic if and only if mass is non zero, otherwise static
 	bool isDynamic = (mass != 0.0f);
@@ -72,7 +73,7 @@ void Entity::InitRigidBody(btDiscreteDynamicsWorld* dw)
 	if (isDynamic)
 		collShape->calculateLocalInertia(mass, localInertia);
 
-	btDefaultMotionState* myMotionState = new btDefaultMotionState(groundTransform);
+	btDefaultMotionState* myMotionState = new btDefaultMotionState(transform);
 	btRigidBody::btRigidBodyConstructionInfo rbInfo(mass, myMotionState, collShape, localInertia);
 	this->rBody = new btRigidBody(rbInfo);
 
@@ -82,6 +83,9 @@ void Entity::InitRigidBody(btDiscreteDynamicsWorld* dw)
 	rBody->setAnisotropicFriction(btVector3(2.0f, 0.0f, 0.0f));
 
 	//rBody->setCollisionFlags(btCollisionObject::CF_KINEMATIC_OBJECT);
+
+	// Have the rigid body register a pointer to the entity it belongs to so we can access it
+	rBody->setUserPointer((void*)(this));
 
 	dynamicsWorld->addRigidBody(rBody);
 }

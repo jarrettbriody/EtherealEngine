@@ -545,7 +545,7 @@ void SceneLoader::LoadScene(string sceneName)
 				someEntity->SetRotation(DirectX::XMConvertToRadians(parsedNumbers[3]), DirectX::XMConvertToRadians(parsedNumbers[4]), DirectX::XMConvertToRadians(parsedNumbers[5]));
 				someEntity->SetScale(parsedNumbers[6], parsedNumbers[7], parsedNumbers[8]);
 				someEntity->CalcWorldMatrix();
-				someEntity->InitRigidBody(dynamicsWorld);
+				someEntity->InitRigidBody(dynamicsWorld, 0.0f);
 				if (someEntity->collisionsEnabled && someEntity->colliderDebugLinesEnabled) {
 					vector<Collider*> colliders = someEntity->GetColliders();
 					for (size_t d = 0; d < colliders.size(); d++)
