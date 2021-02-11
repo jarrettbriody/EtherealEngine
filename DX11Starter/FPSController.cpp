@@ -2,7 +2,7 @@
 
 void FPSController::Init()
 {
-	cam = ScriptManager::renderer->GetCamera("main");
+	cam = ScriptManager::EERenderer->GetCamera("main");
 	direction = cam->direction;
 }
 

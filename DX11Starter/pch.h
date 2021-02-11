@@ -24,6 +24,7 @@
 
 //bullet
 #include "btBulletDynamicsCommon.h"
+#include "BulletCollision/NarrowPhaseCollision/btRaycastCallback.h"
 
 //cascioli black box
 #include "SimpleShader.h"

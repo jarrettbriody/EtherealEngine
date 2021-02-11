@@ -21,7 +21,7 @@ Game::Game(HINSTANCE hInstance)
 
 Game::~Game()
 {
-	delete EESceneLoader;
+	SceneLoader::DestroyInstance();
 
 	Config::Sampler->Release();
 
@@ -46,14 +46,14 @@ Game::~Game()
 
 
 	//delete EECamera;
-	delete EERenderer;
+	Renderer::DestroyInstance();
 
 	for (size_t i = 0; i < ScriptManager::scriptFunctions.size(); i++)
 	{
 		delete ScriptManager::scriptFunctions[i];
 	}
 
-	delete EEMemoryAllocator;
+	MemoryAllocator::DestroyInstance();
 
 	//delete barrel;//(Barrel*)
 }
@@ -62,8 +62,8 @@ void Game::Init()
 {
 	//dont delete this, its for finding mem leaks
 	//_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-	//_CrtSetBreakAlloc(211524);
-	//_CrtSetBreakAlloc(56580);
+	//_CrtSetBreakAlloc(1630);
+	//_CrtSetBreakAlloc(49892);
 
 	// Physics -----------------
 
@@ -105,15 +105,14 @@ void Game::Init()
 	skyDS.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
 	device->CreateDepthStencilState(&skyDS, &skyDepthState);
 
-	EEMemoryAllocator = new MemoryAllocator(Config::MemoryAllocatorSize, Config::MemoryAllocatorAlignment);
+	MemoryAllocator::SetupInstance(Config::MemoryAllocatorSize, Config::MemoryAllocatorAlignment);
+	EEMemoryAllocator = MemoryAllocator::GetInstance();
 	EEMemoryAllocator->CreatePool(Utility::ENTITY_POOL, Config::MemoryAllocatorEntityPoolSize, sizeof(Entity));
 	EEMemoryAllocator->CreatePool(Utility::MESH_POOL, Config::MemoryAllocatorMeshPoolSize, sizeof(Mesh));
 	EEMemoryAllocator->CreatePool(Utility::MATERIAL_POOL, Config::MemoryAllocatorMaterialPoolSize, sizeof(Material));
 
-	EESceneLoader = new SceneLoader(EEMemoryAllocator, dynamicsWorld);
-
-	cout << sizeof(Entity) << endl;
-	cout << sizeof(map<string, Material*>) << endl;
+	SceneLoader::SetupInstance(dynamicsWorld);
+	EESceneLoader = SceneLoader::GetInstance();
 
 	EESceneLoader->LoadShaders();
 
@@ -122,6 +121,7 @@ void Game::Init()
 	EESceneLoader->LoadDefaultMaterials();
 
 	EESceneLoader->LoadScene("ArenaV2");
+
 	//EESceneLoader->LoadScene("Tutorial");
 
 	EESceneLoader->sceneEntitiesMap["barrel_1"]->isCollisionStatic = false;
@@ -129,37 +129,7 @@ void Game::Init()
 
 	ScriptManager::sceneEntitiesMap = &EESceneLoader->sceneEntitiesMap;
 	ScriptManager::sceneEntities = &EESceneLoader->sceneEntities;
-	ScriptManager::sceneLoader = EESceneLoader;
-
-	//test area --------------------------
-	/*
-	CUBE ALWAYS TRIES TO APPLY GRASS MATERIAL BECAUSE OF GROUND NEED TO FIX
-
-	Entity* cube1;
-	cube1 = new Entity("cube1", defaultMeshesMap["Cube"]);
-	cube1->AddMaterial(defaultMaterialsMap["DEFAULT"]);
-	cube1->AddMaterialNameToMesh("DEFAULT");
-	cube1->SetPosition(8.0f, 8.0f, 8.0f);
-	cube1->SetRotation(DirectX::XMConvertToRadians(30), DirectX::XMConvertToRadians(30), DirectX::XMConvertToRadians(30));
-	cube1->SetScale(1.0f, 2.0f, 1.0f);
-	sceneEntitiesMap.insert({ "cube1", cube1 });
-	sceneEntities.push_back(cube1);
-
-	Entity* cube2;
-	cube2 = new Entity("cube2", defaultMeshesMap["Cube"]);
-	cube2->AddMaterial(defaultMaterialsMap["DEFAULT"]);
-	cube2->AddMaterialNameToMesh("DEFAULT");
-	cube2->SetPosition(1.0f, 1.0f, 1.0f);
-	cube2->SetRotation(DirectX::XMConvertToRadians(30), DirectX::XMConvertToRadians(30), DirectX::XMConvertToRadians(30));
-	cube2->SetScale(1.0f, 1.0f, 1.0f);
-	sceneEntitiesMap.insert({ "cube2", cube2 });
-	sceneEntities.push_back(cube2);
-
-	cube1->AddChildEntity(cube2);
-
-	cube1->CalcWorldMatrix();
-
-	*/
+	ScriptManager::EESceneLoader = EESceneLoader;
 
 	/*
 	Entity* sphere1;
@@ -205,6 +175,30 @@ void Game::Init()
 	sphere1->CalcWorldMatrix();
 	*/
 
+	EntityCreationParameters para;
+
+	para.entityName = "cube1";
+	para.meshName = "Cube";
+	para.materialName = "Grey";
+	para.position = XMFLOAT3(8.0f, 8.0f, 8.0f);
+	para.rotationRadians = XMFLOAT3(DirectX::XMConvertToRadians(30), DirectX::XMConvertToRadians(30), DirectX::XMConvertToRadians(30));
+	para.scale = XMFLOAT3(1.0f, 2.0f, 1.0f);
+	para.initRigidBody = true;
+	Entity* cube1 = EESceneLoader->CreateEntity(para);
+
+	para.entityName = "cube2";
+	para.meshName = "Cube";
+	para.materialName = "Grey";
+	para.position = XMFLOAT3(1.0f, 1.0f, 1.0f);
+	para.rotationRadians = XMFLOAT3(DirectX::XMConvertToRadians(30), DirectX::XMConvertToRadians(30), DirectX::XMConvertToRadians(30));
+	para.scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
+	para.initRigidBody = true;
+	Entity* cube2 = EESceneLoader->CreateEntity(para);
+
+	cube1->AddChildEntity(cube2);
+
+	cube1->CalcWorldMatrix();
+
 	prevMousePos.x = 0;
 	prevMousePos.y = 0;
 
@@ -225,7 +219,8 @@ void Game::Init()
 	testLight->Range = 10.f;
 	testLight->SpotFalloff = 20.f;*/
 
-	EERenderer = new Renderer(device, context, swapChain, backBufferRTV, depthStencilView, width, height);
+	Renderer::SetupInstance(swapChain, backBufferRTV, depthStencilView, width, height);
+	EERenderer = Renderer::GetInstance();
 	EERenderer->AddCamera("main", EECamera);
 	EERenderer->EnableCamera("main");
 	EERenderer->SetShadowVertexShader(EESceneLoader->vertexShadersMap["Shadow"]);
@@ -238,7 +233,9 @@ void Game::Init()
 	EERenderer->SendAllLightsToShader(EESceneLoader->pixelShadersMap["Normal"]);
 	EERenderer->SetShadowMapResolution(4096);
 	EERenderer->InitShadows();
-	
+
+	EESceneLoader->EERenderer = EERenderer;
+
 	Entity* e;
 	for (size_t i = 0; i < EESceneLoader->sceneEntities.size(); i++)
 	{
@@ -246,7 +243,7 @@ void Game::Init()
 		EERenderer->AddRenderObject(e, e->GetMesh(), e->GetMaterial(e->GetMeshMaterialName()));
 	}
 
-	ScriptManager::renderer = EERenderer;
+	ScriptManager::EERenderer = EERenderer;
 
 	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
@@ -399,9 +396,6 @@ void Game::Update(float deltaTime, float totalTime)
 
 void Game::PhysicsStep(float deltaTime)
 {
-	btScalar xRot = 0.0f;
-	btScalar yRot = 0.0f;
-	btScalar zRot = 0.0f;
 	btTransform transform;
 	for (int i = 0; i < dynamicsWorld->getNumCollisionObjects(); i++)
 	{
@@ -409,15 +403,10 @@ void Game::PhysicsStep(float deltaTime)
 		btRigidBody* body = btRigidBody::upcast(obj);
 
 		transform = body->getWorldTransform();
-		XMFLOAT3 pos = EESceneLoader->sceneEntities[i]->GetPosition();
-		XMFLOAT4 rot = EESceneLoader->sceneEntities[i]->GetRotationQuaternion();
-		//transform.setIdentity();
+		Entity* entity = (Entity*)body->getUserPointer();
+		XMFLOAT3 pos = entity->GetPosition();
+		XMFLOAT4 rot = entity->GetRotationQuaternion();
 		transform.setOrigin(btVector3(pos.x, pos.y, pos.z));
-
-		//btQuaternion qx = btQuaternion(btVector3(1.0f, 0.0f, 0.0f), rot.x);
-		//btQuaternion qy = btQuaternion(btVector3(0.0f, 1.0f, 0.0f), rot.y);
-		//btQuaternion qz = btQuaternion(btVector3(0.0f, 0.0f, 1.0f), rot.z);
-		//btQuaternion res = qz * qy * qx;
 
 		btQuaternion res = btQuaternion(rot.x, rot.y, rot.z, rot.w);
 		transform.setRotation(res);
@@ -428,39 +417,10 @@ void Game::PhysicsStep(float deltaTime)
 
 		body->getMotionState()->getWorldTransform(transform);
 
-
-		/*
 		btQuaternion q = transform.getRotation();
-		btScalar w = q.getW();
-		btScalar x = q.getX();
-		btScalar y = q.getY();
-		btScalar z = q.getZ();
-
-		double sinr_cosp = 2 * (w * x + y * z);
-		double cosr_cosp = 1 - 2 * (x * x + y * y);
-		xRot = std::atan2(sinr_cosp, cosr_cosp);
-
-		double sinp = 2 * (w * y - z * x);
-		if (std::abs(sinp) >= 1)
-			yRot = std::copysign(DirectX::XM_PI / 2, sinp); // use 90 degrees if out of range
-		else
-			yRot = std::asin(sinp);
-
-		double siny_cosp = 2 * (w * z + x * y);
-		double cosy_cosp = 1 - 2 * (y * y + z * z);
-		zRot = std::atan2(siny_cosp, cosy_cosp);
-		*/
-
-		//transform.getRotation().getEulerZYX(zRot, yRot, xRot);
-		/*
-		if (i == 19) {
-			cout << yRot << endl;
-		}
-		*/
-		btQuaternion q = transform.getRotation();
-		EESceneLoader->sceneEntities[i]->SetPosition(transform.getOrigin().getX(), transform.getOrigin().getY(), transform.getOrigin().getZ());
-		EESceneLoader->sceneEntities[i]->SetRotation(XMFLOAT4(q.getX(), q.getY(), q.getZ(), q.getW()));
-		EESceneLoader->sceneEntities[i]->CalcWorldMatrix();
+		entity->SetPosition(transform.getOrigin().getX(), transform.getOrigin().getY(), transform.getOrigin().getZ());
+		entity->SetRotation(XMFLOAT4(q.getX(), q.getY(), q.getZ(), q.getW()));
+		entity->CalcWorldMatrix();
 	}
 
 	//EESceneLoader->sceneEntities[0]->GetRBody()->setLinearVelocity(btVector3(0.0f, EESceneLoader->sceneEntities[0]->GetRBody()->getLinearVelocity().getY(), 0.0f));

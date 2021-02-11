@@ -1,5 +1,7 @@
 #include "MemoryAllocator.h"
 
+MemoryAllocator* MemoryAllocator::instance = nullptr;
+
 MemoryAllocator::MemoryAllocator(unsigned int size, unsigned int alignment, unsigned int maxPools)
 {
 	originalBufferPtr = memoryBuffer = malloc(((size_t)size + alignment) - 1);
@@ -18,6 +20,29 @@ MemoryAllocator::~MemoryAllocator()
 {
 	delete[] pools;
 	free(originalBufferPtr);
+}
+
+bool MemoryAllocator::SetupInstance(unsigned int size, unsigned int alignment, unsigned int maxPools)
+{
+	if (instance == nullptr) {
+		instance = new MemoryAllocator(size, alignment, maxPools);
+		return true;
+	}
+	return false;
+}
+
+MemoryAllocator* MemoryAllocator::GetInstance()
+{
+	return instance;
+}
+
+bool MemoryAllocator::DestroyInstance()
+{
+	if (instance != nullptr) {
+		delete instance;
+		return true;
+	}
+	return false;
 }
 
 bool MemoryAllocator::CreatePool(unsigned int pool, unsigned int size, unsigned int blockSize)
@@ -60,13 +85,9 @@ bool MemoryAllocator::CreatePool(unsigned int pool, unsigned int size, unsigned 
 
 void* MemoryAllocator::AllocateToPool(unsigned int pool, unsigned int memorySize, bool& success)
 {
-	if (pool > maxPools || pool < 0)
-		return false;
-
-	if (pools[pool].startPtr == nullptr)
-		return false;
-
-	if (pools[pool].usedMemory >= pools[pool].size) {
+	if (pool > maxPools || pool < 0 || 
+		pools[pool].startPtr == nullptr ||
+		pools[pool].usedMemory >= pools[pool].size) {
 		success = false;
 		return nullptr;
 	}

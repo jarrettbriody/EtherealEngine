@@ -11,13 +11,32 @@
 #include "Entity.h"
 #include "Config.h"
 #include "MemoryAllocator.h"
+#include "Renderer.h"
 
 using namespace Utility;
 
+struct EntityCreationParameters {
+	string entityName = "";
+	string meshName = "";
+	string materialName = "";
+	XMFLOAT3 position = ZERO_VECTOR3;
+	XMFLOAT3 rotationRadians = ZERO_VECTOR3;
+	XMFLOAT3 scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
+	bool initRigidBody = true;
+	bool drawEntity = true;
+	bool drawShadow = true;
+};
+
 class SceneLoader
 {
+private:
+	static SceneLoader* instance;
+
+	SceneLoader(btDiscreteDynamicsWorld* dw);
+	~SceneLoader();
 public:
 	MemoryAllocator* EEMemoryAllocator = nullptr;
+	Renderer* EERenderer = nullptr;
 
 	btDiscreteDynamicsWorld* dynamicsWorld;
 
@@ -40,8 +59,9 @@ public:
 	map<string, Entity*> sceneEntitiesMap;
 	vector<Entity*> sceneEntities;
 
-	SceneLoader(MemoryAllocator* memAlloc, btDiscreteDynamicsWorld* dw);
-	~SceneLoader();
+	static bool SetupInstance(btDiscreteDynamicsWorld* dw);
+	static SceneLoader* GetInstance();
+	static bool DestroyInstance();
 
 	void LoadShaders();
 	void LoadDefaultMeshes();
@@ -53,6 +73,6 @@ public:
 	Utility::MESH_TYPE AutoLoadOBJMTL(string name);
 	void LoadScene(string sceneName = "scene");
 
-	bool AddEntity(Entity& e);
+	Entity* SceneLoader::CreateEntity(EntityCreationParameters& para);
 };
 

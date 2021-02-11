@@ -2,6 +2,8 @@
 
 #include "pch.h"
 #include "Vertex.h"
+#include "MemoryAllocator.h"
+#include "Utility.h"
 
 using namespace std;
 
@@ -14,7 +16,7 @@ protected:
 	ID3D11Buffer* indexBuffer = nullptr;
 	int indexCount = 0;
 	vector<Mesh*>* childrenVec = nullptr;
-	Mesh* children = nullptr;
+	Mesh** children = nullptr;
 	string* mtlPath = nullptr;
 	vector<string>* materialNameList = nullptr;
 	string* meshName = nullptr;
@@ -31,15 +33,17 @@ public:
 	void CreateBuffers(Vertex* vertexObjects, int vertexCount, unsigned int* indices, int indexCnt, ID3D11Device* device);
 	void CalculateTangents(Vertex* verts, int numVerts, unsigned int* indices, int numIndices);
 	vector<string> GetMaterialNameList();
-	string GetFirstMaterialName();
-	void AddMaterialName(string nm);
+	string GetMaterialName(unsigned int index = 0);
+	unsigned int AddMaterialName(string nm);
 	bool HasChildren();
-	Mesh* GetChildren();
+	Mesh** GetChildren();
 	int GetChildCount();
 	string GetMTLPath();
 	static vector<string> GetMTLPaths();
 	void SetVertices(vector<DirectX::XMFLOAT3> verts);
 	vector<DirectX::XMFLOAT3> GetVertices();
 	void FreeMemory();
+	void ReleaseBuffers();
+	void AllocateChildren();
 };
 

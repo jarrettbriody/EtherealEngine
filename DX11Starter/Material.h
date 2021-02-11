@@ -47,7 +47,7 @@ public:
 	SimplePixelShader* GetPixelShader();
 	MaterialData GetMaterialData();
 	ID3D11SamplerState* GetSamplerState();
-	virtual void Prepare();
+	void Prepare();
 	string GetName();
 };
 

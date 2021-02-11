@@ -13,6 +13,8 @@ struct Pool{
 class MemoryAllocator
 {
 private:
+	static MemoryAllocator* instance;
+
 	void* memoryBuffer = nullptr;
 	void* originalBufferPtr = nullptr;
 	void* currentPtr = nullptr;
@@ -22,9 +24,12 @@ private:
 	unsigned int poolCnt = 0;
 	unsigned int maxPools = 0;
 	unsigned int usedMemory = 0;
-public:
 	MemoryAllocator(unsigned int size, unsigned int alignment, unsigned int maxPools = 10);
 	~MemoryAllocator();
+public:
+	static bool SetupInstance(unsigned int size, unsigned int alignment, unsigned int maxPools = 10);
+	static MemoryAllocator* GetInstance();
+	static bool DestroyInstance();
 	bool CreatePool(unsigned int pool, unsigned int size, unsigned int blockSize);
 	void* AllocateToPool(unsigned int pool, unsigned int memorySize, bool& success);
 	bool DeallocateFromPool(unsigned int pool, void* memoryLocation, unsigned int memorySize);

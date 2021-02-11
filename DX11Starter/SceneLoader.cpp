@@ -1,8 +1,10 @@
 #include "SceneLoader.h"
 
-SceneLoader::SceneLoader(MemoryAllocator* memAlloc, btDiscreteDynamicsWorld * dw)
+SceneLoader* SceneLoader::instance = nullptr;
+
+SceneLoader::SceneLoader(btDiscreteDynamicsWorld * dw)
 {
-	this->EEMemoryAllocator = memAlloc;
+	this->EEMemoryAllocator = MemoryAllocator::GetInstance();
 	this->dynamicsWorld = dw;
 }
 
@@ -27,7 +29,8 @@ SceneLoader::~SceneLoader()
 			meshMapIter->first != "BloodButton" &&
 			meshMapIter->first != "Graybox" &&
 			meshMapIter->first != "BloodFountain") {
-			delete meshMapIter->second;
+			//delete meshMapIter->second;
+			meshMapIter->second->FreeMemory();
 			//cout << "Deleting " << meshMapIter->first << endl;
 		}
 	}
@@ -47,7 +50,8 @@ SceneLoader::~SceneLoader()
 
 	for (auto meshMapIter = generatedMeshesMap.begin(); meshMapIter != generatedMeshesMap.end(); ++meshMapIter)
 	{
-		delete meshMapIter->second;
+		//delete meshMapIter->second;
+		meshMapIter->second->FreeMemory();
 		//cout << "Deleting " << meshMapIter->first << endl;
 	}
 
@@ -67,6 +71,29 @@ SceneLoader::~SceneLoader()
 	{
 		delete pixSIter->second;
 	}
+}
+
+bool SceneLoader::SetupInstance(btDiscreteDynamicsWorld* dw)
+{
+	if (instance == nullptr) {
+		instance = new SceneLoader(dw);
+		return true;
+	}
+	return false;
+}
+
+SceneLoader* SceneLoader::GetInstance()
+{
+	return instance;
+}
+
+bool SceneLoader::DestroyInstance()
+{
+	if (instance != nullptr) {
+		delete instance;
+		return true;
+	}
+	return false;
 }
 
 void SceneLoader::LoadShaders()
@@ -122,38 +149,36 @@ void SceneLoader::LoadShaders()
 void SceneLoader::LoadDefaultMeshes()
 {
 	bool success;
-	Mesh* newMesh;
-	Mesh someMesh;
 
-	newMesh = (Mesh*)EEMemoryAllocator->AllocateToPool(Utility::MESH_POOL, sizeof(Mesh), success);
-	someMesh = Mesh("Cube", "../../Assets/Models/Default/cube.obj", Config::Device);
-	*newMesh = someMesh;
-	defaultMeshesMap.insert({ "Cube", newMesh });
+	Mesh* cubeMesh = (Mesh*)EEMemoryAllocator->AllocateToPool(Utility::MESH_POOL, sizeof(Mesh), success);
+	Mesh cube = Mesh("Cube", "../../Assets/Models/Default/cube.obj", Config::Device);
+	*cubeMesh = cube;
+	defaultMeshesMap.insert({ "Cube", cubeMesh });
 
-	newMesh = (Mesh*)EEMemoryAllocator->AllocateToPool(Utility::MESH_POOL, sizeof(Mesh), success);
-	someMesh = Mesh("Cylinder", "../../Assets/Models/Default/cylinder.obj", Config::Device);
-	*newMesh = someMesh;
-	defaultMeshesMap.insert({ "Cylinder", newMesh });
+	Mesh* cylinderMesh = (Mesh*)EEMemoryAllocator->AllocateToPool(Utility::MESH_POOL, sizeof(Mesh), success);
+	Mesh cylinder = Mesh("Cylinder", "../../Assets/Models/Default/cylinder.obj", Config::Device);
+	*cylinderMesh = cylinder;
+	defaultMeshesMap.insert({ "Cylinder", cylinderMesh });
 
-	newMesh = (Mesh*)EEMemoryAllocator->AllocateToPool(Utility::MESH_POOL, sizeof(Mesh), success);
-	someMesh = Mesh("Cone", "../../Assets/Models/Default/cone.obj", Config::Device);
-	*newMesh = someMesh;
-	defaultMeshesMap.insert({ "Cone", newMesh });
+	Mesh* coneMesh = (Mesh*)EEMemoryAllocator->AllocateToPool(Utility::MESH_POOL, sizeof(Mesh), success);
+	Mesh cone = Mesh("Cone", "../../Assets/Models/Default/cone.obj", Config::Device);
+	*coneMesh = cone;
+	defaultMeshesMap.insert({ "Cone", coneMesh });
 
-	newMesh = (Mesh*)EEMemoryAllocator->AllocateToPool(Utility::MESH_POOL, sizeof(Mesh), success);
-	someMesh = Mesh("Sphere", "../../Assets/Models/Default/sphere.obj", Config::Device);
-	*newMesh = someMesh;
-	defaultMeshesMap.insert({ "Sphere", newMesh });
+	Mesh* sphereMesh = (Mesh*)EEMemoryAllocator->AllocateToPool(Utility::MESH_POOL, sizeof(Mesh), success);
+	Mesh sphere = Mesh("Sphere", "../../Assets/Models/Default/sphere.obj", Config::Device);
+	*sphereMesh = sphere;
+	defaultMeshesMap.insert({ "Sphere", sphereMesh });
 
-	newMesh = (Mesh*)EEMemoryAllocator->AllocateToPool(Utility::MESH_POOL, sizeof(Mesh), success);
-	someMesh = Mesh("Helix", "../../Assets/Models/Default/helix.obj", Config::Device);
-	*newMesh = someMesh;
-	defaultMeshesMap.insert({ "Helix", newMesh });
+	Mesh* helixMesh = (Mesh*)EEMemoryAllocator->AllocateToPool(Utility::MESH_POOL, sizeof(Mesh), success);
+	Mesh helix = Mesh("Helix", "../../Assets/Models/Default/helix.obj", Config::Device);
+	*helixMesh = helix;
+	defaultMeshesMap.insert({ "Helix", helixMesh });
 
-	newMesh = (Mesh*)EEMemoryAllocator->AllocateToPool(Utility::MESH_POOL, sizeof(Mesh), success);
-	someMesh = Mesh("Torus", "../../Assets/Models/Default/torus.obj", Config::Device);
-	*newMesh = someMesh;
-	defaultMeshesMap.insert({ "Torus", newMesh });
+	Mesh* torusMesh = (Mesh*)EEMemoryAllocator->AllocateToPool(Utility::MESH_POOL, sizeof(Mesh), success);
+	Mesh torus = Mesh("Torus", "../../Assets/Models/Default/torus.obj", Config::Device);
+	*torusMesh = torus;
+	defaultMeshesMap.insert({ "Torus", torusMesh });
 
 
 	defaultMeshesMap.insert({ "Ground", defaultMeshesMap["Cube"] });
@@ -235,22 +260,18 @@ void SceneLoader::LoadDefaultMaterials()
 void SceneLoader::BuildDefaultEntity(string entityName, string objName, Entity* e)
 {
 	if (objName == "Ground") {
-		e->AddMaterial(defaultMaterialsMap["Grass"]);
-		e->AddMaterialNameToMesh("Grass");
+		e->AddMaterial(defaultMaterialsMap["Grass"], true);
 		XMFLOAT3 s = e->GetScale();
 		e->SetRepeatTexture(s.x / 2.0f, s.z / 2.0f);
 	}
 	if (objName == "BloodButton") {
-		e->AddMaterial(defaultMaterialsMap["Grey"]);
-		e->AddMaterialNameToMesh("Grey");
+		e->AddMaterial(defaultMaterialsMap["Grey"], true);
 	}
 	if (objName == "Graybox") {
-		e->AddMaterial(defaultMaterialsMap["Grey"]);
-		e->AddMaterialNameToMesh("Grey");
+		e->AddMaterial(defaultMaterialsMap["Grey"], true);
 	}
 	if (objName == "BloodFountain") {
-		e->AddMaterial(defaultMaterialsMap["Red"]);
-		e->AddMaterialNameToMesh("Red");
+		e->AddMaterial(defaultMaterialsMap["Red"], true);
 	}
 }
 
@@ -299,6 +320,8 @@ Utility::MESH_TYPE SceneLoader::AutoLoadOBJMTL(string name)
 
 	Mesh someMesh = Mesh(name, (char*)objPath.c_str(), Config::Device, &success);
 	*newMesh = someMesh;
+	if(newMesh->GetChildCount() > 0)
+		newMesh->AllocateChildren();
 	if (!success) {
 		cout << "Cannot load Object (OBJ) file: " + string(objPath) << endl;
 		return Utility::MESH_TYPE::LOAD_FAILURE;
@@ -578,7 +601,6 @@ void SceneLoader::LoadScene(string sceneName)
 					}
 					if (requiredMaterials.size() == 0) {
 						allocatedEntity->AddMaterial(defaultMaterialsMap["DEFAULT"]);
-						allocatedEntity->AddMaterialNameToMesh("DEFAULT");
 					}
 				}
 
@@ -663,19 +685,87 @@ void SceneLoader::LoadScene(string sceneName)
 	}
 }
 
-bool SceneLoader::AddEntity(Entity& e)
+Entity* SceneLoader::CreateEntity(EntityCreationParameters& para)
 {
-	if (sceneEntitiesMap.count(e.GetName()))
-		return false;
-
-	bool success = false;
-	Entity* allocatedEntity = (Entity*)EEMemoryAllocator->AllocateToPool(Utility::ENTITY_POOL, sizeof(Entity), success);
-	if (success) {
-		*allocatedEntity = e;
-		sceneEntitiesMap.insert({ e.GetName(), allocatedEntity });
-		sceneEntities.push_back(allocatedEntity);
-		return true;
+	if (para.entityName == "") {
+		return nullptr;
 	}
 
-	return false;
+	//naming of entity internally
+	string entityName = para.entityName; //temporary, should have entity name in scene file
+	int sameNameEntityCnt = 1;
+	while (sceneEntitiesMap.count(entityName)) {
+		entityName = para.entityName + " (" + to_string(sameNameEntityCnt) + ")";
+		sameNameEntityCnt++;
+	}
+	para.entityName = entityName;
+
+	Entity e;
+	Entity* allocatedEntity = nullptr;
+	Mesh* mesh = nullptr;
+	Material* mat = nullptr;
+
+	bool success = false;
+
+	if (para.meshName != "") {
+		if (generatedMeshesMap.count(para.meshName)) {
+			mesh = generatedMeshesMap[para.meshName];
+			e = Entity(para.entityName, mesh);
+		}
+		else if (defaultMeshesMap.count(para.meshName)) {
+			mesh = defaultMeshesMap[para.meshName];
+			e = Entity(para.entityName, mesh);
+		}
+		else {
+			return nullptr;
+		}
+
+		allocatedEntity = (Entity*)EEMemoryAllocator->AllocateToPool(Utility::ENTITY_POOL, sizeof(Entity), success);
+		if (success) {
+			*allocatedEntity = e;
+			sceneEntitiesMap.insert({ para.entityName, allocatedEntity });
+			sceneEntities.push_back(allocatedEntity);
+		}
+
+		if (para.materialName != "") {
+			if (generatedMaterialsMap.count(para.materialName)) {
+				mat = generatedMaterialsMap[para.materialName];
+				allocatedEntity->AddMaterial(mat, true);
+			}
+			else if (defaultMaterialsMap.count(para.materialName)) {
+				mat = defaultMaterialsMap[para.materialName];
+				allocatedEntity->AddMaterial(mat, true);
+			}
+			else {
+				para.materialName = "DEFAULT";
+				mat = defaultMaterialsMap["DEFAULT"];
+				allocatedEntity->AddMaterial(mat, true);
+			}
+		}
+	}
+	else {
+		e = Entity(para.entityName);
+
+		allocatedEntity = (Entity*)EEMemoryAllocator->AllocateToPool(Utility::ENTITY_POOL, sizeof(Entity), success);
+		if (success) {
+			*allocatedEntity = e;
+			sceneEntitiesMap.insert({ para.entityName, allocatedEntity });
+			sceneEntities.push_back(allocatedEntity);
+		}
+	}
+	allocatedEntity->SetPosition(para.position);
+	allocatedEntity->SetRotation(para.rotationRadians);
+	allocatedEntity->SetScale(para.scale);
+	
+	allocatedEntity->CalcWorldMatrix();
+
+	if (para.drawShadow)
+		allocatedEntity->ToggleShadows(true);
+	
+	if (EERenderer != nullptr && para.drawEntity)
+		EERenderer->AddRenderObject(allocatedEntity, mesh, mat);
+	if (para.initRigidBody)
+		allocatedEntity->InitRigidBody(dynamicsWorld);
+
+	return allocatedEntity;
 }

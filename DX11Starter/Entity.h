@@ -26,6 +26,7 @@ private:
 	DirectX::XMFLOAT3 rotationInDegrees;
 	DirectX::XMFLOAT2 repeatTex;
 	map<string, Material*>* materialMap = nullptr;
+	unsigned int meshMaterialIndex = 0;
 	string* name;
 	vector<Entity*>* children = nullptr;
 	Entity* parent = nullptr;
@@ -34,7 +35,7 @@ private:
 	bool shadowsEnabled = true;
 	ShadowData shadowData;
 
-	float isStatic;
+	float isStatic = 0.0f;
 
 	btCollisionShape* collShape = nullptr;
 	btRigidBody* rBody = nullptr;
@@ -72,10 +73,10 @@ public:
 	void ToggleShadows(bool toggle);
 	void Move(XMFLOAT3 f);
 	void Move(float x, float y, float z);
-	ID3D11Buffer* GetMeshVertexBuffer(int i = -1);
-	ID3D11Buffer* GetMeshIndexBuffer(int i = -1);
-	int GetMeshIndexCount(int i = -1);
-	string GetMeshMaterialName(int i = -1);
+	ID3D11Buffer* GetMeshVertexBuffer(int childIndex = -1);
+	ID3D11Buffer* GetMeshIndexBuffer(int childIndex = -1);
+	int GetMeshIndexCount(int childIndex = -1);
+	string GetMeshMaterialName(int childIndex = -1);
 	void CalcWorldMatrix();
 	void PrepareMaterialForDraw(string n, DirectX::XMFLOAT4X4 view, DirectX::XMFLOAT4X4 proj);
 	Material* GetMaterial(string n);
@@ -83,8 +84,7 @@ public:
 	int GetMeshChildCount();
 	Mesh* GetMesh();
 	vector<string> GetMaterialNameList();
-	void AddMaterialNameToMesh(string nm);
-	void AddMaterial(Material* mat);
+	void AddMaterial(Material* mat, bool addToMesh = false);
 	string GetName();
 	void AddChildEntity(Entity* child);
 	void AddAutoBoxCollider();

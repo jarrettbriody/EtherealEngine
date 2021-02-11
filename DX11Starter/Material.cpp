@@ -42,6 +42,7 @@ ID3D11SamplerState * Material::GetSamplerState()
 
 void Material::Prepare()
 {
+	/*
 	static SimpleVertexShader* lastVertShader = nullptr;
 	static SimplePixelShader* lastPixelShader = nullptr;
 	// Set the vertex and pixel shaders to use for the next Draw() command
@@ -56,6 +57,9 @@ void Material::Prepare()
 		pixelShader->SetShader();
 		lastPixelShader = pixelShader;
 	}
+	*/
+	vertexShader->SetShader();
+	pixelShader->SetShader();
 
 	pixelShader->SetSamplerState("BasicSampler", samplerState);
 	pixelShader->SetShaderResourceView("DiffuseTexture", materialData.DiffuseTextureMapSRV);

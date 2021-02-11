@@ -77,7 +77,8 @@ Mesh::Mesh(string meshN, char * objFile, ID3D11Device* device, bool* success)
 			else if (isGroup && line != "g default") {
 				materialNameList->push_back(matName);
 				groupName = line.substr(2);
-				childrenVec->push_back(new Mesh(&verts[0], vertCounter, &indices[0], vertCounter, device, groupName, matName));
+				Mesh* newChild = new Mesh(&verts[0], vertCounter, &indices[0], vertCounter, device, groupName, matName);
+				childrenVec->push_back(newChild);
 				childCount++;
 				//reset everything
 				matName = "";
@@ -228,21 +229,15 @@ Mesh::Mesh(string meshN, char * objFile, ID3D11Device* device, bool* success)
 
 	obj.close();
 
-	if (isGroup && groupName != "" && matName != "" && childCount > 0) {
+	if (isGroup && groupName != "" && matName != "" && childCount > 0 && groupName != "default") {
 		materialNameList->push_back(matName);
-		childrenVec->push_back(new Mesh(&verts[0], vertCounter, &indices[0], vertCounter, device, groupName, matName));
+		Mesh* newChild = new Mesh(&verts[0], vertCounter, &indices[0], vertCounter, device, groupName, matName);
+		childrenVec->push_back(newChild);
 		childCount++;
 	}
 	else if (childCount == 0) {
 		*vertices = positions;
 		CreateBuffers(&verts[0], vertCounter, &indices[0], vertCounter, device);
-	}
-	if (childCount > 0) {
-		children = new Mesh[childCount];
-		for (size_t i = 0; i < childCount; i++)
-		{
-			children[i] = *(*childrenVec)[i];
-		}
 	}
 	if (success != nullptr)
 		*success = true;
@@ -251,22 +246,36 @@ Mesh::Mesh(string meshN, char * objFile, ID3D11Device* device, bool* success)
 
 Mesh::~Mesh()
 {
-	if(vertexBuffer)
-		vertexBuffer->Release();
-	if(indexBuffer)
-		indexBuffer->Release();
-	for (size_t i = 0; i < childCount; i++)
-	{
-		delete (*childrenVec)[i];
-	}
-	if (children != nullptr)
+	if (children != nullptr) {
 		delete[] children;
-
-	delete vertices;
-	delete childrenVec;
-	delete mtlPath;
-	delete materialNameList;
-	delete meshName;
+		children = nullptr;
+	}
+		
+	if (vertices != nullptr) {
+		delete vertices;
+		vertices = nullptr;
+	}
+		
+	if (childrenVec != nullptr) {
+		delete childrenVec;
+		childrenVec = nullptr;
+	}
+		
+	if (mtlPath != nullptr) {
+		delete mtlPath;
+		mtlPath = nullptr;
+	}
+		
+	if (materialNameList != nullptr) {
+		delete materialNameList;
+		materialNameList = nullptr;
+	}
+		
+	if (meshName != nullptr) {
+		delete meshName;
+		meshName = nullptr;
+	}
+		
 }
 
 void Mesh::operator=(const Mesh& m)
@@ -288,11 +297,11 @@ void Mesh::operator=(const Mesh& m)
 	childCount = m.childCount;
 	children = nullptr;
 
-	if (childCount > 0) {
-		children = new Mesh[childCount];
+	if (m.children != nullptr && childCount > 0) {
+		children = new Mesh*[childCount];
 		for (size_t i = 0; i < childCount; i++)
 		{
-			children[i] = *(*childrenVec)[i];
+			children[i] = m.children[i];
 		}
 	}
 	
@@ -426,16 +435,21 @@ vector<string> Mesh::GetMaterialNameList()
 	return *materialNameList;
 }
 
-string Mesh::GetFirstMaterialName()
+string Mesh::GetMaterialName(unsigned int index)
 {
 	if (materialNameList->size() > 0)
-		return (*materialNameList)[0];
+		return (*materialNameList)[index];
 	else return "There are no materials assigned to this mesh.";
 }
 
-void Mesh::AddMaterialName(string nm)
+unsigned int Mesh::AddMaterialName(string nm)
 {
+	for (size_t i = 0; i < materialNameList->size(); i++)
+	{
+		if ((*materialNameList)[i] == nm) return i;
+	}
 	materialNameList->push_back(nm);
+	return materialNameList->size() - 1;
 }
 
 bool Mesh::HasChildren()
@@ -443,7 +457,7 @@ bool Mesh::HasChildren()
 	return childCount != 0;
 }
 
-Mesh* Mesh::GetChildren()
+Mesh** Mesh::GetChildren()
 {
 	return children;
 }
@@ -475,9 +489,49 @@ vector<DirectX::XMFLOAT3> Mesh::GetVertices()
 
 void Mesh::FreeMemory()
 {
+	if (children != nullptr) {
+		for (size_t i = 0; i < childCount; i++)
+		{
+			(children[i])->FreeMemory();
+		}
+		delete[] children;
+	}
+
+	if (vertexBuffer)
+		vertexBuffer->Release();
+	if (indexBuffer)
+		indexBuffer->Release();
+
 	delete vertices;
 	delete childrenVec;
 	delete mtlPath;
 	delete materialNameList;
 	delete meshName;
+}
+
+void Mesh::ReleaseBuffers()
+{
+	if (vertexBuffer)
+		vertexBuffer->Release();
+	if (indexBuffer)
+		indexBuffer->Release();
+}
+
+void Mesh::AllocateChildren()
+{
+	if (childCount > 0) {
+		MemoryAllocator* mem = MemoryAllocator::GetInstance();
+		children = new Mesh * [childCount];
+		bool success = false;
+		for (size_t i = 0; i < childCount; i++)
+		{
+			children[i] = (Mesh*)mem->AllocateToPool(Utility::MESH_POOL, sizeof(Mesh), success);
+			if (success) {
+				*(children[i]) = *(*childrenVec)[i];
+				delete (*childrenVec)[i];
+			}
+		}
+		//delete childrenVec;
+		//childrenVec = nullptr;
+	}
 }

@@ -21,6 +21,7 @@
 using namespace std;
 
 //#define BT_EULER_DEFAULT_ZYX = true;
+#define _ITERATOR_DEBUG_LEVEL 0
 
 class Game 
 	: public DXCore

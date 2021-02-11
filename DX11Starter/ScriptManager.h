@@ -2,18 +2,6 @@
 #include "Renderer.h"
 #include "SceneLoader.h"
 
-struct EntityCreationParameters {
-	string entityName = "";
-	string meshName = "";
-	string materialName = "";
-	XMFLOAT3 position = ZERO_VECTOR3;
-	XMFLOAT3 rotationRadians = ZERO_VECTOR3;
-	XMFLOAT3 scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
-	bool initRigidBody = true;
-	bool drawEntity = true;
-	bool drawShadow = true;
-};
-
 class ScriptManager
 {
 public:
@@ -21,8 +9,8 @@ public:
 	static map<string, vector<ScriptManager*>> scriptFunctionsMap;
 	static map<string, Entity*>* sceneEntitiesMap;
 	static vector<Entity*>* sceneEntities;
-	static Renderer* renderer;
-	static SceneLoader* sceneLoader;
+	static Renderer* EERenderer;
+	static SceneLoader* EESceneLoader;
 
 	bool destroyed = false;
 

@@ -20,6 +20,8 @@ struct RenderObject{
 class Renderer
 {
 private:
+	static Renderer* instance;
+
 	ID3D11Device* device;
 	ID3D11DeviceContext* context;
 	IDXGISwapChain* swapChain;
@@ -54,31 +56,38 @@ private:
 	SimplePixelShader* debugLinePS = nullptr;
 	DirectX::XMFLOAT4X4 shadowViewMatrix;
 	DirectX::XMFLOAT4X4 shadowProjectionMatrix;
-public:
-	Renderer(ID3D11Device* device, ID3D11DeviceContext*	context, IDXGISwapChain* swapChain, ID3D11RenderTargetView* backBufferRTV, ID3D11DepthStencilView* depthStencilView, unsigned int viewPortWidth, unsigned int viewPortHeight);
+
+	Renderer(IDXGISwapChain* swapChain, ID3D11RenderTargetView* backBufferRTV, ID3D11DepthStencilView* depthStencilView, unsigned int viewPortWidth, unsigned int viewPortHeight);
 	~Renderer();
-	void InitShadows();
+public:
+	static bool SetupInstance(IDXGISwapChain* swapChain, ID3D11RenderTargetView* backBufferRTV, ID3D11DepthStencilView* depthStencilView, unsigned int viewPortWidth, unsigned int viewPortHeight);
+	static Renderer* GetInstance();
+	static bool DestroyInstance();
+
 	void SetEntities(vector<Entity*>* entities);
 	void SetShadowVertexShader(SimpleVertexShader* shadowVS);
 	void SetDebugLineVertexShader(SimpleVertexShader* debugLineVS);
 	void SetDebugLinePixelShader(SimplePixelShader* debugLinePS);
+
+	void InitShadows();
+	void ToggleShadows(bool toggle);
+	void SetShadowMapResolution(unsigned int res);
+
 	void ClearFrame();
 	void RenderFrame();
 	void PresentFrame();
 	void RenderDebugLines();
+	void RenderShadowMap();
+
 	bool AddCamera(string name, Camera* newCamera);
 	bool RemoveCamera(string name);
 	Camera* GetCamera(string name);
 	bool EnableCamera(string name);
+
 	bool AddLight(std::string name, Light* newLight);
 	bool RemoveLight(std::string name);
 	void SendAllLightsToShader(SimplePixelShader* pixelShader);
 	Light* GetLight(string name);
-	void ToggleShadows(bool toggle);
-	void SetShadowMapResolution(unsigned int res);
-	void RenderShadowMap();
-	ID3D11Device* GetDevice();
-	ID3D11DeviceContext* GetContext();
+
 	void AddRenderObject(Entity* e, Mesh* mesh, Material* mat = nullptr);
 };
-

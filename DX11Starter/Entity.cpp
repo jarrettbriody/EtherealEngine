@@ -112,6 +112,7 @@ void Entity::operator=(const Entity& e)
 	collisionsEnabled = e.collisionsEnabled;
 	colliderDebugLinesEnabled = e.colliderDebugLinesEnabled;
 	isEmptyObj = e.isEmptyObj;
+	meshMaterialIndex = e.meshMaterialIndex;
 }
 
 void Entity::InitRigidBody(btDiscreteDynamicsWorld* dw)
@@ -151,6 +152,9 @@ void Entity::InitRigidBody(btDiscreteDynamicsWorld* dw)
 	rBody->setAnisotropicFriction(btVector3(2.0f, 0.0f, 0.0f));
 
 	//rBody->setCollisionFlags(btCollisionObject::CF_KINEMATIC_OBJECT);
+
+	// Have the rigid body register a pointer to the entity it belongs to so we can access it
+	rBody->setUserPointer((void*)(this));
 
 	dynamicsWorld->addRigidBody(rBody);
 }
@@ -312,36 +316,36 @@ void Entity::Move(float x, float y, float z)
 	CalcWorldMatrix();
 }
 
-ID3D11Buffer * Entity::GetMeshVertexBuffer(int i)
+ID3D11Buffer * Entity::GetMeshVertexBuffer(int childIndex)
 {
-	if(i == -1)
+	if(childIndex == -1)
 		return mesh->GetVertexBuffer();
 	else
-		return mesh->GetChildren()[i].GetVertexBuffer();
+		return mesh->GetChildren()[childIndex]->GetVertexBuffer();
 }
 
-ID3D11Buffer * Entity::GetMeshIndexBuffer(int i)
+ID3D11Buffer * Entity::GetMeshIndexBuffer(int childIndex)
 {
-	if (i == -1)
+	if (childIndex == -1)
 		return mesh->GetIndexBuffer();
 	else
-		return mesh->GetChildren()[i].GetIndexBuffer();
+		return mesh->GetChildren()[childIndex]->GetIndexBuffer();
 }
 
-int Entity::GetMeshIndexCount(int i)
+int Entity::GetMeshIndexCount(int childIndex)
 {
-	if (i == -1)
+	if (childIndex == -1)
 		return mesh->GetIndexCount();
 	else
-		return mesh->GetChildren()[i].GetIndexCount();
+		return mesh->GetChildren()[childIndex]->GetIndexCount();
 }
 
-string Entity::GetMeshMaterialName(int i)
+string Entity::GetMeshMaterialName(int childIndex)
 {
-	if (i == -1)
-		return mesh->GetFirstMaterialName();
+	if (childIndex == -1)
+		return mesh->GetMaterialName(meshMaterialIndex);
 	else
-		return mesh->GetChildren()[i].GetFirstMaterialName();
+		return mesh->GetChildren()[childIndex]->GetMaterialName();
 }
 
 //Calculate after every transformation
@@ -423,15 +427,14 @@ vector<string> Entity::GetMaterialNameList()
 	return mesh->GetMaterialNameList();
 }
 
-void Entity::AddMaterialNameToMesh(string nm)
-{
-	mesh->AddMaterialName(nm);
-}
-
-void Entity::AddMaterial(Material * mat)
+void Entity::AddMaterial(Material * mat, bool addToMesh)
 {
 	//if (materialMap->size() == 0) materialMap = map<string, Material*>();
-	materialMap->insert({ mat->GetName(),mat });
+	string nm = mat->GetName();
+	if (materialMap->count(nm)) return;
+	materialMap->insert({ nm, mat });
+	if(addToMesh)
+		meshMaterialIndex = mesh->AddMaterialName(nm);
 }
 
 string Entity::GetName()
@@ -448,10 +451,10 @@ void Entity::AddChildEntity(Entity* child)
 void Entity::AddAutoBoxCollider()
 {
 	if (mesh->HasChildren()) {
-		Mesh* children = mesh->GetChildren();
+		Mesh** children = mesh->GetChildren();
 		for (size_t i = 0; i < mesh->GetChildCount(); i++)
 		{
-			colliders->push_back(new Collider(children[i].GetVertices()));
+			colliders->push_back(new Collider(children[i]->GetVertices()));
 		}
 	}
 	else {

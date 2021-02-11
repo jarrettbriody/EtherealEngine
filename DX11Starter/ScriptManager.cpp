@@ -4,8 +4,8 @@ vector<ScriptManager*> ScriptManager::scriptFunctions;
 map<string, vector<ScriptManager*>> ScriptManager::scriptFunctionsMap;
 map<string, Entity*>* ScriptManager::sceneEntitiesMap; 
 vector<Entity*>* ScriptManager::sceneEntities;
-Renderer* ScriptManager::renderer;
-SceneLoader* ScriptManager::sceneLoader;
+Renderer* ScriptManager::EERenderer;
+SceneLoader* ScriptManager::EESceneLoader;
 
 void ScriptManager::CallInit()
 {
@@ -67,51 +67,5 @@ ScriptManager::~ScriptManager()
 
 void ScriptManager::CreateEntity(EntityCreationParameters& para)
 {
-	Entity* e;
-	Mesh* mesh;
-	Material* mat;
-	if (para.entityName == "") return;
-	if (para.meshName != "") {
-		if (sceneLoader->generatedMeshesMap.count(para.meshName)) {
-			mesh = sceneLoader->generatedMeshesMap[para.meshName];
-			e = new Entity(para.entityName, mesh);
-		}
-		else if (sceneLoader->defaultMeshesMap.count(para.meshName)) {
-			mesh = sceneLoader->defaultMeshesMap[para.meshName];
-			e = new Entity(para.entityName, mesh);
-		}
-		else return;
-
-		if (para.materialName != "") {
-			if (sceneLoader->generatedMaterialsMap.count(para.materialName)) {
-				mat = sceneLoader->generatedMaterialsMap[para.materialName];
-				e->AddMaterial(mat);
-			}
-			else if (sceneLoader->defaultMaterialsMap.count(para.materialName)) {
-				mat = sceneLoader->defaultMaterialsMap[para.materialName];
-				e->AddMaterial(mat);
-			}
-			else {
-				para.materialName = "DEFAULT";
-				mat = sceneLoader->defaultMaterialsMap["DEFAULT"];
-				e->AddMaterial(mat);
-			}
-
-			e->AddMaterialNameToMesh(para.materialName);
-		}
-	}
-	else {
-		e = new Entity(para.entityName);
-	}
-	e->SetPosition(para.position);
-	e->SetRotation(para.rotationRadians);
-	e->SetScale(para.scale);
-	if(para.initRigidBody)
-		e->InitRigidBody(sceneLoader->dynamicsWorld);
-	sceneLoader->sceneEntitiesMap.insert({ para.entityName, e });
-	sceneLoader->sceneEntities.push_back(e);
-	if (para.drawEntity)
-		renderer->AddRenderObject(e, mesh, mat);
-	if (para.drawShadow)
-		e->ToggleShadows(true);
+	EESceneLoader->CreateEntity(para);
 }
