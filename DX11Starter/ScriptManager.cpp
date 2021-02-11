@@ -107,7 +107,7 @@ void ScriptManager::CreateEntity(EntityCreationParameters& para)
 	e->SetRotation(para.rotationRadians);
 	e->SetScale(para.scale);
 	if(para.initRigidBody)
-		e->InitRigidBody(sceneLoader->dynamicsWorld);
+		e->InitRigidBody(sceneLoader->dynamicsWorld, para.entityMass);
 	sceneLoader->sceneEntitiesMap.insert({ para.entityName, e });
 	sceneLoader->sceneEntities.push_back(e);
 	if (para.drawEntity)

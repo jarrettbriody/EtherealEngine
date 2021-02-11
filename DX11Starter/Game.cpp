@@ -314,7 +314,7 @@ void Game::Init()
 
 	Entity* fpsController = new Entity("FPSController");
 	fpsController->SetPosition(0.0f, 10.0f, -10.0f);
-	fpsController->InitRigidBody(dynamicsWorld);
+	fpsController->InitRigidBody(dynamicsWorld, 0.0f);
 	EESceneLoader->AddEntity(fpsController);
 	ScriptManager* playerScript = new FPSController();
 	playerScript->Setup("FPSController", EESceneLoader->sceneEntitiesMap["FPSController"]);
@@ -521,14 +521,17 @@ void Game::OnMouseDown(WPARAM buttonState, int x, int y)
 	prevMousePos.x = x;
 	prevMousePos.y = y;
 
-for (size_t i = 0; i < ScriptManager::scriptFunctions.size(); i++)
+
+	for (size_t i = 0; i < ScriptManager::scriptFunctions.size(); i++)
 	{
 		ScriptManager* sf = ScriptManager::scriptFunctions[i];
 		if (!sf->inputEnabled) continue;
 		sf->CallOnMouseDown(buttonState, x, y);
 	}
 
-	printf("Mouse Pos: %d, %d\n", x, y);
+	
+
+	// printf("Mouse Pos: %d, %d\n", x, y);
 
 	// Create debug line
 	DebugLines* dl = new DebugLines("TestRay", 0, false);
@@ -548,7 +551,7 @@ for (size_t i = 0; i < ScriptManager::scriptFunctions.size(); i++)
 	// Get the unprojected vector of the mouse click position in world space
 	XMVECTOR unprojVec = XMVector3Unproject(XMVectorSet(x, y, 1.0f, 1.0f), 0, 0, 1600, 900, 0.0f, 1.0f, proj, view, world);
 	XMFLOAT3 end = XMFLOAT3(XMVectorGetX(unprojVec), XMVectorGetY(unprojVec), XMVectorGetZ(unprojVec));
-	printf("Projected values|- X: %f, Y: %f, Z: %f\n", end.x, end.y, end.z);
+	//printf("Projected values|- X: %f, Y: %f, Z: %f\n", end.x, end.y, end.z);
 
 	// Draw the debug line to show the raycast
 	XMFLOAT3 start = EECamera->position;
@@ -582,8 +585,8 @@ for (size_t i = 0; i < ScriptManager::scriptFunctions.size(); i++)
 		if (closestResult.hasHit())
 		{
 			// Get the entity associated with the rigid body we hit
-			Entity* hit = (Entity *)(closestResult.m_collisionObject->getUserPointer());
-			printf("Hit: %s\n", hit->GetName().c_str());
+			Entity* hit = (Entity*)(closestResult.m_collisionObject->getUserPointer());
+			//printf("Hit: %s\n", hit->GetName().c_str());
 			btRigidBody* rigidBody = hit->GetRBody();
 
 			// In order to update the values associated with the rigid body we need to remove it from the dynamics world first
@@ -593,7 +596,7 @@ for (size_t i = 0; i < ScriptManager::scriptFunctions.size(); i++)
 			rigidBody->getCollisionShape()->calculateLocalInertia(mass, inertia);
 			rigidBody->setActivationState(DISABLE_DEACTIVATION);
 			rigidBody->setMassProps(mass, inertia);
-			
+
 			// Useful functions for updating an object in motion, but not really needed here
 			/*rigidBody->setLinearFactor(btVector3(1, 1, 1));
 			rigidBody->setAngularFactor(btVector3(1, 1, 1));
@@ -608,11 +611,10 @@ for (size_t i = 0; i < ScriptManager::scriptFunctions.size(); i++)
 			transform.setOrigin(btVector3(x, y, z));
 			rigidBody->getCollisionShape()->setLocalScaling(btVector3(1, 1, 1));
 			rigidBody->setWorldTransform(transform);*/
-			
-			dynamicsWorld->addRigidBody(rigidBody); // Add the rigid body back into bullet
+
+			dynamicsWorld->addRigidBody(rigidBody); // Add the rigid body back into bullet		
 		}
 	}
-
 	
 	SetCapture(hWnd);
 }

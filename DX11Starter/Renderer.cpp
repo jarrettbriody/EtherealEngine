@@ -139,7 +139,7 @@ void Renderer::RenderFrame()
 	UINT stride = sizeof(Vertex);
 	UINT offset = 0;
 
-	for (size_t i = renderObjectCount - 1; i > 0; i--)
+	for (int i = renderObjectCount - 1; i >= 0; i--)
 	{
 		RenderObject renderObject = renderObjects[i];
 		Entity* e = renderObject.entity;
@@ -454,7 +454,7 @@ void Renderer::RenderShadowMap()
 		}
 	}
 	*/
-	for (size_t i = renderObjectCount - 1; i > 0; i--)
+	for (int i = renderObjectCount - 1; i >= 0; i--)
 	{
 		RenderObject renderObject = renderObjects[i];
 		Entity* e = renderObject.entity;
