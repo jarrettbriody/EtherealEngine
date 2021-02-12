@@ -9,7 +9,6 @@ void FPSController::Init()
 	
 	playerRBody = entity->GetRBody(); // Get the bullet rigidbody
 	playerRBody->activate();
-	playerRBody->setGravity(btVector3(0.0f, 0.0f, 0.0f));
 	// playerRBody->setUserPointer("Player");
 
 	// TODO: Remove from physics world to change mass -- m_PhysicsWorld->removeRigidBody( bt->body() );
@@ -38,7 +37,7 @@ void FPSController::Update()
 	playerRBody->getMotionState()->getWorldTransform(playerTransform);
 	btVector3 playerTransformPos = playerTransform.getOrigin();
 
-	cam->SetPosition(XMFLOAT3(playerTransformPos.getX(), playerTransformPos.getY() + 5.0f /*Offset for head height*/, playerTransformPos.getZ()));
+	cam->SetPosition(XMFLOAT3(playerTransformPos.getX(), playerTransformPos.getY() /*Offset for head height*/, playerTransformPos.getZ()));
 }
 
 void FPSController::Move()

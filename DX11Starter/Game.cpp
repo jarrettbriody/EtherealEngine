@@ -311,12 +311,14 @@ void Game::Init()
 	barrel = new TestScript();
 	barrel->Setup("barrel_1", EESceneLoader->sceneEntitiesMap["barrel_1"]);
 
+	// FPS CONTROLLER
 
 	Entity* fpsController = new Entity("FPSController");
-	fpsController->SetPosition(0.0f, 10.0f, -10.0f);
-	fpsController->InitRigidBody(dynamicsWorld, 0.0f);
+	fpsController->SetPosition(EECamera->position);
+	fpsController->InitRigidBody(dynamicsWorld, 1.0f);
 	EESceneLoader->AddEntity(fpsController);
-	ScriptManager* playerScript = new FPSController();
+	
+	playerScript = new FPSController();
 	playerScript->Setup("FPSController", EESceneLoader->sceneEntitiesMap["FPSController"]);
 
 	for (size_t i = 0; i < ScriptManager::scriptFunctions.size(); i++)
@@ -383,29 +385,35 @@ void Game::Update(float deltaTime, float totalTime)
 
 void Game::PhysicsStep(float deltaTime)
 {
-	btTransform transform;
+	// btTransform transform;
 	for (int i = 0; i < dynamicsWorld->getNumCollisionObjects(); i++)
 	{
 		btCollisionObject* obj = dynamicsWorld->getCollisionObjectArray()[i];
 		btRigidBody* body = btRigidBody::upcast(obj);
 
-		transform = body->getWorldTransform();
+		btTransform transform = body->getWorldTransform();
 		Entity* entity = (Entity*)body->getUserPointer();
 		XMFLOAT3 pos = entity->GetPosition();
 		XMFLOAT4 rot = entity->GetRotationQuaternion();
-		transform.setOrigin(btVector3(pos.x, pos.y, pos.z));
+		
+		btVector3 transformPos = btVector3(pos.x, pos.y, pos.z);
+		transform.setOrigin(transformPos);
 
 		btQuaternion res = btQuaternion(rot.x, rot.y, rot.z, rot.w);
 		transform.setRotation(res);
+		
+		body->setCenterOfMassTransform(transform);
 
-		body->getMotionState()->setWorldTransform(transform);
+		// body->getMotionState()->setWorldTransform(transform);
 
 		dynamicsWorld->stepSimulation(deltaTime * 0.5f);
 
-		body->getMotionState()->getWorldTransform(transform);
+		// body->getMotionState()->getWorldTransform(transform);
+
+		transform = body->getCenterOfMassTransform();
 
 		btQuaternion q = transform.getRotation();
-		entity->SetPosition(transform.getOrigin().getX(), transform.getOrigin().getY(), transform.getOrigin().getZ());
+		entity->SetPosition(body->getCenterOfMassPosition().getX(), body->getCenterOfMassPosition().getY(), body->getCenterOfMassPosition().getZ());
 		entity->SetRotation(XMFLOAT4(q.getX(), q.getY(), q.getZ(), q.getW()));
 		entity->CalcWorldMatrix();
 	}

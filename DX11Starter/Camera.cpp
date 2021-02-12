@@ -113,9 +113,8 @@ void Camera::Update()
 	XMStoreFloat4x4(&viewMatrix, XMMatrixTranspose(view));
 	XMStoreFloat3(&direction, newDir);
 
-	/*
+	
 	cout << "Pos: (" << position.x << ", " << position.y << ", " << position.z << ")" << endl;
 	cout << "Dir: (" << direction.x << ", " << direction.y << ", " << direction.z << ")" << endl;
 	cout << "Rot: (" << xRotation << ", " << yRotation << ")" << endl << endl;
-	*/
 }
