@@ -314,19 +314,25 @@ void Game::Init()
 	// FPS CONTROLLER
 	Entity* fpsController = new Entity("FPSController");
 	fpsController->SetPosition(XMFLOAT3(0, 5, 5));
+	fpsController->SetScale(5.0f, 10.0f, 5.0f);
 	fpsController->InitRigidBody(dynamicsWorld, 1.0f);
 	// EESceneLoader->AddEntity(fpsController);
 	EESceneLoader->sceneEntitiesMap.insert({ "FPSController", fpsController });
 	EESceneLoader->sceneEntities.push_back(fpsController);
 
-	Entity* camera = new Entity("Camera");
-	camera->SetPosition(XMFLOAT3(0, 7, 5));
-	camera->InitRigidBody(dynamicsWorld, 0.0f);
-	// EESceneLoader->AddEntity(camera);
-	EESceneLoader->sceneEntitiesMap.insert({ "Camera", camera });
-	EESceneLoader->sceneEntities.push_back(camera);
+	/*EESceneLoader->sceneEntitiesMap["FPSController"]->collisionsEnabled = true;
+	EESceneLoader->sceneEntitiesMap["FPSController"]->colliderDebugLinesEnabled = true;
+	EESceneLoader->sceneEntitiesMap["FPSController"]->CheckSATCollisionAndCorrect();
+	EESceneLoader->sceneEntitiesMap["FPSController"]->isCollisionStatic = false;*/
 
-	fpsController->AddChildEntity(camera);
+	//Entity* camera = new Entity("Camera");
+	//camera->SetPosition(XMFLOAT3(0, 7, 5));
+	//camera->InitRigidBody(dynamicsWorld, 0.0f);
+	//// EESceneLoader->AddEntity(camera);
+	//EESceneLoader->sceneEntitiesMap.insert({ "Camera", camera });
+	//EESceneLoader->sceneEntities.push_back(camera);
+
+	//fpsController->AddChildEntity(camera);
 
 	playerScript = new FPSController();
 	playerScript->Setup("FPSController", EESceneLoader->sceneEntitiesMap["FPSController"]);
@@ -377,6 +383,8 @@ void Game::Update(float deltaTime, float totalTime)
 		}
 	}
 
+	PhysicsStep(deltaTime);
+	
 	for (size_t i = 0; i < ScriptManager::scriptFunctions.size(); i++)
 	{
 		ScriptManager* sf = ScriptManager::scriptFunctions[i];
@@ -384,7 +392,6 @@ void Game::Update(float deltaTime, float totalTime)
 	}
 
 	AudioStep();
-	PhysicsStep(deltaTime);
 
 	/*if (!GetAsyncKeyState(VK_CONTROL))
 	{
@@ -416,6 +423,7 @@ void Game::PhysicsStep(float deltaTime)
 
 		// body->getMotionState()->setWorldTransform(transform);
 
+		dynamicsWorld->applyGravity();
 		dynamicsWorld->stepSimulation(deltaTime * 0.5f);
 
 		// body->getMotionState()->getWorldTransform(transform);

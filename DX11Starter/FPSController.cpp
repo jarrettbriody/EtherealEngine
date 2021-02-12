@@ -22,42 +22,37 @@ void FPSController::Update()
 
 	Move();
 
+	// cout << entity->GetPosition().y << endl;
 	// update camera pos from player physics transform
-	btVector3 childCameraTransformPos = eMap->find("Camera")->second->GetRBody()->getCenterOfMassPosition(); //find the camera which is the child entity of fps controller  // playerRBody->getCenterOfMassPosition();
-	cout << childCameraTransformPos.getY() << endl;
-	cam->SetPosition(XMFLOAT3(childCameraTransformPos.getX(), childCameraTransformPos.getY(), childCameraTransformPos.getZ()));
+	// btVector3 childCameraTransformPos = eMap->find("Camera")->second->GetRBody()->getCenterOfMassPosition(); //find the camera which is the child entity of fps controller  // playerRBody->getCenterOfMassPosition();
+	// cout << childCameraTransformPos.getY() << endl;
+	// cam->SetPosition(XMFLOAT3(childCameraTransformPos.getX(), childCameraTransformPos.getY(), childCameraTransformPos.getZ()));
+	cam->SetPosition(XMFLOAT3(entity->GetPosition().x, entity->GetPosition().y, entity->GetPosition().z));
 }
 
 void FPSController::Move()
 {
-
-	btVector3 linearVelocity;
-	btVector3 moveVec;
-
+	playerRBody->activate();
 	if (GetAsyncKeyState('W') & 0x8000) {
-		linearVelocity = btVector3(0.0f, playerRBody->getLinearVelocity().getY(), 0.0f);
-		moveVec = btVector3(0.0f, 0.0f, 100.0f);
+		playerRBody->setLinearVelocity(btVector3(0.0f, playerRBody->getLinearVelocity().getY(), 0.0f));
+		playerRBody->applyCentralImpulse(btVector3(0.0f, 0.0f, 50.0f));
 	}
 	if (GetAsyncKeyState('S') & 0x8000) {
-		linearVelocity = btVector3(0.0f, playerRBody->getLinearVelocity().getY(), 0.0f);
-		moveVec = btVector3(0.0f, 0.0f, -100.0f);
+		playerRBody->setLinearVelocity(btVector3(0.0f, playerRBody->getLinearVelocity().getY(), 0.0f));
+		playerRBody->applyCentralImpulse(btVector3(0.0f, 0.0f, -50.0f));
 	}
 	if (GetAsyncKeyState('A') & 0x8000) {
-		linearVelocity = btVector3(0.0f, playerRBody->getLinearVelocity().getY(), 0.0f);
-		moveVec = btVector3(-100.0f, 0.0f, 0.0f);
+		playerRBody->setLinearVelocity(btVector3(0.0f, playerRBody->getLinearVelocity().getY(), 0.0f));
+		playerRBody->applyCentralImpulse(btVector3(-50.0f, 0.0f, 0.0f));
 	}
 	if (GetAsyncKeyState('D') & 0x8000) {
-		linearVelocity = btVector3(0.0f, playerRBody->getLinearVelocity().getY(), 0.0f);
-		moveVec = btVector3(100.0f, 0.0f, 0.0f);
+		playerRBody->setLinearVelocity(btVector3(0.0f, playerRBody->getLinearVelocity().getY(), 0.0f));
+		playerRBody->applyCentralImpulse(btVector3(50.0f, 0.0f, 0.0f));
 	}
 	if (GetAsyncKeyState(VK_SPACE) & 0x8000) {
-		linearVelocity = btVector3(playerRBody->getLinearVelocity().getX(), 0.0f, playerRBody->getLinearVelocity().getZ());
-		moveVec = btVector3(0.0f, 15.0f, 0.0f);
+		playerRBody->setLinearVelocity(btVector3(0.0f, playerRBody->getLinearVelocity().getY(), 0.0f));
+		playerRBody->applyCentralImpulse(btVector3(0.0f, 10.0f, 0.0f));
 	}
-
-	playerRBody->activate();
-	playerRBody->setLinearVelocity(linearVelocity);
-	playerRBody->applyCentralForce(moveVec);
 }
 
 void FPSController::OnMouseMove(WPARAM buttonState, int x, int y)

@@ -8,7 +8,8 @@ Entity::Entity(string entityName)
 	scale = DirectX::XMFLOAT3(1.0f, 1.0f, 1.0f);
 	rotation = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
 	rotationInDegrees = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
-	quaternion = DirectX::XMFLOAT4(0.0f, 0.0f, 0.0f, 0.0f);
+	XMVECTOR quat = XMQuaternionRotationRollPitchYaw(rotation.x, rotation.y, rotation.z);
+	XMStoreFloat4(&quaternion, quat);
 	repeatTex = XMFLOAT2(1.0f, 1.0f);
 	DirectX::XMMATRIX W = DirectX::XMMatrixIdentity();
 	DirectX::XMStoreFloat4x4(&worldMatrix, XMMatrixTranspose(W));
@@ -23,7 +24,8 @@ Entity::Entity(string entityName, Mesh* entityMesh, Material* mat)
 	scale = DirectX::XMFLOAT3(1.0f, 1.0f, 1.0f);
 	rotation = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
 	rotationInDegrees = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
-	quaternion = DirectX::XMFLOAT4(0.0f, 0.0f, 0.0f, 0.0f);
+	XMVECTOR quat = XMQuaternionRotationRollPitchYaw(rotation.x, rotation.y, rotation.z);
+	XMStoreFloat4(&quaternion, quat);
 	repeatTex = XMFLOAT2(1.0f, 1.0f);
 	DirectX::XMMATRIX W = DirectX::XMMatrixIdentity();
 	DirectX::XMStoreFloat4x4(&worldMatrix, XMMatrixTranspose(W));
