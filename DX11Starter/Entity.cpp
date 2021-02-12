@@ -77,6 +77,9 @@ void Entity::InitRigidBody(btDiscreteDynamicsWorld* dw, float entityMass)
 	btRigidBody::btRigidBodyConstructionInfo rbInfo(mass, myMotionState, collShape, localInertia);
 	this->rBody = new btRigidBody(rbInfo);
 
+	/*rBody->setActivationState(DISABLE_DEACTIVATION);
+	rBody->setMassProps(mass, localInertia);*/
+
 	//rBody->setLinearFactor(btVector3(1, 1, 0));
 	//rBody->setAngularFactor(btVector3(0, 1, 1));
 

@@ -312,12 +312,22 @@ void Game::Init()
 	barrel->Setup("barrel_1", EESceneLoader->sceneEntitiesMap["barrel_1"]);
 
 	// FPS CONTROLLER
-
 	Entity* fpsController = new Entity("FPSController");
-	fpsController->SetPosition(EECamera->position);
+	fpsController->SetPosition(XMFLOAT3(0, 5, 5));
 	fpsController->InitRigidBody(dynamicsWorld, 1.0f);
-	EESceneLoader->AddEntity(fpsController);
-	
+	// EESceneLoader->AddEntity(fpsController);
+	EESceneLoader->sceneEntitiesMap.insert({ "FPSController", fpsController });
+	EESceneLoader->sceneEntities.push_back(fpsController);
+
+	Entity* camera = new Entity("Camera");
+	camera->SetPosition(XMFLOAT3(0, 7, 5));
+	camera->InitRigidBody(dynamicsWorld, 0.0f);
+	// EESceneLoader->AddEntity(camera);
+	EESceneLoader->sceneEntitiesMap.insert({ "Camera", camera });
+	EESceneLoader->sceneEntities.push_back(camera);
+
+	fpsController->AddChildEntity(camera);
+
 	playerScript = new FPSController();
 	playerScript->Setup("FPSController", EESceneLoader->sceneEntitiesMap["FPSController"]);
 
