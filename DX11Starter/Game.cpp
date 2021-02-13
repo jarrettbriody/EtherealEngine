@@ -424,7 +424,7 @@ void Game::PhysicsStep(float deltaTime)
 		// body->getMotionState()->setWorldTransform(transform);
 
 		dynamicsWorld->applyGravity();
-		dynamicsWorld->stepSimulation(deltaTime * 0.5f);
+		dynamicsWorld->stepSimulation(deltaTime);
 
 		// body->getMotionState()->getWorldTransform(transform);
 

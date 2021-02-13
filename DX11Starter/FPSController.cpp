@@ -12,46 +12,43 @@ void FPSController::Init()
 
 void FPSController::Update()
 {
-	// TODO: Figure out how much of the following is still needed
-	direction = cam->direction;
-	XMFLOAT3 yAxis = Y_AXIS;
-	XMVECTOR pos = XMLoadFloat3(&position);
-	XMVECTOR dir = XMLoadFloat3(&direction); 
-	dir.m128_f32[1] = 0.0f;
-	XMVECTOR right = XMVector3Cross(dir, XMLoadFloat3(&yAxis));
-
 	Move();
 
-	// cout << entity->GetPosition().y << endl;
-	// update camera pos from player physics transform
-	// btVector3 childCameraTransformPos = eMap->find("Camera")->second->GetRBody()->getCenterOfMassPosition(); //find the camera which is the child entity of fps controller  // playerRBody->getCenterOfMassPosition();
-	// cout << childCameraTransformPos.getY() << endl;
-	// cam->SetPosition(XMFLOAT3(childCameraTransformPos.getX(), childCameraTransformPos.getY(), childCameraTransformPos.getZ()));
 	cam->SetPosition(XMFLOAT3(entity->GetPosition().x, entity->GetPosition().y, entity->GetPosition().z));
 }
 
 void FPSController::Move()
 {
+	// ready the needed information
+	direction = cam->direction;
+	XMFLOAT3 yAxis = Y_AXIS;
+	XMVECTOR pos = XMLoadFloat3(&position);
+	XMVECTOR dir = XMLoadFloat3(&direction);
+	dir.m128_f32[1] = 0.0f;
+	XMVECTOR right = XMVector3Cross(dir, XMLoadFloat3(&yAxis));
+
+	// TODO: Input detection that is only for key press down
+	// apply forces based on input
 	playerRBody->activate();
 	if (GetAsyncKeyState('W') & 0x8000) {
 		playerRBody->setLinearVelocity(btVector3(0.0f, playerRBody->getLinearVelocity().getY(), 0.0f));
-		playerRBody->applyCentralImpulse(btVector3(0.0f, 0.0f, 50.0f));
+		playerRBody->applyCentralImpulse(btVector3(direction.x, 0, direction.z) * 25.0f);
 	}
 	if (GetAsyncKeyState('S') & 0x8000) {
 		playerRBody->setLinearVelocity(btVector3(0.0f, playerRBody->getLinearVelocity().getY(), 0.0f));
-		playerRBody->applyCentralImpulse(btVector3(0.0f, 0.0f, -50.0f));
+		playerRBody->applyCentralImpulse(btVector3(direction.x, 0, direction.z) * -25.0f);
 	}
 	if (GetAsyncKeyState('A') & 0x8000) {
 		playerRBody->setLinearVelocity(btVector3(0.0f, playerRBody->getLinearVelocity().getY(), 0.0f));
-		playerRBody->applyCentralImpulse(btVector3(-50.0f, 0.0f, 0.0f));
+		playerRBody->applyCentralImpulse(btVector3(right.m128_f32[0], 0, right.m128_f32[2]) * 25.0f);
 	}
 	if (GetAsyncKeyState('D') & 0x8000) {
 		playerRBody->setLinearVelocity(btVector3(0.0f, playerRBody->getLinearVelocity().getY(), 0.0f));
-		playerRBody->applyCentralImpulse(btVector3(50.0f, 0.0f, 0.0f));
+		playerRBody->applyCentralImpulse(btVector3(right.m128_f32[0], 0, right.m128_f32[2]) * -25.0f);
 	}
 	if (GetAsyncKeyState(VK_SPACE) & 0x8000) {
 		playerRBody->setLinearVelocity(btVector3(0.0f, playerRBody->getLinearVelocity().getY(), 0.0f));
-		playerRBody->applyCentralImpulse(btVector3(0.0f, 10.0f, 0.0f));
+		playerRBody->applyCentralImpulse(btVector3(0.0f, 2.5f, 0.0f));
 	}
 }
 
