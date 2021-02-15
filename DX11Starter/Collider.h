@@ -36,5 +36,6 @@ public:
 	XMFLOAT3* GetColliderCorners();
 	XMFLOAT3* GetUntransformedColliderCorners();
 	XMFLOAT4X4 GetWorldMatrix();
+	XMFLOAT3 GetSpan();
 };
 

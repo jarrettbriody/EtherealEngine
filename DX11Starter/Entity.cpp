@@ -123,7 +123,16 @@ void Entity::InitRigidBody(btDiscreteDynamicsWorld* dw, float entityMass)
 	mass = entityMass;
 
 	// Physics set-up
-	this->collShape = new btBoxShape(btVector3(btScalar(scale.x / 2.0f), btScalar(scale.y / 2.0f), btScalar(scale.z / 2.0f)));
+	if (colliders->size() > 0) {
+		XMFLOAT3 span = (*colliders)[0]->GetSpan();
+		XMVECTOR spanVec = XMLoadFloat3(&span);
+		spanVec = XMVectorScale(spanVec, 0.5f);
+		XMStoreFloat3(&span, spanVec);
+		this->collShape = new btBoxShape(btVector3(btScalar(span.x), btScalar(span.y), btScalar(span.z)));
+	}
+	else {
+		this->collShape = new btBoxShape(btVector3(btScalar(scale.x), btScalar(scale.y), btScalar(scale.z)));
+	}
 
 	btTransform transform;
 	transform.setIdentity();

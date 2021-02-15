@@ -317,3 +317,8 @@ XMFLOAT4X4 Collider::GetWorldMatrix()
 {
 	return worldMatrix;
 }
+
+XMFLOAT3 Collider::GetSpan() 
+{
+	return span;
+}

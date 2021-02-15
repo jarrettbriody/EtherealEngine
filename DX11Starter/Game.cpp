@@ -58,7 +58,7 @@ void Game::Init()
 {
 	//dont delete this, its for finding mem leaks
 	//_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-	//_CrtSetBreakAlloc(56756);
+	//_CrtSetBreakAlloc(681190);
 	//_CrtSetBreakAlloc(49892);
 
 	// Physics -----------------
@@ -241,26 +241,12 @@ void Game::Init()
 	para = {};
 	para.entityName = "FPSController";
 	para.position = XMFLOAT3(0, 5, 5);
-	para.scale = XMFLOAT3(1.0f, 3.0f, 1.0f);
+	para.scale = XMFLOAT3(3.0f, 8.0f, 3.0f);
 	para.initRigidBody = true;
 	para.entityMass = 1.0f;
 	Entity* fpsController = EESceneLoader->CreateEntity(para);
 
 	Scripts::CreateScript(Scripts::SCRIPT_NAMES::FPSCONTROLLER, fpsController);
-
-	/*EESceneLoader->sceneEntitiesMap["FPSController"]->collisionsEnabled = true;
-	EESceneLoader->sceneEntitiesMap["FPSController"]->colliderDebugLinesEnabled = true;
-	EESceneLoader->sceneEntitiesMap["FPSController"]->CheckSATCollisionAndCorrect();
-	EESceneLoader->sceneEntitiesMap["FPSController"]->isCollisionStatic = false;*/
-
-	//Entity* camera = new Entity("Camera");
-	//camera->SetPosition(XMFLOAT3(0, 7, 5));
-	//camera->InitRigidBody(dynamicsWorld, 0.0f);
-	//// EESceneLoader->AddEntity(camera);
-	//EESceneLoader->sceneEntitiesMap.insert({ "Camera", camera });
-	//EESceneLoader->sceneEntities.push_back(camera);
-
-	//fpsController->AddChildEntity(camera);
 
 	for (size_t i = 0; i < ScriptManager::scriptFunctions.size(); i++)
 	{
@@ -537,6 +523,7 @@ void Game::OnMouseDown(WPARAM buttonState, int x, int y)
 	rayPoints[6] = end;
 	rayPoints[7] = end;
 	dl->GenerateCuboidVertexBuffer(rayPoints, 8);
+	delete[] rayPoints;
 
 	if (Config::DynamicsWorld)
 	{
