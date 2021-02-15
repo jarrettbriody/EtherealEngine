@@ -2,7 +2,7 @@
 
 void FPSController::Init()
 {
-	cam = ScriptManager::renderer->GetCamera("main");
+	cam = ScriptManager::EERenderer->GetCamera("main");
 	direction = cam->direction; 
 
 	// TODO: Easier setting of physics characteristics via Bullet (coll shape, mass, restitution, other properties)

@@ -52,8 +52,6 @@ Game::~Game()
 	}
 
 	MemoryAllocator::DestroyInstance();
-
-	//delete barrel;//(Barrel*)
 }
 
 void Game::Init()
@@ -240,13 +238,15 @@ void Game::Init()
 	Scripts::CreateScript(Scripts::SCRIPT_NAMES::BARREL, EESceneLoader->sceneEntitiesMap["barrel_1"]);
 
 	// FPS CONTROLLER
-	Entity* fpsController = new Entity("FPSController");
-	fpsController->SetPosition(XMFLOAT3(0, 5, 5));
-	fpsController->SetScale(5.0f, 10.0f, 5.0f);
-	fpsController->InitRigidBody(dynamicsWorld, 1.0f);
-	// EESceneLoader->AddEntity(fpsController);
-	EESceneLoader->sceneEntitiesMap.insert({ "FPSController", fpsController });
-	EESceneLoader->sceneEntities.push_back(fpsController);
+	para = {};
+	para.entityName = "FPSController";
+	para.position = XMFLOAT3(0, 5, 5);
+	para.scale = XMFLOAT3(1.0f, 3.0f, 1.0f);
+	para.initRigidBody = true;
+	para.entityMass = 1.0f;
+	Entity* fpsController = EESceneLoader->CreateEntity(para);
+
+	Scripts::CreateScript(Scripts::SCRIPT_NAMES::FPSCONTROLLER, fpsController);
 
 	/*EESceneLoader->sceneEntitiesMap["FPSController"]->collisionsEnabled = true;
 	EESceneLoader->sceneEntitiesMap["FPSController"]->colliderDebugLinesEnabled = true;
@@ -261,9 +261,6 @@ void Game::Init()
 	//EESceneLoader->sceneEntities.push_back(camera);
 
 	//fpsController->AddChildEntity(camera);
-
-	playerScript = new FPSController();
-	playerScript->Setup("FPSController", EESceneLoader->sceneEntitiesMap["FPSController"]);
 
 	for (size_t i = 0; i < ScriptManager::scriptFunctions.size(); i++)
 	{
@@ -541,11 +538,11 @@ void Game::OnMouseDown(WPARAM buttonState, int x, int y)
 	rayPoints[7] = end;
 	dl->GenerateCuboidVertexBuffer(rayPoints, 8);
 
-	if (dynamicsWorld)
+	if (Config::DynamicsWorld)
 	{
 		// Update physics
-		dynamicsWorld->updateAabbs();
-		dynamicsWorld->computeOverlappingPairs();
+		Config::DynamicsWorld->updateAabbs();
+		Config::DynamicsWorld->computeOverlappingPairs();
 
 		// Redefine our vectors using bullet's silly types
 		btVector3 from(start.x, start.y, start.z);
@@ -555,7 +552,7 @@ void Game::OnMouseDown(WPARAM buttonState, int x, int y)
 		btCollisionWorld::ClosestRayResultCallback closestResult(from, to);
 		closestResult.m_flags |= btTriangleRaycastCallback::kF_FilterBackfaces;
 
-		dynamicsWorld->rayTest(from, to, closestResult); // Raycast
+		Config::DynamicsWorld->rayTest(from, to, closestResult); // Raycast
 
 		if (closestResult.hasHit())
 		{
@@ -565,7 +562,7 @@ void Game::OnMouseDown(WPARAM buttonState, int x, int y)
 			btRigidBody* rigidBody = hit->GetRBody();
 
 			// In order to update the values associated with the rigid body we need to remove it from the dynamics world first
-			dynamicsWorld->removeRigidBody(rigidBody);
+			Config::DynamicsWorld->removeRigidBody(rigidBody);
 			btVector3 inertia(0, 0, 0);
 			float mass = 1.0f;
 			rigidBody->getCollisionShape()->calculateLocalInertia(mass, inertia);
@@ -587,7 +584,7 @@ void Game::OnMouseDown(WPARAM buttonState, int x, int y)
 			rigidBody->getCollisionShape()->setLocalScaling(btVector3(1, 1, 1));
 			rigidBody->setWorldTransform(transform);*/
 
-			dynamicsWorld->addRigidBody(rigidBody); // Add the rigid body back into bullet		
+			Config::DynamicsWorld->addRigidBody(rigidBody); // Add the rigid body back into bullet		
 		}
 	}
 	

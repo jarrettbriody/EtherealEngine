@@ -22,6 +22,7 @@ struct EntityCreationParameters {
 	XMFLOAT3 position = ZERO_VECTOR3;
 	XMFLOAT3 rotationRadians = ZERO_VECTOR3;
 	XMFLOAT3 scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
+	float entityMass = 0.0f;
 	bool initRigidBody = true;
 	bool drawEntity = true;
 	bool drawShadow = true;

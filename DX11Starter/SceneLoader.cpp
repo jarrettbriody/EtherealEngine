@@ -648,7 +648,7 @@ void SceneLoader::LoadScene(string sceneName)
 				allocatedEntity->SetRotation(DirectX::XMConvertToRadians(parsedNumbers[3]), DirectX::XMConvertToRadians(parsedNumbers[4]), DirectX::XMConvertToRadians(parsedNumbers[5]));
 				allocatedEntity->SetScale(parsedNumbers[6], parsedNumbers[7], parsedNumbers[8]);
 				allocatedEntity->CalcWorldMatrix();
-				allocatedEntity->InitRigidBody(Config::DynamicsWorld);
+				allocatedEntity->InitRigidBody(Config::DynamicsWorld, 0.0f);
 				if (Config::DebugLinesEnabled && allocatedEntity->colliderDebugLinesEnabled) {
 					vector<Collider*> colliders = allocatedEntity->GetColliders();
 					for (size_t d = 0; d < colliders.size(); d++)
@@ -797,7 +797,7 @@ Entity* SceneLoader::CreateEntity(EntityCreationParameters& para)
 	if (EERenderer != nullptr && para.drawEntity)
 		EERenderer->AddRenderObject(allocatedEntity, mesh, mat);
 	if (para.initRigidBody)
-		allocatedEntity->InitRigidBody(Config::DynamicsWorld);
+		allocatedEntity->InitRigidBody(Config::DynamicsWorld, para.entityMass);
 
 	return allocatedEntity;
 }
