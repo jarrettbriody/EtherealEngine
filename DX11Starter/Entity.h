@@ -35,7 +35,7 @@ private:
 	bool shadowsEnabled = true;
 	ShadowData shadowData;
 
-	float isStatic = 0.0f;
+	float mass;
 
 	btCollisionShape* collShape = nullptr;
 	btRigidBody* rBody = nullptr;
@@ -51,7 +51,7 @@ public:
 	Entity(string entityName, Mesh* entityMesh, Material* mat = nullptr);
 	~Entity();
 	void operator= (const Entity& e);
-	void InitRigidBody(btDiscreteDynamicsWorld* dw);
+	void InitRigidBody(btDiscreteDynamicsWorld* dw, float entityMass);
 	DirectX::XMFLOAT4X4 GetWorldMatrix();
 	DirectX::XMFLOAT3 GetPosition();
 	DirectX::XMFLOAT3 GetScale();

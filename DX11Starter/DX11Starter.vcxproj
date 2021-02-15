@@ -91,6 +91,7 @@
       <AdditionalLibraryDirectories>$(SolutionDir)Libraries\FMOD\lib;$(SolutionDir)Libraries\Bullet\lib</AdditionalLibraryDirectories>
       <AdditionalDependencies>BulletDynamics_Debugx64.lib;BulletCollision_Debugx64.lib;LinearMath_Debugx64.lib;fmodL_vc.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib</AdditionalDependencies>
       <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">

@@ -239,13 +239,31 @@ void Game::Init()
   
 	Scripts::CreateScript(Scripts::SCRIPT_NAMES::BARREL, EESceneLoader->sceneEntitiesMap["barrel_1"]);
 
-	/*
+	// FPS CONTROLLER
 	Entity* fpsController = new Entity("FPSController");
-	fpsController->SetPosition(0.0f, 5.0f, -10.0f);
-	EESceneLoader->AddEntity(fpsController);
-	ScriptManager* playerScript = new FPSController();
+	fpsController->SetPosition(XMFLOAT3(0, 5, 5));
+	fpsController->SetScale(5.0f, 10.0f, 5.0f);
+	fpsController->InitRigidBody(dynamicsWorld, 1.0f);
+	// EESceneLoader->AddEntity(fpsController);
+	EESceneLoader->sceneEntitiesMap.insert({ "FPSController", fpsController });
+	EESceneLoader->sceneEntities.push_back(fpsController);
+
+	/*EESceneLoader->sceneEntitiesMap["FPSController"]->collisionsEnabled = true;
+	EESceneLoader->sceneEntitiesMap["FPSController"]->colliderDebugLinesEnabled = true;
+	EESceneLoader->sceneEntitiesMap["FPSController"]->CheckSATCollisionAndCorrect();
+	EESceneLoader->sceneEntitiesMap["FPSController"]->isCollisionStatic = false;*/
+
+	//Entity* camera = new Entity("Camera");
+	//camera->SetPosition(XMFLOAT3(0, 7, 5));
+	//camera->InitRigidBody(dynamicsWorld, 0.0f);
+	//// EESceneLoader->AddEntity(camera);
+	//EESceneLoader->sceneEntitiesMap.insert({ "Camera", camera });
+	//EESceneLoader->sceneEntities.push_back(camera);
+
+	//fpsController->AddChildEntity(camera);
+
+	playerScript = new FPSController();
 	playerScript->Setup("FPSController", EESceneLoader->sceneEntitiesMap["FPSController"]);
-	*/
 
 	for (size_t i = 0; i < ScriptManager::scriptFunctions.size(); i++)
 	{
@@ -295,6 +313,8 @@ void Game::Update(float deltaTime, float totalTime)
 		}
 	}
 
+	PhysicsStep(deltaTime);
+	
 	for (size_t i = 0; i < ScriptManager::scriptFunctions.size(); i++)
 	{
 		ScriptManager* sf = ScriptManager::scriptFunctions[i];
@@ -302,7 +322,6 @@ void Game::Update(float deltaTime, float totalTime)
 	}
 
 	AudioStep();
-	PhysicsStep(deltaTime);
 
 	/*if (!GetAsyncKeyState(VK_CONTROL))
 	{
@@ -313,29 +332,35 @@ void Game::Update(float deltaTime, float totalTime)
 
 void Game::PhysicsStep(float deltaTime)
 {
-	btTransform transform;
 	for (int i = 0; i < Config::DynamicsWorld->getNumCollisionObjects(); i++)
 	{
 		btCollisionObject* obj = Config::DynamicsWorld->getCollisionObjectArray()[i];
 		btRigidBody* body = btRigidBody::upcast(obj);
 
-		transform = body->getWorldTransform();
+		btTransform transform = body->getWorldTransform();
 		Entity* entity = (Entity*)body->getUserPointer();
 		XMFLOAT3 pos = entity->GetPosition();
 		XMFLOAT4 rot = entity->GetRotationQuaternion();
-		transform.setOrigin(btVector3(pos.x, pos.y, pos.z));
+		
+		btVector3 transformPos = btVector3(pos.x, pos.y, pos.z);
+		transform.setOrigin(transformPos);
 
 		btQuaternion res = btQuaternion(rot.x, rot.y, rot.z, rot.w);
 		transform.setRotation(res);
+		
+		body->setCenterOfMassTransform(transform);
 
-		body->getMotionState()->setWorldTransform(transform);
+		// body->getMotionState()->setWorldTransform(transform);
 
-		Config::DynamicsWorld->stepSimulation(deltaTime * 0.5f);
+		Config::DynamicsWorld->applyGravity();
+		Config::DynamicsWorld->stepSimulation(deltaTime);
 
-		body->getMotionState()->getWorldTransform(transform);
+		// body->getMotionState()->getWorldTransform(transform);
+
+		transform = body->getCenterOfMassTransform();
 
 		btQuaternion q = transform.getRotation();
-		entity->SetPosition(transform.getOrigin().getX(), transform.getOrigin().getY(), transform.getOrigin().getZ());
+		entity->SetPosition(body->getCenterOfMassPosition().getX(), body->getCenterOfMassPosition().getY(), body->getCenterOfMassPosition().getZ());
 		entity->SetRotation(XMFLOAT4(q.getX(), q.getY(), q.getZ(), q.getW()));
 		entity->CalcWorldMatrix();
 	}
@@ -471,6 +496,7 @@ void Game::OnMouseDown(WPARAM buttonState, int x, int y)
 	prevMousePos.x = x;
 	prevMousePos.y = y;
 
+
 	for (size_t i = 0; i < ScriptManager::scriptFunctions.size(); i++)
 	{
 		ScriptManager* sf = ScriptManager::scriptFunctions[i];
@@ -478,6 +504,93 @@ void Game::OnMouseDown(WPARAM buttonState, int x, int y)
 		sf->CallOnMouseDown(buttonState, x, y);
 	}
 
+	
+
+	// printf("Mouse Pos: %d, %d\n", x, y);
+
+	// Create debug line
+	DebugLines* dl = new DebugLines("TestRay", 0, false);
+	XMFLOAT3 c = XMFLOAT3(0.0f, 1.0f, 0.0f);
+	dl->color = c;
+
+	// Create the world matrix for the debug line
+	XMFLOAT4X4 wm;
+	XMStoreFloat4x4(&wm, XMMatrixTranspose(DirectX::XMMatrixIdentity()));
+	dl->worldMatrix = wm;
+
+	// Create the transformation matrices for our raycast
+	XMMATRIX proj = XMMatrixTranspose(XMLoadFloat4x4(&(EECamera->GetProjMatrix())));
+	XMMATRIX view = XMMatrixTranspose(XMLoadFloat4x4(&(EECamera->GetViewMatrix())));
+	XMMATRIX world = XMMatrixTranspose(XMLoadFloat4x4(&wm));
+
+	// Get the unprojected vector of the mouse click position in world space
+	XMVECTOR unprojVec = XMVector3Unproject(XMVectorSet(x, y, 1.0f, 1.0f), 0, 0, 1600, 900, 0.0f, 1.0f, proj, view, world);
+	XMFLOAT3 end = XMFLOAT3(XMVectorGetX(unprojVec), XMVectorGetY(unprojVec), XMVectorGetZ(unprojVec));
+	//printf("Projected values|- X: %f, Y: %f, Z: %f\n", end.x, end.y, end.z);
+
+	// Draw the debug line to show the raycast
+	XMFLOAT3 start = EECamera->position;
+	XMFLOAT3* rayPoints = new XMFLOAT3[8];
+	rayPoints[0] = start;
+	rayPoints[1] = start;
+	rayPoints[2] = start;
+	rayPoints[3] = start;
+	rayPoints[4] = end;
+	rayPoints[5] = end;
+	rayPoints[6] = end;
+	rayPoints[7] = end;
+	dl->GenerateCuboidVertexBuffer(rayPoints, 8);
+
+	if (dynamicsWorld)
+	{
+		// Update physics
+		dynamicsWorld->updateAabbs();
+		dynamicsWorld->computeOverlappingPairs();
+
+		// Redefine our vectors using bullet's silly types
+		btVector3 from(start.x, start.y, start.z);
+		btVector3 to(end.x, end.y, end.z);
+
+		// Create variable to store the ray hit and set flags
+		btCollisionWorld::ClosestRayResultCallback closestResult(from, to);
+		closestResult.m_flags |= btTriangleRaycastCallback::kF_FilterBackfaces;
+
+		dynamicsWorld->rayTest(from, to, closestResult); // Raycast
+
+		if (closestResult.hasHit())
+		{
+			// Get the entity associated with the rigid body we hit
+			Entity* hit = (Entity*)(closestResult.m_collisionObject->getUserPointer());
+			//printf("Hit: %s\n", hit->GetName().c_str());
+			btRigidBody* rigidBody = hit->GetRBody();
+
+			// In order to update the values associated with the rigid body we need to remove it from the dynamics world first
+			dynamicsWorld->removeRigidBody(rigidBody);
+			btVector3 inertia(0, 0, 0);
+			float mass = 1.0f;
+			rigidBody->getCollisionShape()->calculateLocalInertia(mass, inertia);
+			rigidBody->setActivationState(DISABLE_DEACTIVATION);
+			rigidBody->setMassProps(mass, inertia);
+
+			// Useful functions for updating an object in motion, but not really needed here
+			/*rigidBody->setLinearFactor(btVector3(1, 1, 1));
+			rigidBody->setAngularFactor(btVector3(1, 1, 1));
+			rigidBody->updateInertiaTensor();
+			rigidBody->clearForces();
+			btTransform transform;
+			transform.setIdentity();
+			rigidBody->getMotionState()->getWorldTransform(transform);
+			float x = transform.getOrigin().getX();
+			float y = transform.getOrigin().getY();
+			float z = transform.getOrigin().getZ();
+			transform.setOrigin(btVector3(x, y, z));
+			rigidBody->getCollisionShape()->setLocalScaling(btVector3(1, 1, 1));
+			rigidBody->setWorldTransform(transform);*/
+
+			dynamicsWorld->addRigidBody(rigidBody); // Add the rigid body back into bullet		
+		}
+	}
+	
 	SetCapture(hWnd);
 }
 

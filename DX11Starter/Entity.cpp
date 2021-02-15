@@ -17,7 +17,8 @@ Entity::Entity(string entityName)
 	scale = DirectX::XMFLOAT3(1.0f, 1.0f, 1.0f);
 	rotation = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
 	rotationInDegrees = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
-	quaternion = DirectX::XMFLOAT4(0.0f, 0.0f, 0.0f, 0.0f);
+	XMVECTOR quat = XMQuaternionRotationRollPitchYaw(rotation.x, rotation.y, rotation.z);
+	XMStoreFloat4(&quaternion, quat);
 	repeatTex = XMFLOAT2(1.0f, 1.0f);
 	DirectX::XMMATRIX W = DirectX::XMMatrixIdentity();
 	DirectX::XMStoreFloat4x4(&worldMatrix, XMMatrixTranspose(W));
@@ -37,7 +38,8 @@ Entity::Entity(string entityName, Mesh* entityMesh, Material* mat)
 	scale = DirectX::XMFLOAT3(1.0f, 1.0f, 1.0f);
 	rotation = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
 	rotationInDegrees = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
-	quaternion = DirectX::XMFLOAT4(0.0f, 0.0f, 0.0f, 0.0f);
+	XMVECTOR quat = XMQuaternionRotationRollPitchYaw(rotation.x, rotation.y, rotation.z);
+	XMStoreFloat4(&quaternion, quat);
 	repeatTex = XMFLOAT2(1.0f, 1.0f);
 	DirectX::XMMATRIX W = DirectX::XMMatrixIdentity();
 	DirectX::XMStoreFloat4x4(&worldMatrix, XMMatrixTranspose(W));
@@ -115,25 +117,26 @@ void Entity::operator=(const Entity& e)
 	meshMaterialIndex = e.meshMaterialIndex;
 }
 
-void Entity::InitRigidBody(btDiscreteDynamicsWorld* dw)
+void Entity::InitRigidBody(btDiscreteDynamicsWorld* dw, float entityMass)
 {
 	dynamicsWorld = dw;
+	mass = entityMass;
 
 	// Physics set-up
 	this->collShape = new btBoxShape(btVector3(btScalar(scale.x / 2.0f), btScalar(scale.y / 2.0f), btScalar(scale.z / 2.0f)));
 
-	btTransform groundTransform;
-	groundTransform.setIdentity();
-	groundTransform.setOrigin(btVector3(position.x, position.y, position.z));
+	btTransform transform;
+	transform.setIdentity();
+	transform.setOrigin(btVector3(position.x, position.y, position.z));
 	btQuaternion qx = btQuaternion(btVector3(1.0f, 0.0f, 0.0f), rotation.x);
 	btQuaternion qy = btQuaternion(btVector3(0.0f, 1.0f, 0.0f), rotation.y);
 	btQuaternion qz = btQuaternion(btVector3(0.0f, 0.0f, 1.0f), rotation.z);
 	btQuaternion res = qz * qy * qx;
-	groundTransform.setRotation(res);
+	transform.setRotation(res);
 	//groundTransform.setRotation(btQuaternion(rotation.y, rotation.x, rotation.z));
 
 	//btScalar mass(isStatic);
-	btScalar mass(0.0f);
+	//btScalar mass(0.0f);
 
 	//rigidbody is dynamic if and only if mass is non zero, otherwise static
 	bool isDynamic = (mass != 0.0f);
@@ -142,9 +145,12 @@ void Entity::InitRigidBody(btDiscreteDynamicsWorld* dw)
 	if (isDynamic)
 		collShape->calculateLocalInertia(mass, localInertia);
 
-	btDefaultMotionState* myMotionState = new btDefaultMotionState(groundTransform);
+	btDefaultMotionState* myMotionState = new btDefaultMotionState(transform);
 	btRigidBody::btRigidBodyConstructionInfo rbInfo(mass, myMotionState, collShape, localInertia);
 	this->rBody = new btRigidBody(rbInfo);
+
+	/*rBody->setActivationState(DISABLE_DEACTIVATION);
+	rBody->setMassProps(mass, localInertia);*/
 
 	//rBody->setLinearFactor(btVector3(1, 1, 0));
 	//rBody->setAngularFactor(btVector3(0, 1, 1));
