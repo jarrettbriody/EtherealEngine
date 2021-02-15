@@ -23,7 +23,7 @@ public:
 	void CallOnMouseMove(WPARAM buttonState, int x, int y);
 	void CallOnMouseWheel(float wheelDelta, int x, int y);
 
-	void Setup(string name, Entity* e);
+	void Setup(Entity* e);
 
 	virtual ~ScriptManager();
 protected:

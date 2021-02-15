@@ -32,13 +32,11 @@ class SceneLoader
 private:
 	static SceneLoader* instance;
 
-	SceneLoader(btDiscreteDynamicsWorld* dw);
+	SceneLoader();
 	~SceneLoader();
 public:
 	MemoryAllocator* EEMemoryAllocator = nullptr;
 	Renderer* EERenderer = nullptr;
-
-	btDiscreteDynamicsWorld* dynamicsWorld;
 
 	map<string, SimpleVertexShader*> vertexShadersMap;
 	map<string, SimplePixelShader*> pixelShadersMap;
@@ -46,6 +44,8 @@ public:
 	map<string, bool> utilizedMeshesMap;
 	map<string, bool> utilizedMaterialsMap;
 	map<string, bool> utilizedTexturesMap;
+
+	map<string, vector<string>> materialTextureAssociationMap;
 
 	map<string, Mesh*> defaultMeshesMap;
 	map<string, Mesh*> generatedMeshesMap;
@@ -59,7 +59,7 @@ public:
 	map<string, Entity*> sceneEntitiesMap;
 	vector<Entity*> sceneEntities;
 
-	static bool SetupInstance(btDiscreteDynamicsWorld* dw);
+	static bool SetupInstance();
 	static SceneLoader* GetInstance();
 	static bool DestroyInstance();
 
@@ -73,6 +73,6 @@ public:
 	Utility::MESH_TYPE AutoLoadOBJMTL(string name);
 	void LoadScene(string sceneName = "scene");
 
-	Entity* SceneLoader::CreateEntity(EntityCreationParameters& para);
+	Entity* CreateEntity(EntityCreationParameters& para);
 };
 

@@ -22,14 +22,6 @@ class Renderer
 private:
 	static Renderer* instance;
 
-	ID3D11Device* device;
-	ID3D11DeviceContext* context;
-	IDXGISwapChain* swapChain;
-	ID3D11RenderTargetView* backBufferRTV;
-	ID3D11DepthStencilView* depthStencilView;
-	unsigned int viewPortWidth;
-	unsigned int viewPortHeight;
-
 	vector<Entity*>* entities = nullptr;
 	RenderObject* renderObjects;
 	int renderObjectCount = 0;
@@ -44,8 +36,6 @@ private:
 	unsigned int lightCount = 0;
 	bool shadowsEnabled = true;
 
-	bool debugLinesEnabled = true;
-
 	unsigned int shadowMapResolution = 2048;
 	ID3D11DepthStencilView* shadowDSV;
 	ID3D11ShaderResourceView* shadowSRV;
@@ -57,10 +47,10 @@ private:
 	DirectX::XMFLOAT4X4 shadowViewMatrix;
 	DirectX::XMFLOAT4X4 shadowProjectionMatrix;
 
-	Renderer(IDXGISwapChain* swapChain, ID3D11RenderTargetView* backBufferRTV, ID3D11DepthStencilView* depthStencilView, unsigned int viewPortWidth, unsigned int viewPortHeight);
+	Renderer();
 	~Renderer();
 public:
-	static bool SetupInstance(IDXGISwapChain* swapChain, ID3D11RenderTargetView* backBufferRTV, ID3D11DepthStencilView* depthStencilView, unsigned int viewPortWidth, unsigned int viewPortHeight);
+	static bool SetupInstance();
 	static Renderer* GetInstance();
 	static bool DestroyInstance();
 

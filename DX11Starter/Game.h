@@ -20,9 +20,6 @@
 
 using namespace std;
 
-//#define BT_EULER_DEFAULT_ZYX = true;
-#define _ITERATOR_DEBUG_LEVEL 0
-
 class Game 
 	: public DXCore
 {
@@ -52,49 +49,42 @@ public:
 	void OnMouseWheel(float wheelDelta,   int x, int y);
 private:
 	// Keeps track of the old mouse position for determining how far the mouse moved in a single frame
-	POINT prevMousePos;
+	POINT prevMousePos = POINT();
 
-	ID3D11ShaderResourceView* skySRV;
-	ID3D11RasterizerState* skyRasterState;
-	ID3D11DepthStencilState* skyDepthState;
+	ID3D11ShaderResourceView* skySRV = nullptr;
+	ID3D11RasterizerState* skyRasterState = nullptr;
+	ID3D11DepthStencilState* skyDepthState = nullptr;
 
 	Camera* EECamera = nullptr;
 	Renderer* EERenderer = nullptr;
 	SceneLoader* EESceneLoader = nullptr;
 	MemoryAllocator* EEMemoryAllocator = nullptr;
-
-	ScriptManager* barrel;
-
-	//terrain example stuff
-	//Terrain* terrain;
-	//Water* water;
 	
 	//testing
-	Light* testLight;
+	Light* testLight = nullptr;
 
 	// Physics
-	btDefaultCollisionConfiguration* collisionConfiguration;
-	btCollisionDispatcher* dispatcher;
-	btBroadphaseInterface* broadphase;
-	btSequentialImpulseConstraintSolver* solver;
-	btDiscreteDynamicsWorld* dynamicsWorld;
+	btDefaultCollisionConfiguration* collisionConfiguration = nullptr;
+	btCollisionDispatcher* dispatcher = nullptr;
+	btBroadphaseInterface* broadphase = nullptr;
+	btSequentialImpulseConstraintSolver* solver = nullptr;
 
 	// Audio
-	FMOD_RESULT fmodResult;
-	FMOD::System* fmodSystem = NULL;
+	FMOD_RESULT fmodResult = FMOD_RESULT();
+	FMOD::System* fmodSystem = nullptr;
 
-	FMOD::Sound* backgroundMusic;
+	FMOD::Sound* backgroundMusic = nullptr;
 	FMOD::Sound* sound[12];
 
 	FMOD::Channel* musicChannel = 0;
 	FMOD::Channel* channel[12];
-	FMOD::ChannelGroup* masterGroup, * sfxGroup;
+	FMOD::ChannelGroup* masterGroup = nullptr;
+	FMOD::ChannelGroup* sfxGroup = nullptr;
 
 	bool isPlaying = 0;
 
-	FMOD_VECTOR listener_pos;
+	FMOD_VECTOR listener_pos = FMOD_VECTOR();
 	//FMOD_VECTOR listener_vel; // If we want a doppler effect
-	FMOD_VECTOR listener_forward;
-	FMOD_VECTOR listener_up;
+	FMOD_VECTOR listener_forward = FMOD_VECTOR();
+	FMOD_VECTOR listener_up = FMOD_VECTOR();
 };
-

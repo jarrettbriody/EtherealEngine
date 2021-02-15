@@ -2,15 +2,8 @@
 
 Renderer* Renderer::instance = nullptr;
 
-Renderer::Renderer(IDXGISwapChain* swapChain, ID3D11RenderTargetView* backBufferRTV, ID3D11DepthStencilView* depthStencilView, unsigned int viewPortWidth, unsigned int viewPortHeight)
+Renderer::Renderer()
 {
-	this->device = Config::Device;
-	this->context = Config::Context;
-	this->swapChain = swapChain;
-	this->backBufferRTV = backBufferRTV;
-	this->depthStencilView = depthStencilView;
-	this->viewPortWidth = viewPortWidth;
-	this->viewPortHeight = viewPortHeight;
 }
 
 Renderer::~Renderer()
@@ -52,10 +45,10 @@ Renderer::~Renderer()
 	delete[] renderObjects;
 }
 
-bool Renderer::SetupInstance(IDXGISwapChain* swapChain, ID3D11RenderTargetView* backBufferRTV, ID3D11DepthStencilView* depthStencilView, unsigned int viewPortWidth, unsigned int viewPortHeight)
+bool Renderer::SetupInstance()
 {
 	if (instance == nullptr) {
-		instance = new Renderer(swapChain, backBufferRTV, depthStencilView, viewPortWidth, viewPortHeight);
+		instance = new Renderer();
 		return true;
 	}
 	return false;
@@ -113,14 +106,14 @@ void Renderer::InitShadows()
 	shadowDesc.SampleDesc.Quality = 0;
 	shadowDesc.Usage = D3D11_USAGE_DEFAULT;
 	ID3D11Texture2D* shadowTexture;
-	device->CreateTexture2D(&shadowDesc, 0, &shadowTexture);
+	Config::Device->CreateTexture2D(&shadowDesc, 0, &shadowTexture);
 
 	// Create the depth/stencil
 	D3D11_DEPTH_STENCIL_VIEW_DESC shadowDSDesc = {};
 	shadowDSDesc.Format = DXGI_FORMAT_D32_FLOAT;
 	shadowDSDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
 	shadowDSDesc.Texture2D.MipSlice = 0;
-	device->CreateDepthStencilView(shadowTexture, &shadowDSDesc, &shadowDSV);
+	Config::Device->CreateDepthStencilView(shadowTexture, &shadowDSDesc, &shadowDSV);
 
 	// Create the SRV for the shadow map
 	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
@@ -128,7 +121,7 @@ void Renderer::InitShadows()
 	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
 	srvDesc.Texture2D.MipLevels = 1;
 	srvDesc.Texture2D.MostDetailedMip = 0;
-	device->CreateShaderResourceView(shadowTexture, &srvDesc, &shadowSRV);
+	Config::Device->CreateShaderResourceView(shadowTexture, &srvDesc, &shadowSRV);
 
 	// Release the texture reference since we don't need it
 	shadowTexture->Release();
@@ -144,7 +137,7 @@ void Renderer::InitShadows()
 	shadowSampDesc.BorderColor[1] = 1.0f;
 	shadowSampDesc.BorderColor[2] = 1.0f;
 	shadowSampDesc.BorderColor[3] = 1.0f;
-	device->CreateSamplerState(&shadowSampDesc, &shadowSampler);
+	Config::Device->CreateSamplerState(&shadowSampDesc, &shadowSampler);
 
 	// Create a rasterizer state
 	D3D11_RASTERIZER_DESC shadowRastDesc = {};
@@ -154,7 +147,7 @@ void Renderer::InitShadows()
 	shadowRastDesc.DepthBias = 1000; // Multiplied by (smallest possible value > 0 in depth buffer)
 	shadowRastDesc.DepthBiasClamp = 0.0f;
 	shadowRastDesc.SlopeScaledDepthBias = 1.0f;
-	device->CreateRasterizerState(&shadowRastDesc, &shadowRasterizer);
+	Config::Device->CreateRasterizerState(&shadowRastDesc, &shadowRasterizer);
 
 	// Create the matrices that represent seeing the scene from
 	// the light's point of view
@@ -192,9 +185,9 @@ void Renderer::ClearFrame()
 	// Clear the render target and depth buffer (erases what's on the screen)
 	//  - Do this ONCE PER FRAME
 	//  - At the beginning of Draw (before drawing *anything*)
-	context->ClearRenderTargetView(backBufferRTV, color);
-	context->ClearDepthStencilView(
-		depthStencilView,
+	Config::Context->ClearRenderTargetView(Config::BackBufferRTV, color);
+	Config::Context->ClearDepthStencilView(
+		Config::DepthStencilView,
 		D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL,
 		1.0f,
 		0);
@@ -228,12 +221,12 @@ void Renderer::RenderFrame()
 		
 		ID3D11Buffer* vbo = mesh->GetVertexBuffer();
 		ID3D11Buffer* ind = mesh->GetIndexBuffer();
-		context->IASetVertexBuffers(0, 1, &vbo, &stride, &offset);
-		context->IASetIndexBuffer(ind, DXGI_FORMAT_R32_UINT, 0);
+		Config::Context->IASetVertexBuffers(0, 1, &vbo, &stride, &offset);
+		Config::Context->IASetIndexBuffer(ind, DXGI_FORMAT_R32_UINT, 0);
 
 		e->PrepareMaterialForDraw(mat->GetName(), camera->GetViewMatrix(), camera->GetProjMatrix());
 
-		context->DrawIndexed(
+		Config::Context->DrawIndexed(
 			mesh->GetIndexCount(),		// The number of indices to use (we could draw a subset if we wanted)
 			0,											// Offset to the first index we want to use
 			0);											// Offset to add to each index when looking up vertices
@@ -241,26 +234,26 @@ void Renderer::RenderFrame()
 		mat->GetPixelShader()->SetShaderResourceView("ShadowMap", NULL);
 	}
 
-	if (debugLinesEnabled) RenderDebugLines();
+	if (Config::DebugLinesEnabled) RenderDebugLines();
 }
 
 void Renderer::PresentFrame()
 {
-	swapChain->Present(0, 0);
-	context->OMSetRenderTargets(1, &backBufferRTV, depthStencilView);
+	Config::SwapChain->Present(0, 0);
+	Config::Context->OMSetRenderTargets(1, &Config::BackBufferRTV, Config::DepthStencilView);
 }
 
 void Renderer::RenderDebugLines()
 {
-	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
+	Config::Context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
 
 	UINT stride = sizeof(DebugLinesVertex);
 	UINT offset = 0;
 
 	for (size_t i = 0; i < DebugLines::debugLines.size(); i++)
 	{
-		context->IASetVertexBuffers(0, 1, &DebugLines::debugLines[i]->vertexBuffer, &stride, &offset);
-		context->IASetIndexBuffer(DebugLines::debugLines[i]->indexBuffer, DXGI_FORMAT_R32_UINT, 0);
+		Config::Context->IASetVertexBuffers(0, 1, &DebugLines::debugLines[i]->vertexBuffer, &stride, &offset);
+		Config::Context->IASetIndexBuffer(DebugLines::debugLines[i]->indexBuffer, DXGI_FORMAT_R32_UINT, 0);
 
 		debugLineVS->SetMatrix4x4("world", DebugLines::debugLines[i]->worldMatrix);
 		debugLineVS->SetMatrix4x4("view", camera->GetViewMatrix());
@@ -272,13 +265,13 @@ void Renderer::RenderDebugLines()
 		debugLineVS->CopyAllBufferData();
 		debugLinePS->CopyAllBufferData();
 
-		context->DrawIndexed(
+		Config::Context->DrawIndexed(
 			DebugLines::debugLines[i]->indexCount,		// The number of indices to use (we could draw a subset if we wanted)
 			0,											// Offset to the first index we want to use
 			0);											// Offset to add to each index when looking up vertices
 	}
 
-	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	Config::Context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 }
 
 void Renderer::RenderShadowMap()
@@ -287,9 +280,9 @@ void Renderer::RenderShadowMap()
 		return;
 
 	// Initial setup - No RTV necessary - Clear shadow map
-	context->OMSetRenderTargets(0, 0, shadowDSV);
-	context->ClearDepthStencilView(shadowDSV, D3D11_CLEAR_DEPTH, 1.0f, 0);
-	context->RSSetState(shadowRasterizer);
+	Config::Context->OMSetRenderTargets(0, 0, shadowDSV);
+	Config::Context->ClearDepthStencilView(shadowDSV, D3D11_CLEAR_DEPTH, 1.0f, 0);
+	Config::Context->RSSetState(shadowRasterizer);
 
 	// SET A VIEWPORT!!!
 	D3D11_VIEWPORT vp = {};
@@ -299,14 +292,14 @@ void Renderer::RenderShadowMap()
 	vp.Height = (float)shadowMapResolution;
 	vp.MinDepth = 0.0f;
 	vp.MaxDepth = 1.0f;
-	context->RSSetViewports(1, &vp);
+	Config::Context->RSSetViewports(1, &vp);
 
 	// Set up the shaders
 	shadowVS->SetShader();
 	shadowVS->SetMatrix4x4("view", shadowViewMatrix);
 	shadowVS->SetMatrix4x4("projection", shadowProjectionMatrix);
 
-	context->PSSetShader(0, 0, 0); // Turns OFF the pixel shader
+	Config::Context->PSSetShader(0, 0, 0); // Turns OFF the pixel shader
 
 	// Set buffers in the input assembler
 	UINT stride = sizeof(Vertex);
@@ -335,23 +328,23 @@ void Renderer::RenderShadowMap()
 		ID3D11Buffer* ib = mesh->GetIndexBuffer();
 
 		// Set buffers in the input assembler
-		context->IASetVertexBuffers(0, 1, &vb, &stride, &offset);
-		context->IASetIndexBuffer(ib, DXGI_FORMAT_R32_UINT, 0);
+		Config::Context->IASetVertexBuffers(0, 1, &vb, &stride, &offset);
+		Config::Context->IASetIndexBuffer(ib, DXGI_FORMAT_R32_UINT, 0);
 
 
 		shadowVS->SetMatrix4x4("world", e->GetWorldMatrix());
 		shadowVS->CopyAllBufferData();
 
 		// Finally do the actual drawing
-		context->DrawIndexed(mesh->GetIndexCount(), 0, 0);
+		Config::Context->DrawIndexed(mesh->GetIndexCount(), 0, 0);
 	}
 
 	// Revert to original pipeline state
-	context->OMSetRenderTargets(1, &backBufferRTV, depthStencilView);
-	vp.Width = (float)viewPortWidth;
-	vp.Height = (float)viewPortHeight;
-	context->RSSetViewports(1, &vp);
-	context->RSSetState(0);
+	Config::Context->OMSetRenderTargets(1, &Config::BackBufferRTV, Config::DepthStencilView);
+	vp.Width = (float)Config::ViewPortWidth;
+	vp.Height = (float)Config::ViewPortHeight;
+	Config::Context->RSSetViewports(1, &vp);
+	Config::Context->RSSetState(0);
 }
 
 bool Renderer::AddCamera(string name, Camera* newCamera)

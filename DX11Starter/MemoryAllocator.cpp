@@ -45,7 +45,7 @@ bool MemoryAllocator::DestroyInstance()
 	return false;
 }
 
-bool MemoryAllocator::CreatePool(unsigned int pool, unsigned int size, unsigned int blockSize)
+bool MemoryAllocator::CreatePool(unsigned int pool, unsigned int size, unsigned int slugSize)
 {
 	if (pool > maxPools || pool < 0)
 		return false;
@@ -53,13 +53,13 @@ bool MemoryAllocator::CreatePool(unsigned int pool, unsigned int size, unsigned 
 		return false;
 
 	unsigned int alignedSize = size - (size % alignment);
-	unsigned int alignedBlockSize = blockSize + (alignment - (blockSize % alignment));
-	if (alignedBlockSize - blockSize < 8) alignedBlockSize += alignment;
+	unsigned int alignedBlockSize = slugSize + (alignment - (slugSize % alignment));
+	if (alignedBlockSize - slugSize < 8) alignedBlockSize += alignment;
 
 	if (usedMemory >= this->size || usedMemory + alignedSize >= this->size) 
 		return false;
 
-	pools[poolCnt] = { (char*)currentPtr, alignedSize, alignedBlockSize, blockSize, 0, (char*)currentPtr };
+	pools[poolCnt] = { (char*)currentPtr, alignedSize, alignedBlockSize, slugSize, 0, (char*)currentPtr };
 	currentPtr = (void*)((char*)currentPtr + alignedSize);
 	usedMemory += alignedSize;
 
@@ -83,8 +83,9 @@ bool MemoryAllocator::CreatePool(unsigned int pool, unsigned int size, unsigned 
 	return true;
 }
 
-void* MemoryAllocator::AllocateToPool(unsigned int pool, unsigned int memorySize, bool& success)
+void* MemoryAllocator::AllocateToPool(unsigned int pool, unsigned int slugSize, bool& success)
 {
+	//check that params are valid
 	if (pool > maxPools || pool < 0 || 
 		pools[pool].startPtr == nullptr ||
 		pools[pool].usedMemory >= pools[pool].size) {
@@ -92,36 +93,38 @@ void* MemoryAllocator::AllocateToPool(unsigned int pool, unsigned int memorySize
 		return nullptr;
 	}
 
-	char* writeMemoryLoc = (char*)pools[pool].currentPtr + (pools[pool].blockSize - memorySize);
-	//memcpy(writeMemoryLoc, memoryLocation, memorySize);
+	//calc actual memory slug location
+	char* writeMemoryLoc = (char*)pools[pool].currentPtr + (pools[pool].blockSize - slugSize);
+
+	//de-encode encoded linked list pointer in memory block
 	uintptr_t castedPtr;
 	memcpy(&castedPtr, pools[pool].currentPtr, sizeof(char*));
 	void* castedPtrToRetrieve = reinterpret_cast<void*>(castedPtr);
-	//memcpy(pools[pool].currentPtr, *pools[pool].currentPtr, sizeof(char*));
-	//char* newPtr = *pools[pool].currentPtr;
-	//*pools[pool].currentPtr = **pools[pool].currentPtr;
+
+	//traverse to next memory block location
 	pools[pool].currentPtr = castedPtrToRetrieve;
+
+	//count mem usage
 	pools[pool].usedMemory += pools[pool].blockSize;
 	success = true;
 
 	return (void*)writeMemoryLoc;
 }
 
-bool MemoryAllocator::DeallocateFromPool(unsigned int pool, void* memoryLocation, unsigned int memorySize)
+bool MemoryAllocator::DeallocateFromPool(unsigned int pool, void* memoryLocation, unsigned int slugSize)
 {
-	if (pool > 9 || pool < 0)
-		return false;
-
 	char* reqMem = (char*)memoryLocation;
 
-	if (pools[pool].startPtr == nullptr)
+	//check that params are valid
+	if (pool > maxPools || pool < 0 ||
+		pools[pool].startPtr == nullptr ||
+		reqMem < (char*)pools[pool].startPtr || 
+		reqMem > (char*)pools[pool].startPtr + (pools[pool].size - pools[pool].slugSize)) {
 		return false;
+	}
 
-	if (reqMem < (char*)pools[pool].startPtr || reqMem > (char*)pools[pool].startPtr + (pools[pool].size - pools[pool].storedMemorySize))
-		return false;
-
-	char* actualMemoryLoc = reqMem - (pools[pool].blockSize - memorySize);
-	uintptr_t castedPtrToStore = reinterpret_cast<uintptr_t>(&pools[pool].currentPtr);
+	char* actualMemoryLoc = reqMem - (pools[pool].blockSize - slugSize);
+	uintptr_t castedPtrToStore = reinterpret_cast<uintptr_t>(pools[pool].currentPtr);
 	memcpy(actualMemoryLoc, &castedPtrToStore, sizeof(char*));
 	pools[pool].currentPtr = actualMemoryLoc;
 

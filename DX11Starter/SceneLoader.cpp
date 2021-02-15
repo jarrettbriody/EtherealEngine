@@ -2,10 +2,9 @@
 
 SceneLoader* SceneLoader::instance = nullptr;
 
-SceneLoader::SceneLoader(btDiscreteDynamicsWorld * dw)
+SceneLoader::SceneLoader()
 {
 	this->EEMemoryAllocator = MemoryAllocator::GetInstance();
-	this->dynamicsWorld = dw;
 }
 
 SceneLoader::~SceneLoader()
@@ -19,7 +18,7 @@ SceneLoader::~SceneLoader()
 
 	for (auto matMapIter = defaultMaterialsMap.begin(); matMapIter != defaultMaterialsMap.end(); ++matMapIter)
 	{
-		delete matMapIter->second;
+		matMapIter->second->FreeMemory();
 		//cout << "Deleting " << matMapIter->first << endl;
 	}
 
@@ -44,7 +43,7 @@ SceneLoader::~SceneLoader()
 
 	for (auto matMapIter = generatedMaterialsMap.begin(); matMapIter != generatedMaterialsMap.end(); ++matMapIter)
 	{
-		delete matMapIter->second;
+		matMapIter->second->FreeMemory();
 		//cout << "Deleting " << matMapIter->first << endl;
 	}
 
@@ -73,10 +72,10 @@ SceneLoader::~SceneLoader()
 	}
 }
 
-bool SceneLoader::SetupInstance(btDiscreteDynamicsWorld* dw)
+bool SceneLoader::SetupInstance()
 {
 	if (instance == nullptr) {
-		instance = new SceneLoader(dw);
+		instance = new SceneLoader();
 		return true;
 	}
 	return false;
@@ -211,50 +210,49 @@ void SceneLoader::LoadDefaultTextures()
 void SceneLoader::LoadDefaultMaterials()
 {
 	MaterialData materialData = {};
-	defaultMaterialsMap.insert({ "DEFAULT", new Material("DEFAULT", materialData, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler) });
+	Material* allocatedMaterial;
+	bool success;
+
+	Material defaultMaterial = Material("DEFAULT", materialData, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler);
+	allocatedMaterial = (Material*)EEMemoryAllocator->AllocateToPool(Utility::MATERIAL_POOL, sizeof(Material), success);
+	*allocatedMaterial = defaultMaterial;
+	defaultMaterialsMap.insert({ "DEFAULT", allocatedMaterial});
 
 	materialData = {};
 	materialData.DiffuseTextureMapSRV = defaultTexturesMap["GrassDiffuse"];
 	materialData.NormalTextureMapSRV = defaultTexturesMap["GrassNormal"];
-	defaultMaterialsMap.insert({ "Grass", new Material("Grass", materialData, vertexShadersMap["Normal"], pixelShadersMap["Normal"], Config::Sampler) });
+	Material grassMaterial = Material("Grass", materialData, vertexShadersMap["Normal"], pixelShadersMap["Normal"], Config::Sampler);
+	allocatedMaterial = (Material*)EEMemoryAllocator->AllocateToPool(Utility::MATERIAL_POOL, sizeof(Material), success);
+	*allocatedMaterial = grassMaterial;
+	defaultMaterialsMap.insert({ "Grass", allocatedMaterial });
 
 	materialData = {};
 	materialData.DiffuseTextureMapSRV = defaultTexturesMap["Red"];
-	defaultMaterialsMap.insert({ "Red", new Material("Red", materialData, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler) });
+	Material redMaterial = Material("Red", materialData, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler);
+	allocatedMaterial = (Material*)EEMemoryAllocator->AllocateToPool(Utility::MATERIAL_POOL, sizeof(Material), success);
+	*allocatedMaterial = redMaterial;
+	defaultMaterialsMap.insert({ "Red", allocatedMaterial });
 
 	materialData = {};
 	materialData.DiffuseTextureMapSRV = defaultTexturesMap["Marble"];
-	defaultMaterialsMap.insert({ "Marble", new Material("Marble", materialData, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler) });
+	Material marbleMaterial = Material("Marble", materialData, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler);
+	allocatedMaterial = (Material*)EEMemoryAllocator->AllocateToPool(Utility::MATERIAL_POOL, sizeof(Material), success);
+	*allocatedMaterial = marbleMaterial;
+	defaultMaterialsMap.insert({ "Marble", allocatedMaterial });
 
 	materialData = {};
 	materialData.DiffuseTextureMapSRV = defaultTexturesMap["Hedge"];
-	defaultMaterialsMap.insert({ "Hedge", new Material("Hedge", materialData, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler) });
+	Material hedgeMaterial = Material("Hedge", materialData, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler);
+	allocatedMaterial = (Material*)EEMemoryAllocator->AllocateToPool(Utility::MATERIAL_POOL, sizeof(Material), success);
+	*allocatedMaterial = hedgeMaterial;
+	defaultMaterialsMap.insert({ "Hedge", allocatedMaterial });
 
 	materialData = {};
 	materialData.DiffuseTextureMapSRV = defaultTexturesMap["Grey"];
-	defaultMaterialsMap.insert({ "Grey", new Material("Grey", materialData, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler) });
-
-	/*
-	TerrainMaterialData terrainMaterialData = {};
-	terrainMaterialData.SurfaceTexture1 = defaultTexturesMap["terrain1"];
-	terrainMaterialData.SurfaceTexture2 = defaultTexturesMap["terrain2"];
-	terrainMaterialData.SurfaceTexture3 = defaultTexturesMap["terrain3"];
-	terrainMaterialData.SurfaceNormal1 = defaultTexturesMap["terrainNormal1"];
-	terrainMaterialData.SurfaceNormal2 = defaultTexturesMap["terrainNormal2"];
-	terrainMaterialData.SurfaceNormal3 = defaultTexturesMap["terrainNormal3"];
-	terrainMaterialData.uvScale = 50.0f;
-	terrainMaterialData.BlendMap = defaultTexturesMap["terrainBlendMap"];
-	defaultMaterialsMap.insert({ "Terrain", new TerrainMaterial("Terrain", terrainMaterialData, vertexShadersMap["DEFAULT"], pixelShadersMap["Terrain"], Config::Sampler) });
-
-	WaterMaterialData waterMaterialData = {};
-	waterMaterialData.SurfaceTexture1 = defaultTexturesMap["waterBase"];
-	waterMaterialData.SurfaceTexture2 = defaultTexturesMap["waterFoam"];
-	waterMaterialData.SurfaceNormal1 = defaultTexturesMap["waterNormal1"];
-	waterMaterialData.SurfaceNormal2 = defaultTexturesMap["waterNormal2"];
-	waterMaterialData.uvScale = 20.0f;
-	defaultMaterialsMap.insert({ "Water", new WaterMaterial("Water", waterMaterialData, vertexShadersMap["DEFAULT"], pixelShadersMap["Water"], Config::Sampler) });
-	*/
-
+	Material greyMaterial = Material("Grey", materialData, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler);
+	allocatedMaterial = (Material*)EEMemoryAllocator->AllocateToPool(Utility::MATERIAL_POOL, sizeof(Material), success);
+	*allocatedMaterial = greyMaterial;
+	defaultMaterialsMap.insert({ "Grey", allocatedMaterial });
 }
 
 void SceneLoader::BuildDefaultEntity(string entityName, string objName, Entity* e)
@@ -294,7 +292,7 @@ Utility::MESH_TYPE SceneLoader::AutoLoadOBJMTL(string name)
 				if (!utilizedMaterialsMap.count(utilizedMaterials[i])) {
 					utilizedMaterialsMap.insert({ utilizedMaterials[i], true });
 					//get the texture names utilized under the material
-					vector<string> utilizedTextures = generatedMaterialsMap[utilizedMaterials[i]]->GetMaterialData().SRVNames;
+					vector<string> utilizedTextures = materialTextureAssociationMap[utilizedMaterials[i]];
 					for (int j = 0; j < utilizedTextures.size(); j++)
 					{
 						//if the texture is not already utilized, utilize it
@@ -376,22 +374,36 @@ Utility::MESH_TYPE SceneLoader::AutoLoadOBJMTL(string name)
 			if (regex_search(line, match, newMtlRgx)) {
 				line = regex_replace(line, newMtlRgx, "");
 				//new material line was found but a material was in progress, complete this material before continuing
-				if (ongoingMat) {
+				if (ongoingMat && !generatedMaterialsMap.count(ongoingMatName)) {
+					Material someMaterial;
+
 					//Different shaders based on matData values
 					if (matData.NormalTextureMapSRV) {
-						if(!generatedMaterialsMap.count(ongoingMatName))
-							generatedMaterialsMap.insert({ ongoingMatName, new Material(ongoingMatName, matData, vertexShadersMap["Normal"], pixelShadersMap["Normal"], Config::Sampler) });
+						someMaterial = Material(ongoingMatName, matData, vertexShadersMap["Normal"], pixelShadersMap["Normal"], Config::Sampler);
 					}
-					else if (!generatedMaterialsMap.count(ongoingMatName))
-							generatedMaterialsMap.insert({ ongoingMatName, new Material(ongoingMatName, matData, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler) });
-					
+					else {
+						someMaterial = Material(ongoingMatName, matData, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler);
+					}
+
 					matData = {};
+
+					//alloc the material to memallocator
+					bool success = false;
+					Material* allocatedMaterial = (Material*)EEMemoryAllocator->AllocateToPool(Utility::MATERIAL_POOL, sizeof(Material), success);
+					if (success) {
+						*allocatedMaterial = someMaterial;
+						generatedMaterialsMap.insert({ ongoingMatName, allocatedMaterial });
+
+						//record material as utilized
+						utilizedMaterialsMap.insert({ ongoingMatName,true });
+					}
 				}
 				ongoingMat = true;
 				ongoingMatName = line;
-
-				//record material as utilized
-				utilizedMaterialsMap.insert({ ongoingMatName,true });
+				if (!materialTextureAssociationMap.count(ongoingMatName)) {
+					vector<string> v;
+					materialTextureAssociationMap.insert({ ongoingMatName, v });
+				}
 			}
 			//ambient color
 			else if (regex_search(line, match, ambientColorRgx)) {
@@ -439,7 +451,7 @@ Utility::MESH_TYPE SceneLoader::AutoLoadOBJMTL(string name)
 					utilizedTexturesMap.insert({ line,true });
 				}
 				matData.AmbientTextureMapSRV = generatedTexturesMap[line];
-				matData.SRVNames.push_back(line);
+				materialTextureAssociationMap[ongoingMatName].push_back(line);
 			}
 			//diffuse map
 			else if (regex_search(line, match, diffuseTextureRgx)) {
@@ -451,7 +463,7 @@ Utility::MESH_TYPE SceneLoader::AutoLoadOBJMTL(string name)
 					utilizedTexturesMap.insert({ line,true });
 				}
 				matData.DiffuseTextureMapSRV = generatedTexturesMap[line];
-				matData.SRVNames.push_back(line);
+				materialTextureAssociationMap[ongoingMatName].push_back(line);
 			}
 			//specular color map
 			else if (regex_search(line, match, specularColorTextureRgx)) {
@@ -463,7 +475,7 @@ Utility::MESH_TYPE SceneLoader::AutoLoadOBJMTL(string name)
 					utilizedTexturesMap.insert({ line,true });
 				}
 				matData.SpecularColorTextureMapSRV = generatedTexturesMap[line];
-				matData.SRVNames.push_back(line);
+				materialTextureAssociationMap[ongoingMatName].push_back(line);
 			}
 			//specular highlight map
 			else if (regex_search(line, match, specularHighlightTextureRgx)) {
@@ -475,7 +487,7 @@ Utility::MESH_TYPE SceneLoader::AutoLoadOBJMTL(string name)
 					utilizedTexturesMap.insert({ line,true });
 				}
 				matData.SpecularHighlightTextureMapSRV = generatedTexturesMap[line];
-				matData.SRVNames.push_back(line);
+				materialTextureAssociationMap[ongoingMatName].push_back(line);
 			}
 			//alpha map
 			else if (regex_search(line, match, alphaTextureRgx)) {
@@ -487,7 +499,7 @@ Utility::MESH_TYPE SceneLoader::AutoLoadOBJMTL(string name)
 					utilizedTexturesMap.insert({ line,true });
 				}
 				matData.AlphaTextureMapSRV = generatedTexturesMap[line];
-				matData.SRVNames.push_back(line);
+				materialTextureAssociationMap[ongoingMatName].push_back(line);
 			}
 			//bump map
 			else if (regex_search(line, match, normalTextureRgx)) {
@@ -499,20 +511,35 @@ Utility::MESH_TYPE SceneLoader::AutoLoadOBJMTL(string name)
 					utilizedTexturesMap.insert({ line,true });
 				}
 				matData.NormalTextureMapSRV = generatedTexturesMap[line];
-				matData.SRVNames.push_back(line);
+				materialTextureAssociationMap[ongoingMatName].push_back(line);
 			}
 		}
 	}
 	//basically only executes if the end of the file is reached and there was an ongoing material being created
-	if (ongoingMat) {
+	if (ongoingMat && !generatedMaterialsMap.count(ongoingMatName)) {
+		Material someMaterial;
+
+		//Different shaders based on matData values
 		if (matData.NormalTextureMapSRV) {
-			if (!generatedMaterialsMap.count(ongoingMatName))
-				generatedMaterialsMap.insert({ ongoingMatName, new Material(ongoingMatName, matData, vertexShadersMap["Normal"], pixelShadersMap["Normal"], Config::Sampler) });
+			someMaterial = Material(ongoingMatName, matData, vertexShadersMap["Normal"], pixelShadersMap["Normal"], Config::Sampler);
 		}
-		else if (!generatedMaterialsMap.count(ongoingMatName))
-			generatedMaterialsMap.insert({ ongoingMatName, new Material(ongoingMatName, matData, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler) });
+		else {
+			someMaterial = Material(ongoingMatName, matData, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler);
+		}
+
 		matData = {};
 		ongoingMat = false;
+
+		//alloc the material to memallocator
+		bool success = false;
+		Material* allocatedMaterial = (Material*)EEMemoryAllocator->AllocateToPool(Utility::MATERIAL_POOL, sizeof(Material), success);
+		if (success) {
+			*allocatedMaterial = someMaterial;
+			generatedMaterialsMap.insert({ ongoingMatName, allocatedMaterial });
+
+			//record material as utilized
+			utilizedMaterialsMap.insert({ ongoingMatName,true });
+		}
 	}
 	infile.close();
 	return Utility::MESH_TYPE::GENERATED_MESH;
@@ -523,7 +550,7 @@ void SceneLoader::LoadScene(string sceneName)
 	//remove all current entities loaded
 	for (size_t i = 0; i < sceneEntities.size(); i++)
 	{
-		//delete sceneEntities[i];
+		sceneEntities[i]->FreeMemory();
 		EEMemoryAllocator->DeallocateFromPool(Utility::ENTITY_POOL, sceneEntities[i], sizeof(Entity));
 	}
 	sceneEntities.clear();
@@ -621,8 +648,8 @@ void SceneLoader::LoadScene(string sceneName)
 				allocatedEntity->SetRotation(DirectX::XMConvertToRadians(parsedNumbers[3]), DirectX::XMConvertToRadians(parsedNumbers[4]), DirectX::XMConvertToRadians(parsedNumbers[5]));
 				allocatedEntity->SetScale(parsedNumbers[6], parsedNumbers[7], parsedNumbers[8]);
 				allocatedEntity->CalcWorldMatrix();
-				allocatedEntity->InitRigidBody(dynamicsWorld);
-				if (allocatedEntity->collisionsEnabled && allocatedEntity->colliderDebugLinesEnabled) {
+				allocatedEntity->InitRigidBody(Config::DynamicsWorld);
+				if (Config::DebugLinesEnabled && allocatedEntity->colliderDebugLinesEnabled) {
 					vector<Collider*> colliders = allocatedEntity->GetColliders();
 					for (size_t d = 0; d < colliders.size(); d++)
 					{
@@ -654,7 +681,9 @@ void SceneLoader::LoadScene(string sceneName)
 	}
 	for (size_t i = 0; i < meshesToDelete.size(); i++)
 	{
-		delete generatedMeshesMap[meshesToDelete[i]];
+		Mesh* toDelete = generatedMeshesMap[meshesToDelete[i]];
+		toDelete->FreeMemory();
+		EEMemoryAllocator->DeallocateFromPool(MESH_POOL, toDelete, sizeof(Mesh));
 		generatedMeshesMap.erase(meshesToDelete[i]);
 	}
 
@@ -667,7 +696,7 @@ void SceneLoader::LoadScene(string sceneName)
 	}
 	for (size_t i = 0; i < texturesToDelete.size(); i++)
 	{
-		delete generatedTexturesMap[texturesToDelete[i]];
+		generatedTexturesMap[texturesToDelete[i]]->Release();
 		generatedTexturesMap.erase(texturesToDelete[i]);
 	}
 
@@ -680,7 +709,9 @@ void SceneLoader::LoadScene(string sceneName)
 	}
 	for (size_t i = 0; i < materialsToDelete.size(); i++)
 	{
-		delete generatedMaterialsMap[materialsToDelete[i]];
+		Material* toDelete = generatedMaterialsMap[materialsToDelete[i]];
+		toDelete->FreeMemory();
+		EEMemoryAllocator->DeallocateFromPool(MATERIAL_POOL, toDelete, sizeof(Material));
 		generatedMaterialsMap.erase(materialsToDelete[i]);
 	}
 }
@@ -745,6 +776,7 @@ Entity* SceneLoader::CreateEntity(EntityCreationParameters& para)
 	}
 	else {
 		e = Entity(para.entityName);
+		para.drawEntity = false;
 
 		allocatedEntity = (Entity*)EEMemoryAllocator->AllocateToPool(Utility::ENTITY_POOL, sizeof(Entity), success);
 		if (success) {
@@ -765,7 +797,7 @@ Entity* SceneLoader::CreateEntity(EntityCreationParameters& para)
 	if (EERenderer != nullptr && para.drawEntity)
 		EERenderer->AddRenderObject(allocatedEntity, mesh, mat);
 	if (para.initRigidBody)
-		allocatedEntity->InitRigidBody(dynamicsWorld);
+		allocatedEntity->InitRigidBody(Config::DynamicsWorld);
 
 	return allocatedEntity;
 }

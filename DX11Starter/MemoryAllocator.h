@@ -5,7 +5,7 @@ struct Pool{
 	void* startPtr = nullptr;
 	unsigned int size = 0;
 	unsigned int blockSize = 0;
-	unsigned int storedMemorySize = 0;
+	unsigned int slugSize = 0;
 	unsigned int usedMemory = 0;
 	void* currentPtr = nullptr;
 };
@@ -30,8 +30,8 @@ public:
 	static bool SetupInstance(unsigned int size, unsigned int alignment, unsigned int maxPools = 10);
 	static MemoryAllocator* GetInstance();
 	static bool DestroyInstance();
-	bool CreatePool(unsigned int pool, unsigned int size, unsigned int blockSize);
-	void* AllocateToPool(unsigned int pool, unsigned int memorySize, bool& success);
-	bool DeallocateFromPool(unsigned int pool, void* memoryLocation, unsigned int memorySize);
+	bool CreatePool(unsigned int pool, unsigned int size, unsigned int slugSize);
+	void* AllocateToPool(unsigned int pool, unsigned int slugSize, bool& success);
+	bool DeallocateFromPool(unsigned int pool, void* memoryLocation, unsigned int slugSize);
 };
 

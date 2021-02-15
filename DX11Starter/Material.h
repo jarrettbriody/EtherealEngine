@@ -28,7 +28,6 @@ struct MaterialData {
 	ID3D11ShaderResourceView* SpecularHighlightTextureMapSRV = nullptr; //map_Ns
 	ID3D11ShaderResourceView* AlphaTextureMapSRV = nullptr; //map_d
 	ID3D11ShaderResourceView* NormalTextureMapSRV = nullptr; //map_Bump
-	vector<string> SRVNames;
 };
 
 class Material
@@ -38,11 +37,13 @@ protected:
 	SimplePixelShader* pixelShader;
 	MaterialData materialData;
 	ID3D11SamplerState* samplerState;
-	string name;
+	string* name = nullptr;
 public:
 	Material();
 	Material(string n, MaterialData matData, SimpleVertexShader* vShader, SimplePixelShader* pShader, ID3D11SamplerState* sampler);
 	~Material();
+	void operator= (const Material& m);
+	void FreeMemory();
 	SimpleVertexShader* GetVertexShader();
 	SimplePixelShader* GetPixelShader();
 	MaterialData GetMaterialData();

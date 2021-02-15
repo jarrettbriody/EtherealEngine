@@ -6,9 +6,7 @@ using namespace DirectX;
 Game::Game(HINSTANCE hInstance)
 	: DXCore(
 		hInstance,					// The application's handle
-		"Small Shooting Arena",	   	// Text for the window's title bar
-		1600,						// Width of the window's client area
-		900,						// Height of the window's client area
+		"Ethereal Engine",		 	// Text for the window's title bar
 		true)						// Show extra stats (fps) in title bar?
 {
 
@@ -42,7 +40,7 @@ Game::~Game()
 	delete dispatcher;
 	delete broadphase;
 	delete solver;
-	delete dynamicsWorld;
+	delete Config::DynamicsWorld;
 
 
 	//delete EECamera;
@@ -62,26 +60,18 @@ void Game::Init()
 {
 	//dont delete this, its for finding mem leaks
 	//_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-	//_CrtSetBreakAlloc(1630);
+	//_CrtSetBreakAlloc(56756);
 	//_CrtSetBreakAlloc(49892);
 
 	// Physics -----------------
-
 	collisionConfiguration = new btDefaultCollisionConfiguration();
 	dispatcher = new  btCollisionDispatcher(collisionConfiguration);
 	broadphase = new  btDbvtBroadphase();
 	solver = new  btSequentialImpulseConstraintSolver;
-	dynamicsWorld = new btDiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
+	Config::DynamicsWorld = new btDiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
+	Config::DynamicsWorld->setGravity(btVector3(0, -3.0f, 0));
 
-	dynamicsWorld->setGravity(btVector3(0, -3.0f, 0));
-
-	Config::Device = device;
-	Config::Context = context;
-
-	EECamera = new Camera();
-	EECamera->UpdateProjectionMatrix(width, height);
-
-	DirectX::CreateDDSTextureFromFile(device, L"../../Assets/Textures/SunnyCubeMap.dds", 0, &skySRV);
+	DirectX::CreateDDSTextureFromFile(Config::Device, L"../../Assets/Textures/SunnyCubeMap.dds", 0, &skySRV);
 
 	D3D11_SAMPLER_DESC samplerDesc = {};
 	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
@@ -91,19 +81,19 @@ void Game::Init()
 	samplerDesc.MaxAnisotropy = 16;
 	samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
 
-	device->CreateSamplerState(&samplerDesc, &Config::Sampler);
+	Config::Device->CreateSamplerState(&samplerDesc, &Config::Sampler);
 
 	D3D11_RASTERIZER_DESC skyRD = {};
 	skyRD.CullMode = D3D11_CULL_FRONT;
 	skyRD.FillMode = D3D11_FILL_SOLID;
 	skyRD.DepthClipEnable = true;
-	device->CreateRasterizerState(&skyRD, &skyRasterState);
+	Config::Device->CreateRasterizerState(&skyRD, &skyRasterState);
 
 	D3D11_DEPTH_STENCIL_DESC skyDS = {};
 	skyDS.DepthEnable = true;
 	skyDS.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
 	skyDS.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
-	device->CreateDepthStencilState(&skyDS, &skyDepthState);
+	Config::Device->CreateDepthStencilState(&skyDS, &skyDepthState);
 
 	MemoryAllocator::SetupInstance(Config::MemoryAllocatorSize, Config::MemoryAllocatorAlignment);
 	EEMemoryAllocator = MemoryAllocator::GetInstance();
@@ -111,7 +101,10 @@ void Game::Init()
 	EEMemoryAllocator->CreatePool(Utility::MESH_POOL, Config::MemoryAllocatorMeshPoolSize, sizeof(Mesh));
 	EEMemoryAllocator->CreatePool(Utility::MATERIAL_POOL, Config::MemoryAllocatorMaterialPoolSize, sizeof(Material));
 
-	SceneLoader::SetupInstance(dynamicsWorld);
+	EECamera = new Camera();
+	EECamera->UpdateProjectionMatrix();
+
+	SceneLoader::SetupInstance();
 	EESceneLoader = SceneLoader::GetInstance();
 
 	EESceneLoader->LoadShaders();
@@ -130,50 +123,6 @@ void Game::Init()
 	ScriptManager::sceneEntitiesMap = &EESceneLoader->sceneEntitiesMap;
 	ScriptManager::sceneEntities = &EESceneLoader->sceneEntities;
 	ScriptManager::EESceneLoader = EESceneLoader;
-
-	/*
-	Entity* sphere1;
-	sphere1 = new Entity("sphere1", EESceneLoader->defaultMeshesMap["Sphere"]);
-	sphere1->SetupCollections();
-	sphere1->AddMaterial(EESceneLoader->defaultMaterialsMap["DEFAULT"]);
-	sphere1->AddMaterialNameToMesh("DEFAULT");
-	sphere1->SetPosition(8.0f, 8.0f, 8.0f);
-	sphere1->SetRotation(DirectX::XMConvertToRadians(30), DirectX::XMConvertToRadians(30), DirectX::XMConvertToRadians(30));
-	sphere1->SetScale(1.0f, 2.0f, 1.0f);
-	sphere1->InitRigidBody(dynamicsWorld);
-	EESceneLoader->sceneEntitiesMap.insert({ "sphere1", sphere1 });
-	EESceneLoader->sceneEntities.push_back(sphere1);
-
-	Entity* sphere2;
-	sphere2 = new Entity("sphere2", EESceneLoader->defaultMeshesMap["Sphere"]);
-	sphere2->SetupCollections();
-	sphere2->AddMaterial(EESceneLoader->defaultMaterialsMap["DEFAULT"]);
-	sphere2->AddMaterialNameToMesh("DEFAULT");
-	sphere2->SetPosition(2.0f, 2.0f, 2.0f);
-	sphere2->SetRotation(0.0f, 0.0f, 0.0f);
-	sphere2->SetScale(1.0f, 1.0f, 2.0f);
-	sphere2->InitRigidBody(dynamicsWorld);
-	EESceneLoader->sceneEntitiesMap.insert({ "sphere2", sphere2 });
-	EESceneLoader->sceneEntities.push_back(sphere2);
-
-	sphere1->AddChildEntity(sphere2);
-
-	Entity* sphere3;
-	sphere3 = new Entity("sphere3", EESceneLoader->defaultMeshesMap["Sphere"]);
-	sphere3->SetupCollections();
-	sphere3->AddMaterial(EESceneLoader->defaultMaterialsMap["DEFAULT"]);
-	sphere3->AddMaterialNameToMesh("DEFAULT");
-	sphere3->SetPosition(2.0f, 2.0f, 0.0f);
-	sphere3->SetRotation(0.0f, 0.0f, 90.0f);
-	sphere3->SetScale(1.0f, 1.0f, 1.0f);
-	sphere3->InitRigidBody(dynamicsWorld);
-	EESceneLoader->sceneEntitiesMap.insert({ "sphere3", sphere3 });
-	EESceneLoader->sceneEntities.push_back(sphere3);
-
-	sphere2->AddChildEntity(sphere3);
-
-	sphere1->CalcWorldMatrix();
-	*/
 
 	EntityCreationParameters para;
 
@@ -219,7 +168,7 @@ void Game::Init()
 	testLight->Range = 10.f;
 	testLight->SpotFalloff = 20.f;*/
 
-	Renderer::SetupInstance(swapChain, backBufferRTV, depthStencilView, width, height);
+	Renderer::SetupInstance();
 	EERenderer = Renderer::GetInstance();
 	EERenderer->AddCamera("main", EECamera);
 	EERenderer->EnableCamera("main");
@@ -228,12 +177,10 @@ void Game::Init()
 	EERenderer->SetDebugLinePixelShader(EESceneLoader->pixelShadersMap["DebugLine"]);
 	EERenderer->SetEntities(&(EESceneLoader->sceneEntities));
 	EERenderer->AddLight("Sun", dLight);
-	//EERenderer->AddLight("testLight", testLight);
 	EERenderer->SendAllLightsToShader(EESceneLoader->pixelShadersMap["DEFAULT"]);
 	EERenderer->SendAllLightsToShader(EESceneLoader->pixelShadersMap["Normal"]);
 	EERenderer->SetShadowMapResolution(4096);
 	EERenderer->InitShadows();
-
 	EESceneLoader->EERenderer = EERenderer;
 
 	Entity* e;
@@ -245,38 +192,9 @@ void Game::Init()
 
 	ScriptManager::EERenderer = EERenderer;
 
-	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-	//terrain -----------------
-	/*
-	terrain = new Terrain(device, "../../Assets/valley.raw16", 513, 513, 1.0f, 50.0f, 1.0f);
-	Entity* terrainEntity = new Entity("Terrain", dynamicsWorld, terrain);
-	terrainEntity->AddMaterial(EESceneLoader->defaultMaterialsMap["Terrain"]);
-	terrainEntity->AddMaterialNameToMesh("Terrain");
-	terrainEntity->SetPosition(0.f, -10.f, 0.f);
-	terrainEntity->SetRotation(0.f, 0.f, 0.f);
-	terrainEntity->SetScale(1.0f, 1.0f, 1.0f);
-	EESceneLoader->sceneEntitiesMap.insert({ "Terrain", terrainEntity });
-	EESceneLoader->sceneEntities.push_back(terrainEntity);
-	terrainEntity->CalcWorldMatrix();
-
-	water = new Water(0.0002f, device, 513, 513, 1.f, 1.f, 1.f, EESceneLoader->pixelShadersMap["Water"]);
-	water->SetOffsets(0.2f, 0.1f, 0.1f, 0.2f);
-	Entity* waterEntity = new Entity("Water", dynamicsWorld, water->terrain);
-	waterEntity->AddMaterial(EESceneLoader->defaultMaterialsMap["Water"]);
-	waterEntity->AddMaterialNameToMesh("Water");
-	waterEntity->SetPosition(0.f, -3.f, 0.f);
-	waterEntity->SetRotation(0.f, 0.f, 0.f);
-	waterEntity->SetScale(1.f, 1.f, 1.f);
-	EESceneLoader->sceneEntitiesMap.insert({ "Water", waterEntity });
-	EESceneLoader->sceneEntities.push_back(waterEntity);
-	waterEntity->CalcWorldMatrix();
-	*/
+	Config::Context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	// Audio -----------------
-
-	// Basic set-up for sound
-
 	fmodResult = FMOD::System_Create(&fmodSystem); // Create the Studio System object
 	if (fmodResult != FMOD_OK)
 	{
@@ -319,8 +237,7 @@ void Game::Init()
 	musicChannel->set3DAttributes(&pos, &vel);
 	musicChannel->set3DMinMaxDistance(0, 15.0f);
   
-	barrel = new TestScript();
-	barrel->Setup("barrel_1", EESceneLoader->sceneEntitiesMap["barrel_1"]);
+	Scripts::CreateScript(Scripts::SCRIPT_NAMES::BARREL, EESceneLoader->sceneEntitiesMap["barrel_1"]);
 
 	/*
 	Entity* fpsController = new Entity("FPSController");
@@ -342,7 +259,7 @@ void Game::Init()
 void Game::OnResize()
 {
 	DXCore::OnResize();
-	EECamera->UpdateProjectionMatrix(width, height);
+	EECamera->UpdateProjectionMatrix();
 }
 
 void Game::Update(float deltaTime, float totalTime)
@@ -397,9 +314,9 @@ void Game::Update(float deltaTime, float totalTime)
 void Game::PhysicsStep(float deltaTime)
 {
 	btTransform transform;
-	for (int i = 0; i < dynamicsWorld->getNumCollisionObjects(); i++)
+	for (int i = 0; i < Config::DynamicsWorld->getNumCollisionObjects(); i++)
 	{
-		btCollisionObject* obj = dynamicsWorld->getCollisionObjectArray()[i];
+		btCollisionObject* obj = Config::DynamicsWorld->getCollisionObjectArray()[i];
 		btRigidBody* body = btRigidBody::upcast(obj);
 
 		transform = body->getWorldTransform();
@@ -413,7 +330,7 @@ void Game::PhysicsStep(float deltaTime)
 
 		body->getMotionState()->setWorldTransform(transform);
 
-		dynamicsWorld->stepSimulation(deltaTime * 0.5f);
+		Config::DynamicsWorld->stepSimulation(deltaTime * 0.5f);
 
 		body->getMotionState()->getWorldTransform(transform);
 
@@ -475,8 +392,8 @@ void Game::DrawSky() {
 
 	UINT stride = sizeof(Vertex);
 	UINT offset = 0;
-	context->IASetVertexBuffers(0, 1, &vb, &stride, &offset);
-	context->IASetIndexBuffer(ib, DXGI_FORMAT_R32_UINT, 0);
+	Config::Context->IASetVertexBuffers(0, 1, &vb, &stride, &offset);
+	Config::Context->IASetIndexBuffer(ib, DXGI_FORMAT_R32_UINT, 0);
 
 	EESceneLoader->vertexShadersMap["Sky"]->SetMatrix4x4("view", EECamera->GetViewMatrix());
 	EESceneLoader->vertexShadersMap["Sky"]->SetMatrix4x4("projection", EECamera->GetProjMatrix());
@@ -487,43 +404,63 @@ void Game::DrawSky() {
 	EESceneLoader->pixelShadersMap["Sky"]->SetSamplerState("BasicSampler", Config::Sampler);
 	EESceneLoader->pixelShadersMap["Sky"]->SetShader();
 
-	context->RSSetState(skyRasterState);
-	context->OMSetDepthStencilState(skyDepthState, 0);
+	Config::Context->RSSetState(skyRasterState);
+	Config::Context->OMSetDepthStencilState(skyDepthState, 0);
 
-	context->DrawIndexed(EESceneLoader->defaultMeshesMap["Cube"]->GetIndexCount(), 0, 0);
+	Config::Context->DrawIndexed(EESceneLoader->defaultMeshesMap["Cube"]->GetIndexCount(), 0, 0);
 
-	context->RSSetState(0);
-	context->OMSetDepthStencilState(0, 0);
+	Config::Context->RSSetState(0);
+	Config::Context->OMSetDepthStencilState(0, 0);
 }
 
 void Game::GarbageCollect()
 {
-	int start = EESceneLoader->sceneEntities.size() - 1;
-	for (int i = start; i >= 0; i--)
+	size_t start = EESceneLoader->sceneEntities.size();
+	for (size_t i = start; i > 0; i--)
 	{
-		Entity* e = EESceneLoader->sceneEntities[i];
+		Entity* e = EESceneLoader->sceneEntities[i - 1];
 		if (e->destroyed) {
 			string name = e->GetName();
 			EESceneLoader->sceneEntitiesMap.erase(name);
-			EESceneLoader->sceneEntities.erase(EESceneLoader->sceneEntities.begin() + i);
-			delete e;
+			EESceneLoader->sceneEntities.erase(EESceneLoader->sceneEntities.begin() + i - 1);
+
+			if (Config::DebugLinesEnabled && e->colliderDebugLinesEnabled) {
+				DebugLines::debugLinesMap[name]->destroyed = true;
+				DebugLines::debugLinesMap.erase(name);
+			}
+
+			e->FreeMemory();
+			EEMemoryAllocator->DeallocateFromPool(ENTITY_POOL, e, sizeof(Entity));
 
 			vector<ScriptManager*> scriptFuncs = ScriptManager::scriptFunctionsMap[name];
-			for (size_t j = scriptFuncs.size() - 1; j >= 0; j--)
+			size_t cnt = scriptFuncs.size();
+			for (size_t j = cnt; j > 0; j--)
 			{
-				scriptFuncs[j]->destroyed = true;
+				scriptFuncs[j - 1]->destroyed = true;
 			}
 			ScriptManager::scriptFunctionsMap.erase(name);
 		}
 	}
 
-	start = ScriptManager::scriptFunctions.size() - 1;
-	for (int i = start; i >= 0; i--)
+	start = ScriptManager::scriptFunctions.size();
+	for (size_t i = start; i > 0; i--)
 	{
-		ScriptManager* s = ScriptManager::scriptFunctions[i];
+		ScriptManager* s = ScriptManager::scriptFunctions[i - 1];
 		if (s->destroyed) {
-			ScriptManager::scriptFunctions.erase(ScriptManager::scriptFunctions.begin() + i);
+			ScriptManager::scriptFunctions.erase(ScriptManager::scriptFunctions.begin() + i - 1);
 			delete s;
+		}
+	}
+
+	if (Config::DebugLinesEnabled) {
+		start = DebugLines::debugLines.size();
+		for (size_t i = start; i > 0; i--)
+		{
+			DebugLines* d = DebugLines::debugLines[i - 1];
+			if (d->destroyed) {
+				DebugLines::debugLines.erase(DebugLines::debugLines.begin() + i - 1);
+				delete d;
+			}
 		}
 	}
 }

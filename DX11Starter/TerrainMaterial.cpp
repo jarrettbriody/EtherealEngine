@@ -6,14 +6,16 @@ TerrainMaterial::TerrainMaterial(string n, TerrainMaterialData matData, SimpleVe
 	pixelShader = pShader;
 	terrainMaterialData = matData;
 	samplerState = sampler;
-	name = n;
+	name = new string(n);
 }
 
 TerrainMaterial::~TerrainMaterial()
 {
 	vertexShader = nullptr;
 	pixelShader = nullptr;
-	samplerState = nullptr;
+	samplerState = nullptr; 
+	if (name != nullptr)
+		delete name;
 }
 
 void TerrainMaterial::Prepare()

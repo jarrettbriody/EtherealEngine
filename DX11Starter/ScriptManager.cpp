@@ -43,11 +43,12 @@ void ScriptManager::CallOnMouseWheel(float wheelDelta, int x, int y)
 		OnMouseWheel(wheelDelta, x, y);
 }
 
-void ScriptManager::Setup(string name, Entity* e)
+void ScriptManager::Setup(Entity* e)
 {
-	this->name = name;
 	entity = e;
+	this->name = e->GetName();
 
+	//add this script (and thereby all script function pointers) to the list of scripts
 	scriptFunctions.push_back(this);
 	if (!ScriptManager::scriptFunctionsMap.count(name)) {
 		ScriptManager::scriptFunctionsMap.insert({ this->name, vector<ScriptManager*>() });

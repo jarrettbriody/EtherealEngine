@@ -22,6 +22,7 @@ class DebugLines {
 public:
 	static vector<DebugLines*> debugLines;
 	static map<string, DebugLines*> debugLinesMap;
+
 	ID3D11Buffer* vertexBuffer = nullptr;
 	ID3D11Buffer* indexBuffer = nullptr;
 	DebugLinesVertex* vertices = nullptr;
@@ -33,10 +34,13 @@ public:
 	string entityName;
 	int colliderID;
 	bool willUpdate;
+	bool destroyed = false;
 
 	DebugLines(string entityName = "UNNAMED", int colliderID = 0, bool willUpdate = true);
 
 	~DebugLines();
 
 	void GenerateCuboidVertexBuffer(XMFLOAT3* verts, int vertCount);
+
+	void Destroy();
 };

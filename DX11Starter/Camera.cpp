@@ -54,17 +54,17 @@ void Camera::SetPosition(XMFLOAT3 pos)
 	position = pos;
 }
 
-void Camera::UpdateProjectionMatrix(int w, int h)
+void Camera::UpdateProjectionMatrix()
 {
 	// Create the Projection matrix
 	// - This should match the window's aspect ratio, and also update anytime
 	//    the window resizes (which is already happening in OnResize() below)
 	XMMATRIX P = XMMatrixPerspectiveFovLH(
-		0.4f * 3.1415926535f,		// Field of View Angle
-		(float)w / h,				// Aspect ratio
-		0.1f,						// Near clip plane distance
-		10000.0f);					// Far clip plane distance
-	XMStoreFloat4x4(&projMatrix, XMMatrixTranspose(P)); // Transpose for HLSL!
+		fov,													// Field of View Angle
+		(float)Config::ViewPortWidth / Config::ViewPortHeight,	// Aspect ratio
+		nearClip,												// Near clip plane distance
+		farClip);												// Far clip plane distance
+	XMStoreFloat4x4(&projMatrix, XMMatrixTranspose(P));			// Transpose for HLSL!
 }
 
 void Camera::Update()

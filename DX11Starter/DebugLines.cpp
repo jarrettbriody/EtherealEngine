@@ -67,3 +67,8 @@ void DebugLines::GenerateCuboidVertexBuffer(XMFLOAT3* verts, int vertCount)
 	debugLines.push_back(this);
 	debugLinesMap.insert({ entityName,this });
 }
+
+void DebugLines::Destroy()
+{
+	destroyed = true;
+}

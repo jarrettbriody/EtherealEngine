@@ -6,7 +6,7 @@ WaterMaterial::WaterMaterial(string n, WaterMaterialData matData, SimpleVertexSh
 	pixelShader = pShader;
 	materialData = matData;
 	samplerState = sampler;
-	name = n;
+	name = new string(n);
 }
 
 WaterMaterial::~WaterMaterial()
@@ -14,6 +14,8 @@ WaterMaterial::~WaterMaterial()
 	vertexShader = nullptr;
 	pixelShader = nullptr;
 	samplerState = nullptr;
+	if (name != nullptr)
+		delete name;
 }
 
 void WaterMaterial::Prepare()
