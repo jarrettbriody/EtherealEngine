@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "ScriptManager.h"
 
 vector<ScriptManager*> ScriptManager::scriptFunctions;

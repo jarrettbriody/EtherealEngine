@@ -1,5 +1,6 @@
 #pragma once
 #include "pch.h"
+#include "SimpleShader.h"
 #include "DebugLines.h"
 #include "Utility.h"
 #include "Mesh.h"
@@ -24,6 +25,7 @@ struct EntityCreationParameters {
 	XMFLOAT3 scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
 	float entityMass = 0.0f;
 	bool initRigidBody = true;
+	bool collisionsEnabled = true;
 	bool drawEntity = true;
 	bool drawShadow = true;
 };

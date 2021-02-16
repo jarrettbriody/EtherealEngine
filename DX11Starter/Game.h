@@ -1,7 +1,7 @@
 #pragma once
 
-#include "DXCore.h"
 #include "pch.h"
+#include "DXCore.h"
 #include "Config.h"
 #include "Mesh.h"
 #include "Entity.h"
@@ -36,6 +36,7 @@ public:
 	void Draw(float deltaTime, float totalTime);
 
 	void PhysicsStep(float deltaTime);
+	void EnforcePhysics();
 	void AudioStep();
 	void DrawSky();
 

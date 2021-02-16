@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "SceneLoader.h"
 
 SceneLoader* SceneLoader::instance = nullptr;
@@ -785,6 +786,10 @@ Entity* SceneLoader::CreateEntity(EntityCreationParameters& para)
 			sceneEntities.push_back(allocatedEntity);
 		}
 	}
+
+	if (para.collisionsEnabled)
+		allocatedEntity->AddAutoBoxCollider();
+
 	allocatedEntity->SetPosition(para.position);
 	allocatedEntity->SetRotation(para.rotationRadians);
 	allocatedEntity->SetScale(para.scale);
@@ -798,6 +803,19 @@ Entity* SceneLoader::CreateEntity(EntityCreationParameters& para)
 		EERenderer->AddRenderObject(allocatedEntity, mesh, mat);
 	if (para.initRigidBody)
 		allocatedEntity->InitRigidBody(Config::DynamicsWorld, para.entityMass);
+
+	if (Config::DebugLinesEnabled && allocatedEntity->colliderDebugLinesEnabled) {
+		vector<Collider*> colliders = allocatedEntity->GetColliders();
+		for (size_t d = 0; d < colliders.size(); d++)
+		{
+			DebugLines* dl = new DebugLines(entityName, d);
+			XMFLOAT3 c = XMFLOAT3(1.0f, 0.0f, 0.0f);
+			dl->color = c;
+			dl->worldMatrix = colliders[d]->GetWorldMatrix();
+			XMFLOAT3* colliderCorners = colliders[d]->GetUntransformedColliderCorners();
+			dl->GenerateCuboidVertexBuffer(colliderCorners, 8);
+		}
+	}
 
 	return allocatedEntity;
 }

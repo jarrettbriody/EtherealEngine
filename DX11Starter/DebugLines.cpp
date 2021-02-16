@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "DebugLines.h"
 
 vector<DebugLines*> DebugLines::debugLines;

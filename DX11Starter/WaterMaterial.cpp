@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "WaterMaterial.h"
 
 WaterMaterial::WaterMaterial(string n, WaterMaterialData matData, SimpleVertexShader* vShader, SimplePixelShader* pShader, ID3D11SamplerState* sampler) : Material()

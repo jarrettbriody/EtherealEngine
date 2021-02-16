@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "Entity.h"
 
 Entity::Entity()
@@ -124,11 +125,11 @@ void Entity::InitRigidBody(btDiscreteDynamicsWorld* dw, float entityMass)
 
 	// Physics set-up
 	if (colliders->size() > 0) {
-		XMFLOAT3 span = (*colliders)[0]->GetSpan();
+		XMFLOAT3 span = (*colliders)[0]->GetHalfWidth();
 		XMVECTOR spanVec = XMLoadFloat3(&span);
-		spanVec = XMVectorScale(spanVec, 0.5f);
+		spanVec = XMVectorScale(spanVec, 1.0f);
 		XMStoreFloat3(&span, spanVec);
-		this->collShape = new btBoxShape(btVector3(btScalar(span.x), btScalar(span.y), btScalar(span.z)));
+		this->collShape = new btBoxShape(btVector3(btScalar(span.x * scale.x), btScalar(span.y * scale.y), btScalar(span.z * scale.z)));
 	}
 	else {
 		this->collShape = new btBoxShape(btVector3(btScalar(scale.x), btScalar(scale.y), btScalar(scale.z)));
@@ -465,25 +466,32 @@ void Entity::AddChildEntity(Entity* child)
 
 void Entity::AddAutoBoxCollider()
 {
-	if (mesh->HasChildren()) {
-		Mesh** children = mesh->GetChildren();
-		for (size_t i = 0; i < mesh->GetChildCount(); i++)
-		{
-			colliders->push_back(new Collider(children[i]->GetVertices()));
+	if (mesh != nullptr) {
+		if (mesh->HasChildren()) {
+			Mesh** children = mesh->GetChildren();
+			for (size_t i = 0; i < mesh->GetChildCount(); i++)
+			{
+				colliders->push_back(new Collider(children[i]->GetVertices()));
+			}
+		}
+		else {
+			colliders->push_back(new Collider(mesh->GetVertices()));
 		}
 	}
 	else {
-		colliders->push_back(new Collider(mesh->GetVertices()));
+		vector<XMFLOAT3> v;
+		v.push_back(XMFLOAT3(1.0f, 1.0f, 1.0f));
+		v.push_back(XMFLOAT3(-1.0f, -1.0f, -1.0f));
+		colliders->push_back(new Collider(v));
 	}
 }
 
 bool Entity::CheckSATCollision(Entity* other)
 {
-	bool otherHasChildren = other->MeshHasChildren();
 	unsigned int result;
-	for (size_t i = 0; i < (mesh->HasChildren() ? mesh->GetChildCount() : 1); i++)
+	for (size_t i = 0; i < colliders->size(); i++)
 	{
-		for (size_t j = 0; j < (other->MeshHasChildren() ? other->GetMeshChildCount() : 1); j++)
+		for (size_t j = 0; j < other->colliders->size(); j++)
 		{
 			if((*colliders)[i]->CheckSATCollision((*other->colliders)[j]) == -1) return true;
 		}
@@ -496,9 +504,9 @@ bool Entity::CheckSATCollisionAndCorrect(Entity* other)
 	if (isCollisionStatic) return false;
 	bool isColliding;
 	XMFLOAT3 result;
-	for (size_t i = 0; i < (mesh->HasChildren() ? mesh->GetChildCount() : 1); i++)
+	for (size_t i = 0; i < colliders->size(); i++)
 	{
-		for (size_t j = 0; j < (other->MeshHasChildren() ? other->GetMeshChildCount() : 1); j++)
+		for (size_t j = 0; j < other->colliders->size(); j++)
 		{
 			isColliding = (*colliders)[i]->CheckSATCollisionForCorrection((*other->colliders)[j], result);
 			if (isColliding) break;

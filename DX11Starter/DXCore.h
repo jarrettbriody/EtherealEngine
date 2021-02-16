@@ -1,8 +1,6 @@
 #pragma once
 
-#include <Windows.h>
-#include <d3d11.h>
-#include <string>
+#include "pch.h"
 #include "Config.h"
 
 // We can include the correct library files here

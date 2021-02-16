@@ -13,6 +13,13 @@ class FPSController : public ScriptManager
 
 	btRigidBody* playerRBody;
 
+	Collider* collider;
+
+	float spd = 0.1f;
+	float maxSpeed = 5.0f;
+
+	bool midAir = false;
+
 	void Init();
 
 	void Update();

@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "Config.h"
 
 ID3D11Device* Config::Device = nullptr;

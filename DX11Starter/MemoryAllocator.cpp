@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "MemoryAllocator.h"
 
 MemoryAllocator* MemoryAllocator::instance = nullptr;

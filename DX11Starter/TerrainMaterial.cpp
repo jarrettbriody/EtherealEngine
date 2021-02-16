@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "TerrainMaterial.h"
 
 TerrainMaterial::TerrainMaterial(string n, TerrainMaterialData matData, SimpleVertexShader* vShader, SimplePixelShader* pShader, ID3D11SamplerState* sampler) : Material()

@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "Game.h"
 #include "Vertex.h"
 
@@ -67,7 +68,7 @@ void Game::Init()
 	broadphase = new  btDbvtBroadphase();
 	solver = new  btSequentialImpulseConstraintSolver;
 	Config::DynamicsWorld = new btDiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
-	Config::DynamicsWorld->setGravity(btVector3(0, -3.0f, 0));
+	Config::DynamicsWorld->setGravity(btVector3(0, -10.0f, 0));
 
 	DirectX::CreateDDSTextureFromFile(Config::Device, L"../../Assets/Textures/SunnyCubeMap.dds", 0, &skySRV);
 
@@ -240,8 +241,8 @@ void Game::Init()
 	// FPS CONTROLLER
 	para = {};
 	para.entityName = "FPSController";
-	para.position = XMFLOAT3(0, 5, 5);
-	para.scale = XMFLOAT3(3.0f, 8.0f, 3.0f);
+	para.position = XMFLOAT3(0.0f, 5.0f, 5.0f);
+	para.scale = XMFLOAT3(0.25f, 1.0f, 0.25f);
 	para.initRigidBody = true;
 	para.entityMass = 1.0f;
 	Entity* fpsController = EESceneLoader->CreateEntity(para);
@@ -270,6 +271,8 @@ void Game::Update(float deltaTime, float totalTime)
 
 	GarbageCollect();
 
+	PhysicsStep(deltaTime);
+
 	// Play the 2D sound only if the channel group is not playing something
 	sfxGroup->isPlaying(&isPlaying);
 	if (GetAsyncKeyState('P') & 0x8000 && !isPlaying) {
@@ -284,10 +287,15 @@ void Game::Update(float deltaTime, float totalTime)
 		masterGroup->getMute(&mute);
 		masterGroup->setMute(!mute);
 	}
-
-	EECamera->Update();
-	//water->Update();
 	
+	for (size_t i = 0; i < ScriptManager::scriptFunctions.size(); i++)
+	{
+		ScriptManager* sf = ScriptManager::scriptFunctions[i];
+		sf->CallUpdate();
+	}
+
+	EnforcePhysics();
+
 	for (size_t i = 0; i < DebugLines::debugLines.size(); i++)
 	{
 		DebugLines* dbl = DebugLines::debugLines[i];
@@ -296,13 +304,7 @@ void Game::Update(float deltaTime, float totalTime)
 		}
 	}
 
-	PhysicsStep(deltaTime);
-	
-	for (size_t i = 0; i < ScriptManager::scriptFunctions.size(); i++)
-	{
-		ScriptManager* sf = ScriptManager::scriptFunctions[i];
-		sf->CallUpdate();
-	}
+	EECamera->Update();
 
 	AudioStep();
 
@@ -315,40 +317,64 @@ void Game::Update(float deltaTime, float totalTime)
 
 void Game::PhysicsStep(float deltaTime)
 {
+	btCollisionObject* obj = nullptr;
+	btRigidBody* body = nullptr;
+	btTransform transform;
+	Entity* entity = nullptr;
+
+	Config::DynamicsWorld->applyGravity();
+	Config::DynamicsWorld->stepSimulation(deltaTime, 1, btScalar(1.0) / btScalar(60.0));
+
 	for (int i = 0; i < Config::DynamicsWorld->getNumCollisionObjects(); i++)
 	{
-		btCollisionObject* obj = Config::DynamicsWorld->getCollisionObjectArray()[i];
-		btRigidBody* body = btRigidBody::upcast(obj);
+		obj = Config::DynamicsWorld->getCollisionObjectArray()[i];
+		body = btRigidBody::upcast(obj);
 
-		btTransform transform = body->getWorldTransform();
-		Entity* entity = (Entity*)body->getUserPointer();
-		XMFLOAT3 pos = entity->GetPosition();
-		XMFLOAT4 rot = entity->GetRotationQuaternion();
-		
-		btVector3 transformPos = btVector3(pos.x, pos.y, pos.z);
-		transform.setOrigin(transformPos);
-
-		btQuaternion res = btQuaternion(rot.x, rot.y, rot.z, rot.w);
-		transform.setRotation(res);
-		
-		body->setCenterOfMassTransform(transform);
-
-		// body->getMotionState()->setWorldTransform(transform);
-
-		Config::DynamicsWorld->applyGravity();
-		Config::DynamicsWorld->stepSimulation(deltaTime);
-
-		// body->getMotionState()->getWorldTransform(transform);
+		//transform = body->getWorldTransform();
+		entity = (Entity*)body->getUserPointer();
 
 		transform = body->getCenterOfMassTransform();
+		btVector3 p = transform.getOrigin();
 
 		btQuaternion q = transform.getRotation();
-		entity->SetPosition(body->getCenterOfMassPosition().getX(), body->getCenterOfMassPosition().getY(), body->getCenterOfMassPosition().getZ());
+		entity->SetPosition(p.getX(),p.getY(), p.getZ());
 		entity->SetRotation(XMFLOAT4(q.getX(), q.getY(), q.getZ(), q.getW()));
 		entity->CalcWorldMatrix();
 	}
 
 	//EESceneLoader->sceneEntities[0]->GetRBody()->setLinearVelocity(btVector3(0.0f, EESceneLoader->sceneEntities[0]->GetRBody()->getLinearVelocity().getY(), 0.0f));
+}
+
+void Game::EnforcePhysics()
+{
+	btCollisionObject* obj = nullptr;
+	btRigidBody* body = nullptr;
+	btTransform transform;
+	Entity* entity = nullptr;
+
+	for (int i = 0; i < Config::DynamicsWorld->getNumCollisionObjects(); i++)
+	{
+		obj = Config::DynamicsWorld->getCollisionObjectArray()[i];
+		body = btRigidBody::upcast(obj);
+
+		transform = body->getCenterOfMassTransform();
+		entity = (Entity*)body->getUserPointer();
+		entity->CalcWorldMatrix();
+		XMFLOAT3 pos = entity->GetPosition();
+		XMFLOAT4 rot = entity->GetRotationQuaternion();
+
+		btVector3 transformPos = btVector3(pos.x, pos.y, pos.z);
+		transform.setOrigin(transformPos);
+
+		btQuaternion res = btQuaternion(rot.x, rot.y, rot.z, rot.w);
+		transform.setRotation(res);
+
+		body->setCenterOfMassTransform(transform);
+
+		// body->getMotionState()->setWorldTransform(transform);
+
+		// body->getMotionState()->getWorldTransform(transform);
+	}
 }
 
 void Game::AudioStep()

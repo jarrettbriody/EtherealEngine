@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "Collider.h"
 
 Collider::Collider()
@@ -321,4 +322,9 @@ XMFLOAT4X4 Collider::GetWorldMatrix()
 XMFLOAT3 Collider::GetSpan() 
 {
 	return span;
+}
+
+XMFLOAT3 Collider::GetHalfWidth()
+{
+	return halfWidth;
 }

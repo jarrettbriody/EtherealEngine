@@ -3,6 +3,9 @@
 #include <d3d11.h>
 #include <DirectXMath.h>
 
+//windows
+#include <Windows.h>
+
 //std libraries
 #include <stdlib.h>
 #include <algorithm>
