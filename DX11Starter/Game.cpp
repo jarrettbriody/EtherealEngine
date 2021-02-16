@@ -155,11 +155,12 @@ void Game::Init()
 
 	Light* dLight = new Light;
 	dLight->Type = LIGHT_TYPE_DIR;
-	XMFLOAT3 c = XMFLOAT3(1.0f, 244.0f / 255.0f, 214.0f / 255.0f);
+	XMFLOAT3 c = XMFLOAT3(1.0f, 252.0f / 255.0f, 222.0f / 255.0f);
 	dLight->Color = c;
-	XMFLOAT3 d = XMFLOAT3(0.5f, -1.0f, 1.0f);
+	XMFLOAT3 d = XMFLOAT3(-0.265943f, -0.92075f, 0.28547f);
 	dLight->Direction = d;
-	dLight->Intensity = 1.f;
+	dLight->Intensity = 1.0f;
+	dLight->Position = XMFLOAT3(-334.0f, 179.5f, -175.9f);
 
 	/*testLight = new Light;
 	testLight->Type = LIGHT_TYPE_SPOT;
@@ -181,7 +182,7 @@ void Game::Init()
 	EERenderer->AddLight("Sun", dLight);
 	EERenderer->SendAllLightsToShader(EESceneLoader->pixelShadersMap["DEFAULT"]);
 	EERenderer->SendAllLightsToShader(EESceneLoader->pixelShadersMap["Normal"]);
-	EERenderer->SetShadowMapResolution(4096);
+	EERenderer->SetShadowMapResolution(16384);
 	EERenderer->InitShadows();
 	EESceneLoader->EERenderer = EERenderer;
 
@@ -346,9 +347,13 @@ void Game::PhysicsStep(float deltaTime)
 
 		transform = body->getCenterOfMassTransform();
 		btVector3 p = transform.getOrigin();
+		//XMFLOAT3 centerLocal = entity->GetCollider()->GetCenterLocal();
+		//XMFLOAT3 scale = entity->GetScale();
+		//centerLocal = XMFLOAT3(centerLocal.x * scale.x, centerLocal.y * scale.y, centerLocal.z * scale.z);
+		XMFLOAT3 pos = XMFLOAT3(p.getX(), p.getY(), p.getZ());
 
 		btQuaternion q = transform.getRotation();
-		entity->SetPosition(p.getX(),p.getY(), p.getZ());
+		entity->SetPosition(pos);
 		entity->SetRotation(XMFLOAT4(q.getX(), q.getY(), q.getZ(), q.getW()));
 		entity->CalcWorldMatrix();
 	}
@@ -371,7 +376,13 @@ void Game::EnforcePhysics()
 		transform = body->getCenterOfMassTransform();
 		entity = (Entity*)body->getUserPointer();
 		entity->CalcWorldMatrix();
+
 		XMFLOAT3 pos = entity->GetPosition();
+		//XMFLOAT3 centerLocal = entity->GetCollider()->GetCenterLocal();
+		//XMFLOAT3 scale = entity->GetScale();
+		//centerLocal = XMFLOAT3(centerLocal.x * scale.x, centerLocal.y * scale.y, centerLocal.z * scale.z);
+		pos = XMFLOAT3(pos.x, pos.y, pos.z);
+
 		XMFLOAT4 rot = entity->GetRotationQuaternion();
 
 		btVector3 transformPos = btVector3(pos.x, pos.y, pos.z);

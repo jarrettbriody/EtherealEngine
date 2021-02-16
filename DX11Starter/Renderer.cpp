@@ -154,16 +154,16 @@ void Renderer::InitShadows()
 	// the light's point of view
 	XMFLOAT3 dir = lights["Sun"]->Direction;
 	XMMATRIX shadowView = XMMatrixTranspose(XMMatrixLookToLH(
-		XMVectorSet(dir.x * -15, dir.y * -15, dir.z * -15, 0),
+		XMVectorSet(lights["Sun"]->Position.x, lights["Sun"]->Position.y, lights["Sun"]->Position.z, 0),
 		XMVectorSet(dir.x, dir.y, dir.z, 0),
 		XMVectorSet(0, 1, 0, 0)));
 	XMStoreFloat4x4(&shadowViewMatrix, shadowView);
 
 	XMMATRIX shadowProj = XMMatrixTranspose(XMMatrixOrthographicLH(
-		45,
-		45,
+		750.0f,
+		750.0f,
 		0.1f,
-		200));
+		1000.0f));
 	XMStoreFloat4x4(&shadowProjectionMatrix, shadowProj);
 }
 

@@ -284,12 +284,18 @@ void SceneLoader::BuildDefaultEntity(string entityName, string objName, Entity* 
 	}
 	if (objName == "Blood_Button") {
 		e->AddMaterial(defaultMaterialsMap["Grey"], true);
+		XMFLOAT3 s = e->GetScale();
+		e->SetRepeatTexture(s.x / 2.0f, s.y / 2.0f);
 	}
 	if (objName == "Wall") {
 		e->AddMaterial(defaultMaterialsMap["White"], true);
+		XMFLOAT3 s = e->GetScale();
+		e->SetRepeatTexture(s.x / 2.0f, s.z / 2.0f);
 	}
 	if (objName == "Floor") {
 		e->AddMaterial(defaultMaterialsMap["Grey4"], true);
+		XMFLOAT3 s = e->GetScale();
+		e->SetRepeatTexture(s.x / 2.0f, s.z / 2.0f);
 	}
 	if (objName == "Manhole") {
 		e->AddMaterial(defaultMaterialsMap["White"], true);

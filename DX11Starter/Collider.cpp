@@ -92,6 +92,10 @@ void Collider::SetWorldMatrix(XMFLOAT4X4 worldMat)
 	calculableCenterGlobal = XMVector4Transform(calculableCenterGlobal, calculableWorldMatrix);
 	XMStoreFloat3(&centerGlobal, calculableCenterGlobal);
 
+	XMVECTOR calculableHalfWidth = XMLoadFloat3(&halfWidth);
+	calculableHalfWidth = XMVector4Transform(calculableHalfWidth, calculableWorldMatrix);
+	XMStoreFloat3(&halfWidthGlobal, calculableHalfWidth);
+
 	//Place them in world space
 	for (int i = 0; i < 8; i++)
 	{
@@ -343,7 +347,17 @@ XMFLOAT3 Collider::GetHalfWidth()
 	return halfWidth;
 }
 
+XMFLOAT3 Collider::GetHalfWidthGlobal()
+{
+	return halfWidthGlobal;
+}
+
 XMFLOAT3 Collider::GetCenterLocal()
 {
 	return centerLocal;
+}
+
+XMFLOAT3 Collider::GetCenterGlobal()
+{
+	return centerGlobal;
 }
