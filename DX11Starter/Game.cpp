@@ -255,6 +255,9 @@ void Game::Init()
 		sf->CallInit();
 	}
 
+	if(Config::Fullscreen)
+		Config::SwapChain->SetFullscreenState(true, NULL);
+
 	//cout << sizeof(Entity);
 }
 
@@ -266,8 +269,10 @@ void Game::OnResize()
 
 void Game::Update(float deltaTime, float totalTime)
 {
-	if (GetAsyncKeyState(VK_ESCAPE))
+	if (GetAsyncKeyState(VK_ESCAPE)) {
+		Config::SwapChain->SetFullscreenState(false, NULL);
 		Quit();
+	}
 
 	GarbageCollect();
 

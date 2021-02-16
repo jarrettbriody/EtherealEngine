@@ -11,6 +11,7 @@ public:
 	static ID3D11DepthStencilView* DepthStencilView;
 	static unsigned int ViewPortWidth;
 	static unsigned int ViewPortHeight;
+	static bool Fullscreen;
 
 	static unsigned int MemoryAllocatorSize; //1 gig ish
 	static unsigned int MemoryAllocatorAlignment; //32 byte boundary
