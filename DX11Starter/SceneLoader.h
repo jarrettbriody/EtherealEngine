@@ -62,6 +62,8 @@ public:
 	map<string, Entity*> sceneEntitiesMap;
 	vector<Entity*> sceneEntities;
 
+	string modelPath = "../../Assets/Models/";
+
 	static bool SetupInstance();
 	static SceneLoader* GetInstance();
 	static bool DestroyInstance();
@@ -75,6 +77,7 @@ public:
 
 	Utility::MESH_TYPE AutoLoadOBJMTL(string name);
 	void LoadScene(string sceneName = "scene");
+	void SetModelPath(string path);
 
 	Entity* CreateEntity(EntityCreationParameters& para);
 };

@@ -1,0 +1,5 @@
+newmtl Wood_Debree
+map_Kd prototype_512x512_white.png
+Kd 0.3018867 0.2317459 0.1409754
+d 1
+

@@ -10,6 +10,7 @@ protected:
 	XMFLOAT3 collisionProjVecs[3];
 	XMFLOAT3 colliderCorners[8];
 	XMFLOAT3 untransformedColliderCorners[8];
+	XMFLOAT3 pivotShiftedColliderCorners[8];
 	bool collisionsEnabled = true;
 
 private:
@@ -35,8 +36,10 @@ public:
 	bool CheckSATCollisionForCorrection(Collider* other, XMFLOAT3& result);
 	XMFLOAT3* GetColliderCorners();
 	XMFLOAT3* GetUntransformedColliderCorners();
+	XMFLOAT3* GetPivotShiftedColliderCorners();
 	XMFLOAT4X4 GetWorldMatrix();
 	XMFLOAT3 GetSpan();
 	XMFLOAT3 GetHalfWidth();
+	XMFLOAT3 GetCenterLocal();
 };
 

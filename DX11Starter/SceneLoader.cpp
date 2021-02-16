@@ -26,9 +26,11 @@ SceneLoader::~SceneLoader()
 	for (auto meshMapIter = defaultMeshesMap.begin(); meshMapIter != defaultMeshesMap.end(); ++meshMapIter)
 	{
 		if (meshMapIter->first != "Ground" &&
-			meshMapIter->first != "BloodButton" &&
+			meshMapIter->first != "Blood_Button" &&
 			meshMapIter->first != "Graybox" &&
-			meshMapIter->first != "BloodFountain") {
+			meshMapIter->first != "Wall" &&
+			meshMapIter->first != "Manhole" &&
+			meshMapIter->first != "Floor") {
 			//delete meshMapIter->second;
 			meshMapIter->second->FreeMemory();
 			//cout << "Deleting " << meshMapIter->first << endl;
@@ -182,9 +184,10 @@ void SceneLoader::LoadDefaultMeshes()
 
 
 	defaultMeshesMap.insert({ "Ground", defaultMeshesMap["Cube"] });
-	defaultMeshesMap.insert({ "BloodButton", defaultMeshesMap["Cube"] });
-	defaultMeshesMap.insert({ "Graybox", defaultMeshesMap["Cube"] });
-	defaultMeshesMap.insert({ "BloodFountain", defaultMeshesMap["Cylinder"] });
+	defaultMeshesMap.insert({ "Blood_Button", defaultMeshesMap["Cube"] });
+	defaultMeshesMap.insert({ "Wall", defaultMeshesMap["Cube"] });
+	defaultMeshesMap.insert({ "Floor", defaultMeshesMap["Cube"] });
+	defaultMeshesMap.insert({ "Manhole", defaultMeshesMap["Cylinder"] });
 }
 
 void SceneLoader::LoadDefaultTextures()
@@ -206,6 +209,8 @@ void SceneLoader::LoadDefaultTextures()
 	defaultTexturesMap.insert({ "waterNormal1", Utility::LoadSRV("water_normal1.jpeg") });
 	defaultTexturesMap.insert({ "waterNormal2", Utility::LoadSRV("water_normal2.png") });
 	defaultTexturesMap.insert({ "Grey", Utility::LoadSRV("Default/grey.png") });
+	defaultTexturesMap.insert({ "Grey4", Utility::LoadSRV("Default/grey4.png") });
+	defaultTexturesMap.insert({ "White", Utility::LoadSRV("Default/white.png") });
 }
 
 void SceneLoader::LoadDefaultMaterials()
@@ -254,6 +259,20 @@ void SceneLoader::LoadDefaultMaterials()
 	allocatedMaterial = (Material*)EEMemoryAllocator->AllocateToPool(Utility::MATERIAL_POOL, sizeof(Material), success);
 	*allocatedMaterial = greyMaterial;
 	defaultMaterialsMap.insert({ "Grey", allocatedMaterial });
+
+	materialData = {};
+	materialData.DiffuseTextureMapSRV = defaultTexturesMap["Grey4"];
+	Material grey4Material = Material("Grey4", materialData, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler);
+	allocatedMaterial = (Material*)EEMemoryAllocator->AllocateToPool(Utility::MATERIAL_POOL, sizeof(Material), success);
+	*allocatedMaterial = grey4Material;
+	defaultMaterialsMap.insert({ "Grey4", allocatedMaterial });
+
+	materialData = {};
+	materialData.DiffuseTextureMapSRV = defaultTexturesMap["White"];
+	Material whiteMaterial = Material("White", materialData, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler);
+	allocatedMaterial = (Material*)EEMemoryAllocator->AllocateToPool(Utility::MATERIAL_POOL, sizeof(Material), success);
+	*allocatedMaterial = whiteMaterial;
+	defaultMaterialsMap.insert({ "White", allocatedMaterial });
 }
 
 void SceneLoader::BuildDefaultEntity(string entityName, string objName, Entity* e)
@@ -263,14 +282,17 @@ void SceneLoader::BuildDefaultEntity(string entityName, string objName, Entity* 
 		XMFLOAT3 s = e->GetScale();
 		e->SetRepeatTexture(s.x / 2.0f, s.z / 2.0f);
 	}
-	if (objName == "BloodButton") {
+	if (objName == "Blood_Button") {
 		e->AddMaterial(defaultMaterialsMap["Grey"], true);
 	}
-	if (objName == "Graybox") {
-		e->AddMaterial(defaultMaterialsMap["Grey"], true);
+	if (objName == "Wall") {
+		e->AddMaterial(defaultMaterialsMap["White"], true);
 	}
-	if (objName == "BloodFountain") {
-		e->AddMaterial(defaultMaterialsMap["Red"], true);
+	if (objName == "Floor") {
+		e->AddMaterial(defaultMaterialsMap["Grey4"], true);
+	}
+	if (objName == "Manhole") {
+		e->AddMaterial(defaultMaterialsMap["White"], true);
 	}
 }
 
@@ -307,7 +329,7 @@ Utility::MESH_TYPE SceneLoader::AutoLoadOBJMTL(string name)
 		return Utility::MESH_TYPE::GENERATED_MESH;
 	}
 
-	string objPath = "../../Assets/Models/" + name + ".obj";
+	string objPath = modelPath + name + ".obj";
 
 	//Mesh will change bool ref to false if OBJ file does not exist, otherwise it will generate it and add to map
 	bool success;
@@ -338,7 +360,7 @@ Utility::MESH_TYPE SceneLoader::AutoLoadOBJMTL(string name)
 		return Utility::MESH_TYPE::GENERATED_MESH;
 	}
 
-	ifstream infile("../../Assets/Models/" + mtlPath);
+	ifstream infile(modelPath + mtlPath);
 
 	if (!infile.is_open()) {
 		cout << "Material Template Library (MTL) file not found. Please include MTL file in same directory as OBJ file or remove the internal OBJ link to " + mtlPath + "." << endl;
@@ -658,7 +680,7 @@ void SceneLoader::LoadScene(string sceneName)
 						XMFLOAT3 c = XMFLOAT3(1.0f, 0.0f, 0.0f);
 						dl->color = c;
 						dl->worldMatrix = colliders[d]->GetWorldMatrix();
-						XMFLOAT3* colliderCorners = colliders[d]->GetUntransformedColliderCorners();
+						XMFLOAT3* colliderCorners = colliders[d]->GetPivotShiftedColliderCorners();
 						dl->GenerateCuboidVertexBuffer(colliderCorners, 8);
 					}
 				}
@@ -715,6 +737,11 @@ void SceneLoader::LoadScene(string sceneName)
 		EEMemoryAllocator->DeallocateFromPool(MATERIAL_POOL, toDelete, sizeof(Material));
 		generatedMaterialsMap.erase(materialsToDelete[i]);
 	}
+}
+
+void SceneLoader::SetModelPath(string path)
+{
+	modelPath = path;
 }
 
 Entity* SceneLoader::CreateEntity(EntityCreationParameters& para)
@@ -812,7 +839,7 @@ Entity* SceneLoader::CreateEntity(EntityCreationParameters& para)
 			XMFLOAT3 c = XMFLOAT3(1.0f, 0.0f, 0.0f);
 			dl->color = c;
 			dl->worldMatrix = colliders[d]->GetWorldMatrix();
-			XMFLOAT3* colliderCorners = colliders[d]->GetUntransformedColliderCorners();
+			XMFLOAT3* colliderCorners = colliders[d]->GetPivotShiftedColliderCorners();
 			dl->GenerateCuboidVertexBuffer(colliderCorners, 8);
 		}
 	}

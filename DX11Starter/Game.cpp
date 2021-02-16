@@ -112,12 +112,13 @@ void Game::Init()
 	EESceneLoader->LoadDefaultTextures();
 	EESceneLoader->LoadDefaultMaterials();
 
-	EESceneLoader->LoadScene("ArenaV2");
+	//EESceneLoader->LoadScene("ArenaV2");
 
-	//EESceneLoader->LoadScene("Tutorial");
+	EESceneLoader->SetModelPath("../../Assets/Models/City/");
+	EESceneLoader->LoadScene("City");
 
-	EESceneLoader->sceneEntitiesMap["barrel_1"]->isCollisionStatic = false;
-	EESceneLoader->sceneEntitiesMap["barrel_1 (2)"]->isCollisionStatic = false;
+	//EESceneLoader->sceneEntitiesMap["barrel_1"]->isCollisionStatic = false;
+	//EESceneLoader->sceneEntitiesMap["barrel_1 (2)"]->isCollisionStatic = false;
 
 	ScriptManager::sceneEntitiesMap = &EESceneLoader->sceneEntitiesMap;
 	ScriptManager::sceneEntities = &EESceneLoader->sceneEntities;
@@ -125,6 +126,7 @@ void Game::Init()
 
 	EntityCreationParameters para;
 
+	/*
 	para.entityName = "cube1";
 	para.meshName = "Cube";
 	para.materialName = "Grey";
@@ -146,6 +148,7 @@ void Game::Init()
 	cube1->AddChildEntity(cube2);
 
 	cube1->CalcWorldMatrix();
+	*/
 
 	prevMousePos.x = 0;
 	prevMousePos.y = 0;
@@ -236,8 +239,9 @@ void Game::Init()
 	musicChannel->set3DAttributes(&pos, &vel);
 	musicChannel->set3DMinMaxDistance(0, 15.0f);
   
-	Scripts::CreateScript(Scripts::SCRIPT_NAMES::BARREL, EESceneLoader->sceneEntitiesMap["barrel_1"]);
+	//Scripts::CreateScript(Scripts::SCRIPT_NAMES::BARREL, EESceneLoader->sceneEntitiesMap["barrel_1"]);
 
+	/*
 	// FPS CONTROLLER
 	para = {};
 	para.entityName = "FPSController";
@@ -248,12 +252,14 @@ void Game::Init()
 	Entity* fpsController = EESceneLoader->CreateEntity(para);
 
 	Scripts::CreateScript(Scripts::SCRIPT_NAMES::FPSCONTROLLER, fpsController);
+	*/
 
 	for (size_t i = 0; i < ScriptManager::scriptFunctions.size(); i++)
 	{
 		ScriptManager* sf = ScriptManager::scriptFunctions[i];
 		sf->CallInit();
 	}
+
 
 	if(Config::Fullscreen)
 		Config::SwapChain->SetFullscreenState(true, NULL);

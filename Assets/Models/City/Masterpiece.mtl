@@ -1,0 +1,13 @@
+
+newmtl art
+map_Kd picture_s.png
+map_Bump picture_n.png
+Ka  0.6 0.6 0.6
+Kd  0.6 0.6 0.6
+Ks  0.9 0.9 0.9
+d  1.0
+Ns  0.0
+illum 2
+
+
+
