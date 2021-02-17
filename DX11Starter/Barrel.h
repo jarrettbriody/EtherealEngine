@@ -1,6 +1,5 @@
 #pragma once
 #include "ScriptManager.h"
-#include <iostream>
 
 using namespace std;
 

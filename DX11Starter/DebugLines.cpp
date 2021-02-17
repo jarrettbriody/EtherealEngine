@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "DebugLines.h"
 
 vector<DebugLines*> DebugLines::debugLines;
@@ -66,4 +67,9 @@ void DebugLines::GenerateCuboidVertexBuffer(XMFLOAT3* verts, int vertCount)
 
 	debugLines.push_back(this);
 	debugLinesMap.insert({ entityName,this });
+}
+
+void DebugLines::Destroy()
+{
+	destroyed = true;
 }

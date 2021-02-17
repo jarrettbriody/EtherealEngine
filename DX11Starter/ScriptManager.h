@@ -2,19 +2,6 @@
 #include "Renderer.h"
 #include "SceneLoader.h"
 
-struct EntityCreationParameters {
-	string entityName = "";
-	string meshName = "";
-	string materialName = "";
-	XMFLOAT3 position = ZERO_VECTOR3;
-	XMFLOAT3 rotationRadians = ZERO_VECTOR3;
-	XMFLOAT3 scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
-	bool initRigidBody = true;
-	float entityMass = 0.0f;
-	bool drawEntity = true;
-	bool drawShadow = true;
-};
-
 class ScriptManager
 {
 public:
@@ -22,8 +9,8 @@ public:
 	static map<string, vector<ScriptManager*>> scriptFunctionsMap;
 	static map<string, Entity*>* sceneEntitiesMap;
 	static vector<Entity*>* sceneEntities;
-	static Renderer* renderer;
-	static SceneLoader* sceneLoader;
+	static Renderer* EERenderer;
+	static SceneLoader* EESceneLoader;
 
 	bool destroyed = false;
 
@@ -36,7 +23,7 @@ public:
 	void CallOnMouseMove(WPARAM buttonState, int x, int y);
 	void CallOnMouseWheel(float wheelDelta, int x, int y);
 
-	void Setup(string name, Entity* e);
+	void Setup(Entity* e);
 
 	virtual ~ScriptManager();
 protected:

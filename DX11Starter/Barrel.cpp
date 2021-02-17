@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "Barrel.h"
 
 void TestScript::Init()
@@ -45,11 +46,16 @@ void TestScript::Update()
 
 	//transform hierarchy spheres
 	if (GetAsyncKeyState('F') & 0x8000) {
-		(*eMap)["sphere1"]->RotateAroundAxis(Y_AXIS, 0.05f);
-		(*eMap)["sphere1"]->CalcWorldMatrix();
+		(*eMap)["cube1"]->RotateAroundAxis(Y_AXIS, 0.05f);
+		(*eMap)["cube1"]->CalcWorldMatrix();
 	}
 	if (GetAsyncKeyState('G') & 0x8000) {
-		(*eMap)["sphere1"]->RotateAroundAxis(Y_AXIS, -0.05f);
-		(*eMap)["sphere1"]->CalcWorldMatrix();
+		(*eMap)["cube1"]->RotateAroundAxis(Y_AXIS, -0.05f);
+		(*eMap)["cube1"]->CalcWorldMatrix();
+	}
+
+	//delete barrel
+	if (GetAsyncKeyState('L') & 0x8000) {
+		entity->Destroy();
 	}
 }

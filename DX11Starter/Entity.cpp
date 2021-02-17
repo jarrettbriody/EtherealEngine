@@ -1,9 +1,19 @@
+#include "pch.h"
 #include "Entity.h"
 
+Entity::Entity()
+{
+	
+}
 
 Entity::Entity(string entityName)
 {
-	name = entityName;
+	name = new string();
+	materialMap = new map<string, Material*>;
+	children = new vector<Entity*>;
+	colliders = new vector<Collider*>;
+	
+	*name = entityName;
 	position = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
 	scale = DirectX::XMFLOAT3(1.0f, 1.0f, 1.0f);
 	rotation = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
@@ -18,8 +28,13 @@ Entity::Entity(string entityName)
 
 Entity::Entity(string entityName, Mesh* entityMesh, Material* mat)
 {
+	name = new string();
+	materialMap = new map<string, Material*>;
+	children = new vector<Entity*>;
+	colliders = new vector<Collider*>;
+
 	mesh = entityMesh;
-	name = entityName;
+	*name = entityName;
 	position = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
 	scale = DirectX::XMFLOAT3(1.0f, 1.0f, 1.0f);
 	rotation = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
@@ -30,21 +45,77 @@ Entity::Entity(string entityName, Mesh* entityMesh, Material* mat)
 	DirectX::XMMATRIX W = DirectX::XMMatrixIdentity();
 	DirectX::XMStoreFloat4x4(&worldMatrix, XMMatrixTranspose(W));
 	if (mat != nullptr)
-		materialMap.insert({ mat->GetName(), mat });
+		materialMap->insert({ mat->GetName(), mat });
 }
 
 
 Entity::~Entity()
 {
-	for (size_t i = 0; i < colliders.size(); i++)
-	{
-		delete colliders[i];
+	if (colliders != nullptr) {
+		for (size_t i = 0; i < colliders->size(); i++)
+		{
+			delete (*colliders)[i];
+		}
+		colliders->empty();
 	}
 
-	dynamicsWorld->removeCollisionObject(rBody);
-	delete rBody->getMotionState();
-	delete rBody;
-	delete collShape;
+	if(dynamicsWorld != nullptr)
+		dynamicsWorld->removeCollisionObject(rBody);
+	if (rBody != nullptr) {
+		delete rBody->getMotionState();
+		delete rBody;
+	}
+	
+	if(collShape != nullptr)
+		delete collShape;
+
+	if (materialMap != nullptr) {
+		materialMap->empty();
+		delete materialMap;
+	}
+		
+	if (children != nullptr) {
+		children->empty();
+		delete children;
+	}
+	if (colliders != nullptr)
+		delete colliders;
+
+	delete name;
+}
+
+void Entity::operator=(const Entity& e)
+{
+	name = new string();
+	materialMap = new map<string, Material*>();
+	children = new vector<Entity*>();
+	colliders = new vector<Collider*>();
+
+	*name = *e.name;
+	*children = vector<Entity*>(*e.children);
+	*colliders = vector<Collider*>(*e.colliders);
+	*materialMap = map<string, Material*>(*e.materialMap);
+	worldMatrix = e.worldMatrix;
+	mesh = e.mesh;
+	quaternion = e.quaternion;
+	position = e.position;
+	scale = e.scale;
+	rotation = e.rotation;
+	rotationInDegrees = e.rotationInDegrees;
+	repeatTex = e.repeatTex;
+	parent = e.parent;
+	shadowsEnabled = e.shadowsEnabled;
+	shadowData = e.shadowData;
+	mass = e.mass;
+	collShape = e.collShape;
+	rBody = e.rBody;
+	dynamicsWorld = e.dynamicsWorld;
+	destroyed = e.destroyed;
+	isCollisionStatic = e.isCollisionStatic;
+	collisionsEnabled = e.collisionsEnabled;
+	colliderDebugLinesEnabled = e.colliderDebugLinesEnabled;
+	isEmptyObj = e.isEmptyObj;
+	meshMaterialIndex = e.meshMaterialIndex;
 }
 
 void Entity::InitRigidBody(btDiscreteDynamicsWorld* dw, float entityMass)
@@ -53,7 +124,17 @@ void Entity::InitRigidBody(btDiscreteDynamicsWorld* dw, float entityMass)
 	mass = entityMass;
 
 	// Physics set-up
-	this->collShape = new btBoxShape(btVector3(btScalar(scale.x / 2.0f), btScalar(scale.y / 2.0f), btScalar(scale.z / 2.0f)));
+	if (colliders->size() > 0) {
+		XMFLOAT3 span = (*colliders)[0]->GetHalfWidth();
+		XMVECTOR spanVec = XMLoadFloat3(&span);
+		spanVec = XMVectorScale(spanVec, 1.0f);
+		XMStoreFloat3(&span, spanVec);
+		XMFLOAT3 centerLocal = (*colliders)[0]->GetCenterLocal();
+		this->collShape = new btBoxShape(btVector3(btScalar(span.x * scale.x), btScalar(span.y * scale.y), btScalar(span.z * scale.z)));
+	}
+	else {
+		this->collShape = new btBoxShape(btVector3(btScalar(scale.x), btScalar(scale.y), btScalar(scale.z)));
+	}
 
 	btTransform transform;
 	transform.setIdentity();
@@ -228,7 +309,7 @@ void Entity::SetMeshAndMaterial(Mesh* mesh, Material* mat)
 {
 	this->mesh = mesh;
 	if (mat != nullptr)
-		materialMap.insert({ mat->GetName(), mat });
+		materialMap->insert({ mat->GetName(), mat });
 }
 
 void Entity::ToggleShadows(bool toggle)
@@ -252,38 +333,39 @@ void Entity::Move(float x, float y, float z)
 	CalcWorldMatrix();
 }
 
-ID3D11Buffer * Entity::GetMeshVertexBuffer(int i)
+ID3D11Buffer * Entity::GetMeshVertexBuffer(int childIndex)
 {
-	if(i == -1)
+	if(childIndex == -1)
 		return mesh->GetVertexBuffer();
 	else
-		return mesh->GetChildren()[i].GetVertexBuffer();
+		return mesh->GetChildren()[childIndex]->GetVertexBuffer();
 }
 
-ID3D11Buffer * Entity::GetMeshIndexBuffer(int i)
+ID3D11Buffer * Entity::GetMeshIndexBuffer(int childIndex)
 {
-	if (i == -1)
+	if (childIndex == -1)
 		return mesh->GetIndexBuffer();
 	else
-		return mesh->GetChildren()[i].GetIndexBuffer();
+		return mesh->GetChildren()[childIndex]->GetIndexBuffer();
 }
 
-int Entity::GetMeshIndexCount(int i)
+int Entity::GetMeshIndexCount(int childIndex)
 {
-	if (i == -1)
+	if (childIndex == -1)
 		return mesh->GetIndexCount();
 	else
-		return mesh->GetChildren()[i].GetIndexCount();
+		return mesh->GetChildren()[childIndex]->GetIndexCount();
 }
 
-string Entity::GetMeshMaterialName(int i)
+string Entity::GetMeshMaterialName(int childIndex)
 {
-	if (i == -1)
-		return mesh->GetFirstMaterialName();
+	if (childIndex == -1)
+		return mesh->GetMaterialName(meshMaterialIndex);
 	else
-		return mesh->GetChildren()[i].GetFirstMaterialName();
+		return mesh->GetChildren()[childIndex]->GetMaterialName();
 }
 
+//Calculate after every transformation
 void Entity::CalcWorldMatrix()
 {
 	DirectX::XMMATRIX trans = DirectX::XMMatrixTranslation(position.x, position.y, position.z);
@@ -297,20 +379,20 @@ void Entity::CalcWorldMatrix()
 		world = DirectX::XMMatrixMultiply(world, parentWorld);
 	}
 	DirectX::XMStoreFloat4x4(&worldMatrix, DirectX::XMMatrixTranspose(world));
-	for (size_t i = 0; i < children.size(); i++)
+	for (size_t i = 0; i < children->size(); i++)
 	{
-		children[i]->CalcWorldMatrix();
+		(*children)[i]->CalcWorldMatrix();
 	}
-	for (size_t i = 0; i < colliders.size(); i++)
+	for (size_t i = 0; i < colliders->size(); i++)
 	{
-		colliders[i]->SetWorldMatrix(worldMatrix);
+		(*colliders)[i]->SetWorldMatrix(worldMatrix);
 	} 
 }
 
 void Entity::PrepareMaterialForDraw(string n, DirectX::XMFLOAT4X4 view, DirectX::XMFLOAT4X4 proj)
 {
-	SimpleVertexShader* vs = materialMap[n]->GetVertexShader();
-	SimplePixelShader* ps = materialMap[n]->GetPixelShader();
+	SimpleVertexShader* vs = (*materialMap)[n]->GetVertexShader();
+	SimplePixelShader* ps = (*materialMap)[n]->GetPixelShader();
 
 	// Send data to shader variables
 		//  - Do this ONCE PER OBJECT you're drawing
@@ -334,12 +416,12 @@ void Entity::PrepareMaterialForDraw(string n, DirectX::XMFLOAT4X4 view, DirectX:
 		ps->SetSamplerState("ShadowSampler", shadowData.shadowSampler);
 	}
 
-	materialMap[n]->Prepare();
+	(*materialMap)[n]->Prepare();
 }
 
 Material * Entity::GetMaterial(string n)
 {
-	return materialMap[n];
+	return (*materialMap)[n];
 }
 
 bool Entity::MeshHasChildren()
@@ -362,50 +444,57 @@ vector<string> Entity::GetMaterialNameList()
 	return mesh->GetMaterialNameList();
 }
 
-void Entity::AddMaterialNameToMesh(string nm)
+void Entity::AddMaterial(Material * mat, bool addToMesh)
 {
-	mesh->AddMaterialName(nm);
-}
-
-void Entity::AddMaterial(Material * mat)
-{
-	materialMap.insert({ mat->GetName(),mat });
+	//if (materialMap->size() == 0) materialMap = map<string, Material*>();
+	string nm = mat->GetName();
+	if (materialMap->count(nm)) return;
+	materialMap->insert({ nm, mat });
+	if(addToMesh)
+		meshMaterialIndex = mesh->AddMaterialName(nm);
 }
 
 string Entity::GetName()
 {
-	return name;
+	return *name;
 }
 
 void Entity::AddChildEntity(Entity* child)
 {
-	children.push_back(child);
+	children->push_back(child);
 	child->parent = this;
 }
 
 void Entity::AddAutoBoxCollider()
 {
-	if (mesh->HasChildren()) {
-		Mesh* children = mesh->GetChildren();
-		for (size_t i = 0; i < mesh->GetChildCount(); i++)
-		{
-			colliders.push_back(new Collider(children[i].GetVertices()));
+	if (mesh != nullptr) {
+		if (mesh->HasChildren()) {
+			Mesh** children = mesh->GetChildren();
+			for (size_t i = 0; i < mesh->GetChildCount(); i++)
+			{
+				colliders->push_back(new Collider(children[i]->GetVertices()));
+			}
+		}
+		else {
+			colliders->push_back(new Collider(mesh->GetVertices()));
 		}
 	}
 	else {
-		colliders.push_back(new Collider(mesh->GetVertices()));
+		vector<XMFLOAT3> v;
+		v.push_back(XMFLOAT3(1.0f, 1.0f, 1.0f));
+		v.push_back(XMFLOAT3(-1.0f, -1.0f, -1.0f));
+		colliders->push_back(new Collider(v));
 	}
 }
 
 bool Entity::CheckSATCollision(Entity* other)
 {
-	bool otherHasChildren = other->MeshHasChildren();
 	unsigned int result;
-	for (size_t i = 0; i < (mesh->HasChildren() ? mesh->GetChildCount() : 1); i++)
+	for (size_t i = 0; i < colliders->size(); i++)
 	{
-		for (size_t j = 0; j < (other->MeshHasChildren() ? other->GetMeshChildCount() : 1); j++)
+		for (size_t j = 0; j < other->colliders->size(); j++)
 		{
-			if(colliders[i]->CheckSATCollision(other->colliders[j]) == -1) return true;
+			if((*colliders)[i]->CheckSATCollision((*other->colliders)[j]) == -1) return true;
 		}
 	}
 	return false;
@@ -416,11 +505,11 @@ bool Entity::CheckSATCollisionAndCorrect(Entity* other)
 	if (isCollisionStatic) return false;
 	bool isColliding;
 	XMFLOAT3 result;
-	for (size_t i = 0; i < (mesh->HasChildren() ? mesh->GetChildCount() : 1); i++)
+	for (size_t i = 0; i < colliders->size(); i++)
 	{
-		for (size_t j = 0; j < (other->MeshHasChildren() ? other->GetMeshChildCount() : 1); j++)
+		for (size_t j = 0; j < other->colliders->size(); j++)
 		{
-			isColliding = colliders[i]->CheckSATCollisionForCorrection(other->colliders[j], result);
+			isColliding = (*colliders)[i]->CheckSATCollisionForCorrection((*other->colliders)[j], result);
 			if (isColliding) break;
 		}
 	}
@@ -454,7 +543,7 @@ bool Entity::CheckSATCollisionAndCorrect(Entity* other)
 
 vector<Collider*> Entity::GetColliders()
 {
-	return colliders;
+	return (*colliders);
 }
 
 btRigidBody* Entity::GetRBody()
@@ -464,14 +553,51 @@ btRigidBody* Entity::GetRBody()
 
 Collider* Entity::GetCollider(int index)
 {
-	return colliders[index];
+	return (*colliders)[index];
 }
 
 void Entity::Destroy()
 {
 	this->destroyed = true;
-	for (size_t i = 0; i < children.size(); i++)
+	for (size_t i = 0; i < children->size(); i++)
 	{
-		children[i]->Destroy();
+		(*children)[i]->Destroy();
 	}
 }
+
+void Entity::FreeMemory()
+{
+	if (colliders != nullptr) {
+		for (size_t i = 0; i < colliders->size(); i++)
+		{
+			delete (*colliders)[i];
+		}
+		colliders->empty();
+	}
+
+	if (dynamicsWorld != nullptr)
+		dynamicsWorld->removeCollisionObject(rBody);
+	if (rBody != nullptr) {
+		delete rBody->getMotionState();
+		delete rBody;
+	}
+
+	if (collShape != nullptr)
+		delete collShape;
+
+	if (materialMap != nullptr) {
+		materialMap->empty();
+		delete materialMap;
+	}
+
+	if (children != nullptr) {
+		children->empty();
+		delete children;
+	}
+	if (colliders != nullptr)
+		delete colliders;
+
+	delete name;
+}
+
+

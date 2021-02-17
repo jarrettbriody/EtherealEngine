@@ -1,8 +1,7 @@
 #pragma once
 
-#include <Windows.h>
-#include <d3d11.h>
-#include <string>
+#include "pch.h"
+#include "Config.h"
 
 // We can include the correct library files here
 // instead of in Visual Studio settings if we want
@@ -14,8 +13,6 @@ public:
 	DXCore(
 		HINSTANCE hInstance,		// The application's handle
 		char* titleBarText,			// Text for the window's title bar
-		unsigned int windowWidth,	// Width of the window's client area
-		unsigned int windowHeight,	// Height of the window's client area
 		bool debugTitleBarStats);	// Show extra stats (fps) in title bar?
 	~DXCore();
 
@@ -56,18 +53,8 @@ protected:
 	std::string titleBarText;	// Custom text in window's title bar
 	bool		titleBarStats;	// Show extra stats in title bar?
 	
-	// Size of the window's client area
-	unsigned int width;
-	unsigned int height;
-	
 	// DirectX related objects and variables
 	D3D_FEATURE_LEVEL		dxFeatureLevel;
-	IDXGISwapChain*			swapChain;
-	ID3D11Device*			device;
-	ID3D11DeviceContext*	context;
-
-	ID3D11RenderTargetView* backBufferRTV;
-	ID3D11DepthStencilView* depthStencilView;
 
 	// Helper function for allocating a console window
 	void CreateConsoleWindow(int bufferLines, int bufferColumns, int windowLines, int windowColumns);

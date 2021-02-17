@@ -1,5 +1,5 @@
+#include "pch.h"
 #include "Camera.h"
-
 
 
 Camera::Camera()
@@ -54,17 +54,17 @@ void Camera::SetPosition(XMFLOAT3 pos)
 	position = pos;
 }
 
-void Camera::UpdateProjectionMatrix(int w, int h)
+void Camera::UpdateProjectionMatrix()
 {
 	// Create the Projection matrix
 	// - This should match the window's aspect ratio, and also update anytime
 	//    the window resizes (which is already happening in OnResize() below)
 	XMMATRIX P = XMMatrixPerspectiveFovLH(
-		0.4f * 3.1415926535f,		// Field of View Angle
-		(float)w / h,				// Aspect ratio
-		0.1f,						// Near clip plane distance
-		10000.0f);					// Far clip plane distance
-	XMStoreFloat4x4(&projMatrix, XMMatrixTranspose(P)); // Transpose for HLSL!
+		fov,													// Field of View Angle
+		(float)Config::ViewPortWidth / Config::ViewPortHeight,	// Aspect ratio
+		nearClip,												// Near clip plane distance
+		farClip);												// Far clip plane distance
+	XMStoreFloat4x4(&projMatrix, XMMatrixTranspose(P));			// Transpose for HLSL!
 }
 
 void Camera::Update()
@@ -78,7 +78,7 @@ void Camera::Update()
 
 	float scalar = 10;
 
-	/*if (GetAsyncKeyState('W') & 0x8000) {
+	if (GetAsyncKeyState('W') & 0x8000) {
 		pos = XMVectorAdd(pos, XMVectorScale(dir, 0.05f * scalar));
 		XMStoreFloat3(&position, pos);
 	}
@@ -93,7 +93,7 @@ void Camera::Update()
 	if (GetAsyncKeyState('D') & 0x8000) {
 		pos = XMVectorAdd(pos, XMVectorScale(right, -0.05f * scalar));
 		XMStoreFloat3(&position, pos);
-	}*/
+	}
 
 	/*
 	if (GetAsyncKeyState(VK_SPACE) & 0x8000) {
@@ -114,7 +114,7 @@ void Camera::Update()
 	XMStoreFloat3(&direction, newDir);
 
 	
-	/*cout << "Pos: (" << position.x << ", " << position.y << ", " << position.z << ")" << endl;
+	cout << "Pos: (" << position.x << ", " << position.y << ", " << position.z << ")" << endl;
 	cout << "Dir: (" << direction.x << ", " << direction.y << ", " << direction.z << ")" << endl;
-	cout << "Rot: (" << xRotation << ", " << yRotation << ")" << endl << endl;*/
+	//cout << "Rot: (" << xRotation << ", " << yRotation << ")" << endl << endl;
 }

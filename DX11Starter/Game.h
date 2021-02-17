@@ -1,35 +1,24 @@
 #pragma once
 
+#include "pch.h"
 #include "DXCore.h"
 #include "Config.h"
-#include "SimpleShader.h"
-#include <DirectXMath.h>
 #include "Mesh.h"
 #include "Entity.h"
 #include "Camera.h"
 #include "Lights.h"
 #include "Renderer.h"
-#include <regex>
-#include <iostream>
-#include <map>
 #include "Utility.h"
-#include <atlbase.h>
-#include "WICTextureLoader.h"
-#include "DDSTextureLoader.h"
 //#include "Terrain.h"
 //#include "TerrainMaterial.h"
 //#include "Water.h"
 //#include "WaterMaterial.h"
 #include "SceneLoader.h"
-#include "fmod.hpp"
-#include "fmod_errors.h"
 #include "DebugLines.h"
 #include "ScriptManager.h"
 #include "Scripts.h"
 
 using namespace std;
-
-//#define BT_EULER_DEFAULT_ZYX = true;
 
 class Game 
 	: public DXCore
@@ -47,6 +36,7 @@ public:
 	void Draw(float deltaTime, float totalTime);
 
 	void PhysicsStep(float deltaTime);
+	void EnforcePhysics();
 	void AudioStep();
 	void DrawSky();
 
@@ -60,49 +50,42 @@ public:
 	void OnMouseWheel(float wheelDelta,   int x, int y);
 private:
 	// Keeps track of the old mouse position for determining how far the mouse moved in a single frame
-	POINT prevMousePos;
+	POINT prevMousePos = POINT();
 
-	ID3D11ShaderResourceView* skySRV;
-	ID3D11RasterizerState* skyRasterState;
-	ID3D11DepthStencilState* skyDepthState;
+	ID3D11ShaderResourceView* skySRV = nullptr;
+	ID3D11RasterizerState* skyRasterState = nullptr;
+	ID3D11DepthStencilState* skyDepthState = nullptr;
 
 	Camera* EECamera = nullptr;
 	Renderer* EERenderer = nullptr;
 	SceneLoader* EESceneLoader = nullptr;
-
-	ScriptManager* barrel;
-	ScriptManager* playerScript;
-
-	//terrain example stuff
-	//Terrain* terrain;
-	//Water* water;
+	MemoryAllocator* EEMemoryAllocator = nullptr;
 	
 	//testing
-	Light* testLight;
+	Light* testLight = nullptr;
 
 	// Physics
-	btDefaultCollisionConfiguration* collisionConfiguration;
-	btCollisionDispatcher* dispatcher;
-	btBroadphaseInterface* broadphase;
-	btSequentialImpulseConstraintSolver* solver;
-	btDiscreteDynamicsWorld* dynamicsWorld;
+	btDefaultCollisionConfiguration* collisionConfiguration = nullptr;
+	btCollisionDispatcher* dispatcher = nullptr;
+	btBroadphaseInterface* broadphase = nullptr;
+	btSequentialImpulseConstraintSolver* solver = nullptr;
 
 	// Audio
-	FMOD_RESULT fmodResult;
-	FMOD::System* fmodSystem = NULL;
+	FMOD_RESULT fmodResult = FMOD_RESULT();
+	FMOD::System* fmodSystem = nullptr;
 
-	FMOD::Sound* backgroundMusic;
+	FMOD::Sound* backgroundMusic = nullptr;
 	FMOD::Sound* sound[12];
 
 	FMOD::Channel* musicChannel = 0;
 	FMOD::Channel* channel[12];
-	FMOD::ChannelGroup* masterGroup, * sfxGroup;
+	FMOD::ChannelGroup* masterGroup = nullptr;
+	FMOD::ChannelGroup* sfxGroup = nullptr;
 
 	bool isPlaying = 0;
 
-	FMOD_VECTOR listener_pos;
+	FMOD_VECTOR listener_pos = FMOD_VECTOR();
 	//FMOD_VECTOR listener_vel; // If we want a doppler effect
-	FMOD_VECTOR listener_forward;
-	FMOD_VECTOR listener_up;
+	FMOD_VECTOR listener_forward = FMOD_VECTOR();
+	FMOD_VECTOR listener_up = FMOD_VECTOR();
 };
-

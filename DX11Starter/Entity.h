@@ -1,13 +1,8 @@
 #pragma once
-#include <d3d11.h>
-#include <DirectXMath.h>
-#include <map>
+#include "pch.h"
 #include "Mesh.h"
 #include "Material.h"
 #include "Collider.h"
-#include "btBulletDynamicsCommon.h"
-#include "BulletCollision/NarrowPhaseCollision/btRaycastCallback.h"
-#include <iostream>
 
 struct ShadowData {
 	DirectX::XMFLOAT4X4 shadowViewMatrix;
@@ -22,37 +17,40 @@ using namespace std;
 class Entity
 {
 private:
-	Mesh* mesh;
 	DirectX::XMFLOAT4X4 worldMatrix;
+	Mesh* mesh = nullptr;
+	DirectX::XMFLOAT4 quaternion;
 	DirectX::XMFLOAT3 position;
 	DirectX::XMFLOAT3 scale;
 	DirectX::XMFLOAT3 rotation;
 	DirectX::XMFLOAT3 rotationInDegrees;
-	DirectX::XMFLOAT4 quaternion;
 	DirectX::XMFLOAT2 repeatTex;
-	map<string, Material*> materialMap;
-	string name;
-	vector<Entity*> children;
+	map<string, Material*>* materialMap = nullptr;
+	unsigned int meshMaterialIndex = 0;
+	string* name;
+	vector<Entity*>* children = nullptr;
 	Entity* parent = nullptr;
-	vector<Collider*> colliders;
+	vector<Collider*>* colliders = nullptr;
 
 	bool shadowsEnabled = true;
 	ShadowData shadowData;
 
 	float mass;
 
-	btCollisionShape* collShape;
+	btCollisionShape* collShape = nullptr;
 	btRigidBody* rBody = nullptr;
-	btDiscreteDynamicsWorld* dynamicsWorld;
+	btDiscreteDynamicsWorld* dynamicsWorld = nullptr;
 public:
 	bool destroyed = false;
 	bool isCollisionStatic = true;
 	bool collisionsEnabled = true;
 	bool colliderDebugLinesEnabled = true;
 	bool isEmptyObj = false;
+	Entity();
 	Entity(string entityName);
 	Entity(string entityName, Mesh* entityMesh, Material* mat = nullptr);
 	~Entity();
+	void operator= (const Entity& e);
 	void InitRigidBody(btDiscreteDynamicsWorld* dw, float entityMass);
 	DirectX::XMFLOAT4X4 GetWorldMatrix();
 	DirectX::XMFLOAT3 GetPosition();
@@ -75,10 +73,10 @@ public:
 	void ToggleShadows(bool toggle);
 	void Move(XMFLOAT3 f);
 	void Move(float x, float y, float z);
-	ID3D11Buffer* GetMeshVertexBuffer(int i = -1);
-	ID3D11Buffer* GetMeshIndexBuffer(int i = -1);
-	int GetMeshIndexCount(int i = -1);
-	string GetMeshMaterialName(int i = -1);
+	ID3D11Buffer* GetMeshVertexBuffer(int childIndex = -1);
+	ID3D11Buffer* GetMeshIndexBuffer(int childIndex = -1);
+	int GetMeshIndexCount(int childIndex = -1);
+	string GetMeshMaterialName(int childIndex = -1);
 	void CalcWorldMatrix();
 	void PrepareMaterialForDraw(string n, DirectX::XMFLOAT4X4 view, DirectX::XMFLOAT4X4 proj);
 	Material* GetMaterial(string n);
@@ -86,8 +84,7 @@ public:
 	int GetMeshChildCount();
 	Mesh* GetMesh();
 	vector<string> GetMaterialNameList();
-	void AddMaterialNameToMesh(string nm);
-	void AddMaterial(Material* mat);
+	void AddMaterial(Material* mat, bool addToMesh = false);
 	string GetName();
 	void AddChildEntity(Entity* child);
 	void AddAutoBoxCollider();
@@ -97,5 +94,6 @@ public:
 	btRigidBody* GetRBody();
 	Collider* GetCollider(int index = 0);
 	void Destroy();
+	void FreeMemory();
 };
 
