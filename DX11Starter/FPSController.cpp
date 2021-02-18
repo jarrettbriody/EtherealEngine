@@ -9,6 +9,7 @@ void FPSController::Init()
 	// TODO: Easier setting of physics characteristics via Bullet (coll shape, mass, restitution, other properties)
 	
 	playerRBody = entity->GetRBody(); // Get the bullet rigidbody
+	playerRBody->setAngularFactor(btVector3(0, 1, 0)); // constrain rotations on x and z axes
 	collider = entity->GetCollider();
 }
 
@@ -32,8 +33,9 @@ void FPSController::Move()
 	if(!midAir)
 		playerRBody->setDamping(0.95f, 0.0f);
 
-	if (entity->CheckSATCollision((*eMap)["Ground"])) {
+	if (entity->CheckSATCollision((*eMap)["Floor"])) {
 		midAir = false;
+		jumpCount = 0;
 		btVector3 vel = playerRBody->getLinearVelocity();
 		vel.setValue(vel.getX(), 0.0f, vel.getZ());
 		playerRBody->setLinearVelocity(vel);
@@ -63,10 +65,11 @@ void FPSController::Move()
 		playerRBody->setDamping(0.0f, 0.0f);
 	}
 	if (GetAsyncKeyState(VK_SPACE) & 0x8000) {
-		if (!midAir) {
+		if (!midAir || (midAir && jumpCount < 2)) {
 			//playerRBody->setLinearVelocity(btVector3(0.0f, playerRBody->getLinearVelocity().getY(), 0.0f));
 			playerRBody->applyCentralImpulse(btVector3(0.0f, 20.0f, 0.0f));
 			midAir = true;
+			jumpCount++;
 		}
 	}
 

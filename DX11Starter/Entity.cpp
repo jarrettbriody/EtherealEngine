@@ -130,7 +130,14 @@ void Entity::InitRigidBody(btDiscreteDynamicsWorld* dw, float entityMass)
 		spanVec = XMVectorScale(spanVec, 1.0f);
 		XMStoreFloat3(&span, spanVec);
 		XMFLOAT3 centerLocal = (*colliders)[0]->GetCenterLocal();
-		this->collShape = new btBoxShape(btVector3(btScalar(span.x * scale.x), btScalar(span.y * scale.y), btScalar(span.z * scale.z)));
+		if (*name == "FPSController") { // give the FPS controller a capsule collider shape
+			// btVector3(btScalar(span.x * scale.x), btScalar(span.y * scale.y), btScalar(span.z * scale.z)
+			this->collShape = new btCapsuleShape(btScalar(span.x * scale.x), btScalar(span.y * scale.y));
+		}
+		else {
+			this->collShape = new btBoxShape(btVector3(btScalar(span.x * scale.x), btScalar(span.y * scale.y), btScalar(span.z * scale.z)));
+		}
+		
 	}
 	else {
 		this->collShape = new btBoxShape(btVector3(btScalar(scale.x), btScalar(scale.y), btScalar(scale.z)));

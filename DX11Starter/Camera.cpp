@@ -78,43 +78,43 @@ void Camera::Update()
 
 	float scalar = 10;
 
-	if (GetAsyncKeyState('W') & 0x8000) {
-		pos = XMVectorAdd(pos, XMVectorScale(dir, 0.05f * scalar));
-		XMStoreFloat3(&position, pos);
-	}
-	if (GetAsyncKeyState('S') & 0x8000) {
-		pos = XMVectorAdd(pos, XMVectorScale(dir, -0.05f * scalar));
-		XMStoreFloat3(&position, pos);
-	}
-	if (GetAsyncKeyState('A') & 0x8000) {
-		pos = XMVectorAdd(pos, XMVectorScale(right, 0.05f * scalar));
-		XMStoreFloat3(&position, pos);
-	}
-	if (GetAsyncKeyState('D') & 0x8000) {
-		pos = XMVectorAdd(pos, XMVectorScale(right, -0.05f * scalar));
-		XMStoreFloat3(&position, pos);
+	if (!Config::FPSControllerEnabled)
+	{
+		if (GetAsyncKeyState('W') & 0x8000) {
+			pos = XMVectorAdd(pos, XMVectorScale(dir, 0.05f * scalar));
+			XMStoreFloat3(&position, pos);
+		}
+		if (GetAsyncKeyState('S') & 0x8000) {
+			pos = XMVectorAdd(pos, XMVectorScale(dir, -0.05f * scalar));
+			XMStoreFloat3(&position, pos);
+		}
+		if (GetAsyncKeyState('A') & 0x8000) {
+			pos = XMVectorAdd(pos, XMVectorScale(right, 0.05f * scalar));
+			XMStoreFloat3(&position, pos);
+		}
+		if (GetAsyncKeyState('D') & 0x8000) {
+			pos = XMVectorAdd(pos, XMVectorScale(right, -0.05f * scalar));
+			XMStoreFloat3(&position, pos);
+		}
+
+		if (GetAsyncKeyState(VK_SPACE) & 0x8000) {
+			pos = XMVectorAdd(pos, XMVectorScale(XMLoadFloat3(&yAxis), 0.05f));
+			XMStoreFloat3(&position, pos);
+		}
+		if (GetAsyncKeyState('X') & 0x8000) {
+			pos = XMVectorAdd(pos, XMVectorScale(XMLoadFloat3(&yAxis), -0.05f));
+			XMStoreFloat3(&position, pos);
+		}
 	}
 
-	/*
-	if (GetAsyncKeyState(VK_SPACE) & 0x8000) {
-		pos = XMVectorAdd(pos, XMVectorScale(XMLoadFloat3(&yAxis), 0.05f));
-		XMStoreFloat3(&position, pos);
-	}
-	if (GetAsyncKeyState('X') & 0x8000) {
-		pos = XMVectorAdd(pos, XMVectorScale(XMLoadFloat3(&yAxis), -0.05f));
-		XMStoreFloat3(&position, pos);
-	}
-	*/
-
-	XMVECTOR quat = XMQuaternionRotationRollPitchYaw(xRotation,yRotation,0.0f);
+	XMVECTOR quat = XMQuaternionRotationRollPitchYaw(xRotation, yRotation, 0.0f);
 	XMVECTOR newDir = XMVector3Rotate(XMLoadFloat3(&zAxis), quat);
 	XMMATRIX view = XMMatrixLookToLH(pos, dir, XMLoadFloat3(&yAxis));
 
 	XMStoreFloat4x4(&viewMatrix, XMMatrixTranspose(view));
 	XMStoreFloat3(&direction, newDir);
 
-	
 	cout << "Pos: (" << position.x << ", " << position.y << ", " << position.z << ")" << endl;
 	cout << "Dir: (" << direction.x << ", " << direction.y << ", " << direction.z << ")" << endl;
-	//cout << "Rot: (" << xRotation << ", " << yRotation << ")" << endl << endl;
+	cout << "Rot: (" << xRotation << ", " << yRotation << ")" << endl << endl;
 }

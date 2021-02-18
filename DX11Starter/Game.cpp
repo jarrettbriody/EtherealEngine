@@ -13,6 +13,7 @@ Game::Game(HINSTANCE hInstance)
 
 #if defined(DEBUG) || defined(_DEBUG)
 	CreateConsoleWindow(500, 120, 32, 120);
+	if (Config::FPSControllerEnabled) ShowCursor(false);
 	printf("Console window created successfully.  Feel free to printf() here.\n");
 #endif
 	
@@ -241,19 +242,20 @@ void Game::Init()
 	musicChannel->set3DMinMaxDistance(0, 15.0f);
   
 	//Scripts::CreateScript(Scripts::SCRIPT_NAMES::BARREL, EESceneLoader->sceneEntitiesMap["barrel_1"]);
-
-	/*
+	
 	// FPS CONTROLLER
-	para = {};
-	para.entityName = "FPSController";
-	para.position = XMFLOAT3(0.0f, 5.0f, 5.0f);
-	para.scale = XMFLOAT3(0.25f, 1.0f, 0.25f);
-	para.initRigidBody = true;
-	para.entityMass = 1.0f;
-	Entity* fpsController = EESceneLoader->CreateEntity(para);
+	if (Config::FPSControllerEnabled)
+	{
+		para = {};
+		para.entityName = "FPSController";
+		para.position = XMFLOAT3(0.0f, 5.0f, 5.0f);
+		para.scale = XMFLOAT3(0.25f, 1.0f, 0.25f);
+		para.initRigidBody = true;
+		para.entityMass = 1.0f;
+		Entity* fpsController = EESceneLoader->CreateEntity(para);
 
-	Scripts::CreateScript(Scripts::SCRIPT_NAMES::FPSCONTROLLER, fpsController);
-	*/
+		Scripts::CreateScript(Scripts::SCRIPT_NAMES::FPSCONTROLLER, fpsController);
+	}
 
 	for (size_t i = 0; i < ScriptManager::scriptFunctions.size(); i++)
 	{
@@ -646,7 +648,7 @@ void Game::OnMouseMove(WPARAM buttonState, int x, int y)
 		if (!sf->inputEnabled) continue;
 		sf->CallOnMouseMove(buttonState, x, y);
 	}
-	if (buttonState & 0x0001) {
+	if (Config::FPSControllerEnabled || (!Config::FPSControllerEnabled && buttonState & 0x0001)) {
 		EECamera->RotateCamera(x - (int)prevMousePos.x, y - (int)prevMousePos.y);
 
 		prevMousePos.x = x;

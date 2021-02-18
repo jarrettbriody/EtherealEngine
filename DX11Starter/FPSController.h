@@ -19,6 +19,7 @@ class FPSController : public ScriptManager
 	float maxSpeed = 5.0f;
 
 	bool midAir = false;
+	int jumpCount = 0;
 
 	void Init();
 
