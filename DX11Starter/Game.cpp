@@ -117,9 +117,6 @@ void Game::Init()
 	EESceneLoader->SetModelPath("../../Assets/Models/City/");
 	EESceneLoader->LoadScene("City");
 
-	//EESceneLoader->sceneEntitiesMap["barrel_1"]->isCollisionStatic = false;
-	//EESceneLoader->sceneEntitiesMap["barrel_1 (2)"]->isCollisionStatic = false;
-
 	ScriptManager::sceneEntitiesMap = &EESceneLoader->sceneEntitiesMap;
 	ScriptManager::sceneEntities = &EESceneLoader->sceneEntities;
 	ScriptManager::EESceneLoader = EESceneLoader;
@@ -350,6 +347,7 @@ void Game::PhysicsStep(float deltaTime)
 		//XMFLOAT3 centerLocal = entity->GetCollider()->GetCenterLocal();
 		//XMFLOAT3 scale = entity->GetScale();
 		//centerLocal = XMFLOAT3(centerLocal.x * scale.x, centerLocal.y * scale.y, centerLocal.z * scale.z);
+		//XMFLOAT3 pos = XMFLOAT3(p.getX() - centerLocal.x, p.getY() - centerLocal.y, p.getZ() - centerLocal.z);
 		XMFLOAT3 pos = XMFLOAT3(p.getX(), p.getY(), p.getZ());
 
 		btQuaternion q = transform.getRotation();
@@ -381,6 +379,7 @@ void Game::EnforcePhysics()
 		//XMFLOAT3 centerLocal = entity->GetCollider()->GetCenterLocal();
 		//XMFLOAT3 scale = entity->GetScale();
 		//centerLocal = XMFLOAT3(centerLocal.x * scale.x, centerLocal.y * scale.y, centerLocal.z * scale.z);
+		//pos = XMFLOAT3(pos.x + centerLocal.x, pos.y + centerLocal.y, pos.z + centerLocal.z);
 		pos = XMFLOAT3(pos.x, pos.y, pos.z);
 
 		XMFLOAT4 rot = entity->GetRotationQuaternion();
@@ -593,7 +592,7 @@ void Game::OnMouseDown(WPARAM buttonState, int x, int y)
 		{
 			// Get the entity associated with the rigid body we hit
 			Entity* hit = (Entity*)(closestResult.m_collisionObject->getUserPointer());
-			//printf("Hit: %s\n", hit->GetName().c_str());
+			printf("Hit: %s\n", hit->GetName().c_str());
 			btRigidBody* rigidBody = hit->GetRBody();
 
 			// In order to update the values associated with the rigid body we need to remove it from the dynamics world first

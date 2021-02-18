@@ -219,7 +219,7 @@ void SceneLoader::LoadDefaultMaterials()
 	Material* allocatedMaterial;
 	bool success;
 
-	Material defaultMaterial = Material("DEFAULT", materialData, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler);
+	Material defaultMaterial = Material("DEFAULT", materialData, ShaderType::DEFAULT, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler);
 	allocatedMaterial = (Material*)EEMemoryAllocator->AllocateToPool(Utility::MATERIAL_POOL, sizeof(Material), success);
 	*allocatedMaterial = defaultMaterial;
 	defaultMaterialsMap.insert({ "DEFAULT", allocatedMaterial});
@@ -227,49 +227,49 @@ void SceneLoader::LoadDefaultMaterials()
 	materialData = {};
 	materialData.DiffuseTextureMapSRV = defaultTexturesMap["GrassDiffuse"];
 	materialData.NormalTextureMapSRV = defaultTexturesMap["GrassNormal"];
-	Material grassMaterial = Material("Grass", materialData, vertexShadersMap["Normal"], pixelShadersMap["Normal"], Config::Sampler);
+	Material grassMaterial = Material("Grass", materialData, ShaderType::NORMAL, vertexShadersMap["Normal"], pixelShadersMap["Normal"], Config::Sampler);
 	allocatedMaterial = (Material*)EEMemoryAllocator->AllocateToPool(Utility::MATERIAL_POOL, sizeof(Material), success);
 	*allocatedMaterial = grassMaterial;
 	defaultMaterialsMap.insert({ "Grass", allocatedMaterial });
 
 	materialData = {};
 	materialData.DiffuseTextureMapSRV = defaultTexturesMap["Red"];
-	Material redMaterial = Material("Red", materialData, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler);
+	Material redMaterial = Material("Red", materialData, ShaderType::DEFAULT, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler);
 	allocatedMaterial = (Material*)EEMemoryAllocator->AllocateToPool(Utility::MATERIAL_POOL, sizeof(Material), success);
 	*allocatedMaterial = redMaterial;
 	defaultMaterialsMap.insert({ "Red", allocatedMaterial });
 
 	materialData = {};
 	materialData.DiffuseTextureMapSRV = defaultTexturesMap["Marble"];
-	Material marbleMaterial = Material("Marble", materialData, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler);
+	Material marbleMaterial = Material("Marble", materialData, ShaderType::DEFAULT, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler);
 	allocatedMaterial = (Material*)EEMemoryAllocator->AllocateToPool(Utility::MATERIAL_POOL, sizeof(Material), success);
 	*allocatedMaterial = marbleMaterial;
 	defaultMaterialsMap.insert({ "Marble", allocatedMaterial });
 
 	materialData = {};
 	materialData.DiffuseTextureMapSRV = defaultTexturesMap["Hedge"];
-	Material hedgeMaterial = Material("Hedge", materialData, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler);
+	Material hedgeMaterial = Material("Hedge", materialData, ShaderType::DEFAULT, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler);
 	allocatedMaterial = (Material*)EEMemoryAllocator->AllocateToPool(Utility::MATERIAL_POOL, sizeof(Material), success);
 	*allocatedMaterial = hedgeMaterial;
 	defaultMaterialsMap.insert({ "Hedge", allocatedMaterial });
 
 	materialData = {};
 	materialData.DiffuseTextureMapSRV = defaultTexturesMap["Grey"];
-	Material greyMaterial = Material("Grey", materialData, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler);
+	Material greyMaterial = Material("Grey", materialData, ShaderType::DEFAULT, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler);
 	allocatedMaterial = (Material*)EEMemoryAllocator->AllocateToPool(Utility::MATERIAL_POOL, sizeof(Material), success);
 	*allocatedMaterial = greyMaterial;
 	defaultMaterialsMap.insert({ "Grey", allocatedMaterial });
 
 	materialData = {};
 	materialData.DiffuseTextureMapSRV = defaultTexturesMap["Grey4"];
-	Material grey4Material = Material("Grey4", materialData, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler);
+	Material grey4Material = Material("Grey4", materialData, ShaderType::DEFAULT, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler);
 	allocatedMaterial = (Material*)EEMemoryAllocator->AllocateToPool(Utility::MATERIAL_POOL, sizeof(Material), success);
 	*allocatedMaterial = grey4Material;
 	defaultMaterialsMap.insert({ "Grey4", allocatedMaterial });
 
 	materialData = {};
 	materialData.DiffuseTextureMapSRV = defaultTexturesMap["White"];
-	Material whiteMaterial = Material("White", materialData, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler);
+	Material whiteMaterial = Material("White", materialData, ShaderType::DEFAULT, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler);
 	allocatedMaterial = (Material*)EEMemoryAllocator->AllocateToPool(Utility::MATERIAL_POOL, sizeof(Material), success);
 	*allocatedMaterial = whiteMaterial;
 	defaultMaterialsMap.insert({ "White", allocatedMaterial });
@@ -408,10 +408,10 @@ Utility::MESH_TYPE SceneLoader::AutoLoadOBJMTL(string name)
 
 					//Different shaders based on matData values
 					if (matData.NormalTextureMapSRV) {
-						someMaterial = Material(ongoingMatName, matData, vertexShadersMap["Normal"], pixelShadersMap["Normal"], Config::Sampler);
+						someMaterial = Material(ongoingMatName, matData, ShaderType::NORMAL, vertexShadersMap["Normal"], pixelShadersMap["Normal"], Config::Sampler);
 					}
 					else {
-						someMaterial = Material(ongoingMatName, matData, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler);
+						someMaterial = Material(ongoingMatName, matData, ShaderType::DEFAULT, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler);
 					}
 
 					matData = {};
@@ -550,10 +550,10 @@ Utility::MESH_TYPE SceneLoader::AutoLoadOBJMTL(string name)
 
 		//Different shaders based on matData values
 		if (matData.NormalTextureMapSRV) {
-			someMaterial = Material(ongoingMatName, matData, vertexShadersMap["Normal"], pixelShadersMap["Normal"], Config::Sampler);
+			someMaterial = Material(ongoingMatName, matData, ShaderType::NORMAL, vertexShadersMap["Normal"], pixelShadersMap["Normal"], Config::Sampler);
 		}
 		else {
-			someMaterial = Material(ongoingMatName, matData, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler);
+			someMaterial = Material(ongoingMatName, matData, ShaderType::DEFAULT, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler);
 		}
 
 		matData = {};

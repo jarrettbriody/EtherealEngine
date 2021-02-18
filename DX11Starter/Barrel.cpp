@@ -4,6 +4,8 @@
 void TestScript::Init()
 {
 	cout << "initializing barrel" << endl;
+	(*eMap)["barrel_1"]->isCollisionStatic = false;
+	(*eMap)["barrel_1 (2)"]->isCollisionStatic = false;
 }
 
 void TestScript::Update()
@@ -29,7 +31,7 @@ void TestScript::Update()
 		entity->Move(0, 0, -0.05f);
 		entity->CalcWorldMatrix();
 	}
-	if (entity->CheckSATCollisionAndCorrect((*eMap)["barrel_1 (2)"]))
+	if (entity->CheckSATCollisionAndCorrect((*eMap)["Rock (1)"]))
 	{
 		cout << test << endl;
 	}

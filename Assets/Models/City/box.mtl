@@ -2,4 +2,4 @@ newmtl Box
 map_Kd prototype_512x512_white.png
 Kd 0.4811321 0.3502413 0.1747507
 d 1
-
+illum 11

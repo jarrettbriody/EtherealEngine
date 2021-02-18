@@ -4,8 +4,8 @@
 
 Camera::Camera()
 {
-	position = XMFLOAT3(0.0f, 5.0f, -10.0f);
-	direction = XMFLOAT3(0.0f, -1.0f, 1.0f);
+	position = XMFLOAT3(0.0f, 50.0f, -200.0f);
+	direction = XMFLOAT3(0.0f, 0.0f, 1.0f);
 	XMVECTOR dir = XMLoadFloat3(&direction);
 	dir = XMVector3Normalize(dir);
 	XMStoreFloat3(&direction, dir);
@@ -114,7 +114,7 @@ void Camera::Update()
 	XMStoreFloat3(&direction, newDir);
 
 	
-	cout << "Pos: (" << position.x << ", " << position.y << ", " << position.z << ")" << endl;
-	cout << "Dir: (" << direction.x << ", " << direction.y << ", " << direction.z << ")" << endl;
+	//cout << "Pos: (" << position.x << ", " << position.y << ", " << position.z << ")" << endl;
+	//cout << "Dir: (" << direction.x << ", " << direction.y << ", " << direction.z << ")" << endl;
 	//cout << "Rot: (" << xRotation << ", " << yRotation << ")" << endl << endl;
 }

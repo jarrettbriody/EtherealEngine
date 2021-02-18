@@ -237,7 +237,10 @@ Mesh::Mesh(string meshN, char * objFile, ID3D11Device* device, bool* success)
 		childCount++;
 	}
 	else if (childCount == 0) {
-		*vertices = positions;
+		for (size_t i = 0; i < verts.size(); i++)
+		{
+			vertices->push_back(verts[i].Position);
+		}
 		CreateBuffers(&verts[0], vertCounter, &indices[0], vertCounter, device);
 	}
 	if (success != nullptr)

@@ -37,6 +37,7 @@ private:
 
 	float mass;
 
+	btCompoundShape* compoundShape = nullptr;
 	btCollisionShape* collShape = nullptr;
 	btRigidBody* rBody = nullptr;
 	btDiscreteDynamicsWorld* dynamicsWorld = nullptr;
