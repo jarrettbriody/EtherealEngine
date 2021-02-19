@@ -17,6 +17,6 @@ unsigned int Config::MemoryAllocatorEntityPoolSize = MEGABYTE * 128; //250 MB
 unsigned int Config::MemoryAllocatorMeshPoolSize = MEGABYTE * 128; //250 MB
 unsigned int Config::MemoryAllocatorMaterialPoolSize = MEGABYTE * 64; //250 MB
 
-bool Config::DebugLinesEnabled = true;
+bool Config::DebugLinesEnabled = false;
 
 btDiscreteDynamicsWorld* Config::DynamicsWorld = nullptr;

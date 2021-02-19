@@ -70,7 +70,8 @@ void Game::Init()
 	Config::DynamicsWorld = new btDiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
 	Config::DynamicsWorld->setGravity(btVector3(0, -10.0f, 0));
 
-	DirectX::CreateDDSTextureFromFile(Config::Device, L"../../Assets/Textures/SunnyCubeMap.dds", 0, &skySRV);
+	//DirectX::CreateDDSTextureFromFile(Config::Device, L"../../Assets/Textures/SunnyCubeMap.dds", 0, &skySRV);
+	DirectX::CreateDDSTextureFromFile(Config::Device, L"../../Assets/Textures/night4.dds", 0, &skySRV);
 
 	D3D11_SAMPLER_DESC samplerDesc = {};
 	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
@@ -156,7 +157,7 @@ void Game::Init()
 	dLight->Color = c;
 	XMFLOAT3 d = XMFLOAT3(-0.265943f, -0.92075f, 0.28547f);
 	dLight->Direction = d;
-	dLight->Intensity = 1.0f;
+	dLight->Intensity = 0.25f;
 	dLight->Position = XMFLOAT3(-334.0f, 179.5f, -175.9f);
 
 	/*testLight = new Light;
