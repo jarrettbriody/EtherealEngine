@@ -69,6 +69,9 @@ Entity::~Entity()
 	if(collShape != nullptr)
 		delete collShape;
 
+	if (compoundShape != nullptr)
+		delete compoundShape;
+
 	if (materialMap != nullptr) {
 		materialMap->empty();
 		delete materialMap;
@@ -108,6 +111,7 @@ void Entity::operator=(const Entity& e)
 	shadowData = e.shadowData;
 	mass = e.mass;
 	collShape = e.collShape;
+	compoundShape = e.compoundShape;
 	rBody = e.rBody;
 	dynamicsWorld = e.dynamicsWorld;
 	destroyed = e.destroyed;
@@ -142,9 +146,12 @@ void Entity::InitRigidBody(btDiscreteDynamicsWorld* dw, float entityMass)
 	else {
 		this->collShape = new btBoxShape(btVector3(btScalar(scale.x), btScalar(scale.y), btScalar(scale.z)));
 	}
-
 	btTransform transform;
 	transform.setIdentity();
+	//XMFLOAT3 centerLocal = GetCollider()->GetCenterLocal();
+	//XMFLOAT3 scale = GetScale();
+	//centerLocal = XMFLOAT3(centerLocal.x * scale.x, centerLocal.y * scale.y, centerLocal.z * scale.z);
+	//transform.setOrigin(btVector3(position.x + centerLocal.x, position.y + centerLocal.y, position.z + centerLocal.z));
 	transform.setOrigin(btVector3(position.x, position.y, position.z));
 	btQuaternion qx = btQuaternion(btVector3(1.0f, 0.0f, 0.0f), rotation.x);
 	btQuaternion qy = btQuaternion(btVector3(0.0f, 1.0f, 0.0f), rotation.y);
@@ -164,8 +171,15 @@ void Entity::InitRigidBody(btDiscreteDynamicsWorld* dw, float entityMass)
 		collShape->calculateLocalInertia(mass, localInertia);
 
 	btDefaultMotionState* myMotionState = new btDefaultMotionState(transform);
-	btRigidBody::btRigidBodyConstructionInfo rbInfo(mass, myMotionState, collShape, localInertia);
-	this->rBody = new btRigidBody(rbInfo);
+
+	if (compoundShape == nullptr) {
+		btRigidBody::btRigidBodyConstructionInfo rbInfo(mass, myMotionState, collShape, localInertia);
+		this->rBody = new btRigidBody(rbInfo);
+	}
+	else {
+		btRigidBody::btRigidBodyConstructionInfo rbInfo(mass, myMotionState, compoundShape, localInertia);
+		this->rBody = new btRigidBody(rbInfo);
+	}
 
 	/*rBody->setActivationState(DISABLE_DEACTIVATION);
 	rBody->setMassProps(mass, localInertia);*/
@@ -591,6 +605,9 @@ void Entity::FreeMemory()
 
 	if (collShape != nullptr)
 		delete collShape;
+
+	if (compoundShape != nullptr)
+		delete compoundShape;
 
 	if (materialMap != nullptr) {
 		materialMap->empty();

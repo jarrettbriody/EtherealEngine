@@ -71,7 +71,8 @@ void Game::Init()
 	Config::DynamicsWorld = new btDiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
 	Config::DynamicsWorld->setGravity(btVector3(0, -10.0f, 0));
 
-	DirectX::CreateDDSTextureFromFile(Config::Device, L"../../Assets/Textures/SunnyCubeMap.dds", 0, &skySRV);
+	//DirectX::CreateDDSTextureFromFile(Config::Device, L"../../Assets/Textures/SunnyCubeMap.dds", 0, &skySRV);
+	DirectX::CreateDDSTextureFromFile(Config::Device, L"../../Assets/Textures/night4.dds", 0, &skySRV);
 
 	D3D11_SAMPLER_DESC samplerDesc = {};
 	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
@@ -118,9 +119,6 @@ void Game::Init()
 	EESceneLoader->SetModelPath("../../Assets/Models/City/");
 	EESceneLoader->LoadScene("City");
 
-	//EESceneLoader->sceneEntitiesMap["barrel_1"]->isCollisionStatic = false;
-	//EESceneLoader->sceneEntitiesMap["barrel_1 (2)"]->isCollisionStatic = false;
-
 	ScriptManager::sceneEntitiesMap = &EESceneLoader->sceneEntitiesMap;
 	ScriptManager::sceneEntities = &EESceneLoader->sceneEntities;
 	ScriptManager::EESceneLoader = EESceneLoader;
@@ -160,7 +158,7 @@ void Game::Init()
 	dLight->Color = c;
 	XMFLOAT3 d = XMFLOAT3(-0.265943f, -0.92075f, 0.28547f);
 	dLight->Direction = d;
-	dLight->Intensity = 1.0f;
+	dLight->Intensity = 0.25f;
 	dLight->Position = XMFLOAT3(-334.0f, 179.5f, -175.9f);
 
 	/*testLight = new Light;
@@ -352,6 +350,7 @@ void Game::PhysicsStep(float deltaTime)
 		//XMFLOAT3 centerLocal = entity->GetCollider()->GetCenterLocal();
 		//XMFLOAT3 scale = entity->GetScale();
 		//centerLocal = XMFLOAT3(centerLocal.x * scale.x, centerLocal.y * scale.y, centerLocal.z * scale.z);
+		//XMFLOAT3 pos = XMFLOAT3(p.getX() - centerLocal.x, p.getY() - centerLocal.y, p.getZ() - centerLocal.z);
 		XMFLOAT3 pos = XMFLOAT3(p.getX(), p.getY(), p.getZ());
 
 		btQuaternion q = transform.getRotation();
@@ -383,6 +382,7 @@ void Game::EnforcePhysics()
 		//XMFLOAT3 centerLocal = entity->GetCollider()->GetCenterLocal();
 		//XMFLOAT3 scale = entity->GetScale();
 		//centerLocal = XMFLOAT3(centerLocal.x * scale.x, centerLocal.y * scale.y, centerLocal.z * scale.z);
+		//pos = XMFLOAT3(pos.x + centerLocal.x, pos.y + centerLocal.y, pos.z + centerLocal.z);
 		pos = XMFLOAT3(pos.x, pos.y, pos.z);
 
 		XMFLOAT4 rot = entity->GetRotationQuaternion();
@@ -595,7 +595,7 @@ void Game::OnMouseDown(WPARAM buttonState, int x, int y)
 		{
 			// Get the entity associated with the rigid body we hit
 			Entity* hit = (Entity*)(closestResult.m_collisionObject->getUserPointer());
-			//printf("Hit: %s\n", hit->GetName().c_str());
+			printf("Hit: %s\n", hit->GetName().c_str());
 			btRigidBody* rigidBody = hit->GetRBody();
 
 			// In order to update the values associated with the rigid body we need to remove it from the dynamics world first

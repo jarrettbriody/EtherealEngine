@@ -61,7 +61,7 @@ Collider::Collider(vector<XMFLOAT3> vertices)
 
 	for (size_t i = 0; i < 8; i++)
 	{
-		pivotShiftedColliderCorners[i] = XMFLOAT3(untransformedColliderCorners[i].x, untransformedColliderCorners[i].y, untransformedColliderCorners[i].z - 2 * centerLocal.z);
+		pivotShiftedColliderCorners[i] = XMFLOAT3(untransformedColliderCorners[i].x, untransformedColliderCorners[i].y, untransformedColliderCorners[i].z);// - 2 * centerLocal.z);
 	}
 }
 

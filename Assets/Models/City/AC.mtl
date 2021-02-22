@@ -2,4 +2,4 @@ newmtl AC
 map_Kd prototype_512x512_white.png
 Kd 0.3679245 0.3679245 0.3679245
 d 1
-
+illum 11
