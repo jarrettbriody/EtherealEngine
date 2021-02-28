@@ -20,7 +20,8 @@ public:
 	static unsigned int MemoryAllocatorMeshPoolSize;
 	static unsigned int MemoryAllocatorMaterialPoolSize;
 
-	static bool DebugLinesEnabled;
+	static bool EtherealDebugLinesEnabled;
+	static bool BulletDebugLinesEnabled;
 
 	static btDiscreteDynamicsWorld* DynamicsWorld;
 };

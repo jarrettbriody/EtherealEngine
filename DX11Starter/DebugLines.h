@@ -17,7 +17,7 @@ struct DebugLinesVertex {
 	XMFLOAT3 Color;
 };
 
-class DebugLines {
+class DebugLines : public btIDebugDraw {
 
 public:
 	static vector<DebugLines*> debugLines;
@@ -35,12 +35,27 @@ public:
 	int colliderID;
 	bool willUpdate;
 	bool destroyed = false;
+	int m_debugMode;
 
 	DebugLines(string entityName = "UNNAMED", int colliderID = 0, bool willUpdate = true);
 
 	~DebugLines();
 
 	void GenerateCuboidVertexBuffer(XMFLOAT3* verts, int vertCount);
+
+	// https://www.cs.kent.edu/~ruttan/GameEngines/lectures/Bullet_User_Manual Page 16 of Bullet Manual
+
+	void drawLine(const btVector3& from, const btVector3& to, const btVector3& color) override;
+
+	void drawContactPoint(const btVector3& PointOnB, const btVector3& normalOnB, btScalar distance, int lifeTime, const btVector3& color) override;
+
+	void reportErrorWarning(const char* warningString) override;
+	
+	void draw3dText(const btVector3& location, const char* textString) override;
+	
+	void setDebugMode(int debugMode) override;
+	
+	int getDebugMode() const override;
 
 	void Destroy();
 };

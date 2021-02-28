@@ -681,7 +681,7 @@ void SceneLoader::LoadScene(string sceneName)
 				allocatedEntity->SetScale(parsedNumbers[6], parsedNumbers[7], parsedNumbers[8]);
 				allocatedEntity->CalcWorldMatrix();
 				allocatedEntity->InitRigidBody(Config::DynamicsWorld, 0.0f);
-				if (Config::DebugLinesEnabled && allocatedEntity->colliderDebugLinesEnabled) {
+				if (Config::EtherealDebugLinesEnabled && allocatedEntity->colliderDebugLinesEnabled) {
 					vector<Collider*> colliders = allocatedEntity->GetColliders();
 					for (size_t d = 0; d < colliders.size(); d++)
 					{
@@ -840,7 +840,7 @@ Entity* SceneLoader::CreateEntity(EntityCreationParameters& para)
 	if (para.initRigidBody)
 		allocatedEntity->InitRigidBody(Config::DynamicsWorld, para.entityMass);
 
-	if (Config::DebugLinesEnabled && allocatedEntity->colliderDebugLinesEnabled) {
+	if (Config::EtherealDebugLinesEnabled && allocatedEntity->colliderDebugLinesEnabled) {
 		vector<Collider*> colliders = allocatedEntity->GetColliders();
 		for (size_t d = 0; d < colliders.size(); d++)
 		{
