@@ -235,7 +235,7 @@ void Renderer::RenderFrame()
 		mat->GetPixelShader()->SetShaderResourceView("ShadowMap", NULL);
 	}
 
-	if (Config::DebugLinesEnabled) RenderDebugLines();
+	/*if (Config::EtherealDebugLinesEnabled)*/ RenderDebugLines();
 }
 
 void Renderer::PresentFrame()

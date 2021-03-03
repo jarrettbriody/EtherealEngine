@@ -13,6 +13,7 @@ Game::Game(HINSTANCE hInstance)
 
 #if defined(DEBUG) || defined(_DEBUG)
 	CreateConsoleWindow(500, 120, 32, 120);
+	if (Config::FPSControllerEnabled) ShowCursor(false);
 	printf("Console window created successfully.  Feel free to printf() here.\n");
 #endif
 	
@@ -42,6 +43,7 @@ Game::~Game()
 	delete broadphase;
 	delete solver;
 	delete Config::DynamicsWorld;
+	// delete physicsDraw;
 
 
 	//delete EECamera;
@@ -240,19 +242,20 @@ void Game::Init()
 	musicChannel->set3DMinMaxDistance(0, 15.0f);
   
 	//Scripts::CreateScript(Scripts::SCRIPT_NAMES::BARREL, EESceneLoader->sceneEntitiesMap["barrel_1"]);
-
-	/*
+	
 	// FPS CONTROLLER
-	para = {};
-	para.entityName = "FPSController";
-	para.position = XMFLOAT3(0.0f, 5.0f, 5.0f);
-	para.scale = XMFLOAT3(0.25f, 1.0f, 0.25f);
-	para.initRigidBody = true;
-	para.entityMass = 1.0f;
-	Entity* fpsController = EESceneLoader->CreateEntity(para);
+	if (Config::FPSControllerEnabled)
+	{
+		para = {};
+		para.entityName = "FPSController";
+		para.position = XMFLOAT3(-416.809f, 25.0704, 59.4958f);
+		para.scale = XMFLOAT3(0.25f, 1.0f, 0.25f);
+		para.initRigidBody = true;
+		para.entityMass = 1.0f;
+		Entity* fpsController = EESceneLoader->CreateEntity(para);
 
-	Scripts::CreateScript(Scripts::SCRIPT_NAMES::FPSCONTROLLER, fpsController);
-	*/
+		Scripts::CreateScript(Scripts::SCRIPT_NAMES::FPSCONTROLLER, fpsController);
+	}
 
 	for (size_t i = 0; i < ScriptManager::scriptFunctions.size(); i++)
 	{
@@ -265,6 +268,17 @@ void Game::Init()
 		Config::SwapChain->SetFullscreenState(true, NULL);
 
 	//cout << sizeof(Entity);
+
+	// Physics debug lines initialization once all physical bodies are set-up
+	// https://pybullet.org/Bullet/BulletFull/classbtIDebugDraw.html\
+
+	if (Config::BulletDebugLinesEnabled)
+	{
+		DebugLines* physicsDraw = new DebugLines("PhysicsDebugCore", 0, false);
+		physicsDraw->setDebugMode(btIDebugDraw::DBG_DrawWireframe);
+		Config::DynamicsWorld->setDebugDrawer(physicsDraw);
+		Config::DynamicsWorld->debugDrawWorld(); // Use this to draw physics world once on start 
+	}
 }
 
 void Game::OnResize()
@@ -334,7 +348,7 @@ void Game::PhysicsStep(float deltaTime)
 	Entity* entity = nullptr;
 
 	Config::DynamicsWorld->applyGravity();
-	Config::DynamicsWorld->stepSimulation(deltaTime, 1, btScalar(1.0) / btScalar(60.0));
+	Config::DynamicsWorld->stepSimulation(deltaTime , 1, btScalar(1.0) / btScalar(60.0));
 
 	for (int i = 0; i < Config::DynamicsWorld->getNumCollisionObjects(); i++)
 	{
@@ -481,7 +495,7 @@ void Game::GarbageCollect()
 			EESceneLoader->sceneEntitiesMap.erase(name);
 			EESceneLoader->sceneEntities.erase(EESceneLoader->sceneEntities.begin() + i - 1);
 
-			if (Config::DebugLinesEnabled && e->colliderDebugLinesEnabled) {
+			if (/*Config::EtherealDebugLinesEnabled &&*/ e->colliderDebugLinesEnabled) {
 				DebugLines::debugLinesMap[name]->destroyed = true;
 				DebugLines::debugLinesMap.erase(name);
 			}
@@ -509,15 +523,13 @@ void Game::GarbageCollect()
 		}
 	}
 
-	if (Config::DebugLinesEnabled) {
-		start = DebugLines::debugLines.size();
-		for (size_t i = start; i > 0; i--)
-		{
-			DebugLines* d = DebugLines::debugLines[i - 1];
-			if (d->destroyed) {
-				DebugLines::debugLines.erase(DebugLines::debugLines.begin() + i - 1);
-				delete d;
-			}
+	start = DebugLines::debugLines.size();
+	for (size_t i = start; i > 0; i--)
+	{
+		DebugLines* d = DebugLines::debugLines[i - 1];
+		if (d->destroyed) {
+			DebugLines::debugLines.erase(DebugLines::debugLines.begin() + i - 1);
+			delete d;
 		}
 	}
 }
@@ -535,8 +547,6 @@ void Game::OnMouseDown(WPARAM buttonState, int x, int y)
 		if (!sf->inputEnabled) continue;
 		sf->CallOnMouseDown(buttonState, x, y);
 	}
-
-	
 
 	// printf("Mouse Pos: %d, %d\n", x, y);
 
@@ -649,7 +659,7 @@ void Game::OnMouseMove(WPARAM buttonState, int x, int y)
 		if (!sf->inputEnabled) continue;
 		sf->CallOnMouseMove(buttonState, x, y);
 	}
-	if (buttonState & 0x0001) {
+	if (Config::FPSControllerEnabled || (!Config::FPSControllerEnabled && buttonState & 0x0001)) {
 		EECamera->RotateCamera(x - (int)prevMousePos.x, y - (int)prevMousePos.y);
 
 		prevMousePos.x = x;

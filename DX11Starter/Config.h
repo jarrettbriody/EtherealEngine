@@ -12,6 +12,7 @@ public:
 	static unsigned int ViewPortWidth;
 	static unsigned int ViewPortHeight;
 	static bool Fullscreen;
+	static bool FPSControllerEnabled;
 
 	static unsigned int MemoryAllocatorSize; //1 gig ish
 	static unsigned int MemoryAllocatorAlignment; //32 byte boundary
@@ -19,7 +20,8 @@ public:
 	static unsigned int MemoryAllocatorMeshPoolSize;
 	static unsigned int MemoryAllocatorMaterialPoolSize;
 
-	static bool DebugLinesEnabled;
+	static bool EtherealDebugLinesEnabled;
+	static bool BulletDebugLinesEnabled;
 
 	static btDiscreteDynamicsWorld* DynamicsWorld;
 

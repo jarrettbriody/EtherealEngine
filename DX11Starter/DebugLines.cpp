@@ -69,6 +69,51 @@ void DebugLines::GenerateCuboidVertexBuffer(XMFLOAT3* verts, int vertCount)
 	debugLinesMap.insert({ entityName,this });
 }
 
+void DebugLines::drawLine(const btVector3& from, const btVector3& to, const btVector3& color)
+{
+	DebugLines* physicsDebugLines = new DebugLines("PhysicsDebugLines", 0, false); // cannot turn on the willUpdate paramater currently because not sure how to figure out which lines to update via the input Bullet gives 
+	XMFLOAT4X4 wm;
+	XMStoreFloat4x4(&wm, XMMatrixTranspose(DirectX::XMMatrixIdentity()));
+	physicsDebugLines->worldMatrix = wm;
+	physicsDebugLines->color = XMFLOAT3(0.0f, 0.0f, 1.0f);
+
+	XMFLOAT3 fromVec = XMFLOAT3(from.getX(), from.getY(), from.getZ()); 
+	XMFLOAT3 toVec = XMFLOAT3(to.getX(), to.getY(), to.getZ());
+	XMFLOAT3* linePoints = new XMFLOAT3[8];
+	linePoints[0] = fromVec;
+	linePoints[1] = fromVec;
+	linePoints[2] = fromVec;
+	linePoints[3] = fromVec;
+	linePoints[4] = toVec;	
+	linePoints[5] = toVec;
+	linePoints[6] = toVec;
+	linePoints[7] = toVec;
+	physicsDebugLines->GenerateCuboidVertexBuffer(linePoints, 8);
+	delete[] linePoints;
+}
+
+void DebugLines::drawContactPoint(const btVector3& PointOnB, const btVector3& normalOnB, btScalar distance, int lifeTime, const btVector3& color)
+{
+}
+
+void DebugLines::reportErrorWarning(const char* warningString)
+{
+}
+
+void DebugLines::draw3dText(const btVector3& location, const char* textString)
+{
+}
+
+void DebugLines::setDebugMode(int debugMode)
+{
+	m_debugMode = debugMode;
+}
+
+int DebugLines::getDebugMode() const
+{
+	return m_debugMode;
+}
+
 void DebugLines::Destroy()
 {
 	destroyed = true;

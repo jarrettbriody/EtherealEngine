@@ -15,10 +15,11 @@ class FPSController : public ScriptManager
 
 	Collider* collider;
 
-	float spd = 0.1f;
-	float maxSpeed = 5.0f;
+	float spd = 1.0f;
+	float maxSpeed = 10.0f;
 
 	bool midAir = false;
+	int jumpCount = 0;
 
 	void Init();
 

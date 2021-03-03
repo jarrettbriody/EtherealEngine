@@ -17,6 +17,7 @@
 #include "DebugLines.h"
 #include "ScriptManager.h"
 #include "Scripts.h"
+#include "DebugLines.h"
 
 using namespace std;
 
@@ -64,12 +65,15 @@ private:
 	//testing
 	Light* testLight = nullptr;
 
+
 	// Physics
 	btDefaultCollisionConfiguration* collisionConfiguration = nullptr;
 	btCollisionDispatcher* dispatcher = nullptr;
 	btBroadphaseInterface* broadphase = nullptr;
 	btSequentialImpulseConstraintSolver* solver = nullptr;
 
+	// DebugLines* physicsDraw;
+	
 	// Audio
 	FMOD_RESULT fmodResult = FMOD_RESULT();
 	FMOD::System* fmodSystem = nullptr;

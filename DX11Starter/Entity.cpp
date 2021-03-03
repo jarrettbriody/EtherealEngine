@@ -133,24 +133,15 @@ void Entity::InitRigidBody(btDiscreteDynamicsWorld* dw, float entityMass)
 		XMVECTOR spanVec = XMLoadFloat3(&span);
 		spanVec = XMVectorScale(spanVec, 1.0f);
 		XMStoreFloat3(&span, spanVec);
-
-		this->collShape = new btBoxShape(btVector3(btScalar(span.x * scale.x), btScalar(span.y * scale.y), btScalar(span.z * scale.z)));
-		//this->collShape = new btBoxShape(btVector3(span.x, span.y, span.z));
-		//this->collShape->setLocalScaling(btVector3(scale.x, scale.y, scale.z));
-
-		/*
-		XMFLOAT3 center = (*colliders)[0]->GetCenterLocal();
-		btTransform t;
-		t.setOrigin(btVector3(-center.x * scale.x, -center.y * scale.y, -center.z * scale.z));
-		XMVECTOR calcCenter = XMLoadFloat3(&center);
-		calcCenter = XMVector3Length(calcCenter);
-		XMFLOAT3 length;
-		XMStoreFloat3(&length, calcCenter);
-		if (length.x > 0.0001f) {
-			this->compoundShape = new btCompoundShape(true, 1);
-			this->compoundShape->addChildShape(t, collShape);
+		XMFLOAT3 centerLocal = (*colliders)[0]->GetCenterLocal(); // we ar enot using this anywhere currently? 
+		if (*name == "FPSController") { // give the FPS controller a capsule collider shape
+			// btVector3(btScalar(span.x * scale.x), btScalar(span.y * scale.y), btScalar(span.z * scale.z)
+			this->collShape = new btCapsuleShape(btScalar(span.x * scale.x), btScalar(span.y * scale.y));
 		}
-		*/
+		else {
+			this->collShape = new btBoxShape(btVector3(btScalar(span.x * scale.x), btScalar(span.y * scale.y), btScalar(span.z * scale.z)));
+		}
+		
 	}
 	else {
 		this->collShape = new btBoxShape(btVector3(btScalar(scale.x), btScalar(scale.y), btScalar(scale.z)));
