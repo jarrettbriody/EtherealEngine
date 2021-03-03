@@ -406,6 +406,8 @@ void Game::EnforcePhysics()
 		btQuaternion res = btQuaternion(rot.x, rot.y, rot.z, rot.w);
 		transform.setRotation(res);
 
+		//TODO: ENFORCE LOCAL SCALING OF COLLIDER
+
 		body->setCenterOfMassTransform(transform);
 
 		// body->getMotionState()->setWorldTransform(transform);

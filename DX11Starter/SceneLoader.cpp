@@ -279,8 +279,8 @@ void SceneLoader::LoadDefaultMaterials()
 	materialData = {};
 	materialData.DiffuseTextureMapSRV = defaultTexturesMap["Grey"];
 	materialData.SpecularExponent = 500;
-	materialData.SSAO = true;
-	Material greyMaterial = Material("Grey", materialData, ShaderType::DEFAULT, vertexShadersMap["DEFAULT_SSAO"], pixelShadersMap["DEFAULT_SSAO"], Config::Sampler);
+	//materialData.SSAO = true;
+	Material greyMaterial = Material("Grey", materialData, ShaderType::DEFAULT, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler);
 	allocatedMaterial = (Material*)EEMemoryAllocator->AllocateToPool(Utility::MATERIAL_POOL, sizeof(Material), success);
 	*allocatedMaterial = greyMaterial;
 	defaultMaterialsMap.insert({ "Grey", allocatedMaterial });
@@ -288,8 +288,8 @@ void SceneLoader::LoadDefaultMaterials()
 	materialData = {};
 	materialData.DiffuseTextureMapSRV = defaultTexturesMap["Grey4"];
 	materialData.SpecularExponent = 900;
-	materialData.SSAO = true;
-	Material grey4Material = Material("Grey4", materialData, ShaderType::DEFAULT, vertexShadersMap["DEFAULT_SSAO"], pixelShadersMap["DEFAULT_SSAO"], Config::Sampler);
+	//materialData.SSAO = true;
+	Material grey4Material = Material("Grey4", materialData, ShaderType::DEFAULT, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler);
 	allocatedMaterial = (Material*)EEMemoryAllocator->AllocateToPool(Utility::MATERIAL_POOL, sizeof(Material), success);
 	*allocatedMaterial = grey4Material;
 	defaultMaterialsMap.insert({ "Grey4", allocatedMaterial });
@@ -297,8 +297,8 @@ void SceneLoader::LoadDefaultMaterials()
 	materialData = {};
 	materialData.DiffuseTextureMapSRV = defaultTexturesMap["White"];
 	materialData.SpecularExponent = 100;
-	materialData.SSAO = true;
-	Material whiteMaterial = Material("White", materialData, ShaderType::DEFAULT, vertexShadersMap["DEFAULT_SSAO"], pixelShadersMap["DEFAULT_SSAO"], Config::Sampler);
+	//materialData.SSAO = true;
+	Material whiteMaterial = Material("White", materialData, ShaderType::DEFAULT, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler);
 	allocatedMaterial = (Material*)EEMemoryAllocator->AllocateToPool(Utility::MATERIAL_POOL, sizeof(Material), success);
 	*allocatedMaterial = whiteMaterial;
 	defaultMaterialsMap.insert({ "White", allocatedMaterial });

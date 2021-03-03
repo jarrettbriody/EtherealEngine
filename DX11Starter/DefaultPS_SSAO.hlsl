@@ -113,6 +113,7 @@ float4 main(VertexToPixel input) : SV_TARGET
 		}
 	}
 
+	/*
 	float ambientAccessibility = 1.0f;
 	float ambientScalar = 1.0f;
 	float sampleWeight = 0.5f / sampleCount;
@@ -134,6 +135,8 @@ float4 main(VertexToPixel input) : SV_TARGET
 	//finalColor = float3(input.position.z / input.position.w,input.position.z / input.position.w,input.position.z / input.position.w);
 
 	//finalColor = float3(input.ssaoWVP.x, input.ssaoWVP.y, input.ssaoWVP.z);
+
+	*/
 
 	float3 gammaCorrect = pow(abs(finalColor), 1.0f / 2.2f);
 
