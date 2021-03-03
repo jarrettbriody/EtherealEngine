@@ -1,5 +1,6 @@
 #pragma once
 #include "pch.h"
+#include "Config.h"
 
 using namespace std;
 using namespace DirectX;
@@ -29,6 +30,7 @@ struct MaterialData {
 	ID3D11ShaderResourceView* SpecularHighlightTextureMapSRV = nullptr; //map_Ns
 	ID3D11ShaderResourceView* AlphaTextureMapSRV = nullptr; //map_d
 	ID3D11ShaderResourceView* NormalTextureMapSRV = nullptr; //map_Bump
+	bool SSAO = false;
 };
 
 enum class ShaderType {

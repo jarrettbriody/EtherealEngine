@@ -24,5 +24,9 @@ public:
 	static bool BulletDebugLinesEnabled;
 
 	static btDiscreteDynamicsWorld* DynamicsWorld;
+
+	static unsigned int SSAOSampleCount;
+	static float SSAOKernelRadius;
+	static std::vector<DirectX::XMFLOAT4> SSAOKernel;
 };
 

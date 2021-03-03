@@ -134,13 +134,33 @@ void Entity::InitRigidBody(btDiscreteDynamicsWorld* dw, float entityMass)
 		spanVec = XMVectorScale(spanVec, 1.0f);
 		XMStoreFloat3(&span, spanVec);
 		XMFLOAT3 centerLocal = (*colliders)[0]->GetCenterLocal(); // we ar enot using this anywhere currently? 
+		XMVECTOR centerLocalCalc = XMLoadFloat3(&centerLocal);
+		centerLocalCalc = XMVector3Length(centerLocalCalc);
+		XMFLOAT3 res;
+		XMStoreFloat3(&res, centerLocalCalc);
+		float mag = res.x; 
+		
 		if (*name == "FPSController") { // give the FPS controller a capsule collider shape
 			// btVector3(btScalar(span.x * scale.x), btScalar(span.y * scale.y), btScalar(span.z * scale.z)
-			this->collShape = new btCapsuleShape(btScalar(span.x * scale.x), btScalar(span.y * scale.y));
+			this->collShape = new btCapsuleShape(btScalar(span.x), btScalar(span.y));
 		}
 		else {
-			this->collShape = new btBoxShape(btVector3(btScalar(span.x * scale.x), btScalar(span.y * scale.y), btScalar(span.z * scale.z)));
+			//this->collShape = new btBoxShape(btVector3(btScalar(span.x * scale.x), btScalar(span.y * scale.y), btScalar(span.z * scale.z)));
+			this->collShape = new btBoxShape(btVector3(btScalar(span.x), btScalar(span.y), btScalar(span.z)));
 		}
+
+		if (mag > 0.001f) {
+			this->compoundShape = new btCompoundShape();
+			btTransform localTransform;
+			localTransform.setIdentity();
+			localTransform.setOrigin(btVector3(centerLocal.x, centerLocal.y, centerLocal.z));
+			this->compoundShape->addChildShape(localTransform,this->collShape);
+			this->compoundShape->setLocalScaling(btVector3(scale.x, scale.y, scale.z));
+		}
+		else {
+			this->collShape->setLocalScaling(btVector3(scale.x, scale.y, scale.z));
+		}
+		
 		
 	}
 	else {
@@ -423,6 +443,12 @@ void Entity::PrepareMaterialForDraw(string n, DirectX::XMFLOAT4X4 view, DirectX:
 	vs->SetMatrix4x4("world", GetWorldMatrix());
 	vs->SetMatrix4x4("view", view);
 	vs->SetMatrix4x4("projection", proj);
+
+	if ((*materialMap)[n]->GetMaterialData().SSAO) {
+		ps->SetMatrix4x4("world", GetWorldMatrix());
+		ps->SetMatrix4x4("view", view);
+		ps->SetMatrix4x4("projection", proj);
+	}
 
 	ps->SetData(
 		"uvMult",

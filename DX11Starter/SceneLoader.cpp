@@ -121,6 +121,10 @@ void SceneLoader::LoadShaders()
 	debugLineVS->LoadShaderFile(L"DebugLineVS.cso");
 	vertexShadersMap.insert({ "DebugLine", debugLineVS });
 
+	SimpleVertexShader* defaultSSAOVS = new SimpleVertexShader(Config::Device, Config::Context);
+	defaultSSAOVS->LoadShaderFile(L"DefaultVS_SSAO.cso");
+	vertexShadersMap.insert({ "DEFAULT_SSAO", defaultSSAOVS });
+
 	//pixel shaders
 	SimplePixelShader* defaultPS = new SimplePixelShader(Config::Device, Config::Context);
 	defaultPS->LoadShaderFile(L"DefaultPS.cso");
@@ -146,6 +150,25 @@ void SceneLoader::LoadShaders()
 	waterPS->LoadShaderFile(L"WaterPS.cso");
 	pixelShadersMap.insert({ "Water", waterPS });
 
+	SimplePixelShader* defaultSSAOPS = new SimplePixelShader(Config::Device, Config::Context);
+	defaultSSAOPS->LoadShaderFile(L"DefaultPS_SSAO.cso");
+	pixelShadersMap.insert({ "DEFAULT_SSAO", defaultSSAOPS });
+	Utility::GenerateSSAOKernel(Config::SSAOSampleCount, Config::SSAOKernel);
+	defaultSSAOPS->SetData(
+		"kernel",
+		&Config::SSAOKernel[0],
+		sizeof(XMFLOAT4) * MAX_KERNEL_SAMPLES
+	);
+	defaultSSAOPS->SetData(
+		"sampleCount",
+		&Config::SSAOSampleCount,
+		sizeof(Config::SSAOSampleCount)
+	);
+	defaultSSAOPS->SetData(
+		"kernelRadius",
+		&Config::SSAOKernelRadius,
+		sizeof(Config::SSAOKernelRadius)
+	);
 }
 
 void SceneLoader::LoadDefaultMeshes()
@@ -256,6 +279,7 @@ void SceneLoader::LoadDefaultMaterials()
 	materialData = {};
 	materialData.DiffuseTextureMapSRV = defaultTexturesMap["Grey"];
 	materialData.SpecularExponent = 500;
+	//materialData.SSAO = true;
 	Material greyMaterial = Material("Grey", materialData, ShaderType::DEFAULT, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler);
 	allocatedMaterial = (Material*)EEMemoryAllocator->AllocateToPool(Utility::MATERIAL_POOL, sizeof(Material), success);
 	*allocatedMaterial = greyMaterial;
@@ -264,6 +288,7 @@ void SceneLoader::LoadDefaultMaterials()
 	materialData = {};
 	materialData.DiffuseTextureMapSRV = defaultTexturesMap["Grey4"];
 	materialData.SpecularExponent = 900;
+	//materialData.SSAO = true;
 	Material grey4Material = Material("Grey4", materialData, ShaderType::DEFAULT, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler);
 	allocatedMaterial = (Material*)EEMemoryAllocator->AllocateToPool(Utility::MATERIAL_POOL, sizeof(Material), success);
 	*allocatedMaterial = grey4Material;
@@ -272,6 +297,7 @@ void SceneLoader::LoadDefaultMaterials()
 	materialData = {};
 	materialData.DiffuseTextureMapSRV = defaultTexturesMap["White"];
 	materialData.SpecularExponent = 100;
+	//materialData.SSAO = true;
 	Material whiteMaterial = Material("White", materialData, ShaderType::DEFAULT, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler);
 	allocatedMaterial = (Material*)EEMemoryAllocator->AllocateToPool(Utility::MATERIAL_POOL, sizeof(Material), success);
 	*allocatedMaterial = whiteMaterial;

@@ -74,6 +74,7 @@ void Game::Init()
 
 	//DirectX::CreateDDSTextureFromFile(Config::Device, L"../../Assets/Textures/SunnyCubeMap.dds", 0, &skySRV);
 	DirectX::CreateDDSTextureFromFile(Config::Device, L"../../Assets/Textures/night4.dds", 0, &skySRV);
+	//DirectX::CreateDDSTextureFromFile(Config::Device, L"../../Assets/Textures/pink.dds", 0, &skySRV);
 
 	D3D11_SAMPLER_DESC samplerDesc = {};
 	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
@@ -405,6 +406,8 @@ void Game::EnforcePhysics()
 		btQuaternion res = btQuaternion(rot.x, rot.y, rot.z, rot.w);
 		transform.setRotation(res);
 
+		//TODO: ENFORCE LOCAL SCALING OF COLLIDER
+
 		body->setCenterOfMassTransform(transform);
 
 		// body->getMotionState()->setWorldTransform(transform);
@@ -599,6 +602,7 @@ void Game::OnMouseDown(WPARAM buttonState, int x, int y)
 
 		Config::DynamicsWorld->rayTest(from, to, closestResult); // Raycast
 
+		/*
 		if (closestResult.hasHit())
 		{
 			// Get the entity associated with the rigid body we hit
@@ -627,10 +631,11 @@ void Game::OnMouseDown(WPARAM buttonState, int x, int y)
 			float z = transform.getOrigin().getZ();
 			transform.setOrigin(btVector3(x, y, z));
 			rigidBody->getCollisionShape()->setLocalScaling(btVector3(1, 1, 1));
-			rigidBody->setWorldTransform(transform);*/
+			rigidBody->setWorldTransform(transform); // * /
 
 			Config::DynamicsWorld->addRigidBody(rigidBody); // Add the rigid body back into bullet		
 		}
+		*/
 	}
 	
 	SetCapture(hWnd);
