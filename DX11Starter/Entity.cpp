@@ -433,6 +433,12 @@ void Entity::PrepareMaterialForDraw(string n, DirectX::XMFLOAT4X4 view, DirectX:
 	vs->SetMatrix4x4("view", view);
 	vs->SetMatrix4x4("projection", proj);
 
+	if ((*materialMap)[n]->GetMaterialData().SSAO) {
+		ps->SetMatrix4x4("world", GetWorldMatrix());
+		ps->SetMatrix4x4("view", view);
+		ps->SetMatrix4x4("projection", proj);
+	}
+
 	ps->SetData(
 		"uvMult",
 		&repeatTex,

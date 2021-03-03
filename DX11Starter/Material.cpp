@@ -98,6 +98,26 @@ void Material::Prepare()
 	if (shaderType == ShaderType::DEFAULT)
 		pixelShader->SetFloat3("manualColor", materialData.DiffuseColor);
 
+	/*
+	if (materialData.SSAO) {
+		pixelShader->SetData(
+			"kernel",
+			&Config::SSAOKernel[0],
+			sizeof(XMFLOAT4) * Config::SSAOSampleCount
+		);
+		pixelShader->SetData(
+			"sampleCount",
+			&Config::SSAOSampleCount,
+			sizeof(Config::SSAOSampleCount)
+		);
+		pixelShader->SetData(
+			"kernelRadius",
+			&Config::SSAOKernelRadius,
+			sizeof(Config::SSAOKernelRadius)
+		);
+	}
+	*/
+
 	// Once you've set all of the data you care to change for
 	// the next draw call, you need to actually send it to the GPU
 	//  - If you skip this, the "SetMatrix" calls above won't make it to the GPU!

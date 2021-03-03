@@ -76,7 +76,7 @@ void Camera::Update()
 	XMVECTOR dir = XMLoadFloat3(&direction);
 	XMVECTOR right = XMVector3Cross(dir, XMLoadFloat3(&yAxis));
 
-	float scalar = 10;
+	float scalar = 100;
 
 	if (GetAsyncKeyState('W') & 0x8000) {
 		pos = XMVectorAdd(pos, XMVectorScale(dir, 0.05f * scalar));
