@@ -10,6 +10,8 @@ void FPSController::Init()
 	
 	playerRBody = entity->GetRBody(); // Get the bullet rigidbody
 	playerRBody->setAngularFactor(btVector3(0, 1, 0)); // constrain rotations on x and z axes
+	playerRBody->setGravity(btVector3(0.0f, -25.0f, 0.0f));
+	playerRBody->setFriction(0.8f);
 	collider = entity->GetCollider();
 }
 
@@ -21,6 +23,8 @@ void FPSController::Update()
 
 void FPSController::Move()
 {
+	// TODO: Figure out whether to use a dynamic or kinematic character controller
+
 	// ready the needed information
 	direction = cam->direction;
 	XMFLOAT3 yAxis = Y_AXIS;
@@ -33,6 +37,7 @@ void FPSController::Move()
 	if(!midAir)
 		playerRBody->setDamping(0.95f, 0.0f);
 
+	// TODO: Should I check via Bullet or Ethereal?
 	if (entity->CheckSATCollision((*eMap)["Floor"])) {
 		midAir = false;
 		jumpCount = 0;
@@ -96,25 +101,24 @@ void FPSController::OnMouseMove(WPARAM buttonState, int x, int y)
 	}
 }
 
-/*
-void SceneManager::CheckCollisionWithFloor()
-{
-	int numManifolds = dispatcher->getNumManifolds();
-	for (int i = 0; i < numManifolds; i++)
-	{
-		btPersistentManifold* contactManifold = dynamicsWorld->getDispatcher()->getManifoldByIndexInternal(i);
-		auto* obA = contactManifold->getBody0();
-		auto* obB = contactManifold->getBody1();
+//void FPSController::CheckCollisionWithFloor()
+//{
+//	int numManifolds = dispatcher->getNumManifolds();
+//	for (int i = 0; i < numManifolds; i++)
+//	{
+//		btPersistentManifold* contactManifold = dynamicsWorld->getDispatcher()->getManifoldByIndexInternal(i);
+//		auto* obA = contactManifold->getBody0();
+//		auto* obB = contactManifold->getBody1();
+//
+//		if (obA->getUserPointer() == "Player" && obB->getUserPointer() == "Floor")
+//		{
+//			int numContacts = contactManifold->getNumContacts();
+//			if (numContacts > 0 && !doubleJumpControl)
+//			{
+//				jumpCount = 0;
+//				doubleJumpControl = false;
+//			}
+//		}
+//	}
+//}
 
-		if (obA->getUserPointer() == "Player" && obB->getUserPointer() == "Floor")
-		{
-			int numContacts = contactManifold->getNumContacts();
-			if (numContacts > 0 && !doubleJumpControl)
-			{
-				jumpCount = 0;
-				doubleJumpControl = false;
-			}
-		}
-	}
-}
-*/

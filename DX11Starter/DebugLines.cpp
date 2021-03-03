@@ -71,9 +71,11 @@ void DebugLines::GenerateCuboidVertexBuffer(XMFLOAT3* verts, int vertCount)
 
 void DebugLines::drawLine(const btVector3& from, const btVector3& to, const btVector3& color)
 {
-	cout << "Physics Debug Drawline" << endl;
-
-	// this->color = XMFLOAT3(color.getX(), color.getY(), color.getZ());
+	DebugLines* physicsDebugLines = new DebugLines("PhysicsDebugLines", 0, false); // cannot turn on the willUpdate paramater currently because not sure how to figure out which lines to update via the input Bullet gives 
+	XMFLOAT4X4 wm;
+	XMStoreFloat4x4(&wm, XMMatrixTranspose(DirectX::XMMatrixIdentity()));
+	physicsDebugLines->worldMatrix = wm;
+	physicsDebugLines->color = XMFLOAT3(0.0f, 0.0f, 1.0f);
 
 	XMFLOAT3 fromVec = XMFLOAT3(from.getX(), from.getY(), from.getZ()); 
 	XMFLOAT3 toVec = XMFLOAT3(to.getX(), to.getY(), to.getZ());
@@ -86,7 +88,7 @@ void DebugLines::drawLine(const btVector3& from, const btVector3& to, const btVe
 	linePoints[5] = toVec;
 	linePoints[6] = toVec;
 	linePoints[7] = toVec;
-	GenerateCuboidVertexBuffer(linePoints, 8);
+	physicsDebugLines->GenerateCuboidVertexBuffer(linePoints, 8);
 	delete[] linePoints;
 }
 

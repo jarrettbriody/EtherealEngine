@@ -247,7 +247,7 @@ void Game::Init()
 	{
 		para = {};
 		para.entityName = "FPSController";
-		para.position = XMFLOAT3(0.0f, 5.0f, 5.0f);
+		para.position = XMFLOAT3(-416.809f, 25.0704, 59.4958f);
 		para.scale = XMFLOAT3(0.25f, 1.0f, 0.25f);
 		para.initRigidBody = true;
 		para.entityMass = 1.0f;
@@ -273,8 +273,7 @@ void Game::Init()
 
 	if (Config::BulletDebugLinesEnabled)
 	{
-		DebugLines* physicsDraw = new DebugLines("PhysicsDebugLine", 0, false);
-		physicsDraw->color = XMFLOAT3(0.0f, 0.0f, 1.0f);
+		DebugLines* physicsDraw = new DebugLines("PhysicsDebugCore", 0, false);
 		physicsDraw->setDebugMode(btIDebugDraw::DBG_DrawWireframe);
 		Config::DynamicsWorld->setDebugDrawer(physicsDraw);
 		Config::DynamicsWorld->debugDrawWorld(); // Use this to draw physics world once on start 
@@ -349,11 +348,6 @@ void Game::PhysicsStep(float deltaTime)
 
 	Config::DynamicsWorld->applyGravity();
 	Config::DynamicsWorld->stepSimulation(deltaTime , 1, btScalar(1.0) / btScalar(60.0));
-	if (Config::BulletDebugLinesEnabled)
-	{
-		// Config::DynamicsWorld->debugDrawWorld(); --> use this to updtae bullet debug lines (Caution: big perofrmance hit)
-	}
-
 
 	for (int i = 0; i < Config::DynamicsWorld->getNumCollisionObjects(); i++)
 	{
@@ -552,8 +546,6 @@ void Game::OnMouseDown(WPARAM buttonState, int x, int y)
 		if (!sf->inputEnabled) continue;
 		sf->CallOnMouseDown(buttonState, x, y);
 	}
-
-	
 
 	// printf("Mouse Pos: %d, %d\n", x, y);
 
