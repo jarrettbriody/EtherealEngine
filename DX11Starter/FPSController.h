@@ -12,11 +12,12 @@ class FPSController : public ScriptManager
 	XMFLOAT3 direction;
 
 	btRigidBody* playerRBody;
+	btVector3 controllerVelocity;
 
 	Collider* collider;
 
-	float spd = 1.0f;
-	float maxSpeed = 10.0f;
+	float spd = 5.0f;
+	float maxSpeed = 20.0f;
 
 	bool midAir = false;
 	int jumpCount = 0;

@@ -11,7 +11,10 @@ void FPSController::Init()
 	playerRBody = entity->GetRBody(); // Get the bullet rigidbody
 	playerRBody->setAngularFactor(btVector3(0, 1, 0)); // constrain rotations on x and z axes
 	playerRBody->setGravity(btVector3(0.0f, -25.0f, 0.0f));
-	playerRBody->setFriction(0.8f);
+	playerRBody->setRestitution(0.1f);
+	// playerRBody->setFriction(1.0f); --> debating using friction because it would probably result in weird interations with other level gemoetry, would rather just use pure velocity dampening
+	controllerVelocity = btVector3(0, 0, 0);
+
 	collider = entity->GetCollider();
 }
 
@@ -23,7 +26,7 @@ void FPSController::Update()
 
 void FPSController::Move()
 {
-	// TODO: Figure out whether to use a dynamic or kinematic character controller
+	// Choosing to go with a dynamic character controller to ensure ease of interaction with Bullet, many people online mentioned funk things going on when trying to get kinematic to work
 
 	// ready the needed information
 	direction = cam->direction;
@@ -34,10 +37,12 @@ void FPSController::Move()
 	XMFLOAT3 right;
 	XMStoreFloat3(&right, rightVec);
 
+	// TODO: Properly enforce damping when moving on the ground
 	if(!midAir)
-		playerRBody->setDamping(0.95f, 0.0f);
+		playerRBody->setDamping(0.99f, 0.99f);
 
-	// TODO: Should I check via Bullet or Ethereal?
+	// TODO: Properly check for the ground
+	// Ground Check
 	if (entity->CheckSATCollision((*eMap)["Floor"])) {
 		midAir = false;
 		jumpCount = 0;
@@ -46,45 +51,41 @@ void FPSController::Move()
 		playerRBody->setLinearVelocity(vel);
 	}
 
-	// TODO: Input detection that is only for key press down
-	// apply forces based on input
+	// update the controller velocity vector based on input
 	playerRBody->activate();
+
 	if (GetAsyncKeyState('W') & 0x8000) {
-		//playerRBody->setLinearVelocity(btVector3(0.0f, playerRBody->getLinearVelocity().getY(), 0.0f));
-		playerRBody->applyCentralImpulse(btVector3(direction.x, 0, direction.z) * spd);
-		playerRBody->setDamping(0.0f, 0.0f);
+		controllerVelocity += btVector3(direction.x, 0, direction.z) * spd;
 	}
 	if (GetAsyncKeyState('S') & 0x8000) {
-		//playerRBody->setLinearVelocity(btVector3(0.0f, playerRBody->getLinearVelocity().getY(), 0.0f));
-		playerRBody->applyCentralImpulse(btVector3(direction.x, 0, direction.z) * -spd);
-		playerRBody->setDamping(0.0f, 0.0f);
+		controllerVelocity += btVector3(direction.x, 0, direction.z) * -spd;
 	}
 	if (GetAsyncKeyState('A') & 0x8000) {
-		//playerRBody->setLinearVelocity(btVector3(0.0f, playerRBody->getLinearVelocity().getY(), 0.0f));
-		playerRBody->applyCentralImpulse(btVector3(right.x, 0, right.z) * spd);
-		playerRBody->setDamping(0.0f, 0.0f);
+		controllerVelocity += btVector3(right.x, 0, right.z) * spd;
 	}
 	if (GetAsyncKeyState('D') & 0x8000) {
-		//playerRBody->setLinearVelocity(btVector3(0.0f, playerRBody->getLinearVelocity().getY(), 0.0f));
-		playerRBody->applyCentralImpulse(btVector3(right.x, 0, right.z) * -spd);
-		playerRBody->setDamping(0.0f, 0.0f);
+		controllerVelocity += btVector3(right.x, 0, right.z) * -spd;
 	}
 	if (GetAsyncKeyState(VK_SPACE) & 0x8000) {
 		if (!midAir || (midAir && jumpCount < 2)) {
-			//playerRBody->setLinearVelocity(btVector3(0.0f, playerRBody->getLinearVelocity().getY(), 0.0f));
-			playerRBody->applyCentralImpulse(btVector3(0.0f, 20.0f, 0.0f));
+			playerRBody->applyCentralImpulse(btVector3(0, 20.0f, 0));
 			midAir = true;
 			jumpCount++;
 		}
 	}
-
-	btVector3 vel = playerRBody->getLinearVelocity();
-	btScalar ySpd = vel.getY();
-	vel.setValue(vel.getX(), 0.0f, vel.getZ());
-	btScalar spd = vel.length();
-	if (spd > maxSpeed) vel = vel.normalized() * maxSpeed;
-	vel.setValue(vel.getX(), ySpd, vel.getZ());
-	playerRBody->setLinearVelocity(vel);
+	
+	/* TODO: Dash
+	if (GetAsyncKeyState(VK_LSHIFT) & 0x8000) {
+	
+	}
+	*/
+	
+	btScalar ySpd = playerRBody->getLinearVelocity().getY();
+	btScalar spd = controllerVelocity.length();
+	if (spd > maxSpeed) controllerVelocity = controllerVelocity.normalized() * maxSpeed;
+	controllerVelocity.setValue(controllerVelocity.getX(), ySpd, controllerVelocity.getZ());
+	
+	playerRBody->setLinearVelocity(controllerVelocity);
 
 	XMFLOAT3 eulers = entity->GetEulerAngles();
 	eulers = XMFLOAT3(0.0f, eulers.y, 0.0f);
