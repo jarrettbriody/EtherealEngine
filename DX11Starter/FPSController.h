@@ -20,8 +20,14 @@ class FPSController : public ScriptManager
 	float spd = 5.0f;
 	float maxSpeed = 20.0f;
 
-	bool midAir = false;
+	bool midAir = true; // true if starting character in the air
 	int jumpCount = 0;
+
+	enum class PlayerState
+	{
+		Intro, Normal, HookshotThrown, HookshotFlight, HookshotLeash, Paused, Death, Victory
+	};
+	PlayerState ps;
 
 	void Init();
 
@@ -30,6 +36,8 @@ class FPSController : public ScriptManager
 	void Move();
 
 	void DampControllerVelocity();
+
+	void GroundCheck();
 
 	void OnMouseMove(WPARAM buttonState, int x, int y);
 };

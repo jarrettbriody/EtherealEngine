@@ -10,19 +10,63 @@ void FPSController::Init()
 	
 	playerRBody = entity->GetRBody(); // Get the bullet rigidbody
 	playerRBody->setAngularFactor(btVector3(0, 1, 0)); // constrain rotations on x and z axes
-	// playerRBody->setGravity(btVector3(0.0f, -25.0f, 0.0f));
 	playerRBody->setRestitution(0.1f);
 	// playerRBody->setFriction(1.0f); --> debating using friction because it would probably result in weird interations with other level gemoetry, would rather just use pure velocity dampening
 	controllerVelocity = btVector3(0, 0, 0);
 
 	collider = entity->GetCollider();
+
+	ps = PlayerState::Normal;
 }
 
 void FPSController::Update()
 {
-	Move();
+	// TODO: Need to get access to delta time
 
-	cam->SetPosition(XMFLOAT3(entity->GetPosition().x, entity->GetPosition().y + entity->GetScale().y, entity->GetPosition().z)); // after all updates make sure camera is following the affected entity
+	// player state machine
+	switch (ps)
+	{
+		case PlayerState::Intro:
+
+			break;
+
+		case PlayerState::Normal:
+			Move();
+			cam->SetPosition(XMFLOAT3(entity->GetPosition().x, entity->GetPosition().y + entity->GetScale().y, entity->GetPosition().z)); // after all updates make sure camera is following the affected entity
+			break;
+
+		case PlayerState::HookshotThrown:
+
+			break;
+
+		case PlayerState::HookshotFlight:
+
+			break;
+
+		case PlayerState::HookshotLeash:
+
+			break;
+
+		case PlayerState::Paused:
+
+			break;
+
+		case PlayerState::Death:
+			// ragdoll the player
+			playerRBody->setAngularFactor(btVector3(1, 1, 1)); // constrain rotations on x and z axes
+			playerRBody->setGravity(btVector3(0.0f, -25.0f, 0.0f));
+			cam->SetPosition(XMFLOAT3(entity->GetPosition().x, entity->GetPosition().y + entity->GetScale().y, entity->GetPosition().z)); // after all updates make sure camera is following the affected entity
+
+			break;
+
+		case PlayerState::Victory:
+			
+			break;
+
+		default:
+
+			break;
+	}
 }
 
 void FPSController::Move()
@@ -38,23 +82,10 @@ void FPSController::Move()
 	XMFLOAT3 right;
 	XMStoreFloat3(&right, rightVec);
 
-	// TODO: Properly enforce damping when moving on the ground
-	/*if(!midAir)
-		playerRBody->setDamping(0.99f, 0.99f);*/
-
-	// TODO: Properly check for the ground using Bullet
-	// Ground Check
-	if (entity->CheckSATCollision((*eMap)["Floor"])) {
-		midAir = false;
-		jumpCount = 0;
-		btVector3 vel = playerRBody->getLinearVelocity();
-		vel.setValue(vel.getX(), 0.0f, vel.getZ());
-		playerRBody->setLinearVelocity(vel);
-	}
+	GroundCheck();
 
 	// update the controller velocity vector based on input
-	playerRBody->activate(); // needed?
-	playerRBody->setActivationState(ACTIVE_TAG);
+	playerRBody->activate();
 
 	if (GetAsyncKeyState('W') & 0x8000) {
 		controllerVelocity += btVector3(direction.x, 0, direction.z) * spd;
@@ -68,17 +99,18 @@ void FPSController::Move()
 	if (GetAsyncKeyState('D') & 0x8000) {
 		controllerVelocity += btVector3(right.x, 0, right.z) * -spd;
 	}
-	if (GetAsyncKeyState(VK_SPACE) & 0x8000) {
-		if (!midAir || (midAir && jumpCount < 2)) {
-			playerRBody->applyCentralImpulse(btVector3(0, 20.0f, 0));
+	if (GetAsyncKeyState(VK_SPACE) & 0x8000) { // TODO: Need to detect input for a single keypress down for double jump (probably other things too)
+		if (!midAir) {
+			cout << "Jump" << endl;
+			playerRBody->applyCentralImpulse(btVector3(0, 30.0f, 0));
 			midAir = true;
 			jumpCount++;
 		}
 	}
-	
-	/* TODO: Dash
+	/*
+	TODO: Dash
 	if (GetAsyncKeyState(VK_LSHIFT) & 0x8000) {
-	
+		
 	}
 	*/
 	
@@ -89,7 +121,7 @@ void FPSController::Move()
 
 	DampControllerVelocity();
 	playerRBody->setLinearVelocity(controllerVelocity);
-	cout << "Vel: (" << controllerVelocity.getX() << ", " << controllerVelocity.getY() << ", " << controllerVelocity.getZ() << ")" << endl;
+	// cout << "Vel: (" << controllerVelocity.getX() << ", " << controllerVelocity.getY() << ", " << controllerVelocity.getZ() << ")" << endl;
 
 	XMFLOAT3 eulers = entity->GetEulerAngles();
 	eulers = XMFLOAT3(0.0f, eulers.y, 0.0f);
@@ -99,16 +131,38 @@ void FPSController::Move()
 void FPSController::DampControllerVelocity()
 {
 	btVector3 vel = btVector3(controllerVelocity.getX(), 0, controllerVelocity.getZ());
-	if (!vel.fuzzyZero()) // TODO: Better way?
+	if (!vel.fuzzyZero()) 
 	{
 		vel *= dampingScalar;
 		controllerVelocity -= vel; // manual damping for X and Z
-		cout << "DAMPING" << endl;
-		// controllerVelocity -= vel / dampingScalar; // TODO: Sliding error comes from performing the subtraction on both positive and negative velocity values
+		// cout << "DAMPING" << endl;
 	}
 	else
 	{
-		controllerVelocity = btVector3(0, controllerVelocity.getY(), 0);
+		controllerVelocity -= vel; // so we don't get any leftover velocities from fuzzy zero check, zero out the x and z
+	}
+}
+
+void FPSController::GroundCheck()
+{
+	// TODO: Properly check for the ground using Bullet
+	// Ground Check
+	if (entity->CheckSATCollision((*eMap)["Floor (8)"])) {
+		midAir = false;
+		jumpCount = 0;
+		btVector3 vel = playerRBody->getLinearVelocity();
+		vel.setValue(vel.getX(), 0.0f, vel.getZ());
+		playerRBody->setLinearVelocity(vel);
+	}
+
+	// Only apply gravity to the player when in the air
+	if (!midAir)
+	{
+		playerRBody->setGravity(btVector3(0.0f, 0.0f, 0.0f));
+	}
+	else
+	{
+		playerRBody->setGravity(btVector3(0.0f, -25.0f, 0.0f));
 	}
 }
 
