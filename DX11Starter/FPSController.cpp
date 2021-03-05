@@ -10,7 +10,7 @@ void FPSController::Init()
 	
 	playerRBody = entity->GetRBody(); // Get the bullet rigidbody
 	playerRBody->setAngularFactor(btVector3(0, 1, 0)); // constrain rotations on x and z axes
-	playerRBody->setGravity(btVector3(0.0f, -25.0f, 0.0f));
+	// playerRBody->setGravity(btVector3(0.0f, -25.0f, 0.0f));
 	playerRBody->setRestitution(0.1f);
 	// playerRBody->setFriction(1.0f); --> debating using friction because it would probably result in weird interations with other level gemoetry, would rather just use pure velocity dampening
 	controllerVelocity = btVector3(0, 0, 0);
@@ -21,12 +21,13 @@ void FPSController::Init()
 void FPSController::Update()
 {
 	Move();
-	cam->SetPosition(XMFLOAT3(entity->GetPosition().x, entity->GetPosition().y + entity->GetScale().y, entity->GetPosition().z));
+
+	cam->SetPosition(XMFLOAT3(entity->GetPosition().x, entity->GetPosition().y + entity->GetScale().y, entity->GetPosition().z)); // after all updates make sure camera is following the affected entity
 }
 
 void FPSController::Move()
 {
-	// Choosing to go with a dynamic character controller to ensure ease of interaction with Bullet, many people online mentioned funk things going on when trying to get kinematic to work
+	// Choosing to go with a dynamic character controller to ensure ease of interaction with Bullet, many people online mentioned funky things going on when trying to get kinematic to work
 
 	// ready the needed information
 	direction = cam->direction;
@@ -38,10 +39,10 @@ void FPSController::Move()
 	XMStoreFloat3(&right, rightVec);
 
 	// TODO: Properly enforce damping when moving on the ground
-	if(!midAir)
-		playerRBody->setDamping(0.99f, 0.99f);
+	/*if(!midAir)
+		playerRBody->setDamping(0.99f, 0.99f);*/
 
-	// TODO: Properly check for the ground
+	// TODO: Properly check for the ground using Bullet
 	// Ground Check
 	if (entity->CheckSATCollision((*eMap)["Floor"])) {
 		midAir = false;
@@ -52,7 +53,8 @@ void FPSController::Move()
 	}
 
 	// update the controller velocity vector based on input
-	playerRBody->activate();
+	playerRBody->activate(); // needed?
+	playerRBody->setActivationState(ACTIVE_TAG);
 
 	if (GetAsyncKeyState('W') & 0x8000) {
 		controllerVelocity += btVector3(direction.x, 0, direction.z) * spd;
@@ -84,12 +86,30 @@ void FPSController::Move()
 	btScalar spd = controllerVelocity.length();
 	if (spd > maxSpeed) controllerVelocity = controllerVelocity.normalized() * maxSpeed;
 	controllerVelocity.setValue(controllerVelocity.getX(), ySpd, controllerVelocity.getZ());
-	
+
+	DampControllerVelocity();
 	playerRBody->setLinearVelocity(controllerVelocity);
+	cout << "Vel: (" << controllerVelocity.getX() << ", " << controllerVelocity.getY() << ", " << controllerVelocity.getZ() << ")" << endl;
 
 	XMFLOAT3 eulers = entity->GetEulerAngles();
 	eulers = XMFLOAT3(0.0f, eulers.y, 0.0f);
 	entity->SetRotation(eulers);
+}
+
+void FPSController::DampControllerVelocity()
+{
+	btVector3 vel = btVector3(controllerVelocity.getX(), 0, controllerVelocity.getZ());
+	if (!vel.fuzzyZero()) // TODO: Better way?
+	{
+		vel *= dampingScalar;
+		controllerVelocity -= vel; // manual damping for X and Z
+		cout << "DAMPING" << endl;
+		// controllerVelocity -= vel / dampingScalar; // TODO: Sliding error comes from performing the subtraction on both positive and negative velocity values
+	}
+	else
+	{
+		controllerVelocity = btVector3(0, controllerVelocity.getY(), 0);
+	}
 }
 
 void FPSController::OnMouseMove(WPARAM buttonState, int x, int y)

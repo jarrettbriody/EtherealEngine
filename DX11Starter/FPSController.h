@@ -11,10 +11,11 @@ class FPSController : public ScriptManager
 	XMFLOAT3 position;
 	XMFLOAT3 direction;
 
+	Collider* collider;
+	
 	btRigidBody* playerRBody;
 	btVector3 controllerVelocity;
-
-	Collider* collider;
+	float dampingScalar = 0.09f;
 
 	float spd = 5.0f;
 	float maxSpeed = 20.0f;
@@ -27,6 +28,8 @@ class FPSController : public ScriptManager
 	void Update();
 
 	void Move();
+
+	void DampControllerVelocity();
 
 	void OnMouseMove(WPARAM buttonState, int x, int y);
 };
