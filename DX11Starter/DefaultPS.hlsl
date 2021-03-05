@@ -101,5 +101,5 @@ float4 main(VertexToPixel input) : SV_TARGET
 
 	float3 gammaCorrect = pow(abs(finalColor), 1.0f / 2.2f);
 
-	return float4(gammaCorrect, 1.f);
+	return float4(gammaCorrect, surfaceColor.a);
 }

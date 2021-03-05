@@ -41,6 +41,7 @@ private:
 	ID3D11ShaderResourceView* shadowSRV;
 	ID3D11SamplerState* shadowSampler;
 	ID3D11RasterizerState* shadowRasterizer;
+	ID3D11BlendState* blendState;
 	SimpleVertexShader* shadowVS = nullptr;
 	SimpleVertexShader* debugLineVS = nullptr;
 	SimplePixelShader* debugLinePS = nullptr;
@@ -62,6 +63,9 @@ public:
 	void InitShadows();
 	void ToggleShadows(bool toggle);
 	void SetShadowMapResolution(unsigned int res);
+
+	void InitBlendState();
+	void ToggleBlendState(bool toggle);
 
 	void ClearFrame();
 	void RenderFrame();

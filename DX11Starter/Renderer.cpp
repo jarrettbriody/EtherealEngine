@@ -167,6 +167,8 @@ void Renderer::InitShadows()
 	XMStoreFloat4x4(&shadowProjectionMatrix, shadowProj);
 }
 
+
+
 void Renderer::ToggleShadows(bool toggle)
 {
 	shadowsEnabled = toggle;
@@ -176,6 +178,34 @@ void Renderer::SetShadowMapResolution(unsigned int res)
 {
 	unsigned int exponent = (unsigned int)(log2((double)res) + 0.5);
 	shadowMapResolution = (unsigned int)(pow(2u, exponent) + 0.5);
+}
+
+void Renderer::InitBlendState()
+{
+	D3D11_BLEND_DESC bd = {};
+	bd.RenderTarget[0].BlendEnable = true;
+
+	// These control how the RGB channels are combined
+	bd.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+	bd.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+	bd.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+
+	// These control how the alpha channel is combined
+	bd.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+	bd.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ONE;
+	bd.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+
+	bd.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+
+	Config::Device->CreateBlendState(&bd, &blendState);
+}
+
+void Renderer::ToggleBlendState(bool toggle)
+{
+	if (toggle)
+		Config::Context->OMSetBlendState(blendState, 0, 0xFFFFFFFF);
+	else
+		Config::Context->OMSetBlendState(NULL, 0, 0xFFFFFFFF);
 }
 
 void Renderer::ClearFrame()

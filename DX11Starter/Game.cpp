@@ -147,6 +147,16 @@ void Game::Init()
 
 	cube1->CalcWorldMatrix();
 
+	// Transparency test object
+	/*para.entityName = "desk";
+	para.meshName = "StylishDesk";
+	para.materialName = "";
+	para.position = XMFLOAT3(5.0f, 5.0f, 5.0f);
+	para.rotationRadians = XMFLOAT3(DirectX::XMConvertToRadians(30), DirectX::XMConvertToRadians(30), DirectX::XMConvertToRadians(30));
+	para.scale = XMFLOAT3(1.0f, 2.0f, 1.0f);
+	para.initRigidBody = true;
+	Entity* desk = EESceneLoader->CreateEntity(para);*/
+
 	prevMousePos.x = 0;
 	prevMousePos.y = 0;
 
@@ -180,6 +190,7 @@ void Game::Init()
 	EERenderer->SendAllLightsToShader(EESceneLoader->pixelShadersMap["Normal"]);
 	EERenderer->SetShadowMapResolution(4096);
 	EERenderer->InitShadows();
+	EERenderer->InitBlendState();
 	EESceneLoader->EERenderer = EERenderer;
 
 	Entity* e;
