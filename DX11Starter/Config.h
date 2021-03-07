@@ -23,10 +23,14 @@ public:
 	static bool EtherealDebugLinesEnabled;
 	static bool BulletDebugLinesEnabled;
 
+	static bool ShadowsEnabled;
+	static bool SSAOEnabled;
+	static bool HBAOPlusEnabled;
+
 	static btDiscreteDynamicsWorld* DynamicsWorld;
 
 	static unsigned int SSAOSampleCount;
 	static float SSAOKernelRadius;
-	static std::vector<DirectX::XMFLOAT4> SSAOKernel;
+	static DirectX::XMFLOAT4 SSAOKernel[32];
 };
 

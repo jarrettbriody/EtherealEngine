@@ -21,8 +21,12 @@ unsigned int Config::MemoryAllocatorMaterialPoolSize = MEGABYTE * 64; //250 MB
 bool Config::EtherealDebugLinesEnabled = false;
 bool Config::BulletDebugLinesEnabled = true;
 
+bool Config::ShadowsEnabled = true;
+bool Config::SSAOEnabled = false;
+bool Config::HBAOPlusEnabled = true;
+
 btDiscreteDynamicsWorld* Config::DynamicsWorld = nullptr;
 
 unsigned int Config::SSAOSampleCount = 32;
 float Config::SSAOKernelRadius = 1.0f;
-std::vector<DirectX::XMFLOAT4> Config::SSAOKernel;
+DirectX::XMFLOAT4 Config::SSAOKernel[32];

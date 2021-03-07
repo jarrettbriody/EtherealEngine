@@ -346,6 +346,11 @@ void Entity::SetShadowData(ShadowData shadowData)
 	this->shadowData = shadowData;
 }
 
+void Entity::SetDepthStencilData(DepthStencilData depthStencilData)
+{
+	this->depthStencilData = depthStencilData;
+}
+
 void Entity::SetMeshAndMaterial(Mesh* mesh, Material* mat)
 {
 	this->mesh = mesh;
@@ -444,12 +449,6 @@ void Entity::PrepareMaterialForDraw(string n, DirectX::XMFLOAT4X4 view, DirectX:
 	vs->SetMatrix4x4("view", view);
 	vs->SetMatrix4x4("projection", proj);
 
-	if ((*materialMap)[n]->GetMaterialData().SSAO) {
-		ps->SetMatrix4x4("world", GetWorldMatrix());
-		ps->SetMatrix4x4("view", view);
-		ps->SetMatrix4x4("projection", proj);
-	}
-
 	ps->SetData(
 		"uvMult",
 		&repeatTex,
@@ -461,6 +460,13 @@ void Entity::PrepareMaterialForDraw(string n, DirectX::XMFLOAT4X4 view, DirectX:
 		vs->SetMatrix4x4("shadowProj", shadowData.shadowProjectionMatrix);
 		ps->SetShaderResourceView("ShadowMap", shadowData.shadowSRV);
 		ps->SetSamplerState("ShadowSampler", shadowData.shadowSampler);
+	}
+
+	if (Config::SSAOEnabled && (*materialMap)[n]->GetMaterialData().SSAO) {
+		ps->SetMatrix4x4("ssaoView", view);
+		ps->SetMatrix4x4("ssaoProjection", proj);
+		ps->SetShaderResourceView("DepthStencilMap", depthStencilData.depthStencilSRV);
+		ps->SetSamplerState("DepthStencilSampler", depthStencilData.depthStencilSampler);
 	}
 
 	(*materialMap)[n]->Prepare();

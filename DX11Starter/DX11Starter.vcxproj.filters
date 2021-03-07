@@ -10,9 +10,6 @@
     <FxCompile Include="NormalVS.hlsl">
       <Filter>EEShaders\Vertex Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="ShadowVS.hlsl">
-      <Filter>EEShaders\Vertex Shaders</Filter>
-    </FxCompile>
     <FxCompile Include="SkyVS.hlsl">
       <Filter>EEShaders\Vertex Shaders</Filter>
     </FxCompile>
@@ -37,7 +34,7 @@
     <FxCompile Include="DefaultPS_SSAO.hlsl">
       <Filter>EEShaders\Pixel Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="DefaultVS_SSAO.hlsl">
+    <FxCompile Include="DepthStencilVS.hlsl">
       <Filter>EEShaders\Vertex Shaders</Filter>
     </FxCompile>
   </ItemGroup>

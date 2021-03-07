@@ -176,15 +176,19 @@ void Game::Init()
 	EERenderer = Renderer::GetInstance();
 	EERenderer->AddCamera("main", EECamera);
 	EERenderer->EnableCamera("main");
-	EERenderer->SetShadowVertexShader(EESceneLoader->vertexShadersMap["Shadow"]);
-	EERenderer->SetDebugLineVertexShader(EESceneLoader->vertexShadersMap["DebugLine"]);
-	EERenderer->SetDebugLinePixelShader(EESceneLoader->pixelShadersMap["DebugLine"]);
+	RendererShaders rShaders;
+	rShaders.depthStencilVS = EESceneLoader->vertexShadersMap["DepthStencil"];
+	rShaders.debugLineVS = EESceneLoader->vertexShadersMap["DebugLine"];
+	rShaders.debugLinePS = EESceneLoader->pixelShadersMap["DebugLine"];
+	EERenderer->SetRendererShaders(rShaders);
 	EERenderer->SetEntities(&(EESceneLoader->sceneEntities));
 	EERenderer->AddLight("Sun", dLight);
 	EERenderer->SendAllLightsToShader(EESceneLoader->pixelShadersMap["DEFAULT"]);
 	EERenderer->SendAllLightsToShader(EESceneLoader->pixelShadersMap["Normal"]);
 	EERenderer->SetShadowMapResolution(16384);
 	EERenderer->InitShadows();
+	EERenderer->InitDepthStencil();
+	EERenderer->InitHBAOPlus();
 	EESceneLoader->EERenderer = EERenderer;
 
 	Entity* e;
@@ -446,11 +450,13 @@ void Game::Draw(float deltaTime, float totalTime)
 
 	EERenderer->SendAllLightsToShader(EESceneLoader->pixelShadersMap["DEFAULT"]);
 	EERenderer->SendAllLightsToShader(EESceneLoader->pixelShadersMap["Normal"]);
-	EERenderer->SendAllLightsToShader(EESceneLoader->pixelShadersMap["Water"]);
-	EERenderer->SendAllLightsToShader(EESceneLoader->pixelShadersMap["Terrain"]);
+	//EERenderer->SendAllLightsToShader(EESceneLoader->pixelShadersMap["Water"]);
+	//EERenderer->SendAllLightsToShader(EESceneLoader->pixelShadersMap["Terrain"]);
+
+	//EERenderer->SendSSAOKernelToShader(EESceneLoader->pixelShadersMap["DEFAULT_SSAO"]);
 
 	EERenderer->RenderShadowMap();
-
+	EERenderer->RenderDepthStencil();
 	EERenderer->RenderFrame();
 
 	DrawSky();
