@@ -70,7 +70,7 @@ Mesh::Mesh(string meshN, char * objFile, ID3D11Device* device, bool* success)
 		line = string(chars);
 
 		// Check the type of line
-		if (chars[0] == 'g') {
+		if (chars[0] == 'g') { //|| chars[0] == 'o') {
 			if (!isGroup && line != "g default") {
 				isGroup = true;
 				groupName = line.substr(2);
