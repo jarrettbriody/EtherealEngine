@@ -26,9 +26,11 @@ SceneLoader::~SceneLoader()
 	for (auto meshMapIter = defaultMeshesMap.begin(); meshMapIter != defaultMeshesMap.end(); ++meshMapIter)
 	{
 		if (meshMapIter->first != "Ground" &&
-			meshMapIter->first != "BloodButton" &&
+			meshMapIter->first != "Blood_Button" &&
 			meshMapIter->first != "Graybox" &&
-			meshMapIter->first != "BloodFountain") {
+			meshMapIter->first != "Wall" &&
+			meshMapIter->first != "Manhole" &&
+			meshMapIter->first != "Floor") {
 			//delete meshMapIter->second;
 			meshMapIter->second->FreeMemory();
 			//cout << "Deleting " << meshMapIter->first << endl;
@@ -103,9 +105,9 @@ void SceneLoader::LoadShaders()
 	defaultVS->LoadShaderFile(L"DefaultVS.cso");
 	vertexShadersMap.insert({ "DEFAULT", defaultVS });
 
-	SimpleVertexShader* shadowVS = new SimpleVertexShader(Config::Device, Config::Context);
-	shadowVS->LoadShaderFile(L"ShadowVS.cso");
-	vertexShadersMap.insert({ "Shadow", shadowVS });
+	SimpleVertexShader* depthStencilVS = new SimpleVertexShader(Config::Device, Config::Context);
+	depthStencilVS->LoadShaderFile(L"DepthStencilVS.cso");
+	vertexShadersMap.insert({ "DepthStencil", depthStencilVS });
 
 	SimpleVertexShader* skyVS = new SimpleVertexShader(Config::Device, Config::Context);
 	skyVS->LoadShaderFile(L"SkyVS.cso");
@@ -136,6 +138,7 @@ void SceneLoader::LoadShaders()
 	debugLinePS->LoadShaderFile(L"DebugLinePS.cso");
 	pixelShadersMap.insert({ "DebugLine", debugLinePS });
 
+	/*
 	SimplePixelShader* terrainPS = new SimplePixelShader(Config::Device, Config::Context);
 	terrainPS->LoadShaderFile(L"TerrainPS.cso");
 	pixelShadersMap.insert({ "Terrain", terrainPS });
@@ -143,7 +146,12 @@ void SceneLoader::LoadShaders()
 	SimplePixelShader* waterPS = new SimplePixelShader(Config::Device, Config::Context);
 	waterPS->LoadShaderFile(L"WaterPS.cso");
 	pixelShadersMap.insert({ "Water", waterPS });
+	*/
 
+	SimplePixelShader* defaultSSAOPS = new SimplePixelShader(Config::Device, Config::Context);
+	defaultSSAOPS->LoadShaderFile(L"DefaultPS_SSAO.cso");
+	pixelShadersMap.insert({ "DEFAULT_SSAO", defaultSSAOPS });
+	Utility::GenerateSSAOKernel(Config::SSAOSampleCount, Config::SSAOKernel);
 }
 
 void SceneLoader::LoadDefaultMeshes()
@@ -182,9 +190,10 @@ void SceneLoader::LoadDefaultMeshes()
 
 
 	defaultMeshesMap.insert({ "Ground", defaultMeshesMap["Cube"] });
-	defaultMeshesMap.insert({ "BloodButton", defaultMeshesMap["Cube"] });
-	defaultMeshesMap.insert({ "Graybox", defaultMeshesMap["Cube"] });
-	defaultMeshesMap.insert({ "BloodFountain", defaultMeshesMap["Cylinder"] });
+	defaultMeshesMap.insert({ "Blood_Button", defaultMeshesMap["Cube"] });
+	defaultMeshesMap.insert({ "Wall", defaultMeshesMap["Cube"] });
+	defaultMeshesMap.insert({ "Floor", defaultMeshesMap["Cube"] });
+	defaultMeshesMap.insert({ "Manhole", defaultMeshesMap["Cylinder"] });
 }
 
 void SceneLoader::LoadDefaultTextures()
@@ -206,6 +215,8 @@ void SceneLoader::LoadDefaultTextures()
 	defaultTexturesMap.insert({ "waterNormal1", Utility::LoadSRV("water_normal1.jpeg") });
 	defaultTexturesMap.insert({ "waterNormal2", Utility::LoadSRV("water_normal2.png") });
 	defaultTexturesMap.insert({ "Grey", Utility::LoadSRV("Default/grey.png") });
+	defaultTexturesMap.insert({ "Grey4", Utility::LoadSRV("Default/grey4.png") });
+	defaultTexturesMap.insert({ "White", Utility::LoadSRV("Default/white.png") });
 }
 
 void SceneLoader::LoadDefaultMaterials()
@@ -214,7 +225,7 @@ void SceneLoader::LoadDefaultMaterials()
 	Material* allocatedMaterial;
 	bool success;
 
-	Material defaultMaterial = Material("DEFAULT", materialData, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler);
+	Material defaultMaterial = Material("DEFAULT", materialData, ShaderType::DEFAULT, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler);
 	allocatedMaterial = (Material*)EEMemoryAllocator->AllocateToPool(Utility::MATERIAL_POOL, sizeof(Material), success);
 	*allocatedMaterial = defaultMaterial;
 	defaultMaterialsMap.insert({ "DEFAULT", allocatedMaterial});
@@ -222,38 +233,58 @@ void SceneLoader::LoadDefaultMaterials()
 	materialData = {};
 	materialData.DiffuseTextureMapSRV = defaultTexturesMap["GrassDiffuse"];
 	materialData.NormalTextureMapSRV = defaultTexturesMap["GrassNormal"];
-	Material grassMaterial = Material("Grass", materialData, vertexShadersMap["Normal"], pixelShadersMap["Normal"], Config::Sampler);
+	Material grassMaterial = Material("Grass", materialData, ShaderType::NORMAL, vertexShadersMap["Normal"], pixelShadersMap["Normal"], Config::Sampler);
 	allocatedMaterial = (Material*)EEMemoryAllocator->AllocateToPool(Utility::MATERIAL_POOL, sizeof(Material), success);
 	*allocatedMaterial = grassMaterial;
 	defaultMaterialsMap.insert({ "Grass", allocatedMaterial });
 
 	materialData = {};
 	materialData.DiffuseTextureMapSRV = defaultTexturesMap["Red"];
-	Material redMaterial = Material("Red", materialData, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler);
+	Material redMaterial = Material("Red", materialData, ShaderType::DEFAULT, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler);
 	allocatedMaterial = (Material*)EEMemoryAllocator->AllocateToPool(Utility::MATERIAL_POOL, sizeof(Material), success);
 	*allocatedMaterial = redMaterial;
 	defaultMaterialsMap.insert({ "Red", allocatedMaterial });
 
 	materialData = {};
 	materialData.DiffuseTextureMapSRV = defaultTexturesMap["Marble"];
-	Material marbleMaterial = Material("Marble", materialData, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler);
+	Material marbleMaterial = Material("Marble", materialData, ShaderType::DEFAULT, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler);
 	allocatedMaterial = (Material*)EEMemoryAllocator->AllocateToPool(Utility::MATERIAL_POOL, sizeof(Material), success);
 	*allocatedMaterial = marbleMaterial;
 	defaultMaterialsMap.insert({ "Marble", allocatedMaterial });
 
 	materialData = {};
 	materialData.DiffuseTextureMapSRV = defaultTexturesMap["Hedge"];
-	Material hedgeMaterial = Material("Hedge", materialData, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler);
+	Material hedgeMaterial = Material("Hedge", materialData, ShaderType::DEFAULT, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler);
 	allocatedMaterial = (Material*)EEMemoryAllocator->AllocateToPool(Utility::MATERIAL_POOL, sizeof(Material), success);
 	*allocatedMaterial = hedgeMaterial;
 	defaultMaterialsMap.insert({ "Hedge", allocatedMaterial });
 
 	materialData = {};
 	materialData.DiffuseTextureMapSRV = defaultTexturesMap["Grey"];
-	Material greyMaterial = Material("Grey", materialData, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler);
+	materialData.SpecularExponent = 500;
+	materialData.SSAO = true;
+	Material greyMaterial = Material("Grey", materialData, ShaderType::DEFAULT, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler);
 	allocatedMaterial = (Material*)EEMemoryAllocator->AllocateToPool(Utility::MATERIAL_POOL, sizeof(Material), success);
 	*allocatedMaterial = greyMaterial;
 	defaultMaterialsMap.insert({ "Grey", allocatedMaterial });
+
+	materialData = {};
+	materialData.DiffuseTextureMapSRV = defaultTexturesMap["Grey4"];
+	materialData.SpecularExponent = 900;
+	materialData.SSAO = true;
+	Material grey4Material = Material("Grey4", materialData, ShaderType::DEFAULT, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler);
+	allocatedMaterial = (Material*)EEMemoryAllocator->AllocateToPool(Utility::MATERIAL_POOL, sizeof(Material), success);
+	*allocatedMaterial = grey4Material;
+	defaultMaterialsMap.insert({ "Grey4", allocatedMaterial });
+
+	materialData = {};
+	materialData.DiffuseTextureMapSRV = defaultTexturesMap["White"];
+	materialData.SpecularExponent = 100;
+	materialData.SSAO = true;
+	Material whiteMaterial = Material("White", materialData, ShaderType::DEFAULT, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler);
+	allocatedMaterial = (Material*)EEMemoryAllocator->AllocateToPool(Utility::MATERIAL_POOL, sizeof(Material), success);
+	*allocatedMaterial = whiteMaterial;
+	defaultMaterialsMap.insert({ "White", allocatedMaterial });
 }
 
 void SceneLoader::BuildDefaultEntity(string entityName, string objName, Entity* e)
@@ -263,14 +294,23 @@ void SceneLoader::BuildDefaultEntity(string entityName, string objName, Entity* 
 		XMFLOAT3 s = e->GetScale();
 		e->SetRepeatTexture(s.x / 2.0f, s.z / 2.0f);
 	}
-	if (objName == "BloodButton") {
+	if (objName == "Blood_Button") {
 		e->AddMaterial(defaultMaterialsMap["Grey"], true);
+		XMFLOAT3 s = e->GetScale();
+		e->SetRepeatTexture(s.x / 2.0f, s.y / 2.0f);
 	}
-	if (objName == "Graybox") {
-		e->AddMaterial(defaultMaterialsMap["Grey"], true);
+	if (objName == "Wall") {
+		e->AddMaterial(defaultMaterialsMap["White"], true);
+		XMFLOAT3 s = e->GetScale();
+		e->SetRepeatTexture(s.x / 2.0f, s.z / 2.0f);
 	}
-	if (objName == "BloodFountain") {
-		e->AddMaterial(defaultMaterialsMap["Red"], true);
+	if (objName == "Floor") {
+		e->AddMaterial(defaultMaterialsMap["Grey4"], true);
+		XMFLOAT3 s = e->GetScale();
+		e->SetRepeatTexture(s.x / 2.0f, s.z / 2.0f);
+	}
+	if (objName == "Manhole") {
+		e->AddMaterial(defaultMaterialsMap["White"], true);
 	}
 }
 
@@ -307,7 +347,7 @@ Utility::MESH_TYPE SceneLoader::AutoLoadOBJMTL(string name)
 		return Utility::MESH_TYPE::GENERATED_MESH;
 	}
 
-	string objPath = "../../Assets/Models/" + name + ".obj";
+	string objPath = modelPath + name + ".obj";
 
 	//Mesh will change bool ref to false if OBJ file does not exist, otherwise it will generate it and add to map
 	bool success;
@@ -338,7 +378,7 @@ Utility::MESH_TYPE SceneLoader::AutoLoadOBJMTL(string name)
 		return Utility::MESH_TYPE::GENERATED_MESH;
 	}
 
-	ifstream infile("../../Assets/Models/" + mtlPath);
+	ifstream infile(modelPath + mtlPath);
 
 	if (!infile.is_open()) {
 		cout << "Material Template Library (MTL) file not found. Please include MTL file in same directory as OBJ file or remove the internal OBJ link to " + mtlPath + "." << endl;
@@ -380,10 +420,10 @@ Utility::MESH_TYPE SceneLoader::AutoLoadOBJMTL(string name)
 
 					//Different shaders based on matData values
 					if (matData.NormalTextureMapSRV) {
-						someMaterial = Material(ongoingMatName, matData, vertexShadersMap["Normal"], pixelShadersMap["Normal"], Config::Sampler);
+						someMaterial = Material(ongoingMatName, matData, ShaderType::NORMAL, vertexShadersMap["Normal"], pixelShadersMap["Normal"], Config::Sampler);
 					}
 					else {
-						someMaterial = Material(ongoingMatName, matData, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler);
+						someMaterial = Material(ongoingMatName, matData, ShaderType::DEFAULT, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler);
 					}
 
 					matData = {};
@@ -522,10 +562,10 @@ Utility::MESH_TYPE SceneLoader::AutoLoadOBJMTL(string name)
 
 		//Different shaders based on matData values
 		if (matData.NormalTextureMapSRV) {
-			someMaterial = Material(ongoingMatName, matData, vertexShadersMap["Normal"], pixelShadersMap["Normal"], Config::Sampler);
+			someMaterial = Material(ongoingMatName, matData, ShaderType::NORMAL, vertexShadersMap["Normal"], pixelShadersMap["Normal"], Config::Sampler);
 		}
 		else {
-			someMaterial = Material(ongoingMatName, matData, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler);
+			someMaterial = Material(ongoingMatName, matData, ShaderType::DEFAULT, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler);
 		}
 
 		matData = {};
@@ -650,7 +690,7 @@ void SceneLoader::LoadScene(string sceneName)
 				allocatedEntity->SetScale(parsedNumbers[6], parsedNumbers[7], parsedNumbers[8]);
 				allocatedEntity->CalcWorldMatrix();
 				allocatedEntity->InitRigidBody(Config::DynamicsWorld, 0.0f);
-				if (Config::DebugLinesEnabled && allocatedEntity->colliderDebugLinesEnabled) {
+				if (Config::EtherealDebugLinesEnabled && allocatedEntity->colliderDebugLinesEnabled) {
 					vector<Collider*> colliders = allocatedEntity->GetColliders();
 					for (size_t d = 0; d < colliders.size(); d++)
 					{
@@ -658,7 +698,7 @@ void SceneLoader::LoadScene(string sceneName)
 						XMFLOAT3 c = XMFLOAT3(1.0f, 0.0f, 0.0f);
 						dl->color = c;
 						dl->worldMatrix = colliders[d]->GetWorldMatrix();
-						XMFLOAT3* colliderCorners = colliders[d]->GetUntransformedColliderCorners();
+						XMFLOAT3* colliderCorners = colliders[d]->GetPivotShiftedColliderCorners();
 						dl->GenerateCuboidVertexBuffer(colliderCorners, 8);
 					}
 				}
@@ -715,6 +755,11 @@ void SceneLoader::LoadScene(string sceneName)
 		EEMemoryAllocator->DeallocateFromPool(MATERIAL_POOL, toDelete, sizeof(Material));
 		generatedMaterialsMap.erase(materialsToDelete[i]);
 	}
+}
+
+void SceneLoader::SetModelPath(string path)
+{
+	modelPath = path;
 }
 
 Entity* SceneLoader::CreateEntity(EntityCreationParameters& para)
@@ -804,7 +849,7 @@ Entity* SceneLoader::CreateEntity(EntityCreationParameters& para)
 	if (para.initRigidBody)
 		allocatedEntity->InitRigidBody(Config::DynamicsWorld, para.entityMass);
 
-	if (Config::DebugLinesEnabled && allocatedEntity->colliderDebugLinesEnabled) {
+	if (Config::EtherealDebugLinesEnabled && allocatedEntity->colliderDebugLinesEnabled) {
 		vector<Collider*> colliders = allocatedEntity->GetColliders();
 		for (size_t d = 0; d < colliders.size(); d++)
 		{
@@ -812,7 +857,7 @@ Entity* SceneLoader::CreateEntity(EntityCreationParameters& para)
 			XMFLOAT3 c = XMFLOAT3(1.0f, 0.0f, 0.0f);
 			dl->color = c;
 			dl->worldMatrix = colliders[d]->GetWorldMatrix();
-			XMFLOAT3* colliderCorners = colliders[d]->GetUntransformedColliderCorners();
+			XMFLOAT3* colliderCorners = colliders[d]->GetPivotShiftedColliderCorners();
 			dl->GenerateCuboidVertexBuffer(colliderCorners, 8);
 		}
 	}

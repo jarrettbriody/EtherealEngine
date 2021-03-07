@@ -29,6 +29,9 @@
 #include "btBulletDynamicsCommon.h"
 #include "BulletCollision/NarrowPhaseCollision/btRaycastCallback.h"
 
+//HBAO+
+#include "GFSDK_SSAO.h"
+
 //cascioli black box
 #include "SimpleShader.h"
 
@@ -40,3 +43,4 @@
 #define KILOBYTE 1024
 #define MEGABYTE 1048576
 #define GIGABYTE 1073741824
+#define MAX_KERNEL_SAMPLES 32

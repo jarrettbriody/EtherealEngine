@@ -10,6 +10,7 @@ ID3D11DepthStencilView* Config::DepthStencilView = nullptr;
 unsigned int Config::ViewPortWidth = 1600;
 unsigned int Config::ViewPortHeight = 900;
 bool Config::Fullscreen = false;
+bool Config::FPSControllerEnabled = false;
 
 unsigned int Config::MemoryAllocatorSize = MEGABYTE * 512;
 unsigned int Config::MemoryAllocatorAlignment = 16; //16 byte boundary
@@ -17,6 +18,15 @@ unsigned int Config::MemoryAllocatorEntityPoolSize = MEGABYTE * 128; //250 MB
 unsigned int Config::MemoryAllocatorMeshPoolSize = MEGABYTE * 128; //250 MB
 unsigned int Config::MemoryAllocatorMaterialPoolSize = MEGABYTE * 64; //250 MB
 
-bool Config::DebugLinesEnabled = true;
+bool Config::EtherealDebugLinesEnabled = false;
+bool Config::BulletDebugLinesEnabled = true;
+
+bool Config::ShadowsEnabled = true;
+bool Config::SSAOEnabled = false;
+bool Config::HBAOPlusEnabled = true;
 
 btDiscreteDynamicsWorld* Config::DynamicsWorld = nullptr;
+
+unsigned int Config::SSAOSampleCount = 32;
+float Config::SSAOKernelRadius = 1.0f;
+DirectX::XMFLOAT4 Config::SSAOKernel[32];

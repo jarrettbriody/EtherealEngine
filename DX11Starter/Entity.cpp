@@ -69,6 +69,9 @@ Entity::~Entity()
 	if(collShape != nullptr)
 		delete collShape;
 
+	if (compoundShape != nullptr)
+		delete compoundShape;
+
 	if (materialMap != nullptr) {
 		materialMap->empty();
 		delete materialMap;
@@ -108,6 +111,7 @@ void Entity::operator=(const Entity& e)
 	shadowData = e.shadowData;
 	mass = e.mass;
 	collShape = e.collShape;
+	compoundShape = e.compoundShape;
 	rBody = e.rBody;
 	dynamicsWorld = e.dynamicsWorld;
 	destroyed = e.destroyed;
@@ -129,14 +133,45 @@ void Entity::InitRigidBody(btDiscreteDynamicsWorld* dw, float entityMass)
 		XMVECTOR spanVec = XMLoadFloat3(&span);
 		spanVec = XMVectorScale(spanVec, 1.0f);
 		XMStoreFloat3(&span, spanVec);
-		this->collShape = new btBoxShape(btVector3(btScalar(span.x * scale.x), btScalar(span.y * scale.y), btScalar(span.z * scale.z)));
+		XMFLOAT3 centerLocal = (*colliders)[0]->GetCenterLocal(); // we ar enot using this anywhere currently? 
+		XMVECTOR centerLocalCalc = XMLoadFloat3(&centerLocal);
+		centerLocalCalc = XMVector3Length(centerLocalCalc);
+		XMFLOAT3 res;
+		XMStoreFloat3(&res, centerLocalCalc);
+		float mag = res.x; 
+		
+		if (*name == "FPSController") { // give the FPS controller a capsule collider shape
+			// btVector3(btScalar(span.x * scale.x), btScalar(span.y * scale.y), btScalar(span.z * scale.z)
+			this->collShape = new btCapsuleShape(btScalar(span.x), btScalar(span.y));
+		}
+		else {
+			//this->collShape = new btBoxShape(btVector3(btScalar(span.x * scale.x), btScalar(span.y * scale.y), btScalar(span.z * scale.z)));
+			this->collShape = new btBoxShape(btVector3(btScalar(span.x), btScalar(span.y), btScalar(span.z)));
+		}
+
+		if (mag > 0.001f) {
+			this->compoundShape = new btCompoundShape();
+			btTransform localTransform;
+			localTransform.setIdentity();
+			localTransform.setOrigin(btVector3(centerLocal.x, centerLocal.y, centerLocal.z));
+			this->compoundShape->addChildShape(localTransform,this->collShape);
+			this->compoundShape->setLocalScaling(btVector3(scale.x, scale.y, scale.z));
+		}
+		else {
+			this->collShape->setLocalScaling(btVector3(scale.x, scale.y, scale.z));
+		}
+		
+		
 	}
 	else {
 		this->collShape = new btBoxShape(btVector3(btScalar(scale.x), btScalar(scale.y), btScalar(scale.z)));
 	}
-
 	btTransform transform;
 	transform.setIdentity();
+	//XMFLOAT3 centerLocal = GetCollider()->GetCenterLocal();
+	//XMFLOAT3 scale = GetScale();
+	//centerLocal = XMFLOAT3(centerLocal.x * scale.x, centerLocal.y * scale.y, centerLocal.z * scale.z);
+	//transform.setOrigin(btVector3(position.x + centerLocal.x, position.y + centerLocal.y, position.z + centerLocal.z));
 	transform.setOrigin(btVector3(position.x, position.y, position.z));
 	btQuaternion qx = btQuaternion(btVector3(1.0f, 0.0f, 0.0f), rotation.x);
 	btQuaternion qy = btQuaternion(btVector3(0.0f, 1.0f, 0.0f), rotation.y);
@@ -156,8 +191,15 @@ void Entity::InitRigidBody(btDiscreteDynamicsWorld* dw, float entityMass)
 		collShape->calculateLocalInertia(mass, localInertia);
 
 	btDefaultMotionState* myMotionState = new btDefaultMotionState(transform);
-	btRigidBody::btRigidBodyConstructionInfo rbInfo(mass, myMotionState, collShape, localInertia);
-	this->rBody = new btRigidBody(rbInfo);
+
+	if (compoundShape == nullptr) {
+		btRigidBody::btRigidBodyConstructionInfo rbInfo(mass, myMotionState, collShape, localInertia);
+		this->rBody = new btRigidBody(rbInfo);
+	}
+	else {
+		btRigidBody::btRigidBodyConstructionInfo rbInfo(mass, myMotionState, compoundShape, localInertia);
+		this->rBody = new btRigidBody(rbInfo);
+	}
 
 	/*rBody->setActivationState(DISABLE_DEACTIVATION);
 	rBody->setMassProps(mass, localInertia);*/
@@ -304,6 +346,11 @@ void Entity::SetShadowData(ShadowData shadowData)
 	this->shadowData = shadowData;
 }
 
+void Entity::SetDepthStencilData(DepthStencilData depthStencilData)
+{
+	this->depthStencilData = depthStencilData;
+}
+
 void Entity::SetMeshAndMaterial(Mesh* mesh, Material* mat)
 {
 	this->mesh = mesh;
@@ -413,6 +460,13 @@ void Entity::PrepareMaterialForDraw(string n, DirectX::XMFLOAT4X4 view, DirectX:
 		vs->SetMatrix4x4("shadowProj", shadowData.shadowProjectionMatrix);
 		ps->SetShaderResourceView("ShadowMap", shadowData.shadowSRV);
 		ps->SetSamplerState("ShadowSampler", shadowData.shadowSampler);
+	}
+
+	if (Config::SSAOEnabled && (*materialMap)[n]->GetMaterialData().SSAO) {
+		ps->SetMatrix4x4("ssaoView", view);
+		ps->SetMatrix4x4("ssaoProjection", proj);
+		ps->SetShaderResourceView("DepthStencilMap", depthStencilData.depthStencilSRV);
+		ps->SetSamplerState("DepthStencilSampler", depthStencilData.depthStencilSampler);
 	}
 
 	(*materialMap)[n]->Prepare();
@@ -583,6 +637,9 @@ void Entity::FreeMemory()
 
 	if (collShape != nullptr)
 		delete collShape;
+
+	if (compoundShape != nullptr)
+		delete compoundShape;
 
 	if (materialMap != nullptr) {
 		materialMap->empty();

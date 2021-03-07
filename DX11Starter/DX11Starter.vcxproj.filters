@@ -10,9 +10,6 @@
     <FxCompile Include="NormalVS.hlsl">
       <Filter>EEShaders\Vertex Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="ShadowVS.hlsl">
-      <Filter>EEShaders\Vertex Shaders</Filter>
-    </FxCompile>
     <FxCompile Include="SkyVS.hlsl">
       <Filter>EEShaders\Vertex Shaders</Filter>
     </FxCompile>
@@ -33,6 +30,12 @@
     </FxCompile>
     <FxCompile Include="WaterPS.hlsl">
       <Filter>EEShaders\Pixel Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="DefaultPS_SSAO.hlsl">
+      <Filter>EEShaders\Pixel Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="DepthStencilVS.hlsl">
+      <Filter>EEShaders\Vertex Shaders</Filter>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
@@ -230,6 +233,12 @@
     </Filter>
     <Filter Include="EEScenes">
       <UniqueIdentifier>{10bb6dee-8673-4f20-9d6d-8b5e6a9458e8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="EEShaders\Compute Shaders">
+      <UniqueIdentifier>{cf4c20e1-06bf-4688-a8c4-8fccea182adf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="EEShaders\Geometry Shaders">
+      <UniqueIdentifier>{ee0ab75f-3663-4ccb-bfa3-6b5a731e270d}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

@@ -13,6 +13,7 @@ Game::Game(HINSTANCE hInstance)
 
 #if defined(DEBUG) || defined(_DEBUG)
 	CreateConsoleWindow(500, 120, 32, 120);
+	if (Config::FPSControllerEnabled) ShowCursor(false);
 	printf("Console window created successfully.  Feel free to printf() here.\n");
 #endif
 	
@@ -42,6 +43,7 @@ Game::~Game()
 	delete broadphase;
 	delete solver;
 	delete Config::DynamicsWorld;
+	// delete physicsDraw;
 
 
 	//delete EECamera;
@@ -70,7 +72,9 @@ void Game::Init()
 	Config::DynamicsWorld = new btDiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
 	Config::DynamicsWorld->setGravity(btVector3(0, -10.0f, 0));
 
-	DirectX::CreateDDSTextureFromFile(Config::Device, L"../../Assets/Textures/SunnyCubeMap.dds", 0, &skySRV);
+	//DirectX::CreateDDSTextureFromFile(Config::Device, L"../../Assets/Textures/SunnyCubeMap.dds", 0, &skySRV);
+	DirectX::CreateDDSTextureFromFile(Config::Device, L"../../Assets/Textures/night4.dds", 0, &skySRV);
+	//DirectX::CreateDDSTextureFromFile(Config::Device, L"../../Assets/Textures/pink.dds", 0, &skySRV);
 
 	D3D11_SAMPLER_DESC samplerDesc = {};
 	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
@@ -112,12 +116,10 @@ void Game::Init()
 	EESceneLoader->LoadDefaultTextures();
 	EESceneLoader->LoadDefaultMaterials();
 
-	EESceneLoader->LoadScene("ArenaV2");
+	//EESceneLoader->LoadScene("ArenaV2");
 
-	//EESceneLoader->LoadScene("Tutorial");
-
-	EESceneLoader->sceneEntitiesMap["barrel_1"]->isCollisionStatic = false;
-	EESceneLoader->sceneEntitiesMap["barrel_1 (2)"]->isCollisionStatic = false;
+	EESceneLoader->SetModelPath("../../Assets/Models/City/");
+	EESceneLoader->LoadScene("City");
 
 	ScriptManager::sceneEntitiesMap = &EESceneLoader->sceneEntitiesMap;
 	ScriptManager::sceneEntities = &EESceneLoader->sceneEntities;
@@ -125,6 +127,7 @@ void Game::Init()
 
 	EntityCreationParameters para;
 
+	/*
 	para.entityName = "cube1";
 	para.meshName = "Cube";
 	para.materialName = "Grey";
@@ -146,6 +149,7 @@ void Game::Init()
 	cube1->AddChildEntity(cube2);
 
 	cube1->CalcWorldMatrix();
+	*/
 
 	// Transparency test object
 	/*para.entityName = "desk";
@@ -162,11 +166,12 @@ void Game::Init()
 
 	Light* dLight = new Light;
 	dLight->Type = LIGHT_TYPE_DIR;
-	XMFLOAT3 c = XMFLOAT3(1.0f, 244.0f / 255.0f, 214.0f / 255.0f);
+	XMFLOAT3 c = XMFLOAT3(1.0f, 252.0f / 255.0f, 222.0f / 255.0f);
 	dLight->Color = c;
-	XMFLOAT3 d = XMFLOAT3(0.5f, -1.0f, 1.0f);
+	XMFLOAT3 d = XMFLOAT3(-0.265943f, -0.92075f, 0.28547f);
 	dLight->Direction = d;
-	dLight->Intensity = 1.f;
+	dLight->Intensity = 0.25f;
+	dLight->Position = XMFLOAT3(-334.0f, 179.5f, -175.9f);
 
 	/*testLight = new Light;
 	testLight->Type = LIGHT_TYPE_SPOT;
@@ -181,15 +186,19 @@ void Game::Init()
 	EERenderer = Renderer::GetInstance();
 	EERenderer->AddCamera("main", EECamera);
 	EERenderer->EnableCamera("main");
-	EERenderer->SetShadowVertexShader(EESceneLoader->vertexShadersMap["Shadow"]);
-	EERenderer->SetDebugLineVertexShader(EESceneLoader->vertexShadersMap["DebugLine"]);
-	EERenderer->SetDebugLinePixelShader(EESceneLoader->pixelShadersMap["DebugLine"]);
+	RendererShaders rShaders;
+	rShaders.depthStencilVS = EESceneLoader->vertexShadersMap["DepthStencil"];
+	rShaders.debugLineVS = EESceneLoader->vertexShadersMap["DebugLine"];
+	rShaders.debugLinePS = EESceneLoader->pixelShadersMap["DebugLine"];
+	EERenderer->SetRendererShaders(rShaders);
 	EERenderer->SetEntities(&(EESceneLoader->sceneEntities));
 	EERenderer->AddLight("Sun", dLight);
 	EERenderer->SendAllLightsToShader(EESceneLoader->pixelShadersMap["DEFAULT"]);
 	EERenderer->SendAllLightsToShader(EESceneLoader->pixelShadersMap["Normal"]);
-	EERenderer->SetShadowMapResolution(4096);
+	EERenderer->SetShadowMapResolution(16384);
 	EERenderer->InitShadows();
+	EERenderer->InitDepthStencil();
+	EERenderer->InitHBAOPlus();
 	EERenderer->InitBlendState();
 	EESceneLoader->EERenderer = EERenderer;
 
@@ -247,18 +256,21 @@ void Game::Init()
 	musicChannel->set3DAttributes(&pos, &vel);
 	musicChannel->set3DMinMaxDistance(0, 15.0f);
   
-	Scripts::CreateScript(Scripts::SCRIPT_NAMES::BARREL, EESceneLoader->sceneEntitiesMap["barrel_1"]);
-
+	//Scripts::CreateScript(Scripts::SCRIPT_NAMES::BARREL, EESceneLoader->sceneEntitiesMap["barrel_1"]);
+	
 	// FPS CONTROLLER
-	para = {};
-	para.entityName = "FPSController";
-	para.position = XMFLOAT3(0.0f, 5.0f, 5.0f);
-	para.scale = XMFLOAT3(0.25f, 1.0f, 0.25f);
-	para.initRigidBody = true;
-	para.entityMass = 1.0f;
-	Entity* fpsController = EESceneLoader->CreateEntity(para);
+	if (Config::FPSControllerEnabled)
+	{
+		para = {};
+		para.entityName = "FPSController";
+		para.position = XMFLOAT3(-416.809f, 25.0704, 59.4958f);
+		para.scale = XMFLOAT3(0.25f, 1.0f, 0.25f);
+		para.initRigidBody = true;
+		para.entityMass = 1.0f;
+		Entity* fpsController = EESceneLoader->CreateEntity(para);
 
-	Scripts::CreateScript(Scripts::SCRIPT_NAMES::FPSCONTROLLER, fpsController);
+		Scripts::CreateScript(Scripts::SCRIPT_NAMES::FPSCONTROLLER, fpsController);
+	}
 
 	for (size_t i = 0; i < ScriptManager::scriptFunctions.size(); i++)
 	{
@@ -266,10 +278,22 @@ void Game::Init()
 		sf->CallInit();
 	}
 
+
 	if(Config::Fullscreen)
 		Config::SwapChain->SetFullscreenState(true, NULL);
 
 	//cout << sizeof(Entity);
+
+	// Physics debug lines initialization once all physical bodies are set-up
+	// https://pybullet.org/Bullet/BulletFull/classbtIDebugDraw.html\
+
+	if (Config::BulletDebugLinesEnabled)
+	{
+		DebugLines* physicsDraw = new DebugLines("PhysicsDebugCore", 0, false);
+		physicsDraw->setDebugMode(btIDebugDraw::DBG_DrawWireframe);
+		Config::DynamicsWorld->setDebugDrawer(physicsDraw);
+		Config::DynamicsWorld->debugDrawWorld(); // Use this to draw physics world once on start 
+	}
 }
 
 void Game::OnResize()
@@ -339,7 +363,7 @@ void Game::PhysicsStep(float deltaTime)
 	Entity* entity = nullptr;
 
 	Config::DynamicsWorld->applyGravity();
-	Config::DynamicsWorld->stepSimulation(deltaTime, 1, btScalar(1.0) / btScalar(60.0));
+	Config::DynamicsWorld->stepSimulation(deltaTime , 1, btScalar(1.0) / btScalar(60.0));
 
 	for (int i = 0; i < Config::DynamicsWorld->getNumCollisionObjects(); i++)
 	{
@@ -351,9 +375,14 @@ void Game::PhysicsStep(float deltaTime)
 
 		transform = body->getCenterOfMassTransform();
 		btVector3 p = transform.getOrigin();
+		//XMFLOAT3 centerLocal = entity->GetCollider()->GetCenterLocal();
+		//XMFLOAT3 scale = entity->GetScale();
+		//centerLocal = XMFLOAT3(centerLocal.x * scale.x, centerLocal.y * scale.y, centerLocal.z * scale.z);
+		//XMFLOAT3 pos = XMFLOAT3(p.getX() - centerLocal.x, p.getY() - centerLocal.y, p.getZ() - centerLocal.z);
+		XMFLOAT3 pos = XMFLOAT3(p.getX(), p.getY(), p.getZ());
 
 		btQuaternion q = transform.getRotation();
-		entity->SetPosition(p.getX(),p.getY(), p.getZ());
+		entity->SetPosition(pos);
 		entity->SetRotation(XMFLOAT4(q.getX(), q.getY(), q.getZ(), q.getW()));
 		entity->CalcWorldMatrix();
 	}
@@ -376,7 +405,14 @@ void Game::EnforcePhysics()
 		transform = body->getCenterOfMassTransform();
 		entity = (Entity*)body->getUserPointer();
 		entity->CalcWorldMatrix();
+
 		XMFLOAT3 pos = entity->GetPosition();
+		//XMFLOAT3 centerLocal = entity->GetCollider()->GetCenterLocal();
+		//XMFLOAT3 scale = entity->GetScale();
+		//centerLocal = XMFLOAT3(centerLocal.x * scale.x, centerLocal.y * scale.y, centerLocal.z * scale.z);
+		//pos = XMFLOAT3(pos.x + centerLocal.x, pos.y + centerLocal.y, pos.z + centerLocal.z);
+		pos = XMFLOAT3(pos.x, pos.y, pos.z);
+
 		XMFLOAT4 rot = entity->GetRotationQuaternion();
 
 		btVector3 transformPos = btVector3(pos.x, pos.y, pos.z);
@@ -384,6 +420,8 @@ void Game::EnforcePhysics()
 
 		btQuaternion res = btQuaternion(rot.x, rot.y, rot.z, rot.w);
 		transform.setRotation(res);
+
+		//TODO: ENFORCE LOCAL SCALING OF COLLIDER
 
 		body->setCenterOfMassTransform(transform);
 
@@ -423,11 +461,13 @@ void Game::Draw(float deltaTime, float totalTime)
 
 	EERenderer->SendAllLightsToShader(EESceneLoader->pixelShadersMap["DEFAULT"]);
 	EERenderer->SendAllLightsToShader(EESceneLoader->pixelShadersMap["Normal"]);
-	EERenderer->SendAllLightsToShader(EESceneLoader->pixelShadersMap["Water"]);
-	EERenderer->SendAllLightsToShader(EESceneLoader->pixelShadersMap["Terrain"]);
+	//EERenderer->SendAllLightsToShader(EESceneLoader->pixelShadersMap["Water"]);
+	//EERenderer->SendAllLightsToShader(EESceneLoader->pixelShadersMap["Terrain"]);
+
+	//EERenderer->SendSSAOKernelToShader(EESceneLoader->pixelShadersMap["DEFAULT_SSAO"]);
 
 	EERenderer->RenderShadowMap();
-
+	EERenderer->RenderDepthStencil();
 	EERenderer->RenderFrame();
 
 	DrawSky();
@@ -474,7 +514,7 @@ void Game::GarbageCollect()
 			EESceneLoader->sceneEntitiesMap.erase(name);
 			EESceneLoader->sceneEntities.erase(EESceneLoader->sceneEntities.begin() + i - 1);
 
-			if (Config::DebugLinesEnabled && e->colliderDebugLinesEnabled) {
+			if (/*Config::EtherealDebugLinesEnabled &&*/ e->colliderDebugLinesEnabled) {
 				DebugLines::debugLinesMap[name]->destroyed = true;
 				DebugLines::debugLinesMap.erase(name);
 			}
@@ -502,15 +542,13 @@ void Game::GarbageCollect()
 		}
 	}
 
-	if (Config::DebugLinesEnabled) {
-		start = DebugLines::debugLines.size();
-		for (size_t i = start; i > 0; i--)
-		{
-			DebugLines* d = DebugLines::debugLines[i - 1];
-			if (d->destroyed) {
-				DebugLines::debugLines.erase(DebugLines::debugLines.begin() + i - 1);
-				delete d;
-			}
+	start = DebugLines::debugLines.size();
+	for (size_t i = start; i > 0; i--)
+	{
+		DebugLines* d = DebugLines::debugLines[i - 1];
+		if (d->destroyed) {
+			DebugLines::debugLines.erase(DebugLines::debugLines.begin() + i - 1);
+			delete d;
 		}
 	}
 }
@@ -528,8 +566,6 @@ void Game::OnMouseDown(WPARAM buttonState, int x, int y)
 		if (!sf->inputEnabled) continue;
 		sf->CallOnMouseDown(buttonState, x, y);
 	}
-
-	
 
 	// printf("Mouse Pos: %d, %d\n", x, y);
 
@@ -583,11 +619,12 @@ void Game::OnMouseDown(WPARAM buttonState, int x, int y)
 
 		Config::DynamicsWorld->rayTest(from, to, closestResult); // Raycast
 
+		/*
 		if (closestResult.hasHit())
 		{
 			// Get the entity associated with the rigid body we hit
 			Entity* hit = (Entity*)(closestResult.m_collisionObject->getUserPointer());
-			//printf("Hit: %s\n", hit->GetName().c_str());
+			printf("Hit: %s\n", hit->GetName().c_str());
 			btRigidBody* rigidBody = hit->GetRBody();
 
 			// In order to update the values associated with the rigid body we need to remove it from the dynamics world first
@@ -611,10 +648,11 @@ void Game::OnMouseDown(WPARAM buttonState, int x, int y)
 			float z = transform.getOrigin().getZ();
 			transform.setOrigin(btVector3(x, y, z));
 			rigidBody->getCollisionShape()->setLocalScaling(btVector3(1, 1, 1));
-			rigidBody->setWorldTransform(transform);*/
+			rigidBody->setWorldTransform(transform); // * /
 
 			Config::DynamicsWorld->addRigidBody(rigidBody); // Add the rigid body back into bullet		
 		}
+		*/
 	}
 	
 	SetCapture(hWnd);
@@ -640,7 +678,7 @@ void Game::OnMouseMove(WPARAM buttonState, int x, int y)
 		if (!sf->inputEnabled) continue;
 		sf->CallOnMouseMove(buttonState, x, y);
 	}
-	if (buttonState & 0x0001) {
+	if (Config::FPSControllerEnabled || (!Config::FPSControllerEnabled && buttonState & 0x0001)) {
 		EECamera->RotateCamera(x - (int)prevMousePos.x, y - (int)prevMousePos.y);
 
 		prevMousePos.x = x;

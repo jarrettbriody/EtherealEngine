@@ -46,7 +46,7 @@ Collider::Collider(vector<XMFLOAT3> vertices)
 	untransformedColliderCorners[5] = colliderCorners[5] = XMFLOAT3(minLocal.x, minLocal.y, maxLocal.z);
 	untransformedColliderCorners[6] = colliderCorners[6] = XMFLOAT3(maxLocal.x, minLocal.y, maxLocal.z);
 	untransformedColliderCorners[7] = colliderCorners[7] = maxLocal;
-	
+
 	XMVECTOR minLoc = XMLoadFloat3(&minLocal);
 	XMVECTOR maxLoc = XMLoadFloat3(&maxLocal);
 
@@ -58,6 +58,11 @@ Collider::Collider(vector<XMFLOAT3> vertices)
 
 	//Get the distance between the center and either the min or the max
 	XMStoreFloat(&radius, XMVector3Length(XMLoadFloat3(&halfWidth)));
+
+	for (size_t i = 0; i < 8; i++)
+	{
+		pivotShiftedColliderCorners[i] = XMFLOAT3(untransformedColliderCorners[i].x, untransformedColliderCorners[i].y, untransformedColliderCorners[i].z);// - 2 * centerLocal.z);
+	}
 }
 
 Collider::~Collider()
@@ -83,10 +88,18 @@ void Collider::SetWorldMatrix(XMFLOAT4X4 worldMat)
 	colliderCorners[6] = XMFLOAT3(maxLocal.x, minLocal.y, maxLocal.z);
 	colliderCorners[7] = maxLocal;
 
+	XMVECTOR calculableCenterGlobal = XMLoadFloat3(&centerLocal);
+	calculableCenterGlobal = XMVector4Transform(calculableCenterGlobal, calculableWorldMatrix);
+	XMStoreFloat3(&centerGlobal, calculableCenterGlobal);
+
+	XMVECTOR calculableHalfWidth = XMLoadFloat3(&halfWidth);
+	calculableHalfWidth = XMVector4Transform(calculableHalfWidth, calculableWorldMatrix);
+	XMStoreFloat3(&halfWidthGlobal, calculableHalfWidth);
+
 	//Place them in world space
 	for (int i = 0; i < 8; i++)
 	{
-		XMFLOAT4 pt(colliderCorners[i].x, colliderCorners[i].y, colliderCorners[i].z, 1.0f);
+		XMFLOAT4 pt(pivotShiftedColliderCorners[i].x, pivotShiftedColliderCorners[i].y, pivotShiftedColliderCorners[i].z, 1.0f);
 		XMVECTOR calculableCorner = XMLoadFloat4(&pt);
 		XMStoreFloat3(&colliderCorners[i], XMVector4Transform(calculableCorner, calculableWorldMatrix));
 	}
@@ -314,6 +327,11 @@ XMFLOAT3* Collider::GetUntransformedColliderCorners()
 	return untransformedColliderCorners;
 }
 
+XMFLOAT3* Collider::GetPivotShiftedColliderCorners()
+{
+	return pivotShiftedColliderCorners;
+}
+
 XMFLOAT4X4 Collider::GetWorldMatrix()
 {
 	return worldMatrix;
@@ -327,4 +345,19 @@ XMFLOAT3 Collider::GetSpan()
 XMFLOAT3 Collider::GetHalfWidth()
 {
 	return halfWidth;
+}
+
+XMFLOAT3 Collider::GetHalfWidthGlobal()
+{
+	return halfWidthGlobal;
+}
+
+XMFLOAT3 Collider::GetCenterLocal()
+{
+	return centerLocal;
+}
+
+XMFLOAT3 Collider::GetCenterGlobal()
+{
+	return centerGlobal;
 }

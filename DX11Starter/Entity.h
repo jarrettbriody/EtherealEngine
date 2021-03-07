@@ -11,6 +11,11 @@ struct ShadowData {
 	ID3D11SamplerState* shadowSampler = nullptr;
 };
 
+struct DepthStencilData {
+	ID3D11ShaderResourceView* depthStencilSRV = nullptr;
+	ID3D11SamplerState* depthStencilSampler = nullptr;
+};
+
 using namespace std;
 //using namespace DirectX;
 
@@ -35,8 +40,11 @@ private:
 	bool shadowsEnabled = true;
 	ShadowData shadowData;
 
+	DepthStencilData depthStencilData;
+
 	float mass;
 
+	btCompoundShape* compoundShape = nullptr;
 	btCollisionShape* collShape = nullptr;
 	btRigidBody* rBody = nullptr;
 	btDiscreteDynamicsWorld* dynamicsWorld = nullptr;
@@ -69,6 +77,7 @@ public:
 	void CalcEulerAngles();
 	void SetRepeatTexture(float x, float y);
 	void SetShadowData(ShadowData shadowData);
+	void SetDepthStencilData(DepthStencilData depthStencilData);
 	void SetMeshAndMaterial(Mesh* mesh, Material* mat = nullptr);
 	void ToggleShadows(bool toggle);
 	void Move(XMFLOAT3 f);

@@ -77,4 +77,22 @@ namespace Utility {
 	static float RadToDeg(float rad) {
 		return (rad * 180.0f) / DirectX::XM_PI;
 	}
+
+	static void GenerateSSAOKernel(unsigned int sampleCount, DirectX::XMFLOAT4* kernel) {
+		//kernel.reserve(sampleCount);
+		DirectX::XMVECTOR calculableVector;
+		for (size_t i = 0; i < sampleCount; i++)
+		{
+			const float x = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+			const float y = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+			const float z = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+			kernel[i] = DirectX::XMFLOAT4(x, y, z, 1.0f);
+			DirectX::XMFLOAT4& currentSample = kernel[i];
+			calculableVector = DirectX::XMLoadFloat4(&currentSample);
+			calculableVector = DirectX::XMVector4Normalize(calculableVector);
+			const float scalar = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+			calculableVector = DirectX::XMVectorScale(calculableVector, scalar);
+			DirectX::XMStoreFloat4(&currentSample, calculableVector);
+		}
+	}
 }

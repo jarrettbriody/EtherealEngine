@@ -38,6 +38,8 @@ cbuffer externalData : register(b2) {
 
 	int specularValue;
 	float3 cameraPosition;
+	int illumination;
+	float3 manualColor;
 }
 
 Texture2D DiffuseTexture  :  register(t0);
@@ -65,6 +67,10 @@ float4 main(VertexToPixel input) : SV_TARGET
 	// - This color (like most values passing through the rasterizer) is 
 	//   interpolated for each pixel between the corresponding vertices 
 	//   of the triangle we're rendering
+
+	if (illumination == 11) {
+		surfaceColor = surfaceColor.xyzw - (1 - float4(manualColor.xyz, 0));
+	}
 
 	// Shadow calculations
 	float2 shadowUV = input.posForShadow.xy / input.posForShadow.w * 0.5f + 0.5f;
