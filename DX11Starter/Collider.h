@@ -14,6 +14,8 @@ protected:
 	bool collisionsEnabled = true;
 
 private:
+	string name;
+
 	XMFLOAT4X4 worldMatrix;
 
 	XMFLOAT3 minLocal = ZERO_VECTOR3;
@@ -30,7 +32,7 @@ private:
 public:
 	bool debugLinesEnabled = false;
 	Collider();
-	Collider(vector<XMFLOAT3> vertices);
+	Collider(string name, vector<XMFLOAT3> vertices);
 	~Collider();
 	void SetWorldMatrix(XMFLOAT4X4 worldMat);
 	unsigned int CheckSATCollision(Collider* other);
@@ -44,5 +46,6 @@ public:
 	XMFLOAT3 GetHalfWidthGlobal();
 	XMFLOAT3 GetCenterLocal();
 	XMFLOAT3 GetCenterGlobal();
+	string GetName();
 };
 

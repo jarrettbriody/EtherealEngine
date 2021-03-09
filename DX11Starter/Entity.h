@@ -48,6 +48,9 @@ private:
 	btCollisionShape* collShape = nullptr;
 	btRigidBody* rBody = nullptr;
 	btDiscreteDynamicsWorld* dynamicsWorld = nullptr;
+
+	int colliderCnt = 0;
+	int compoundColliderCnt = 0;
 public:
 	bool destroyed = false;
 	bool isCollisionStatic = true;

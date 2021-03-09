@@ -5,8 +5,10 @@ Collider::Collider()
 {
 }
 
-Collider::Collider(vector<XMFLOAT3> vertices)
+Collider::Collider(string name, vector<XMFLOAT3> vertices)
 {
+	this->name = name;
+
 	//Count the points of the incoming list
 	unsigned int vertCount = vertices.size();
 
@@ -360,4 +362,9 @@ XMFLOAT3 Collider::GetCenterLocal()
 XMFLOAT3 Collider::GetCenterGlobal()
 {
 	return centerGlobal;
+}
+
+string Collider::GetName()
+{
+	return name;
 }

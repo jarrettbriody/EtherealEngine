@@ -45,5 +45,6 @@ public:
 	void FreeMemory();
 	void ReleaseBuffers();
 	void AllocateChildren();
+	string GetName();
 };
 

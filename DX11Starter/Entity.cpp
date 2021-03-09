@@ -120,6 +120,8 @@ void Entity::operator=(const Entity& e)
 	colliderDebugLinesEnabled = e.colliderDebugLinesEnabled;
 	isEmptyObj = e.isEmptyObj;
 	meshMaterialIndex = e.meshMaterialIndex;
+	colliderCnt = e.colliderCnt;
+	compoundColliderCnt = e.compoundColliderCnt;
 }
 
 void Entity::InitRigidBody(btDiscreteDynamicsWorld* dw, float entityMass)
@@ -128,18 +130,19 @@ void Entity::InitRigidBody(btDiscreteDynamicsWorld* dw, float entityMass)
 	mass = entityMass;
 
 	// Physics set-up
-	if (colliders->size() > 0) {
-		XMFLOAT3 span = (*colliders)[0]->GetHalfWidth();
+	for (size_t i = 0; i < colliderCnt; i++)
+	{
+		XMFLOAT3 span = (*colliders)[i]->GetHalfWidth();
 		XMVECTOR spanVec = XMLoadFloat3(&span);
 		spanVec = XMVectorScale(spanVec, 1.0f);
 		XMStoreFloat3(&span, spanVec);
-		XMFLOAT3 centerLocal = (*colliders)[0]->GetCenterLocal(); // we ar enot using this anywhere currently? 
+		XMFLOAT3 centerLocal = (*colliders)[i]->GetCenterLocal();
 		XMVECTOR centerLocalCalc = XMLoadFloat3(&centerLocal);
 		centerLocalCalc = XMVector3Length(centerLocalCalc);
 		XMFLOAT3 res;
 		XMStoreFloat3(&res, centerLocalCalc);
-		float mag = res.x; 
-		
+		float mag = res.x;
+
 		if (*name == "FPSController") { // give the FPS controller a capsule collider shape
 			// btVector3(btScalar(span.x * scale.x), btScalar(span.y * scale.y), btScalar(span.z * scale.z)
 			this->collShape = new btCapsuleShape(btScalar(span.x), btScalar(span.y));
@@ -154,18 +157,17 @@ void Entity::InitRigidBody(btDiscreteDynamicsWorld* dw, float entityMass)
 			btTransform localTransform;
 			localTransform.setIdentity();
 			localTransform.setOrigin(btVector3(centerLocal.x, centerLocal.y, centerLocal.z));
-			this->compoundShape->addChildShape(localTransform,this->collShape);
+			this->compoundShape->addChildShape(localTransform, this->collShape);
 			this->compoundShape->setLocalScaling(btVector3(scale.x, scale.y, scale.z));
 		}
 		else {
 			this->collShape->setLocalScaling(btVector3(scale.x, scale.y, scale.z));
 		}
-		
-		
 	}
-	else {
+	if (colliders->size() == 0) {
 		this->collShape = new btBoxShape(btVector3(btScalar(scale.x), btScalar(scale.y), btScalar(scale.z)));
 	}
+
 	btTransform transform;
 	transform.setIdentity();
 	//XMFLOAT3 centerLocal = GetCollider()->GetCenterLocal();
@@ -525,19 +527,21 @@ void Entity::AddAutoBoxCollider()
 			Mesh** children = mesh->GetChildren();
 			for (size_t i = 0; i < mesh->GetChildCount(); i++)
 			{
-				colliders->push_back(new Collider(children[i]->GetVertices()));
+				colliders->push_back(new Collider(children[i]->GetName(), children[i]->GetVertices()));
 			}
 		}
 		else {
-			colliders->push_back(new Collider(mesh->GetVertices()));
+			colliders->push_back(new Collider(mesh->GetName(), mesh->GetVertices()));
 		}
 	}
 	else {
 		vector<XMFLOAT3> v;
 		v.push_back(XMFLOAT3(1.0f, 1.0f, 1.0f));
 		v.push_back(XMFLOAT3(-1.0f, -1.0f, -1.0f));
-		colliders->push_back(new Collider(v));
+		colliders->push_back(new Collider("EMPTY", v));
 	}
+
+	colliderCnt = colliders->size();
 }
 
 bool Entity::CheckSATCollision(Entity* other)
