@@ -66,8 +66,13 @@ Entity::~Entity()
 		delete rBody;
 	}
 	
-	if(collShape != nullptr)
-		delete collShape;
+	if (collShape != nullptr) {
+		for (size_t i = 0; i < colliderCnt; i++)
+		{
+			delete collShape[i];
+		}
+		delete[] collShape;
+	}
 
 	if (compoundShape != nullptr)
 		delete compoundShape;
@@ -121,13 +126,20 @@ void Entity::operator=(const Entity& e)
 	isEmptyObj = e.isEmptyObj;
 	meshMaterialIndex = e.meshMaterialIndex;
 	colliderCnt = e.colliderCnt;
-	compoundColliderCnt = e.compoundColliderCnt;
 }
 
-void Entity::InitRigidBody(btDiscreteDynamicsWorld* dw, float entityMass)
+void Entity::InitRigidBody(btDiscreteDynamicsWorld* dw, BulletColliderShape shape, float entityMass)
 {
+	assert(colliderCnt > 0);
+
 	dynamicsWorld = dw;
 	mass = entityMass;
+
+	collShape = new btCollisionShape * [colliderCnt];
+	
+	if (colliderCnt > 1) {
+		compoundShape = new btCompoundShape();
+	}
 
 	// Physics set-up
 	for (size_t i = 0; i < colliderCnt; i++)
@@ -143,29 +155,42 @@ void Entity::InitRigidBody(btDiscreteDynamicsWorld* dw, float entityMass)
 		XMStoreFloat3(&res, centerLocalCalc);
 		float mag = res.x;
 
+		/*
 		if (*name == "FPSController") { // give the FPS controller a capsule collider shape
 			// btVector3(btScalar(span.x * scale.x), btScalar(span.y * scale.y), btScalar(span.z * scale.z)
 			this->collShape = new btCapsuleShape(btScalar(span.x), btScalar(span.y));
 		}
+
 		else {
 			//this->collShape = new btBoxShape(btVector3(btScalar(span.x * scale.x), btScalar(span.y * scale.y), btScalar(span.z * scale.z)));
 			this->collShape = new btBoxShape(btVector3(btScalar(span.x), btScalar(span.y), btScalar(span.z)));
 		}
+		*/
 
-		if (mag > 0.001f) {
-			this->compoundShape = new btCompoundShape();
+		switch (shape)
+		{
+		case BulletColliderShape::BOX:
+			collShape[i] = new btBoxShape(btVector3(btScalar(span.x), btScalar(span.y), btScalar(span.z)));
+			break;
+		case BulletColliderShape::CAPSULE:
+			collShape[i] = new btCapsuleShape(btScalar(span.x), btScalar(span.y));
+			break;
+		default:
+			break;
+		}
+
+		collShape[i]->setUserPointer((*colliders)[i]);
+
+		if (mag > 0.001f || this->compoundShape != nullptr) {
+			if(this->compoundShape == nullptr) this->compoundShape = new btCompoundShape();
 			btTransform localTransform;
 			localTransform.setIdentity();
 			localTransform.setOrigin(btVector3(centerLocal.x, centerLocal.y, centerLocal.z));
-			this->compoundShape->addChildShape(localTransform, this->collShape);
-			this->compoundShape->setLocalScaling(btVector3(scale.x, scale.y, scale.z));
+			this->compoundShape->addChildShape(localTransform, this->collShape[i]);
 		}
 		else {
-			this->collShape->setLocalScaling(btVector3(scale.x, scale.y, scale.z));
+			collShape[i]->setLocalScaling(btVector3(scale.x, scale.y, scale.z));
 		}
-	}
-	if (colliders->size() == 0) {
-		this->collShape = new btBoxShape(btVector3(btScalar(scale.x), btScalar(scale.y), btScalar(scale.z)));
 	}
 
 	btTransform transform;
@@ -189,19 +214,32 @@ void Entity::InitRigidBody(btDiscreteDynamicsWorld* dw, float entityMass)
 	bool isDynamic = (mass != 0.0f);
 
 	btVector3 localInertia(0, 0, 0);
-	if (isDynamic)
-		collShape->calculateLocalInertia(mass, localInertia);
+	if (isDynamic) {
+		for (size_t i = 0; i < colliderCnt; i++)
+		{
+			collShape[i]->calculateLocalInertia(mass, localInertia);
+		}
+	}
 
 	btDefaultMotionState* myMotionState = new btDefaultMotionState(transform);
 
 	if (compoundShape == nullptr) {
-		btRigidBody::btRigidBodyConstructionInfo rbInfo(mass, myMotionState, collShape, localInertia);
-		this->rBody = new btRigidBody(rbInfo);
+		for (size_t i = 0; i < colliderCnt; i++)
+		{
+			btRigidBody::btRigidBodyConstructionInfo rbInfo(mass, myMotionState, collShape[i], localInertia);
+			this->rBody = new btRigidBody(rbInfo);
+		}
+		
 	}
 	else {
+		this->compoundShape->setLocalScaling(btVector3(scale.x, scale.y, scale.z));
+		this->compoundShape->setUserPointer(colliders);
 		btRigidBody::btRigidBodyConstructionInfo rbInfo(mass, myMotionState, compoundShape, localInertia);
 		this->rBody = new btRigidBody(rbInfo);
 	}
+
+
+	rBody->setFriction(0.7f);
 
 	/*rBody->setActivationState(DISABLE_DEACTIVATION);
 	rBody->setMassProps(mass, localInertia);*/
@@ -527,18 +565,18 @@ void Entity::AddAutoBoxCollider()
 			Mesh** children = mesh->GetChildren();
 			for (size_t i = 0; i < mesh->GetChildCount(); i++)
 			{
-				colliders->push_back(new Collider(children[i]->GetName(), children[i]->GetVertices()));
+				colliders->push_back(new Collider(children[i], children[i]->GetVertices()));
 			}
 		}
 		else {
-			colliders->push_back(new Collider(mesh->GetName(), mesh->GetVertices()));
+			colliders->push_back(new Collider(mesh, mesh->GetVertices()));
 		}
 	}
 	else {
 		vector<XMFLOAT3> v;
 		v.push_back(XMFLOAT3(1.0f, 1.0f, 1.0f));
 		v.push_back(XMFLOAT3(-1.0f, -1.0f, -1.0f));
-		colliders->push_back(new Collider("EMPTY", v));
+		colliders->push_back(new Collider(nullptr, v));
 	}
 
 	colliderCnt = colliders->size();
@@ -613,6 +651,32 @@ Collider* Entity::GetCollider(int index)
 	return (*colliders)[index];
 }
 
+btCollisionShape* Entity::GetBTCollisionShape(int index)
+{
+	if(index >= colliderCnt || index < 0) return nullptr;
+	return collShape[index];
+}
+
+btCompoundShape* Entity::GetBTCompoundShape(int index)
+{
+	if(compoundShape == nullptr || index >= colliderCnt || index < 0) return nullptr;
+	return compoundShape;
+}
+
+float Entity::GetMass()
+{
+	return mass;
+}
+
+void Entity::EmptyEntity()
+{
+	if (dynamicsWorld != nullptr) {
+		dynamicsWorld->removeCollisionObject(rBody);
+	}
+		
+	this->isEmptyObj = true;
+}
+
 void Entity::Destroy()
 {
 	this->destroyed = true;
@@ -639,8 +703,13 @@ void Entity::FreeMemory()
 		delete rBody;
 	}
 
-	if (collShape != nullptr)
-		delete collShape;
+	if (collShape != nullptr) {
+		for (size_t i = 0; i < colliderCnt; i++)
+		{
+			delete collShape[i];
+		}
+		delete[] collShape;
+	}
 
 	if (compoundShape != nullptr)
 		delete compoundShape;

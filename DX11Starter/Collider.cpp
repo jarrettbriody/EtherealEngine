@@ -5,9 +5,10 @@ Collider::Collider()
 {
 }
 
-Collider::Collider(string name, vector<XMFLOAT3> vertices)
+Collider::Collider(Mesh* m, vector<XMFLOAT3> vertices)
 {
-	this->name = name;
+	this->name = m->GetName();
+	mesh = m;
 
 	//Count the points of the incoming list
 	unsigned int vertCount = vertices.size();

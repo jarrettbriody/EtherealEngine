@@ -16,6 +16,11 @@ struct DepthStencilData {
 	ID3D11SamplerState* depthStencilSampler = nullptr;
 };
 
+enum class BulletColliderShape {
+	BOX,
+	CAPSULE,
+};
+
 using namespace std;
 //using namespace DirectX;
 
@@ -45,12 +50,11 @@ private:
 	float mass;
 
 	btCompoundShape* compoundShape = nullptr;
-	btCollisionShape* collShape = nullptr;
+	btCollisionShape** collShape = nullptr;
 	btRigidBody* rBody = nullptr;
 	btDiscreteDynamicsWorld* dynamicsWorld = nullptr;
 
 	int colliderCnt = 0;
-	int compoundColliderCnt = 0;
 public:
 	bool destroyed = false;
 	bool isCollisionStatic = true;
@@ -62,7 +66,7 @@ public:
 	Entity(string entityName, Mesh* entityMesh, Material* mat = nullptr);
 	~Entity();
 	void operator= (const Entity& e);
-	void InitRigidBody(btDiscreteDynamicsWorld* dw, float entityMass);
+	void InitRigidBody(btDiscreteDynamicsWorld* dw, BulletColliderShape shape, float entityMass);
 	DirectX::XMFLOAT4X4 GetWorldMatrix();
 	DirectX::XMFLOAT3 GetPosition();
 	DirectX::XMFLOAT3 GetScale();
@@ -105,6 +109,10 @@ public:
 	vector<Collider*> GetColliders();
 	btRigidBody* GetRBody();
 	Collider* GetCollider(int index = 0);
+	btCollisionShape* GetBTCollisionShape(int index);
+	btCompoundShape* GetBTCompoundShape(int index);
+	float GetMass();
+	void EmptyEntity();
 	void Destroy();
 	void FreeMemory();
 };

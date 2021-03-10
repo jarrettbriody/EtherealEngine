@@ -15,6 +15,7 @@ protected:
 
 private:
 	string name;
+	Mesh* mesh;
 
 	XMFLOAT4X4 worldMatrix;
 
@@ -32,7 +33,7 @@ private:
 public:
 	bool debugLinesEnabled = false;
 	Collider();
-	Collider(string name, vector<XMFLOAT3> vertices);
+	Collider(Mesh* m, vector<XMFLOAT3> vertices);
 	~Collider();
 	void SetWorldMatrix(XMFLOAT4X4 worldMat);
 	unsigned int CheckSATCollision(Collider* other);

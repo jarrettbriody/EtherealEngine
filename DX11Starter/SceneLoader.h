@@ -25,6 +25,7 @@ struct EntityCreationParameters {
 	XMFLOAT3 scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
 	float entityMass = 0.0f;
 	bool initRigidBody = true;
+	BulletColliderShape bulletColliderShape = BulletColliderShape::BOX;
 	bool collisionsEnabled = true;
 	bool drawEntity = true;
 	bool drawShadow = true;
@@ -80,5 +81,6 @@ public:
 	void SetModelPath(string path);
 
 	Entity* CreateEntity(EntityCreationParameters& para);
+	void SplitMeshIntoChildEntities(Entity* e, float componentMass);
 };
 

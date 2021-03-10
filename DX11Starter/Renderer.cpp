@@ -49,6 +49,9 @@ Renderer::~Renderer()
 	}
 
 	delete[] renderObjects;
+
+	if(hbaoPlusComponents.pAOContext)
+		hbaoPlusComponents.pAOContext->Release();
 }
 
 bool Renderer::SetupInstance()
@@ -410,7 +413,7 @@ void Renderer::RenderShadowMap()
 		Entity* e = renderObject.entity;
 		Mesh* mesh = renderObject.mesh;
 
-		if (e->destroyed) {
+		if (e->destroyed || e->isEmptyObj) {
 			if (i == renderObjectCount - 1) {
 				renderObjectCount--;
 			}

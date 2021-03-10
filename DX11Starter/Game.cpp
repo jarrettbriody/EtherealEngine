@@ -60,8 +60,8 @@ Game::~Game()
 void Game::Init()
 {
 	//dont delete this, its for finding mem leaks
-	//_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-	//_CrtSetBreakAlloc(681190);
+	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+	//_CrtSetBreakAlloc(327967);
 	//_CrtSetBreakAlloc(49892);
 
 	// Physics -----------------
@@ -503,7 +503,7 @@ void Game::GarbageCollect()
 			EESceneLoader->sceneEntitiesMap.erase(name);
 			EESceneLoader->sceneEntities.erase(EESceneLoader->sceneEntities.begin() + i - 1);
 
-			if (/*Config::EtherealDebugLinesEnabled &&*/ e->colliderDebugLinesEnabled) {
+			if (Config::EtherealDebugLinesEnabled) {
 				DebugLines::debugLinesMap[name]->destroyed = true;
 				DebugLines::debugLinesMap.erase(name);
 			}
@@ -608,7 +608,6 @@ void Game::OnMouseDown(WPARAM buttonState, int x, int y)
 
 		Config::DynamicsWorld->rayTest(from, to, closestResult); // Raycast
 
-		/*
 		if (closestResult.hasHit())
 		{
 			// Get the entity associated with the rigid body we hit
@@ -625,7 +624,8 @@ void Game::OnMouseDown(WPARAM buttonState, int x, int y)
 			rigidBody->setMassProps(mass, inertia);
 
 			// Useful functions for updating an object in motion, but not really needed here
-			/*rigidBody->setLinearFactor(btVector3(1, 1, 1));
+			/*
+			rigidBody->setLinearFactor(btVector3(1, 1, 1));
 			rigidBody->setAngularFactor(btVector3(1, 1, 1));
 			rigidBody->updateInertiaTensor();
 			rigidBody->clearForces();
@@ -637,11 +637,14 @@ void Game::OnMouseDown(WPARAM buttonState, int x, int y)
 			float z = transform.getOrigin().getZ();
 			transform.setOrigin(btVector3(x, y, z));
 			rigidBody->getCollisionShape()->setLocalScaling(btVector3(1, 1, 1));
-			rigidBody->setWorldTransform(transform); // * /
+			rigidBody->setWorldTransform(transform); */
 
 			Config::DynamicsWorld->addRigidBody(rigidBody); // Add the rigid body back into bullet		
+
+			if (hit->MeshHasChildren()) {
+				EESceneLoader->SplitMeshIntoChildEntities(hit, 0.5f);
+			}
 		}
-		*/
 	}
 	
 	SetCapture(hWnd);

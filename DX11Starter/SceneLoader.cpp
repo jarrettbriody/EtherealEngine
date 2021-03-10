@@ -689,7 +689,7 @@ void SceneLoader::LoadScene(string sceneName)
 				allocatedEntity->SetRotation(DirectX::XMConvertToRadians(parsedNumbers[3]), DirectX::XMConvertToRadians(parsedNumbers[4]), DirectX::XMConvertToRadians(parsedNumbers[5]));
 				allocatedEntity->SetScale(parsedNumbers[6], parsedNumbers[7], parsedNumbers[8]);
 				allocatedEntity->CalcWorldMatrix();
-				allocatedEntity->InitRigidBody(Config::DynamicsWorld, 0.0f);
+				allocatedEntity->InitRigidBody(Config::DynamicsWorld, BulletColliderShape::BOX, 0.0f);
 				if (Config::EtherealDebugLinesEnabled && allocatedEntity->colliderDebugLinesEnabled) {
 					vector<Collider*> colliders = allocatedEntity->GetColliders();
 					for (size_t d = 0; d < colliders.size(); d++)
@@ -847,7 +847,7 @@ Entity* SceneLoader::CreateEntity(EntityCreationParameters& para)
 	if (EERenderer != nullptr && para.drawEntity)
 		EERenderer->AddRenderObject(allocatedEntity, mesh, mat);
 	if (para.initRigidBody)
-		allocatedEntity->InitRigidBody(Config::DynamicsWorld, para.entityMass);
+		allocatedEntity->InitRigidBody(Config::DynamicsWorld, para.bulletColliderShape, para.entityMass);
 
 	if (Config::EtherealDebugLinesEnabled && allocatedEntity->colliderDebugLinesEnabled) {
 		vector<Collider*> colliders = allocatedEntity->GetColliders();
@@ -863,4 +863,32 @@ Entity* SceneLoader::CreateEntity(EntityCreationParameters& para)
 	}
 
 	return allocatedEntity;
+}
+
+void SceneLoader::SplitMeshIntoChildEntities(Entity* e, float componentMass)
+{
+	int meshChildCnt = e->GetMeshChildCount();
+	if (meshChildCnt == 0) return;
+	bool success;
+	Mesh** children = e->GetMesh()->GetChildren();
+	for (size_t i = 0; i < meshChildCnt; i++)
+	{
+		Entity newE(children[i]->GetName(), children[i], e->GetMaterial(e->GetMeshMaterialName(i)));
+		Entity* allocatedEntity = (Entity*)EEMemoryAllocator->AllocateToPool(Utility::ENTITY_POOL, sizeof(Entity), success);
+		*allocatedEntity = newE;
+		//e->AddChildEntity(allocatedEntity);
+		//e->CalcWorldMatrix();
+		allocatedEntity->SetPosition(e->GetPosition());
+		allocatedEntity->SetRotation(e->GetEulerAngles());
+		//allocatedEntity->SetRotation(e->GetRotationQuaternion());
+		allocatedEntity->SetScale(e->GetScale());
+		allocatedEntity->CalcWorldMatrix();
+		allocatedEntity->AddAutoBoxCollider();
+		allocatedEntity->InitRigidBody(Config::DynamicsWorld, BulletColliderShape::BOX, componentMass);
+		sceneEntitiesMap.insert({ children[i]->GetName(), allocatedEntity });
+		sceneEntities.push_back(allocatedEntity);
+		EERenderer->AddRenderObject(allocatedEntity, children[i], e->GetMaterial(e->GetMeshMaterialName(i)));
+	}
+	//e->EmptyEntity();
+	e->Destroy();
 }
