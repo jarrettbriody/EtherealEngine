@@ -879,7 +879,9 @@ void SceneLoader::SplitMeshIntoChildEntities(Entity* e, float componentMass)
 		//e->AddChildEntity(allocatedEntity);
 		//e->CalcWorldMatrix();
 		allocatedEntity->SetPosition(e->GetPosition());
-		allocatedEntity->SetRotation(e->GetEulerAngles());
+		XMFLOAT3 r = e->GetEulerAngles();
+		r.y += DirectX::XM_PI;
+		allocatedEntity->SetRotation(r);
 		//allocatedEntity->SetRotation(e->GetRotationQuaternion());
 		allocatedEntity->SetScale(e->GetScale());
 		allocatedEntity->CalcWorldMatrix();

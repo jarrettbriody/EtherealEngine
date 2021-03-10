@@ -256,6 +256,7 @@ void Game::Init()
 		para.scale = XMFLOAT3(0.25f, 1.0f, 0.25f);
 		para.initRigidBody = true;
 		para.entityMass = 1.0f;
+		para.bulletColliderShape = BulletColliderShape::CAPSULE;
 		Entity* fpsController = EESceneLoader->CreateEntity(para);
 
 		Scripts::CreateScript(Scripts::SCRIPT_NAMES::FPSCONTROLLER, fpsController);
