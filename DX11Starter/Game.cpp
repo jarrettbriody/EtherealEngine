@@ -316,7 +316,7 @@ void Game::Update(float deltaTime, float totalTime)
 	for (size_t i = 0; i < ScriptManager::scriptFunctions.size(); i++)
 	{
 		ScriptManager* sf = ScriptManager::scriptFunctions[i];
-		sf->CallUpdate();
+		sf->CallUpdate(deltaTime);
 	}
 
 	EnforcePhysics();

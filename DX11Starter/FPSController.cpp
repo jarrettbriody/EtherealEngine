@@ -21,7 +21,7 @@ void FPSController::Init()
 
 void FPSController::Update()
 {
-	// TODO: Need to get access to delta time
+	// cout << deltaTime << endl;
 
 	// player state machine
 	switch (ps)
@@ -100,20 +100,20 @@ void FPSController::Move()
 		controllerVelocity += btVector3(right.x, 0, right.z) * -spd;
 	}
 	if (GetAsyncKeyState(VK_SPACE) & 0x8000) { // TODO: Need to detect input for a single keypress down for double jump (probably other things too)
-		if (!midAir) {
+		if (!midAir || midAir && jumpCount < 2) {
 			cout << "Jump" << endl;
 			playerRBody->applyCentralImpulse(btVector3(0, 30.0f, 0));
 			midAir = true;
 			jumpCount++;
 		}
 	}
+	// TODO: Dash
 	/*
-	TODO: Dash
-	if (GetAsyncKeyState(VK_LSHIFT) & 0x8000) {
+	if () {
 		
 	}
 	*/
-	
+
 	btScalar ySpd = playerRBody->getLinearVelocity().getY();
 	btScalar spd = controllerVelocity.length();
 	if (spd > maxSpeed) controllerVelocity = controllerVelocity.normalized() * maxSpeed;

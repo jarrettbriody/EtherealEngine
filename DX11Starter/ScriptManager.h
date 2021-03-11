@@ -1,6 +1,7 @@
 #pragma once
 #include "Renderer.h"
 #include "SceneLoader.h"
+#include <gainput/gainput.h>
 
 class ScriptManager
 {
@@ -11,13 +12,14 @@ public:
 	static vector<Entity*>* sceneEntities;
 	static Renderer* EERenderer;
 	static SceneLoader* EESceneLoader;
+	static float deltaTime;
 
 	bool destroyed = false;
 
 	bool inputEnabled = false;
 
 	void CallInit();
-	void CallUpdate();
+	void CallUpdate(float deltaTime);
 	void CallOnMouseDown(WPARAM buttonState, int x, int y);
 	void CallOnMouseUp(WPARAM buttonState, int x, int y);
 	void CallOnMouseMove(WPARAM buttonState, int x, int y);

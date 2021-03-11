@@ -3,6 +3,8 @@
 #include "pch.h"
 #include "Config.h"
 
+#include <gainput/gainput.h>
+
 // We can include the correct library files here
 // instead of in Visual Studio settings if we want
 #pragma comment(lib, "d3d11.lib")
@@ -46,6 +48,12 @@ public:
 	virtual void OnMouseUp	 (WPARAM buttonState, int x, int y) { }
 	virtual void OnMouseMove (WPARAM buttonState, int x, int y) { }
 	virtual void OnMouseWheel(float wheelDelta,   int x, int y) { }
+
+	// define gainput mappings
+	enum Button
+	{
+		W, A, S, D, Q, E, F, SPACE, LSHIFT, LMB, RMB
+	};
 	
 protected:
 	HINSTANCE	hInstance;		// The handle to the application

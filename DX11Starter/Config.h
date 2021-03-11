@@ -28,5 +28,12 @@ public:
 	static unsigned int SSAOSampleCount;
 	static float SSAOKernelRadius;
 	static std::vector<DirectX::XMFLOAT4> SSAOKernel;
+
+	static bool FORWARD;
+	static bool BACKWARD;
+	static bool LEFT;
+	static bool RIGHT;
+	static bool JUMP;
+	static bool DASH;
 };
 

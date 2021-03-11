@@ -1,10 +1,14 @@
 #pragma once
 #include "ScriptManager.h"
+#include <gainput/gainput.h>
+
 class FPSController : public ScriptManager
 {
 	map<string, Entity*>* eMap = ScriptManager::sceneEntitiesMap;
 
 	Camera* cam;
+
+	float deltatime = ScriptManager::deltaTime;
 
 	POINT prevMousePos;
 

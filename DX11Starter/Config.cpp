@@ -26,3 +26,10 @@ btDiscreteDynamicsWorld* Config::DynamicsWorld = nullptr;
 unsigned int Config::SSAOSampleCount = 32;
 float Config::SSAOKernelRadius = 1.0f;
 std::vector<DirectX::XMFLOAT4> Config::SSAOKernel;
+
+bool FORWARD = false;
+bool BACKWARD = false;
+bool LEFT = false;
+bool RIGHT = false;
+bool JUMP = false;
+bool DASH = false;
