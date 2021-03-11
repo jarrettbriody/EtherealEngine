@@ -7,7 +7,8 @@ Collider::Collider()
 
 Collider::Collider(Mesh* m, vector<XMFLOAT3> vertices)
 {
-	this->name = m->GetName();
+	if(m != nullptr)
+		this->name = m->GetName();
 	mesh = m;
 
 	//Count the points of the incoming list

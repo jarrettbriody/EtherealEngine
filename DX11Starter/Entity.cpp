@@ -9,6 +9,7 @@ Entity::Entity()
 Entity::Entity(string entityName)
 {
 	name = new string();
+	tag = new string();
 	materialMap = new map<string, Material*>;
 	children = new vector<Entity*>;
 	colliders = new vector<Collider*>;
@@ -29,6 +30,7 @@ Entity::Entity(string entityName)
 Entity::Entity(string entityName, Mesh* entityMesh, Material* mat)
 {
 	name = new string();
+	tag = new string();
 	materialMap = new map<string, Material*>;
 	children = new vector<Entity*>;
 	colliders = new vector<Collider*>;
@@ -59,9 +61,9 @@ Entity::~Entity()
 		colliders->empty();
 	}
 
-	if(dynamicsWorld != nullptr)
-		dynamicsWorld->removeCollisionObject(rBody);
-	if (rBody != nullptr) {
+	if(Config::DynamicsWorld != nullptr && rBody != nullptr)
+	{
+		Config::DynamicsWorld->removeCollisionObject(rBody);
 		delete rBody->getMotionState();
 		delete rBody;
 	}
@@ -90,6 +92,7 @@ Entity::~Entity()
 		delete colliders;
 
 	delete name;
+	delete tag;
 }
 
 void Entity::operator=(const Entity& e)
@@ -98,8 +101,10 @@ void Entity::operator=(const Entity& e)
 	materialMap = new map<string, Material*>();
 	children = new vector<Entity*>();
 	colliders = new vector<Collider*>();
+	tag = new string();
 
 	*name = *e.name;
+	*tag = *e.tag;
 	*children = vector<Entity*>(*e.children);
 	*colliders = vector<Collider*>(*e.colliders);
 	*materialMap = map<string, Material*>(*e.materialMap);
@@ -118,7 +123,6 @@ void Entity::operator=(const Entity& e)
 	collShape = e.collShape;
 	compoundShape = e.compoundShape;
 	rBody = e.rBody;
-	dynamicsWorld = e.dynamicsWorld;
 	destroyed = e.destroyed;
 	isCollisionStatic = e.isCollisionStatic;
 	collisionsEnabled = e.collisionsEnabled;
@@ -128,11 +132,10 @@ void Entity::operator=(const Entity& e)
 	colliderCnt = e.colliderCnt;
 }
 
-void Entity::InitRigidBody(btDiscreteDynamicsWorld* dw, BulletColliderShape shape, float entityMass)
+void Entity::InitRigidBody(BulletColliderShape shape, float entityMass)
 {
 	assert(colliderCnt > 0);
 
-	dynamicsWorld = dw;
 	mass = entityMass;
 
 	collShape = new btCollisionShape * [colliderCnt];
@@ -254,7 +257,7 @@ void Entity::InitRigidBody(btDiscreteDynamicsWorld* dw, BulletColliderShape shap
 	// Have the rigid body register a pointer to the entity it belongs to so we can access it
 	rBody->setUserPointer((void*)(this));
 
-	dynamicsWorld->addRigidBody(rBody);
+	Config::DynamicsWorld->addRigidBody(rBody);
 }
 
 DirectX::XMFLOAT4X4 Entity::GetWorldMatrix()
@@ -670,8 +673,8 @@ float Entity::GetMass()
 
 void Entity::EmptyEntity()
 {
-	if (dynamicsWorld != nullptr) {
-		dynamicsWorld->removeCollisionObject(rBody);
+	if (Config::DynamicsWorld != nullptr) {
+		Config::DynamicsWorld->removeCollisionObject(rBody);
 	}
 		
 	this->isEmptyObj = true;
@@ -696,9 +699,9 @@ void Entity::FreeMemory()
 		colliders->empty();
 	}
 
-	if (dynamicsWorld != nullptr)
-		dynamicsWorld->removeCollisionObject(rBody);
-	if (rBody != nullptr) {
+	if (Config::DynamicsWorld != nullptr && rBody != nullptr)
+	{
+		Config::DynamicsWorld->removeCollisionObject(rBody);
 		delete rBody->getMotionState();
 		delete rBody;
 	}
@@ -727,6 +730,7 @@ void Entity::FreeMemory()
 		delete colliders;
 
 	delete name;
+	delete tag;
 }
 
 

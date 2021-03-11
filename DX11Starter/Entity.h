@@ -52,21 +52,21 @@ private:
 	btCompoundShape* compoundShape = nullptr;
 	btCollisionShape** collShape = nullptr;
 	btRigidBody* rBody = nullptr;
-	btDiscreteDynamicsWorld* dynamicsWorld = nullptr;
 
 	int colliderCnt = 0;
 public:
 	bool destroyed = false;
 	bool isCollisionStatic = true;
-	bool collisionsEnabled = true;
-	bool colliderDebugLinesEnabled = true;
+	bool collisionsEnabled = false;
+	bool colliderDebugLinesEnabled = false;
 	bool isEmptyObj = false;
+	string* tag;
 	Entity();
 	Entity(string entityName);
 	Entity(string entityName, Mesh* entityMesh, Material* mat = nullptr);
 	~Entity();
 	void operator= (const Entity& e);
-	void InitRigidBody(btDiscreteDynamicsWorld* dw, BulletColliderShape shape, float entityMass);
+	void InitRigidBody(BulletColliderShape shape, float entityMass);
 	DirectX::XMFLOAT4X4 GetWorldMatrix();
 	DirectX::XMFLOAT3 GetPosition();
 	DirectX::XMFLOAT3 GetScale();

@@ -116,14 +116,12 @@ void Game::Init()
 	EESceneLoader->LoadDefaultTextures();
 	EESceneLoader->LoadDefaultMaterials();
 
+	EESceneLoader->SetScriptLoader([](Entity* e, string script) {Scripts::CreateScript(e, script); });
+
 	//EESceneLoader->LoadScene("ArenaV2");
 
 	EESceneLoader->SetModelPath("../../Assets/Models/City/");
 	EESceneLoader->LoadScene("City");
-
-	ScriptManager::sceneEntitiesMap = &EESceneLoader->sceneEntitiesMap;
-	ScriptManager::sceneEntities = &EESceneLoader->sceneEntities;
-	ScriptManager::EESceneLoader = EESceneLoader;
 
 	EntityCreationParameters para;
 
@@ -195,7 +193,8 @@ void Game::Init()
 	for (size_t i = 0; i < EESceneLoader->sceneEntities.size(); i++)
 	{
 		e = EESceneLoader->sceneEntities[i];
-		EERenderer->AddRenderObject(e, e->GetMesh(), e->GetMaterial(e->GetMeshMaterialName()));
+		if(!e->isEmptyObj)
+			EERenderer->AddRenderObject(e, e->GetMesh(), e->GetMaterial(e->GetMeshMaterialName()));
 	}
 
 	ScriptManager::EERenderer = EERenderer;
@@ -245,22 +244,24 @@ void Game::Init()
 	musicChannel->set3DAttributes(&pos, &vel);
 	musicChannel->set3DMinMaxDistance(0, 15.0f);
   
-	//Scripts::CreateScript(Scripts::SCRIPT_NAMES::BARREL, EESceneLoader->sceneEntitiesMap["barrel_1"]);
+	//Scripts::CreateScript(Scripts::SCRIPT_NAMES::BARREL, EESceneLoader->sceneEntitiesMap["antlerdemon_separatedhead"]);
 	
+	/*
 	// FPS CONTROLLER
 	if (Config::FPSControllerEnabled)
 	{
 		para = {};
 		para.entityName = "FPSController";
-		para.position = XMFLOAT3(-416.809f, 25.0704, 59.4958f);
+		para.position = XMFLOAT3(-416.809f, 25.0704f, 59.4958f);
 		para.scale = XMFLOAT3(0.25f, 1.0f, 0.25f);
 		para.initRigidBody = true;
 		para.entityMass = 1.0f;
 		para.bulletColliderShape = BulletColliderShape::CAPSULE;
 		Entity* fpsController = EESceneLoader->CreateEntity(para);
 
-		Scripts::CreateScript(Scripts::SCRIPT_NAMES::FPSCONTROLLER, fpsController);
+		Scripts::CreateScript(fpsController, "FPSCONTROLLER");
 	}
+	*/
 
 	for (size_t i = 0; i < ScriptManager::scriptFunctions.size(); i++)
 	{
@@ -322,6 +323,24 @@ void Game::Update(float deltaTime, float totalTime)
 	{
 		ScriptManager* sf = ScriptManager::scriptFunctions[i];
 		sf->CallUpdate();
+	}
+
+	int numManifolds = Config::DynamicsWorld->getDispatcher()->getNumManifolds();
+	for (int i = 0; i < numManifolds; i++)
+	{
+		btPersistentManifold* contactManifold = Config::DynamicsWorld->getDispatcher()->getManifoldByIndexInternal(i);
+		btCollisionObject* obA = (btCollisionObject*)(contactManifold->getBody0());
+		btCollisionObject* obB = (btCollisionObject*)(contactManifold->getBody1());
+
+		Entity* a = (Entity*)obA->getUserPointer();
+
+		if (ScriptManager::scriptFunctionsMap.count(a->GetName())) {
+			vector<ScriptManager*> scripts = ScriptManager::scriptFunctionsMap[a->GetName()];
+			for (size_t j = 0; j < scripts.size(); j++)
+			{
+				scripts[j]->CallOnCollision(obB);
+			}
+		}
 	}
 
 	EnforcePhysics();

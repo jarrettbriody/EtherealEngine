@@ -5,8 +5,9 @@
 namespace Utility {
 	enum MESH_TYPE {
 		LOAD_FAILURE = -1,
-		DEFAULT_MESH = 0,
-		GENERATED_MESH = 1,
+		EMPTY_OBJECT = 0,
+		DEFAULT_MESH = 1,
+		GENERATED_MESH = 2,
 	};
 
 	enum MEMORY_POOL {

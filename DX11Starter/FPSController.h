@@ -2,7 +2,7 @@
 #include "ScriptManager.h"
 class FPSController : public ScriptManager
 {
-	map<string, Entity*>* eMap = ScriptManager::sceneEntitiesMap;
+	map<string, Entity*>* eMap;
 
 	Camera* cam;
 
