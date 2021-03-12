@@ -345,11 +345,12 @@ HRESULT DXCore::Run()
 	Init();
 
 	// set-up gainput 
-	/*gainput::InputManager inputManager;
+	gainput::InputManager inputManager;
 	inputManager.SetDisplaySize(Config::ViewPortWidth, Config::ViewPortHeight);
 
 	const gainput::DeviceId keyboardId = inputManager.CreateDevice<gainput::InputDeviceKeyboard>();
 	const gainput::DeviceId mouseId = inputManager.CreateDevice<gainput::InputDeviceMouse>();
+
 
 	gainput::InputMap inputMap(inputManager);
 
@@ -364,7 +365,7 @@ HRESULT DXCore::Run()
 	inputMap.MapBool(LSHIFT, keyboardId, gainput::KeyShiftL);
 
 	inputMap.MapBool(LMB, mouseId, gainput::MouseButtonLeft);
-	inputMap.MapBool(RMB, mouseId, gainput::MouseButtonRight);*/
+	inputMap.MapBool(RMB, mouseId, gainput::MouseButtonRight);
 
 	// Our overall game and message loop
 	MSG msg = {};
@@ -388,12 +389,13 @@ HRESULT DXCore::Run()
 			// The game loop
 
 			// player input update to send logic events to FPS Controller ---
-			/*inputManager.Update();
-
+			inputManager.Update();
+			
 			if (inputMap.GetBool(W))
 			{
 				std::cout << "W is pressed" << std::endl;
 			}
+			/*
 			if (inputMap.GetBool(A))
 			if (inputMap.GetBool(S))
 			if (inputMap.GetBool(D))
