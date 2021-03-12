@@ -152,10 +152,6 @@
     <ClCompile Include="SceneLoader.cpp" />
     <ClCompile Include="ScriptManager.cpp" />
     <ClCompile Include="SimpleShader.cpp" />
-    <ClCompile Include="Terrain.cpp" />
-    <ClCompile Include="TerrainMaterial.cpp" />
-    <ClCompile Include="Water.cpp" />
-    <ClCompile Include="WaterMaterial.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Barrel.h" />
@@ -179,12 +175,8 @@
     <ClInclude Include="Scripts.h" />
     <ClInclude Include="Shadows.h" />
     <ClInclude Include="SimpleShader.h" />
-    <ClInclude Include="Terrain.h" />
-    <ClInclude Include="TerrainMaterial.h" />
     <ClInclude Include="Utility.h" />
     <ClInclude Include="Vertex.h" />
-    <ClInclude Include="Water.h" />
-    <ClInclude Include="WaterMaterial.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="DebugLinePS.hlsl">

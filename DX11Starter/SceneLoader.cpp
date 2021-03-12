@@ -187,13 +187,6 @@ void SceneLoader::LoadDefaultMeshes()
 	Mesh torus = Mesh("Torus", "../../Assets/Models/Default/torus.obj", Config::Device);
 	*torusMesh = torus;
 	defaultMeshesMap.insert({ "Torus", torusMesh });
-
-
-	//defaultMeshesMap.insert({ "Ground", defaultMeshesMap["Cube"] });
-	//defaultMeshesMap.insert({ "Blood_Button", defaultMeshesMap["Cube"] });
-	//defaultMeshesMap.insert({ "Wall", defaultMeshesMap["Cube"] });
-	//defaultMeshesMap.insert({ "Floor", defaultMeshesMap["Cube"] });
-	//defaultMeshesMap.insert({ "Manhole", defaultMeshesMap["Cylinder"] });
 }
 
 void SceneLoader::LoadDefaultTextures()
@@ -285,35 +278,6 @@ void SceneLoader::LoadDefaultMaterials()
 	allocatedMaterial = (Material*)EEMemoryAllocator->AllocateToPool(Utility::MATERIAL_POOL, sizeof(Material), success);
 	*allocatedMaterial = whiteMaterial;
 	defaultMaterialsMap.insert({ "White", allocatedMaterial });
-}
-
-void SceneLoader::BuildDefaultEntity(string entityName, string objName, Entity* e)
-{
-	/*
-	if (objName == "Ground") {
-		e->AddMaterial(defaultMaterialsMap["Grass"], true);
-		XMFLOAT3 s = e->GetScale();
-		e->SetRepeatTexture(s.x / 2.0f, s.z / 2.0f);
-	}
-	if (objName == "Blood_Button") {
-		e->AddMaterial(defaultMaterialsMap["Grey"], true);
-		XMFLOAT3 s = e->GetScale();
-		e->SetRepeatTexture(s.x / 2.0f, s.y / 2.0f);
-	}
-	if (objName == "Wall") {
-		e->AddMaterial(defaultMaterialsMap["White"], true);
-		XMFLOAT3 s = e->GetScale();
-		e->SetRepeatTexture(s.x / 2.0f, s.z / 2.0f);
-	}
-	if (objName == "Floor") {
-		e->AddMaterial(defaultMaterialsMap["Grey4"], true);
-		XMFLOAT3 s = e->GetScale();
-		e->SetRepeatTexture(s.x / 2.0f, s.z / 2.0f);
-	}
-	if (objName == "Manhole") {
-		e->AddMaterial(defaultMaterialsMap["White"], true);
-	}
-	*/
 }
 
 Utility::MESH_TYPE SceneLoader::AutoLoadOBJMTL(string name)
@@ -761,9 +725,6 @@ void SceneLoader::LoadScene(string sceneName)
 						}
 					}
 				}
-
-				//if (meshType == Utility::DEFAULT_MESH)
-					//BuildDefaultEntity(entityName, objName, allocatedEntity);
 			}
 		}
 	}

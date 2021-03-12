@@ -78,18 +78,6 @@
     <ClCompile Include="SimpleShader.cpp">
       <Filter>EECore\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Terrain.cpp">
-      <Filter>EECore\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="TerrainMaterial.cpp">
-      <Filter>EECore\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Water.cpp">
-      <Filter>EECore\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="WaterMaterial.cpp">
-      <Filter>EECore\Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Config.cpp">
       <Filter>EECore\Source Files</Filter>
     </ClCompile>
@@ -152,22 +140,10 @@
     <ClInclude Include="SimpleShader.h">
       <Filter>EECore\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Terrain.h">
-      <Filter>EECore\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="TerrainMaterial.h">
-      <Filter>EECore\Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Utility.h">
       <Filter>EECore\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Vertex.h">
-      <Filter>EECore\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Water.h">
-      <Filter>EECore\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="WaterMaterial.h">
       <Filter>EECore\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Config.h">

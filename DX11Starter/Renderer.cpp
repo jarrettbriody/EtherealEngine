@@ -221,7 +221,9 @@ void Renderer::InitShadows()
 
 	// Create the special "comparison" sampler state for shadows
 	D3D11_SAMPLER_DESC shadowSampDesc = {};
-	shadowSampDesc.Filter = D3D11_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR; // Could be anisotropic
+	//shadowSampDesc.Filter = D3D11_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR; // Could be anisotropic
+	shadowSampDesc.Filter = D3D11_FILTER_COMPARISON_ANISOTROPIC;
+	shadowSampDesc.MaxAnisotropy = 16;
 	shadowSampDesc.ComparisonFunc = D3D11_COMPARISON_LESS;
 	shadowSampDesc.AddressU = D3D11_TEXTURE_ADDRESS_BORDER;
 	shadowSampDesc.AddressV = D3D11_TEXTURE_ADDRESS_BORDER;

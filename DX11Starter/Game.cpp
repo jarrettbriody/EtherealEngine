@@ -123,32 +123,6 @@ void Game::Init()
 	EESceneLoader->SetModelPath("../../Assets/Models/City/");
 	EESceneLoader->LoadScene("City");
 
-	EntityCreationParameters para;
-
-	/*
-	para.entityName = "cube1";
-	para.meshName = "Cube";
-	para.materialName = "Grey";
-	para.position = XMFLOAT3(8.0f, 8.0f, 8.0f);
-	para.rotationRadians = XMFLOAT3(DirectX::XMConvertToRadians(30), DirectX::XMConvertToRadians(30), DirectX::XMConvertToRadians(30));
-	para.scale = XMFLOAT3(1.0f, 2.0f, 1.0f);
-	para.initRigidBody = true;
-	Entity* cube1 = EESceneLoader->CreateEntity(para);
-
-	para.entityName = "cube2";
-	para.meshName = "Cube";
-	para.materialName = "Grey";
-	para.position = XMFLOAT3(1.0f, 1.0f, 1.0f);
-	para.rotationRadians = XMFLOAT3(DirectX::XMConvertToRadians(30), DirectX::XMConvertToRadians(30), DirectX::XMConvertToRadians(30));
-	para.scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
-	para.initRigidBody = true;
-	Entity* cube2 = EESceneLoader->CreateEntity(para);
-
-	cube1->AddChildEntity(cube2);
-
-	cube1->CalcWorldMatrix();
-	*/
-
 	prevMousePos.x = 0;
 	prevMousePos.y = 0;
 
@@ -183,7 +157,7 @@ void Game::Init()
 	EERenderer->AddLight("Sun", dLight);
 	EERenderer->SendAllLightsToShader(EESceneLoader->pixelShadersMap["DEFAULT"]);
 	EERenderer->SendAllLightsToShader(EESceneLoader->pixelShadersMap["Normal"]);
-	EERenderer->SetShadowMapResolution(16384);
+	EERenderer->SetShadowMapResolution(4096);
 	EERenderer->InitShadows();
 	EERenderer->InitDepthStencil();
 	EERenderer->InitHBAOPlus();
@@ -243,25 +217,6 @@ void Game::Init()
 	// Set the 3D values for the channel
 	musicChannel->set3DAttributes(&pos, &vel);
 	musicChannel->set3DMinMaxDistance(0, 15.0f);
-  
-	//Scripts::CreateScript(Scripts::SCRIPT_NAMES::BARREL, EESceneLoader->sceneEntitiesMap["antlerdemon_separatedhead"]);
-	
-	/*
-	// FPS CONTROLLER
-	if (Config::FPSControllerEnabled)
-	{
-		para = {};
-		para.entityName = "FPSController";
-		para.position = XMFLOAT3(-416.809f, 25.0704f, 59.4958f);
-		para.scale = XMFLOAT3(0.25f, 1.0f, 0.25f);
-		para.initRigidBody = true;
-		para.entityMass = 1.0f;
-		para.bulletColliderShape = BulletColliderShape::CAPSULE;
-		Entity* fpsController = EESceneLoader->CreateEntity(para);
-
-		Scripts::CreateScript(fpsController, "FPSCONTROLLER");
-	}
-	*/
 
 	for (size_t i = 0; i < ScriptManager::scriptFunctions.size(); i++)
 	{
