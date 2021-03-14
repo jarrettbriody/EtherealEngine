@@ -364,6 +364,37 @@ HRESULT DXCore::Run()
 				UpdateTitleBarStats();
 
 			// The game loop
+
+			// Handle Input
+			while (!keyboard.CharBufferIsEmpty())
+			{
+				// Debug
+				unsigned char ch = keyboard.ReadChar();
+				std::string outmsg = "Char: ";
+				outmsg += ch;
+				outmsg += "\n";
+				std::cout << outmsg.c_str();
+			}
+
+			while (!keyboard.KeyBufferIsEmpty())
+			{
+				// Debug
+				KeyboardEvent kEvent = keyboard.ReadKey();
+				unsigned char keycode = kEvent.GetKeyCode();
+				std::string outmsg = "";
+				if (kEvent.IsPress())
+				{
+					outmsg += "Key Press: ";
+				}
+				if (kEvent.IsRelease())
+				{
+					outmsg += "Key Release: ";
+				}
+				outmsg += keycode;
+				outmsg += "\n";
+				std::cout << outmsg.c_str();
+			}
+
 			Update(deltaTime, totalTime);
 			Draw(deltaTime, totalTime);
 		}
@@ -509,22 +540,22 @@ LRESULT DXCore::ProcessMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 	// Check the incoming message and handle any we care about
 	switch (uMsg)
 	{
-	// This is the message that signifies the window closing
+		// This is the message that signifies the window closing
 	case WM_DESTROY:
 		PostQuitMessage(0); // Send a quit message to our own program
 		return 0;
 
-	// Prevent beeping when we "alt-enter" into fullscreen
-	case WM_MENUCHAR: 
+		// Prevent beeping when we "alt-enter" into fullscreen
+	case WM_MENUCHAR:
 		return MAKELRESULT(0, MNC_CLOSE);
 
-	// Prevent the overall window from becoming too small
+		// Prevent the overall window from becoming too small
 	case WM_GETMINMAXINFO:
 		((MINMAXINFO*)lParam)->ptMinTrackSize.x = 200;
 		((MINMAXINFO*)lParam)->ptMinTrackSize.y = 200;
 		return 0;
 
-	// Sent when the window size changes
+		// Sent when the window size changes
 	case WM_SIZE:
 		// Don't adjust anything when minimizing,
 		// since we end up with a Config::ViewPortWidth/Config::ViewPortHeight of zero
@@ -538,35 +569,79 @@ LRESULT DXCore::ProcessMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 
 		// If DX is initialized, resize 
 		// our required buffers
-		if (Config::Device) 
+		if (Config::Device)
 			OnResize();
 
 		return 0;
 
-	// Mouse button being pressed (while the cursor is currently over our window)
+		// Mouse button being pressed (while the cursor is currently over our window)
 	case WM_LBUTTONDOWN:
 	case WM_MBUTTONDOWN:
 	case WM_RBUTTONDOWN:
 		OnMouseDown(wParam, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
 		return 0;
 
-	// Mouse button being released (while the cursor is currently over our window)
+		// Mouse button being released (while the cursor is currently over our window)
 	case WM_LBUTTONUP:
 	case WM_MBUTTONUP:
 	case WM_RBUTTONUP:
 		OnMouseUp(wParam, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
 		return 0;
 
-	// Cursor moves over the window (or outside, while we're currently capturing it)
+		// Cursor moves over the window (or outside, while we're currently capturing it)
 	case WM_MOUSEMOVE:
 		OnMouseMove(wParam, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
 		return 0;
 
-	// Mouse wheel is scrolled
+		// Mouse wheel is scrolled
 	case WM_MOUSEWHEEL:
 		OnMouseWheel(GET_WHEEL_DELTA_WPARAM(wParam) / (float)WHEEL_DELTA, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
 		return 0;
+
+		// Input handling
+	case WM_KEYDOWN:
+	{
+		unsigned char keycode = static_cast<unsigned char>(wParam);
+		if (keyboard.IsKeysAutoRepeat())
+		{
+			keyboard.OnKeyPressed(keycode);
+		}
+		else
+		{
+			const bool wasPressed = lParam & 0x40000000;
+			if (!wasPressed)
+			{
+				keyboard.OnKeyPressed(keycode);
+			}
+		}
+		return 0;
 	}
+	case WM_KEYUP:
+	{
+		unsigned char keycode = static_cast<unsigned char>(wParam);
+		keyboard.OnKeyReleased(keycode);
+		return 0;
+	}
+	case WM_CHAR:
+	{
+		unsigned char ch = static_cast<unsigned char>(wParam);
+		if (keyboard.IsCharsAutoRepeat())
+		{
+			keyboard.OnChar(ch);
+		}
+		else
+		{
+			const bool wasPressed = lParam & 0x40000000;
+			if (!wasPressed)
+			{
+				keyboard.OnChar(ch);
+			}
+		}
+		return 0;
+	}
+
+	}
+
 
 	// Let Windows handle any messages we're not touching
 	return DefWindowProc(hWnd, uMsg, wParam, lParam);

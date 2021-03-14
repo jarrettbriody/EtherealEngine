@@ -111,6 +111,12 @@
     <ClCompile Include="pch.cpp">
       <Filter>EECore\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="KeyboardEvent.cpp">
+      <Filter>EECore\Source Files\Keyboard</Filter>
+    </ClCompile>
+    <ClCompile Include="Keyboard.cpp">
+      <Filter>EECore\Source Files\Keyboard</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h">
@@ -194,6 +200,12 @@
     <ClInclude Include="FPSController.h">
       <Filter>EEScripts\Headers</Filter>
     </ClInclude>
+    <ClInclude Include="KeyboardEvent.h">
+      <Filter>EECore\Header Files\Keyboard</Filter>
+    </ClInclude>
+    <ClInclude Include="Keyboard.h">
+      <Filter>EECore\Header Files\Keyboard</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Lighting.hlsli">
@@ -242,6 +254,12 @@
     </Filter>
     <Filter Include="EEShaders\Geometry Shaders">
       <UniqueIdentifier>{ee0ab75f-3663-4ccb-bfa3-6b5a731e270d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="EECore\Header Files\Keyboard">
+      <UniqueIdentifier>{72ff7ae4-872c-4f1a-9a4a-cf79f1e2dad4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="EECore\Source Files\Keyboard">
+      <UniqueIdentifier>{aa161763-d20f-462e-a089-4f34139a2f99}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

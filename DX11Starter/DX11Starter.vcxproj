@@ -144,6 +144,8 @@
     <ClCompile Include="Entity.cpp" />
     <ClCompile Include="FPSController.cpp" />
     <ClCompile Include="Game.cpp" />
+    <ClCompile Include="Keyboard.cpp" />
+    <ClCompile Include="KeyboardEvent.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Material.cpp" />
     <ClCompile Include="MemoryAllocator.cpp" />
@@ -172,6 +174,8 @@
     <ClInclude Include="Entity.h" />
     <ClInclude Include="FPSController.h" />
     <ClInclude Include="Game.h" />
+    <ClInclude Include="Keyboard.h" />
+    <ClInclude Include="KeyboardEvent.h" />
     <ClInclude Include="Lights.h" />
     <ClInclude Include="Material.h" />
     <ClInclude Include="MemoryAllocator.h" />
