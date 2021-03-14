@@ -1,7 +1,6 @@
 #pragma once
 #include "Renderer.h"
 #include "SceneLoader.h"
-#include <gainput/gainput.h>
 
 class ScriptManager
 {

@@ -1,6 +1,5 @@
 #pragma once
 #include "ScriptManager.h"
-#include <gainput/gainput.h>
 
 class FPSController : public ScriptManager
 {

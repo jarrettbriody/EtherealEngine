@@ -3,8 +3,6 @@
 #include "pch.h"
 #include "Config.h"
 
-#include <gainput/gainput.h>
-
 // We can include the correct library files here
 // instead of in Visual Studio settings if we want
 #pragma comment(lib, "d3d11.lib")

@@ -344,29 +344,6 @@ HRESULT DXCore::Run()
 	// Give subclass a chance to initialize
 	Init();
 
-	// set-up gainput 
-	gainput::InputManager inputManager;
-	inputManager.SetDisplaySize(Config::ViewPortWidth, Config::ViewPortHeight);
-
-	const gainput::DeviceId keyboardId = inputManager.CreateDevice<gainput::InputDeviceKeyboard>();
-	const gainput::DeviceId mouseId = inputManager.CreateDevice<gainput::InputDeviceMouse>();
-
-
-	gainput::InputMap inputMap(inputManager);
-
-	inputMap.MapBool(W, keyboardId, gainput::KeyW);
-	inputMap.MapBool(A, keyboardId, gainput::KeyA);
-	inputMap.MapBool(S, keyboardId, gainput::KeyS);
-	inputMap.MapBool(D, keyboardId, gainput::KeyD);
-	inputMap.MapBool(Q, keyboardId, gainput::KeyQ);
-	inputMap.MapBool(E, keyboardId, gainput::KeyE);
-	inputMap.MapBool(F, keyboardId, gainput::KeyF);
-	inputMap.MapBool(SPACE, keyboardId, gainput::KeySpace);
-	inputMap.MapBool(LSHIFT, keyboardId, gainput::KeyShiftL);
-
-	inputMap.MapBool(LMB, mouseId, gainput::MouseButtonLeft);
-	inputMap.MapBool(RMB, mouseId, gainput::MouseButtonRight);
-
 	// Our overall game and message loop
 	MSG msg = {};
 	while (msg.message != WM_QUIT)
@@ -387,26 +364,6 @@ HRESULT DXCore::Run()
 				UpdateTitleBarStats();
 
 			// The game loop
-
-			// player input update to send logic events to FPS Controller ---
-			inputManager.Update();
-			
-			if (inputMap.GetBool(W))
-			{
-				std::cout << "W is pressed" << std::endl;
-			}
-			/*
-			if (inputMap.GetBool(A))
-			if (inputMap.GetBool(S))
-			if (inputMap.GetBool(D))
-			if (inputMap.GetBoolWasDown(Q))
-			if (inputMap.GetBoolWasDown(E))
-			if (inputMap.GetBoolWasDown(F))
-			if (inputMap.GetBoolWasDown(SPACE))
-			if (inputMap.GetBoolWasDown(LSHIFT))
-			if (inputMap.GetBoolWasDown(LMB))
-			if (inputMap.GetBoolWasDown(LMB))*/
-
 			Update(deltaTime, totalTime);
 			Draw(deltaTime, totalTime);
 		}
