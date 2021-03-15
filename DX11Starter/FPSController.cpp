@@ -1,10 +1,12 @@
 #include "pch.h"
 #include "FPSController.h"
+#include <WinUser.h>
 
 void FPSController::Init()
 {
 	cam = ScriptManager::EERenderer->GetCamera("main");
 	direction = cam->direction; 
+
 
 	// TODO: Easier setting of physics characteristics via Bullet (coll shape, mass, restitution, other properties)
 	
@@ -87,21 +89,20 @@ void FPSController::Move()
 	// update the controller velocity vector based on input
 	playerRBody->activate();
 
-	if (GetAsyncKeyState('W') & 0x8000) {
+	if (DXCore::keyboard.KeyIsPressed(0x57)) {
 		controllerVelocity += btVector3(direction.x, 0, direction.z) * spd;
 	}
-	if (GetAsyncKeyState('S') & 0x8000) {
+	if (DXCore::keyboard.KeyIsPressed(0x53)) {
 		controllerVelocity += btVector3(direction.x, 0, direction.z) * -spd;
 	}
-	if (GetAsyncKeyState('A') & 0x8000) {
+	if (DXCore::keyboard.KeyIsPressed(0x41)) {
 		controllerVelocity += btVector3(right.x, 0, right.z) * spd;
 	}
-	if (GetAsyncKeyState('D') & 0x8000) {
+	if (DXCore::keyboard.KeyIsPressed(0x44)) {
 		controllerVelocity += btVector3(right.x, 0, right.z) * -spd;
 	}
-	if (GetAsyncKeyState(VK_SPACE) & 0x8000) { // TODO: Need to detect input for a single keypress down for double jump (probably other things too)
+	if (DXCore::keyboard.OnKeyDown(VK_SPACE)) { // TODO: Need to detect input for a single keypress down for double jump (probably other things too)
 		if (!midAir || midAir && jumpCount < 2) {
-			cout << "Jump" << endl;
 			playerRBody->applyCentralImpulse(btVector3(0, 30.0f, 0));
 			midAir = true;
 			jumpCount++;

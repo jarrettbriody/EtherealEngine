@@ -7,6 +7,7 @@
 // Define the static instance variable so our OS-level 
 // message handling function below can talk to our object
 DXCore* DXCore::DXCoreInstance = 0;
+Keyboard DXCore::keyboard;
 
 // --------------------------------------------------------
 // The global callback function for handling windows OS-level messages.
@@ -364,37 +365,6 @@ HRESULT DXCore::Run()
 				UpdateTitleBarStats();
 
 			// The game loop
-
-			// Handle Input
-			while (!keyboard.CharBufferIsEmpty())
-			{
-				// Debug
-				unsigned char ch = keyboard.ReadChar();
-				std::string outmsg = "Char: ";
-				outmsg += ch;
-				outmsg += "\n";
-				std::cout << outmsg.c_str();
-			}
-
-			while (!keyboard.KeyBufferIsEmpty())
-			{
-				// Debug
-				KeyboardEvent kEvent = keyboard.ReadKey();
-				unsigned char keycode = kEvent.GetKeyCode();
-				std::string outmsg = "";
-				if (kEvent.IsPress())
-				{
-					outmsg += "Key Press: ";
-				}
-				if (kEvent.IsRelease())
-				{
-					outmsg += "Key Release: ";
-				}
-				outmsg += keycode;
-				outmsg += "\n";
-				std::cout << outmsg.c_str();
-			}
-
 			Update(deltaTime, totalTime);
 			Draw(deltaTime, totalTime);
 		}
@@ -525,10 +495,6 @@ void DXCore::CreateConsoleWindow(int bufferLines, int bufferColumns, int windowL
 	EnableMenuItem(hmenu, SC_CLOSE, MF_GRAYED);
 }
 
-
-
-
-
 // --------------------------------------------------------
 // Handles messages that are sent to our window by the
 // operating system.  Ignoring these messages would cause
@@ -604,14 +570,14 @@ LRESULT DXCore::ProcessMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 		unsigned char keycode = static_cast<unsigned char>(wParam);
 		if (keyboard.IsKeysAutoRepeat())
 		{
-			keyboard.OnKeyPressed(keycode);
+			keyboard.RegisterKeyPress(keycode);
 		}
 		else
 		{
 			const bool wasPressed = lParam & 0x40000000;
 			if (!wasPressed)
 			{
-				keyboard.OnKeyPressed(keycode);
+				keyboard.RegisterKeyPress(keycode);
 			}
 		}
 		return 0;
@@ -619,27 +585,9 @@ LRESULT DXCore::ProcessMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 	case WM_KEYUP:
 	{
 		unsigned char keycode = static_cast<unsigned char>(wParam);
-		keyboard.OnKeyReleased(keycode);
+		keyboard.RegisterKeyRelease(keycode);
 		return 0;
 	}
-	case WM_CHAR:
-	{
-		unsigned char ch = static_cast<unsigned char>(wParam);
-		if (keyboard.IsCharsAutoRepeat())
-		{
-			keyboard.OnChar(ch);
-		}
-		else
-		{
-			const bool wasPressed = lParam & 0x40000000;
-			if (!wasPressed)
-			{
-				keyboard.OnChar(ch);
-			}
-		}
-		return 0;
-	}
-
 	}
 
 

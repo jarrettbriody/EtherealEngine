@@ -47,13 +47,13 @@ public:
 	virtual void OnMouseMove (WPARAM buttonState, int x, int y) { }
 	virtual void OnMouseWheel(float wheelDelta,   int x, int y) { }
 	
+	static Keyboard keyboard;
 protected:
 	HINSTANCE	hInstance;		// The handle to the application
 	HWND		hWnd;			// The handle to the window itself
 	std::string titleBarText;	// Custom text in window's title bar
 	bool		titleBarStats;	// Show extra stats in title bar?
 	
-	Keyboard keyboard;
 
 	// DirectX related objects and variables
 	D3D_FEATURE_LEVEL		dxFeatureLevel;
