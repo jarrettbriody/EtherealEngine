@@ -5,8 +5,12 @@ Collider::Collider()
 {
 }
 
-Collider::Collider(vector<XMFLOAT3> vertices)
+Collider::Collider(Mesh* m, vector<XMFLOAT3> vertices)
 {
+	if(m != nullptr)
+		this->name = m->GetName();
+	mesh = m;
+
 	//Count the points of the incoming list
 	unsigned int vertCount = vertices.size();
 
@@ -360,4 +364,9 @@ XMFLOAT3 Collider::GetCenterLocal()
 XMFLOAT3 Collider::GetCenterGlobal()
 {
 	return centerGlobal;
+}
+
+string Collider::GetName()
+{
+	return name;
 }

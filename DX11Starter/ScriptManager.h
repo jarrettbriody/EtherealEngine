@@ -23,6 +23,7 @@ public:
 	void CallOnMouseUp(WPARAM buttonState, int x, int y);
 	void CallOnMouseMove(WPARAM buttonState, int x, int y);
 	void CallOnMouseWheel(float wheelDelta, int x, int y);
+	void CallOnCollision(btCollisionObject* other);
 
 	void Setup(Entity* e);
 
@@ -38,6 +39,7 @@ protected:
 	virtual void OnMouseUp(WPARAM buttonState, int x, int y) {};
 	virtual void OnMouseMove(WPARAM buttonState, int x, int y) {};
 	virtual void OnMouseWheel(float wheelDelta, int x, int y) {};
+	virtual void OnCollision(btCollisionObject* other) {};
 	void CreateEntity(EntityCreationParameters& para);
 };
 

@@ -46,10 +46,21 @@ void ScriptManager::CallOnMouseWheel(float wheelDelta, int x, int y)
 		OnMouseWheel(wheelDelta, x, y);
 }
 
+void ScriptManager::CallOnCollision(btCollisionObject* other)
+{
+	if (initialized)
+		OnCollision(other);
+}
+
 void ScriptManager::Setup(Entity* e)
 {
 	entity = e;
 	this->name = e->GetName();
+
+	this->EERenderer = Renderer::GetInstance();
+	this->EESceneLoader = SceneLoader::GetInstance();
+	this->sceneEntities = &this->EESceneLoader->sceneEntities;
+	this->sceneEntitiesMap = &this->EESceneLoader->sceneEntitiesMap;
 
 	//add this script (and thereby all script function pointers) to the list of scripts
 	scriptFunctions.push_back(this);

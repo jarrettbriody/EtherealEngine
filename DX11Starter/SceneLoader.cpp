@@ -105,9 +105,9 @@ void SceneLoader::LoadShaders()
 	defaultVS->LoadShaderFile(L"DefaultVS.cso");
 	vertexShadersMap.insert({ "DEFAULT", defaultVS });
 
-	SimpleVertexShader* shadowVS = new SimpleVertexShader(Config::Device, Config::Context);
-	shadowVS->LoadShaderFile(L"ShadowVS.cso");
-	vertexShadersMap.insert({ "Shadow", shadowVS });
+	SimpleVertexShader* depthStencilVS = new SimpleVertexShader(Config::Device, Config::Context);
+	depthStencilVS->LoadShaderFile(L"DepthStencilVS.cso");
+	vertexShadersMap.insert({ "DepthStencil", depthStencilVS });
 
 	SimpleVertexShader* skyVS = new SimpleVertexShader(Config::Device, Config::Context);
 	skyVS->LoadShaderFile(L"SkyVS.cso");
@@ -120,10 +120,6 @@ void SceneLoader::LoadShaders()
 	SimpleVertexShader* debugLineVS = new SimpleVertexShader(Config::Device, Config::Context);
 	debugLineVS->LoadShaderFile(L"DebugLineVS.cso");
 	vertexShadersMap.insert({ "DebugLine", debugLineVS });
-
-	SimpleVertexShader* defaultSSAOVS = new SimpleVertexShader(Config::Device, Config::Context);
-	defaultSSAOVS->LoadShaderFile(L"DefaultVS_SSAO.cso");
-	vertexShadersMap.insert({ "DEFAULT_SSAO", defaultSSAOVS });
 
 	//pixel shaders
 	SimplePixelShader* defaultPS = new SimplePixelShader(Config::Device, Config::Context);
@@ -142,6 +138,7 @@ void SceneLoader::LoadShaders()
 	debugLinePS->LoadShaderFile(L"DebugLinePS.cso");
 	pixelShadersMap.insert({ "DebugLine", debugLinePS });
 
+	/*
 	SimplePixelShader* terrainPS = new SimplePixelShader(Config::Device, Config::Context);
 	terrainPS->LoadShaderFile(L"TerrainPS.cso");
 	pixelShadersMap.insert({ "Terrain", terrainPS });
@@ -149,26 +146,12 @@ void SceneLoader::LoadShaders()
 	SimplePixelShader* waterPS = new SimplePixelShader(Config::Device, Config::Context);
 	waterPS->LoadShaderFile(L"WaterPS.cso");
 	pixelShadersMap.insert({ "Water", waterPS });
+	*/
 
 	SimplePixelShader* defaultSSAOPS = new SimplePixelShader(Config::Device, Config::Context);
 	defaultSSAOPS->LoadShaderFile(L"DefaultPS_SSAO.cso");
 	pixelShadersMap.insert({ "DEFAULT_SSAO", defaultSSAOPS });
 	Utility::GenerateSSAOKernel(Config::SSAOSampleCount, Config::SSAOKernel);
-	defaultSSAOPS->SetData(
-		"kernel",
-		&Config::SSAOKernel[0],
-		sizeof(XMFLOAT4) * MAX_KERNEL_SAMPLES
-	);
-	defaultSSAOPS->SetData(
-		"sampleCount",
-		&Config::SSAOSampleCount,
-		sizeof(Config::SSAOSampleCount)
-	);
-	defaultSSAOPS->SetData(
-		"kernelRadius",
-		&Config::SSAOKernelRadius,
-		sizeof(Config::SSAOKernelRadius)
-	);
 }
 
 void SceneLoader::LoadDefaultMeshes()
@@ -204,13 +187,6 @@ void SceneLoader::LoadDefaultMeshes()
 	Mesh torus = Mesh("Torus", "../../Assets/Models/Default/torus.obj", Config::Device);
 	*torusMesh = torus;
 	defaultMeshesMap.insert({ "Torus", torusMesh });
-
-
-	defaultMeshesMap.insert({ "Ground", defaultMeshesMap["Cube"] });
-	defaultMeshesMap.insert({ "Blood_Button", defaultMeshesMap["Cube"] });
-	defaultMeshesMap.insert({ "Wall", defaultMeshesMap["Cube"] });
-	defaultMeshesMap.insert({ "Floor", defaultMeshesMap["Cube"] });
-	defaultMeshesMap.insert({ "Manhole", defaultMeshesMap["Cylinder"] });
 }
 
 void SceneLoader::LoadDefaultTextures()
@@ -279,7 +255,7 @@ void SceneLoader::LoadDefaultMaterials()
 	materialData = {};
 	materialData.DiffuseTextureMapSRV = defaultTexturesMap["Grey"];
 	materialData.SpecularExponent = 500;
-	//materialData.SSAO = true;
+	materialData.SSAO = true;
 	Material greyMaterial = Material("Grey", materialData, ShaderType::DEFAULT, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler);
 	allocatedMaterial = (Material*)EEMemoryAllocator->AllocateToPool(Utility::MATERIAL_POOL, sizeof(Material), success);
 	*allocatedMaterial = greyMaterial;
@@ -288,7 +264,7 @@ void SceneLoader::LoadDefaultMaterials()
 	materialData = {};
 	materialData.DiffuseTextureMapSRV = defaultTexturesMap["Grey4"];
 	materialData.SpecularExponent = 900;
-	//materialData.SSAO = true;
+	materialData.SSAO = true;
 	Material grey4Material = Material("Grey4", materialData, ShaderType::DEFAULT, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler);
 	allocatedMaterial = (Material*)EEMemoryAllocator->AllocateToPool(Utility::MATERIAL_POOL, sizeof(Material), success);
 	*allocatedMaterial = grey4Material;
@@ -297,38 +273,11 @@ void SceneLoader::LoadDefaultMaterials()
 	materialData = {};
 	materialData.DiffuseTextureMapSRV = defaultTexturesMap["White"];
 	materialData.SpecularExponent = 100;
-	//materialData.SSAO = true;
+	materialData.SSAO = true;
 	Material whiteMaterial = Material("White", materialData, ShaderType::DEFAULT, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler);
 	allocatedMaterial = (Material*)EEMemoryAllocator->AllocateToPool(Utility::MATERIAL_POOL, sizeof(Material), success);
 	*allocatedMaterial = whiteMaterial;
 	defaultMaterialsMap.insert({ "White", allocatedMaterial });
-}
-
-void SceneLoader::BuildDefaultEntity(string entityName, string objName, Entity* e)
-{
-	if (objName == "Ground") {
-		e->AddMaterial(defaultMaterialsMap["Grass"], true);
-		XMFLOAT3 s = e->GetScale();
-		e->SetRepeatTexture(s.x / 2.0f, s.z / 2.0f);
-	}
-	if (objName == "Blood_Button") {
-		e->AddMaterial(defaultMaterialsMap["Grey"], true);
-		XMFLOAT3 s = e->GetScale();
-		e->SetRepeatTexture(s.x / 2.0f, s.y / 2.0f);
-	}
-	if (objName == "Wall") {
-		e->AddMaterial(defaultMaterialsMap["White"], true);
-		XMFLOAT3 s = e->GetScale();
-		e->SetRepeatTexture(s.x / 2.0f, s.z / 2.0f);
-	}
-	if (objName == "Floor") {
-		e->AddMaterial(defaultMaterialsMap["Grey4"], true);
-		XMFLOAT3 s = e->GetScale();
-		e->SetRepeatTexture(s.x / 2.0f, s.z / 2.0f);
-	}
-	if (objName == "Manhole") {
-		e->AddMaterial(defaultMaterialsMap["White"], true);
-	}
 }
 
 Utility::MESH_TYPE SceneLoader::AutoLoadOBJMTL(string name)
@@ -403,21 +352,6 @@ Utility::MESH_TYPE SceneLoader::AutoLoadOBJMTL(string name)
 	}
 
 	using namespace Utility;
-
-	regex newMtlRgx("^(newmtl\\s+)");
-	regex ambientColorRgx("^(Ka\\s+)");
-	regex diffuseColorRgx("^(Kd\\s+)");
-	regex specularColorRgx("^(Ks\\s+)");
-	regex specularExpRgx("^(Ns\\s+)");
-	regex dTransparencyRgx("^(d\\s+)");
-	regex trTransparencyRgx("^(Tr\\s+)");
-	regex illuminationRgx("^(illum\\s+)");
-	regex ambientTextureRgx("^(map_Ka\\s+)");
-	regex diffuseTextureRgx("^(map_Kd\\s+)");
-	regex specularColorTextureRgx("^(map_Ks\\s+)");
-	regex specularHighlightTextureRgx("^(map_Ns\\s+)");
-	regex alphaTextureRgx("^(map_d\\s+)");
-	regex normalTextureRgx("^(map_Bump\\s+)");
 
 	bool ongoingMat = false;
 	string ongoingMatName = "";
@@ -617,9 +551,6 @@ void SceneLoader::LoadScene(string sceneName)
 	utilizedMaterialsMap.clear();
 	utilizedTexturesMap.clear();
 
-	//for iterating over each line to get the float values for transformations
-	regex iteratorRegex = regex("-\\d*\\.\\d*|\\d*\\.\\d*|-\\d+|\\d+");
-
 	ifstream infile("../../Assets/Scenes/" + sceneName + ".txt");
 	string line;
 	smatch match;
@@ -630,21 +561,28 @@ void SceneLoader::LoadScene(string sceneName)
 		//cout << line << endl;
 		if (line != "") {
 			//if the line does not start with "//"
-			if (!regex_match(line, regex("//.*"))) {
-				//search for OBJ name at start of line
-				regex_search(line, match, regex("^(\\S+)"));
-				objName = match[0];
+			if (!regex_match(line, commentedLineRegex)) {
+				Utility::MESH_TYPE meshType;
 
-				//load mesh, material, and textures, and if they already exist then mark them as utilized
-				Utility::MESH_TYPE meshType = AutoLoadOBJMTL(objName);
+				//search for OBJ name at start of line
+				if (regex_search(line, match, objNameRegex)) {
+					objName = match[1];
+					//load mesh, material, and textures, and if they already exist then mark them as utilized
+					meshType = AutoLoadOBJMTL(objName);
+				}
+				else
+					meshType = MESH_TYPE::EMPTY_OBJECT;
 
 				Entity someEntity;
 
-				//naming of entity internally
-				string entityName = objName; //temporary, should have entity name in scene file
+				//search for entity name in scene file
+				string originalEntityName = regex_search(line, match, entityNameRegex) ? match[1] : objName;
+				string entityName = originalEntityName;
+
+				//check if entity name already exists, if it does then add (1), (2), etc
 				int sameNameEntityCnt = 1;
 				while (sceneEntitiesMap.count(entityName)) {
-					entityName = objName + " (" + to_string(sameNameEntityCnt) + ")";
+					entityName = originalEntityName + " (" + to_string(sameNameEntityCnt) + ")";
 					sameNameEntityCnt++;
 				}
 
@@ -652,6 +590,11 @@ void SceneLoader::LoadScene(string sceneName)
 				switch (meshType) {
 				case Utility::LOAD_FAILURE:
 					continue;
+				case Utility::EMPTY_OBJECT:
+					if (entityName == "") continue;
+					someEntity = Entity(entityName);
+					someEntity.isEmptyObj = true;
+					break;
 				case Utility::DEFAULT_MESH:
 					someEntity = Entity(entityName, defaultMeshesMap[objName]);
 					break;
@@ -689,39 +632,99 @@ void SceneLoader::LoadScene(string sceneName)
 					}
 				}
 
-				//get the transformation data associated with this entity
-				line = regex_replace(line, regex("^(\\S+ )"), "");
-				std::sregex_iterator iter(line.begin(), line.end(), iteratorRegex);
-				int counter = 0;
-				for (; iter != std::sregex_iterator(); ++iter) {
-					if (counter < 9) {
-						match = *iter;
-						parsedNumbers[counter] = std::stof(match.str());
+				//check for manual material
+				if (meshType == Utility::DEFAULT_MESH) {
+					if (regex_search(line, match, materialNameRegex)) {
+						if (defaultMaterialsMap.count(match[1]))
+							allocatedEntity->AddMaterial(defaultMaterialsMap[match[1]], true);
 					}
-					counter++;
-				}
-				if(allocatedEntity->collisionsEnabled)
-					allocatedEntity->AddAutoBoxCollider();
-				allocatedEntity->SetPosition(parsedNumbers[0], parsedNumbers[1], parsedNumbers[2]);
-				allocatedEntity->SetRotation(DirectX::XMConvertToRadians(parsedNumbers[3]), DirectX::XMConvertToRadians(parsedNumbers[4]), DirectX::XMConvertToRadians(parsedNumbers[5]));
-				allocatedEntity->SetScale(parsedNumbers[6], parsedNumbers[7], parsedNumbers[8]);
-				allocatedEntity->CalcWorldMatrix();
-				allocatedEntity->InitRigidBody(Config::DynamicsWorld, 0.0f);
-				if (Config::EtherealDebugLinesEnabled && allocatedEntity->colliderDebugLinesEnabled) {
-					vector<Collider*> colliders = allocatedEntity->GetColliders();
-					for (size_t d = 0; d < colliders.size(); d++)
-					{
-						DebugLines* dl = new DebugLines(entityName, d);
-						XMFLOAT3 c = XMFLOAT3(1.0f, 0.0f, 0.0f);
-						dl->color = c;
-						dl->worldMatrix = colliders[d]->GetWorldMatrix();
-						XMFLOAT3* colliderCorners = colliders[d]->GetPivotShiftedColliderCorners();
-						dl->GenerateCuboidVertexBuffer(colliderCorners, 8);
+					else {
+						allocatedEntity->AddMaterial(defaultMaterialsMap["DEFAULT"], true);
 					}
 				}
 
-				if (meshType == Utility::DEFAULT_MESH)
-					BuildDefaultEntity(entityName, objName, allocatedEntity);
+				//check for texture repeat
+				if (regex_search(line, match, repeatTextureRegex))
+					allocatedEntity->SetRepeatTexture(std::stof(match[1].str()), std::stof(match[2].str()));
+
+				//check for entity tag
+				if (regex_search(line, match, tagNameRegex))
+					*allocatedEntity->tag = match[1];
+
+				//check for scripts
+				if (regex_search(line, match, scriptNamesRegex)) {
+					string scripts = match[1].str();
+					std::sregex_iterator iter(scripts.begin(), scripts.end(), scriptNamesIteratorRegex);
+					for (; iter != std::sregex_iterator(); ++iter) {
+						match = *iter;
+						string script = match.str();
+						scriptCallback(allocatedEntity, script);
+					}
+				}
+
+				//check for transformation data associated with this entity
+				if (regex_search(line, match, transformationDataRegex)) {
+					string transformData = match[0];
+					std::sregex_iterator iter(transformData.begin(), transformData.end(), transformNumIteratorRegex);
+					int counter = 0;
+					for (; iter != std::sregex_iterator(); ++iter) {
+						if (counter < 9) {
+							match = *iter;
+							parsedNumbers[counter] = std::stof(match.str());
+						}
+						counter++;
+					}
+					allocatedEntity->SetPosition(parsedNumbers[0], parsedNumbers[1], parsedNumbers[2]);
+					allocatedEntity->SetRotation(DirectX::XMConvertToRadians(parsedNumbers[3]), DirectX::XMConvertToRadians(parsedNumbers[4]), DirectX::XMConvertToRadians(parsedNumbers[5]));
+					allocatedEntity->SetScale(parsedNumbers[6], parsedNumbers[7], parsedNumbers[8]);
+					allocatedEntity->CalcWorldMatrix();
+				}
+
+				//check if object is collision enabled
+				if (regex_search(line, match, collidersEnabledRegex)) {
+					string collidersEnabled = match[1];
+					if (collidersEnabled == "true" || collidersEnabled == "TRUE") {
+						allocatedEntity->collisionsEnabled = true;
+						allocatedEntity->AddAutoBoxCollider();
+						float mass = 0.0f;
+						BulletColliderShape collShape = BulletColliderShape::BOX;
+
+						//check if there is a mass
+						if (regex_search(line, match, massRegex)) {
+							mass = std::stof(match[1].str());
+						}
+						
+						//check if there is a collider type
+						if (regex_search(line, match, colliderTypeRegex)) {
+							string collType = match[1];
+							if (bulletColliders.count(collType)) {
+								collShape = bulletColliders[collType];
+							}
+						}
+						allocatedEntity->isCollisionStatic = (mass == 0.0f);
+						allocatedEntity->InitRigidBody(collShape, mass);
+					}
+				}
+				
+				//check for debug lines
+				if (regex_search(line, match, debugRegex)) {
+					string debugEnabled = match[1];
+					if (debugEnabled == "true" || debugEnabled == "TRUE") {
+						allocatedEntity->colliderDebugLinesEnabled = true;
+						if (Config::EtherealDebugLinesEnabled && allocatedEntity->collisionsEnabled) {
+							vector<Collider*> colliders = allocatedEntity->GetColliders();
+							for (size_t d = 0; d < colliders.size(); d++)
+							{
+								DebugLines* dl = new DebugLines(entityName, d);
+								XMFLOAT3 c = XMFLOAT3(1.0f, 0.0f, 0.0f);
+								dl->color = c;
+								dl->worldMatrix = colliders[d]->GetWorldMatrix();
+								XMFLOAT3* colliderCorners = colliders[d]->GetPivotShiftedColliderCorners();
+								dl->GenerateCuboidVertexBuffer(colliderCorners, 8);
+							}
+						}
+					}
+				}
 			}
 		}
 	}
@@ -777,6 +780,11 @@ void SceneLoader::LoadScene(string sceneName)
 void SceneLoader::SetModelPath(string path)
 {
 	modelPath = path;
+}
+
+void SceneLoader::SetScriptLoader(void(*callback)(Entity* e, string script))
+{
+	scriptCallback = callback;
 }
 
 Entity* SceneLoader::CreateEntity(EntityCreationParameters& para)
@@ -864,7 +872,7 @@ Entity* SceneLoader::CreateEntity(EntityCreationParameters& para)
 	if (EERenderer != nullptr && para.drawEntity)
 		EERenderer->AddRenderObject(allocatedEntity, mesh, mat);
 	if (para.initRigidBody)
-		allocatedEntity->InitRigidBody(Config::DynamicsWorld, para.entityMass);
+		allocatedEntity->InitRigidBody(para.bulletColliderShape, para.entityMass);
 
 	if (Config::EtherealDebugLinesEnabled && allocatedEntity->colliderDebugLinesEnabled) {
 		vector<Collider*> colliders = allocatedEntity->GetColliders();
@@ -880,4 +888,34 @@ Entity* SceneLoader::CreateEntity(EntityCreationParameters& para)
 	}
 
 	return allocatedEntity;
+}
+
+void SceneLoader::SplitMeshIntoChildEntities(Entity* e, float componentMass)
+{
+	int meshChildCnt = e->GetMeshChildCount();
+	if (meshChildCnt == 0) return;
+	bool success;
+	Mesh** children = e->GetMesh()->GetChildren();
+	for (size_t i = 0; i < meshChildCnt; i++)
+	{
+		Entity newE(children[i]->GetName(), children[i], e->GetMaterial(e->GetMeshMaterialName(i)));
+		Entity* allocatedEntity = (Entity*)EEMemoryAllocator->AllocateToPool(Utility::ENTITY_POOL, sizeof(Entity), success);
+		*allocatedEntity = newE;
+		//e->AddChildEntity(allocatedEntity);
+		//e->CalcWorldMatrix();
+		allocatedEntity->SetPosition(e->GetPosition());
+		XMFLOAT3 r = e->GetEulerAngles();
+		r.y += DirectX::XM_PI;
+		allocatedEntity->SetRotation(r);
+		//allocatedEntity->SetRotation(e->GetRotationQuaternion());
+		allocatedEntity->SetScale(e->GetScale());
+		allocatedEntity->CalcWorldMatrix();
+		allocatedEntity->AddAutoBoxCollider();
+		allocatedEntity->InitRigidBody(BulletColliderShape::BOX, componentMass);
+		sceneEntitiesMap.insert({ children[i]->GetName(), allocatedEntity });
+		sceneEntities.push_back(allocatedEntity);
+		EERenderer->AddRenderObject(allocatedEntity, children[i], e->GetMaterial(e->GetMeshMaterialName(i)));
+	}
+	//e->EmptyEntity();
+	e->Destroy();
 }

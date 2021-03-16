@@ -4,6 +4,7 @@
 
 void FPSController::Init()
 {
+	eMap = ScriptManager::sceneEntitiesMap;
 	cam = ScriptManager::EERenderer->GetCamera("main");
 	direction = cam->direction; 
 

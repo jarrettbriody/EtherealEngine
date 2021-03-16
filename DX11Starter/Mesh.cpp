@@ -539,3 +539,8 @@ void Mesh::AllocateChildren()
 		//childrenVec = nullptr;
 	}
 }
+
+string Mesh::GetName()
+{
+	return *meshName;
+}

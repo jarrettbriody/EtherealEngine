@@ -11,6 +11,16 @@ struct ShadowData {
 	ID3D11SamplerState* shadowSampler = nullptr;
 };
 
+struct DepthStencilData {
+	ID3D11ShaderResourceView* depthStencilSRV = nullptr;
+	ID3D11SamplerState* depthStencilSampler = nullptr;
+};
+
+enum class BulletColliderShape {
+	BOX,
+	CAPSULE,
+};
+
 using namespace std;
 //using namespace DirectX;
 
@@ -35,24 +45,28 @@ private:
 	bool shadowsEnabled = true;
 	ShadowData shadowData;
 
+	DepthStencilData depthStencilData;
+
 	float mass;
 
 	btCompoundShape* compoundShape = nullptr;
-	btCollisionShape* collShape = nullptr;
+	btCollisionShape** collShape = nullptr;
 	btRigidBody* rBody = nullptr;
-	btDiscreteDynamicsWorld* dynamicsWorld = nullptr;
+
+	int colliderCnt = 0;
 public:
 	bool destroyed = false;
 	bool isCollisionStatic = true;
-	bool collisionsEnabled = true;
-	bool colliderDebugLinesEnabled = true;
+	bool collisionsEnabled = false;
+	bool colliderDebugLinesEnabled = false;
 	bool isEmptyObj = false;
+	string* tag;
 	Entity();
 	Entity(string entityName);
 	Entity(string entityName, Mesh* entityMesh, Material* mat = nullptr);
 	~Entity();
 	void operator= (const Entity& e);
-	void InitRigidBody(btDiscreteDynamicsWorld* dw, float entityMass);
+	void InitRigidBody(BulletColliderShape shape, float entityMass);
 	DirectX::XMFLOAT4X4 GetWorldMatrix();
 	DirectX::XMFLOAT3 GetPosition();
 	DirectX::XMFLOAT3 GetScale();
@@ -70,6 +84,7 @@ public:
 	void CalcEulerAngles();
 	void SetRepeatTexture(float x, float y);
 	void SetShadowData(ShadowData shadowData);
+	void SetDepthStencilData(DepthStencilData depthStencilData);
 	void SetMeshAndMaterial(Mesh* mesh, Material* mat = nullptr);
 	void ToggleShadows(bool toggle);
 	void Move(XMFLOAT3 f);
@@ -94,6 +109,10 @@ public:
 	vector<Collider*> GetColliders();
 	btRigidBody* GetRBody();
 	Collider* GetCollider(int index = 0);
+	btCollisionShape* GetBTCollisionShape(int index);
+	btCompoundShape* GetBTCompoundShape(int index);
+	float GetMass();
+	void EmptyEntity();
 	void Destroy();
 	void FreeMemory();
 };

@@ -1,7 +1,7 @@
 #include "Lighting.hlsli"
 
 #define MAX_LIGHTS 32
-#define MAX_KERNEL_SAMPLES 128
+#define MAX_KERNEL_SAMPLES 32
 
 
 
@@ -23,7 +23,6 @@ struct VertexToPixel
 	float3 worldPos		: POSITION;
 	float3 tangent		: TANGENT;
 	float4 posForShadow : SHADOW;
-	float4 posForSSAO	: SSAO;
 };
 
 cbuffer lightCBuffer : register(b0)
@@ -42,20 +41,27 @@ cbuffer externalData : register(b2) {
 	float3 cameraPosition;
 	int illumination;
 	float3 manualColor;
-}
+	matrix ssaoView;
+	matrix ssaoProjection;
+};
 
 cbuffer ssaoKernel : register(b3) {
 	float4 kernel[MAX_KERNEL_SAMPLES];
 	unsigned int sampleCount;
 	float kernelRadius;
-}
+};
 
 Texture2D DiffuseTexture  :  register(t0);
 
 Texture2D ShadowMap		  : register(t1);
 
+Texture2D DepthStencilMap : register(t2);
+
 SamplerState BasicSampler               : register(s0);
+
 SamplerComparisonState ShadowSampler	: register(s1);
+
+SamplerState DepthStencilSampler	: register(s2);
 
 // --------------------------------------------------------
 // The entry point (main method) for our pixel shader
@@ -113,21 +119,45 @@ float4 main(VertexToPixel input) : SV_TARGET
 		}
 	}
 
-	/*
 	float ambientAccessibility = 1.0f;
 	float ambientScalar = 1.0f;
-	float sampleWeight = 0.5f / sampleCount;
+	//float sampleWeight = 0.25f / sampleCount;
 	float4 kernelSample;
+
+	float2 pixelDepthStencilUV = input.position.xy / input.position.w * 0.5f + 0.5f;
+
 	for (int i = 0; i < sampleCount; i++)
 	{
 		kernelSample = float4(kernel[i].xyz * kernelRadius, 1.0f);
-		kernelSample = mul(kernelSample, input.ssaoWVP);
-		if ((kernelSample.z) > (input.position.z)) {
-			ambientAccessibility -= sampleWeight;
-		}
+		kernelSample = float4(input.worldPos.xyz + kernelSample.xyz, 1.0f);
+		kernelSample = mul(mul(kernelSample, ssaoView), ssaoProjection);
+
+		// SSAO calculations
+		float2 ssaoUV = kernelSample.xy / kernelSample.w * 0.5f + 0.5f;
+		ssaoUV.y = 1.0f - ssaoUV.y;
+
+		// This sample point's actual depth
+		float depth = kernelSample.z / kernelSample.w;
+
+		// Sample the shadow map in the same location to get
+		// the closest depth along that "ray" from the light
+		// (Samples the shadow map with comparison built in)
+		//float result = DepthStencilMap.SampleCmpLevelZero(DepthStencilSampler, ssaoUV, depth);
+
+		//ambientAccessibility *= result;
 	}
 
-	finalColor *= ambientAccessibility * ambientScalar;
+	if (ambientAccessibility < 0.25f) ambientAccessibility = 0.25f;
+
+	//finalColor = finalColor.xyz * ambientAccessibility * ambientScalar;
+
+	pixelDepthStencilUV.y = 1.0f - pixelDepthStencilUV.y;
+	float4 depthBuffer = DepthStencilMap.Sample(DepthStencilSampler, pixelDepthStencilUV);
+	finalColor = depthBuffer.xyz;
+
+	//finalColor = kernel[31];
+
+	//finalColor.xyz = ambientAccessibility / 4.0f;
 
 	//float4 v = mul(float4(kernel[0].xyz, 1.0f), input.ssaoWVP);
 	//finalColor = float3(v.z / v.w, v.z / v.w, v.z/ v.w);
@@ -136,7 +166,6 @@ float4 main(VertexToPixel input) : SV_TARGET
 
 	//finalColor = float3(input.ssaoWVP.x, input.ssaoWVP.y, input.ssaoWVP.z);
 
-	*/
 
 	float3 gammaCorrect = pow(abs(finalColor), 1.0f / 2.2f);
 

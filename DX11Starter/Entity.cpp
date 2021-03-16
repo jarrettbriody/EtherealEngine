@@ -9,6 +9,7 @@ Entity::Entity()
 Entity::Entity(string entityName)
 {
 	name = new string();
+	tag = new string();
 	materialMap = new map<string, Material*>;
 	children = new vector<Entity*>;
 	colliders = new vector<Collider*>;
@@ -29,6 +30,7 @@ Entity::Entity(string entityName)
 Entity::Entity(string entityName, Mesh* entityMesh, Material* mat)
 {
 	name = new string();
+	tag = new string();
 	materialMap = new map<string, Material*>;
 	children = new vector<Entity*>;
 	colliders = new vector<Collider*>;
@@ -59,15 +61,20 @@ Entity::~Entity()
 		colliders->empty();
 	}
 
-	if(dynamicsWorld != nullptr)
-		dynamicsWorld->removeCollisionObject(rBody);
-	if (rBody != nullptr) {
+	if(Config::DynamicsWorld != nullptr && rBody != nullptr)
+	{
+		Config::DynamicsWorld->removeCollisionObject(rBody);
 		delete rBody->getMotionState();
 		delete rBody;
 	}
 	
-	if(collShape != nullptr)
-		delete collShape;
+	if (collShape != nullptr) {
+		for (size_t i = 0; i < colliderCnt; i++)
+		{
+			delete collShape[i];
+		}
+		delete[] collShape;
+	}
 
 	if (compoundShape != nullptr)
 		delete compoundShape;
@@ -85,6 +92,7 @@ Entity::~Entity()
 		delete colliders;
 
 	delete name;
+	delete tag;
 }
 
 void Entity::operator=(const Entity& e)
@@ -93,8 +101,10 @@ void Entity::operator=(const Entity& e)
 	materialMap = new map<string, Material*>();
 	children = new vector<Entity*>();
 	colliders = new vector<Collider*>();
+	tag = new string();
 
 	*name = *e.name;
+	*tag = *e.tag;
 	*children = vector<Entity*>(*e.children);
 	*colliders = vector<Collider*>(*e.colliders);
 	*materialMap = map<string, Material*>(*e.materialMap);
@@ -113,59 +123,79 @@ void Entity::operator=(const Entity& e)
 	collShape = e.collShape;
 	compoundShape = e.compoundShape;
 	rBody = e.rBody;
-	dynamicsWorld = e.dynamicsWorld;
 	destroyed = e.destroyed;
 	isCollisionStatic = e.isCollisionStatic;
 	collisionsEnabled = e.collisionsEnabled;
 	colliderDebugLinesEnabled = e.colliderDebugLinesEnabled;
 	isEmptyObj = e.isEmptyObj;
 	meshMaterialIndex = e.meshMaterialIndex;
+	colliderCnt = e.colliderCnt;
 }
 
-void Entity::InitRigidBody(btDiscreteDynamicsWorld* dw, float entityMass)
+void Entity::InitRigidBody(BulletColliderShape shape, float entityMass)
 {
-	dynamicsWorld = dw;
+	assert(colliderCnt > 0);
+
 	mass = entityMass;
 
+	collShape = new btCollisionShape * [colliderCnt];
+	
+	if (colliderCnt > 1) {
+		compoundShape = new btCompoundShape();
+	}
+
 	// Physics set-up
-	if (colliders->size() > 0) {
-		XMFLOAT3 span = (*colliders)[0]->GetHalfWidth();
+	for (size_t i = 0; i < colliderCnt; i++)
+	{
+		XMFLOAT3 span = (*colliders)[i]->GetHalfWidth();
 		XMVECTOR spanVec = XMLoadFloat3(&span);
 		spanVec = XMVectorScale(spanVec, 1.0f);
 		XMStoreFloat3(&span, spanVec);
-		XMFLOAT3 centerLocal = (*colliders)[0]->GetCenterLocal(); // we ar enot using this anywhere currently? 
+		XMFLOAT3 centerLocal = (*colliders)[i]->GetCenterLocal();
 		XMVECTOR centerLocalCalc = XMLoadFloat3(&centerLocal);
 		centerLocalCalc = XMVector3Length(centerLocalCalc);
 		XMFLOAT3 res;
 		XMStoreFloat3(&res, centerLocalCalc);
-		float mag = res.x; 
+		float mag = res.x;
 
+		/*
 		if (*name == "FPSController") { // give the FPS controller a capsule collider shape
 			// btVector3(btScalar(span.x * scale.x), btScalar(span.y * scale.y), btScalar(span.z * scale.z)
 			this->collShape = new btCapsuleShape(btScalar(span.x), btScalar(span.y));
 		}
+
 		else {
 			//this->collShape = new btBoxShape(btVector3(btScalar(span.x * scale.x), btScalar(span.y * scale.y), btScalar(span.z * scale.z)));
 			this->collShape = new btBoxShape(btVector3(btScalar(span.x), btScalar(span.y), btScalar(span.z)));
 		}
+		*/
 
-		if (mag > 0.001f) {
-			this->compoundShape = new btCompoundShape();
+		switch (shape)
+		{
+		case BulletColliderShape::BOX:
+			collShape[i] = new btBoxShape(btVector3(btScalar(span.x), btScalar(span.y), btScalar(span.z)));
+			break;
+		case BulletColliderShape::CAPSULE:
+			collShape[i] = new btCapsuleShape(btScalar(span.x), btScalar(span.y));
+			break;
+		default:
+			break;
+		}
+
+		collShape[i]->setUserPointer((*colliders)[i]);
+
+		if (mag > 0.001f || this->compoundShape != nullptr) {
+			if(this->compoundShape == nullptr) this->compoundShape = new btCompoundShape();
 			btTransform localTransform;
 			localTransform.setIdentity();
 			localTransform.setOrigin(btVector3(centerLocal.x, centerLocal.y, centerLocal.z));
-			this->compoundShape->addChildShape(localTransform,this->collShape);
-			this->compoundShape->setLocalScaling(btVector3(scale.x, scale.y, scale.z));
+			this->compoundShape->addChildShape(localTransform, this->collShape[i]);
 		}
 		else {
-			this->collShape->setLocalScaling(btVector3(scale.x, scale.y, scale.z));
+			collShape[i]->setLocalScaling(btVector3(scale.x, scale.y, scale.z));
 		}
-		
-		
 	}
-	else {
-		this->collShape = new btBoxShape(btVector3(btScalar(scale.x), btScalar(scale.y), btScalar(scale.z)));
-	}
+
 	btTransform transform;
 	transform.setIdentity();
 	//XMFLOAT3 centerLocal = GetCollider()->GetCenterLocal();
@@ -187,19 +217,32 @@ void Entity::InitRigidBody(btDiscreteDynamicsWorld* dw, float entityMass)
 	bool isDynamic = (mass != 0.0f);
 
 	btVector3 localInertia(0, 0, 0);
-	if (isDynamic)
-		collShape->calculateLocalInertia(mass, localInertia);
+	if (isDynamic) {
+		for (size_t i = 0; i < colliderCnt; i++)
+		{
+			collShape[i]->calculateLocalInertia(mass, localInertia);
+		}
+	}
 
 	btDefaultMotionState* myMotionState = new btDefaultMotionState(transform);
 
 	if (compoundShape == nullptr) {
-		btRigidBody::btRigidBodyConstructionInfo rbInfo(mass, myMotionState, collShape, localInertia);
-		this->rBody = new btRigidBody(rbInfo);
+		for (size_t i = 0; i < colliderCnt; i++)
+		{
+			btRigidBody::btRigidBodyConstructionInfo rbInfo(mass, myMotionState, collShape[i], localInertia);
+			this->rBody = new btRigidBody(rbInfo);
+		}
+		
 	}
 	else {
+		this->compoundShape->setLocalScaling(btVector3(scale.x, scale.y, scale.z));
+		this->compoundShape->setUserPointer(colliders);
 		btRigidBody::btRigidBodyConstructionInfo rbInfo(mass, myMotionState, compoundShape, localInertia);
 		this->rBody = new btRigidBody(rbInfo);
 	}
+
+
+	rBody->setFriction(0.7f);
 
 	/*rBody->setActivationState(DISABLE_DEACTIVATION);
 	rBody->setMassProps(mass, localInertia);*/
@@ -215,7 +258,7 @@ void Entity::InitRigidBody(btDiscreteDynamicsWorld* dw, float entityMass)
 	// TODO: Change this to a struct with everything included (name, entity pointer, tag)
 	rBody->setUserPointer((void*)(this));
 
-	dynamicsWorld->addRigidBody(rBody);
+	Config::DynamicsWorld->addRigidBody(rBody);
 }
 
 DirectX::XMFLOAT4X4 Entity::GetWorldMatrix()
@@ -347,6 +390,11 @@ void Entity::SetShadowData(ShadowData shadowData)
 	this->shadowData = shadowData;
 }
 
+void Entity::SetDepthStencilData(DepthStencilData depthStencilData)
+{
+	this->depthStencilData = depthStencilData;
+}
+
 void Entity::SetMeshAndMaterial(Mesh* mesh, Material* mat)
 {
 	this->mesh = mesh;
@@ -445,12 +493,6 @@ void Entity::PrepareMaterialForDraw(string n, DirectX::XMFLOAT4X4 view, DirectX:
 	vs->SetMatrix4x4("view", view);
 	vs->SetMatrix4x4("projection", proj);
 
-	if ((*materialMap)[n]->GetMaterialData().SSAO) {
-		ps->SetMatrix4x4("world", GetWorldMatrix());
-		ps->SetMatrix4x4("view", view);
-		ps->SetMatrix4x4("projection", proj);
-	}
-
 	ps->SetData(
 		"uvMult",
 		&repeatTex,
@@ -462,6 +504,13 @@ void Entity::PrepareMaterialForDraw(string n, DirectX::XMFLOAT4X4 view, DirectX:
 		vs->SetMatrix4x4("shadowProj", shadowData.shadowProjectionMatrix);
 		ps->SetShaderResourceView("ShadowMap", shadowData.shadowSRV);
 		ps->SetSamplerState("ShadowSampler", shadowData.shadowSampler);
+	}
+
+	if (Config::SSAOEnabled && (*materialMap)[n]->GetMaterialData().SSAO) {
+		ps->SetMatrix4x4("ssaoView", view);
+		ps->SetMatrix4x4("ssaoProjection", proj);
+		ps->SetShaderResourceView("DepthStencilMap", depthStencilData.depthStencilSRV);
+		ps->SetSamplerState("DepthStencilSampler", depthStencilData.depthStencilSampler);
 	}
 
 	(*materialMap)[n]->Prepare();
@@ -520,19 +569,21 @@ void Entity::AddAutoBoxCollider()
 			Mesh** children = mesh->GetChildren();
 			for (size_t i = 0; i < mesh->GetChildCount(); i++)
 			{
-				colliders->push_back(new Collider(children[i]->GetVertices()));
+				colliders->push_back(new Collider(children[i], children[i]->GetVertices()));
 			}
 		}
 		else {
-			colliders->push_back(new Collider(mesh->GetVertices()));
+			colliders->push_back(new Collider(mesh, mesh->GetVertices()));
 		}
 	}
 	else {
 		vector<XMFLOAT3> v;
 		v.push_back(XMFLOAT3(1.0f, 1.0f, 1.0f));
 		v.push_back(XMFLOAT3(-1.0f, -1.0f, -1.0f));
-		colliders->push_back(new Collider(v));
+		colliders->push_back(new Collider(nullptr, v));
 	}
+
+	colliderCnt = colliders->size();
 }
 
 bool Entity::CheckSATCollision(Entity* other)
@@ -604,6 +655,32 @@ Collider* Entity::GetCollider(int index)
 	return (*colliders)[index];
 }
 
+btCollisionShape* Entity::GetBTCollisionShape(int index)
+{
+	if(index >= colliderCnt || index < 0) return nullptr;
+	return collShape[index];
+}
+
+btCompoundShape* Entity::GetBTCompoundShape(int index)
+{
+	if(compoundShape == nullptr || index >= colliderCnt || index < 0) return nullptr;
+	return compoundShape;
+}
+
+float Entity::GetMass()
+{
+	return mass;
+}
+
+void Entity::EmptyEntity()
+{
+	if (Config::DynamicsWorld != nullptr) {
+		Config::DynamicsWorld->removeCollisionObject(rBody);
+	}
+		
+	this->isEmptyObj = true;
+}
+
 void Entity::Destroy()
 {
 	this->destroyed = true;
@@ -623,15 +700,20 @@ void Entity::FreeMemory()
 		colliders->empty();
 	}
 
-	if (dynamicsWorld != nullptr)
-		dynamicsWorld->removeCollisionObject(rBody);
-	if (rBody != nullptr) {
+	if (Config::DynamicsWorld != nullptr && rBody != nullptr)
+	{
+		Config::DynamicsWorld->removeCollisionObject(rBody);
 		delete rBody->getMotionState();
 		delete rBody;
 	}
 
-	if (collShape != nullptr)
-		delete collShape;
+	if (collShape != nullptr) {
+		for (size_t i = 0; i < colliderCnt; i++)
+		{
+			delete collShape[i];
+		}
+		delete[] collShape;
+	}
 
 	if (compoundShape != nullptr)
 		delete compoundShape;
@@ -649,6 +731,7 @@ void Entity::FreeMemory()
 		delete colliders;
 
 	delete name;
+	delete tag;
 }
 
 

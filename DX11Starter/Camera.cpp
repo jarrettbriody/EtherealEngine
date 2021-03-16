@@ -4,7 +4,7 @@
 
 Camera::Camera()
 {
-	position = XMFLOAT3(0.0f, 50.0f, -200.0f);
+	position = XMFLOAT3(-410.543f, 30.0f, -90.21f);
 	direction = XMFLOAT3(0.0f, 0.0f, 1.0f);
 	XMVECTOR dir = XMLoadFloat3(&direction);
 	dir = XMVector3Normalize(dir);

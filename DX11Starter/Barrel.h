@@ -12,5 +12,7 @@ class TestScript : public ScriptManager
 	void Init();
 
 	void Update();
+
+	void OnCollision(btCollisionObject* other);
 };
 

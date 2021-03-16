@@ -11,10 +11,42 @@ using namespace std;
 
 #define MAX_LIGHTS 32
 
+struct RendererShaders {
+	SimpleVertexShader* depthStencilVS = nullptr;
+	SimpleVertexShader* debugLineVS = nullptr;
+	SimplePixelShader* debugLinePS = nullptr;
+};
+
 struct RenderObject{
 	Entity* entity;
 	Mesh* mesh;
 	Material* material;
+};
+
+struct ShadowComponents {
+	unsigned int shadowMapResolution = 2048;
+	ID3D11DepthStencilView* shadowDSV;
+	ID3D11ShaderResourceView* shadowSRV;
+	ID3D11SamplerState* shadowSampler;
+	ID3D11RasterizerState* shadowRasterizer;
+
+	DirectX::XMFLOAT4X4 shadowViewMatrix;
+	DirectX::XMFLOAT4X4 shadowProjectionMatrix;
+};
+
+struct DepthStencilComponents {
+	ID3D11DepthStencilView* depthStencilDSV;
+	ID3D11ShaderResourceView* depthStencilSRV;
+	ID3D11SamplerState* depthStencilSampler;
+	ID3D11RasterizerState* depthStencilRasterizer;
+};
+
+struct HBAOPlusComponents {
+	GFSDK_SSAO_CustomHeap CustomHeap;
+	GFSDK_SSAO_Status status;
+	GFSDK_SSAO_Context_D3D11* pAOContext;
+	GFSDK_SSAO_InputData_D3D11 Input;
+	GFSDK_SSAO_Parameters_D3D11 Params;
 };
 
 class Renderer
@@ -27,6 +59,8 @@ private:
 	int renderObjectCount = 0;
 	int maxRenderObjects = 0;
 
+	RendererShaders shaders;
+
 	Camera* camera = nullptr;
 	map<string, Camera*> cameras;
 	unsigned int cameraCount = 0;
@@ -34,18 +68,10 @@ private:
 	map<string, Light*> lights;
 	//map<string, Shadow> shadows;
 	unsigned int lightCount = 0;
-	bool shadowsEnabled = true;
 
-	unsigned int shadowMapResolution = 2048;
-	ID3D11DepthStencilView* shadowDSV;
-	ID3D11ShaderResourceView* shadowSRV;
-	ID3D11SamplerState* shadowSampler;
-	ID3D11RasterizerState* shadowRasterizer;
-	SimpleVertexShader* shadowVS = nullptr;
-	SimpleVertexShader* debugLineVS = nullptr;
-	SimplePixelShader* debugLinePS = nullptr;
-	DirectX::XMFLOAT4X4 shadowViewMatrix;
-	DirectX::XMFLOAT4X4 shadowProjectionMatrix;
+	ShadowComponents shadowComponents;
+	DepthStencilComponents depthStencilComponents;
+	HBAOPlusComponents hbaoPlusComponents;
 
 	Renderer();
 	~Renderer();
@@ -55,12 +81,13 @@ public:
 	static bool DestroyInstance();
 
 	void SetEntities(vector<Entity*>* entities);
-	void SetShadowVertexShader(SimpleVertexShader* shadowVS);
-	void SetDebugLineVertexShader(SimpleVertexShader* debugLineVS);
-	void SetDebugLinePixelShader(SimplePixelShader* debugLinePS);
+	void SetRendererShaders(RendererShaders rShaders);
 
+	void InitDepthStencil();
+
+	void InitHBAOPlus();
+	
 	void InitShadows();
-	void ToggleShadows(bool toggle);
 	void SetShadowMapResolution(unsigned int res);
 
 	void ClearFrame();
@@ -68,6 +95,7 @@ public:
 	void PresentFrame();
 	void RenderDebugLines();
 	void RenderShadowMap();
+	void RenderDepthStencil();
 
 	bool AddCamera(string name, Camera* newCamera);
 	bool RemoveCamera(string name);
@@ -78,6 +106,8 @@ public:
 	bool RemoveLight(std::string name);
 	void SendAllLightsToShader(SimplePixelShader* pixelShader);
 	Light* GetLight(string name);
+
+	void SendSSAOKernelToShader(SimplePixelShader* pixelShader);
 
 	void AddRenderObject(Entity* e, Mesh* mesh, Material* mat = nullptr);
 };

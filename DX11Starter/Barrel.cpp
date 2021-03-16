@@ -3,13 +3,16 @@
 
 void TestScript::Init()
 {
+	/*
 	cout << "initializing barrel" << endl;
 	(*eMap)["barrel_1"]->isCollisionStatic = false;
 	(*eMap)["barrel_1 (2)"]->isCollisionStatic = false;
+	*/
 }
 
 void TestScript::Update()
 {
+	/*
 	//collision barrels
 	if (GetAsyncKeyState(VK_LEFT))
 	{
@@ -60,4 +63,11 @@ void TestScript::Update()
 	if (GetAsyncKeyState('L') & 0x8000) {
 		entity->Destroy();
 	}
+	*/
+}
+
+void TestScript::OnCollision(btCollisionObject* other)
+{
+	Entity* otherE = (Entity*)other->getUserPointer();
+	cout << otherE->GetName() << endl;
 }

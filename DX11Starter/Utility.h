@@ -5,8 +5,9 @@
 namespace Utility {
 	enum MESH_TYPE {
 		LOAD_FAILURE = -1,
-		DEFAULT_MESH = 0,
-		GENERATED_MESH = 1,
+		EMPTY_OBJECT = 0,
+		DEFAULT_MESH = 1,
+		GENERATED_MESH = 2,
 	};
 
 	enum MEMORY_POOL {
@@ -78,16 +79,16 @@ namespace Utility {
 		return (rad * 180.0f) / DirectX::XM_PI;
 	}
 
-	static void GenerateSSAOKernel(unsigned int sampleCount, std::vector<DirectX::XMFLOAT4>& kernel) {
-		kernel.reserve(sampleCount);
+	static void GenerateSSAOKernel(unsigned int sampleCount, DirectX::XMFLOAT4* kernel) {
+		//kernel.reserve(sampleCount);
 		DirectX::XMVECTOR calculableVector;
 		for (size_t i = 0; i < sampleCount; i++)
 		{
 			const float x = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
 			const float y = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
 			const float z = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
-			kernel.push_back(DirectX::XMFLOAT4(x, y, z, 1.0f));
-			DirectX::XMFLOAT4& currentSample = kernel.back();
+			kernel[i] = DirectX::XMFLOAT4(x, y, z, 1.0f);
+			DirectX::XMFLOAT4& currentSample = kernel[i];
 			calculableVector = DirectX::XMLoadFloat4(&currentSample);
 			calculableVector = DirectX::XMVector4Normalize(calculableVector);
 			const float scalar = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
