@@ -22,13 +22,12 @@ bool Keyboard::OnKeyDown(const unsigned char keycode)
 	}
 	else // look up the keycode and return boolean if it is pressed or not
 	{
-		/*std::unordered_map<unsigned char, KeyboardEvent>::iterator it = this->keyBuffer.find(keycode);
-
-		KeyboardEvent e = it->second;
-		if (it != keyBuffer.end()) 
-			this->keyBuffer.erase(it);*/
-		bool pressed = this->keyBuffer.find(keycode)->second.IsPress();
-		this->keyBuffer.erase(keycode);
+		bool pressed = false;
+		if (this->keyBuffer.count(keycode))
+		{
+			pressed = this->keyBuffer[keycode].IsPress();
+			this->keyBuffer.erase(keycode);
+		}
 		return pressed;
 	}
 }
@@ -41,8 +40,12 @@ bool Keyboard::OnKeyUp(const unsigned char keycode)
 	}
 	else // look up the keycode and return boolean if it is released or not
 	{
-		bool released = this->keyBuffer.find(keycode)->second.IsRelease();
-		this->keyBuffer.erase(keycode);
+		bool released = false;
+		if (this->keyBuffer.count(keycode))
+		{
+			released = this->keyBuffer[keycode].IsRelease();
+			this->keyBuffer.erase(keycode);
+		}
 		return released;
 	}
 }
@@ -55,13 +58,13 @@ bool Keyboard::KeyBufferIsEmpty()
 void Keyboard::RegisterKeyPress(const unsigned char key)
 {
 	this->keyStates[key] = true;
-	this->keyBuffer.insert(std::pair<unsigned char, KeyboardEvent>(key,KeyboardEvent(KeyboardEvent::EventType::Press, key)));
+	this->keyBuffer.insert({key, KeyboardEvent(KeyboardEvent::EventType::Press, key)});
 }
 
 void Keyboard::RegisterKeyRelease(const unsigned char key)
 {
 	this->keyStates[key] = false;
-	this->keyBuffer.insert(std::pair<unsigned char, KeyboardEvent>(key, KeyboardEvent(KeyboardEvent::EventType::Release, key)));
+	this->keyBuffer.insert({key, KeyboardEvent(KeyboardEvent::EventType::Release, key)});
 }
 
 void Keyboard::EnableAutoRepeatKeys()

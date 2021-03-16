@@ -101,7 +101,7 @@ void FPSController::Move()
 	if (DXCore::keyboard.KeyIsPressed(0x44)) {
 		controllerVelocity += btVector3(right.x, 0, right.z) * -spd;
 	}
-	if (DXCore::keyboard.OnKeyDown(VK_SPACE)) { // TODO: Need to detect input for a single keypress down for double jump (probably other things too)
+	if (DXCore::keyboard.OnKeyDown(VK_SPACE)) { 
 		if (!midAir || midAir && jumpCount < 2) {
 			playerRBody->applyCentralImpulse(btVector3(0, 30.0f, 0));
 			midAir = true;
