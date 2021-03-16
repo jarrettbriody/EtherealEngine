@@ -18,6 +18,7 @@
 #include "ScriptManager.h"
 #include "Scripts.h"
 #include "DebugLines.h"
+#include "DecalHandler.h"
 
 using namespace std;
 
@@ -61,6 +62,7 @@ private:
 	Renderer* EERenderer = nullptr;
 	SceneLoader* EESceneLoader = nullptr;
 	MemoryAllocator* EEMemoryAllocator = nullptr;
+	DecalHandler* EEDecalHandler = nullptr;
 	
 	//testing
 	Light* testLight = nullptr;

@@ -31,6 +31,7 @@ Entity::Entity(string entityName, Mesh* entityMesh, Material* mat)
 {
 	name = new string();
 	tag = new string();
+	layer = new string();
 	materialMap = new map<string, Material*>;
 	children = new vector<Entity*>;
 	colliders = new vector<Collider*>;
@@ -93,6 +94,7 @@ Entity::~Entity()
 
 	delete name;
 	delete tag;
+	delete layer;
 }
 
 void Entity::operator=(const Entity& e)
@@ -102,9 +104,11 @@ void Entity::operator=(const Entity& e)
 	children = new vector<Entity*>();
 	colliders = new vector<Collider*>();
 	tag = new string();
+	layer = new string();
 
 	*name = *e.name;
 	*tag = *e.tag;
+	*layer = *e.layer;
 	*children = vector<Entity*>(*e.children);
 	*colliders = vector<Collider*>(*e.colliders);
 	*materialMap = map<string, Material*>(*e.materialMap);
@@ -478,6 +482,26 @@ void Entity::CalcWorldMatrix()
 	} 
 }
 
+XMMATRIX Entity::CalcWorldToModelMatrix()
+{
+	XMMATRIX worldToModel;
+	XMVECTOR t = XMLoadFloat3(&position);
+	XMVECTOR r = XMLoadFloat4(&quaternion);
+	XMVECTOR s = XMLoadFloat3(&scale);
+	t = XMVectorScale(t, -1.0f);
+	s = XMVectorReciprocal(s);
+
+	XMMATRIX trans = XMMatrixTranslationFromVector(t);
+
+	XMMATRIX rot = XMMatrixRotationQuaternion(r);
+	rot = XMMatrixTranspose(rot);
+
+	XMMATRIX scl = XMMatrixScalingFromVector(s);
+
+	worldToModel = scl * rot * trans;
+	return worldToModel;
+}
+
 void Entity::PrepareMaterialForDraw(string n, DirectX::XMFLOAT4X4 view, DirectX::XMFLOAT4X4 proj)
 {
 	SimpleVertexShader* vs = (*materialMap)[n]->GetVertexShader();
@@ -731,6 +755,7 @@ void Entity::FreeMemory()
 
 	delete name;
 	delete tag;
+	delete layer;
 }
 
 

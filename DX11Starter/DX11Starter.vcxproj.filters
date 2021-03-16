@@ -37,6 +37,9 @@
     <FxCompile Include="DepthStencilVS.hlsl">
       <Filter>EEShaders\Vertex Shaders</Filter>
     </FxCompile>
+    <FxCompile Include="DefaultDecalPS.hlsl">
+      <Filter>EEShaders\Pixel Shaders</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Camera.cpp">
@@ -94,6 +97,9 @@
       <Filter>EEScripts\Source</Filter>
     </ClCompile>
     <ClCompile Include="pch.cpp">
+      <Filter>EECore\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DecalHandler.cpp">
       <Filter>EECore\Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -167,6 +173,9 @@
     <ClInclude Include="FPSController.h">
       <Filter>EEScripts\Headers</Filter>
     </ClInclude>
+    <ClInclude Include="DecalHandler.h">
+      <Filter>EECore\Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Lighting.hlsli">
@@ -174,6 +183,9 @@
     </None>
     <None Include="packages.config">
       <Filter>Other</Filter>
+    </None>
+    <None Include="Decals.hlsli">
+      <Filter>EEShaders\Pixel Shaders</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

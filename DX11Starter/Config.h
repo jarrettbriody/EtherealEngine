@@ -1,5 +1,30 @@
 #pragma once
 #include "pch.h"
+
+//define macros
+#define ZERO_VECTOR3 XMFLOAT3(0.0f,0.0f,0.0f)
+#define X_AXIS XMFLOAT3(1.0f,0.0f,0.0f)
+#define Y_AXIS XMFLOAT3(0.0f,1.0f,0.0f)
+#define Z_AXIS XMFLOAT3(0.0f,0.0f,1.0f)
+#define KILOBYTE 1024
+#define MEGABYTE 1048576
+#define GIGABYTE 1073741824
+#define MAX_KERNEL_SAMPLES 32
+#define MAX_DECALS_PER_ENTITY 32
+
+enum class MESH_TYPE {
+	LOAD_FAILURE = -1,
+	EMPTY_OBJECT = 0,
+	DEFAULT_MESH = 1,
+	GENERATED_MESH = 2,
+};
+
+enum class MEMORY_POOL {
+	ENTITY_POOL = 0,
+	MESH_POOL = 1,
+	MATERIAL_POOL = 2,
+};
+
 class Config
 {
 public:

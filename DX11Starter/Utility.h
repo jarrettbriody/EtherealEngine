@@ -3,19 +3,6 @@
 #include "Config.h"
 
 namespace Utility {
-	enum MESH_TYPE {
-		LOAD_FAILURE = -1,
-		EMPTY_OBJECT = 0,
-		DEFAULT_MESH = 1,
-		GENERATED_MESH = 2,
-	};
-
-	enum MEMORY_POOL {
-		ENTITY_POOL = 0,
-		MESH_POOL = 1,
-		MATERIAL_POOL = 2,
-	};
-
 	static void ParseFloat3FromString(std::string s, DirectX::XMFLOAT3& f) {
 		std::smatch match;
 		int i = 0;

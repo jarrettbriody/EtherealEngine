@@ -55,6 +55,8 @@ Game::~Game()
 	}
 
 	MemoryAllocator::DestroyInstance();
+
+	DecalHandler::DestroyInstance();
 }
 
 void Game::Init()
@@ -100,9 +102,9 @@ void Game::Init()
 
 	MemoryAllocator::SetupInstance(Config::MemoryAllocatorSize, Config::MemoryAllocatorAlignment);
 	EEMemoryAllocator = MemoryAllocator::GetInstance();
-	EEMemoryAllocator->CreatePool(Utility::ENTITY_POOL, Config::MemoryAllocatorEntityPoolSize, sizeof(Entity));
-	EEMemoryAllocator->CreatePool(Utility::MESH_POOL, Config::MemoryAllocatorMeshPoolSize, sizeof(Mesh));
-	EEMemoryAllocator->CreatePool(Utility::MATERIAL_POOL, Config::MemoryAllocatorMaterialPoolSize, sizeof(Material));
+	EEMemoryAllocator->CreatePool((unsigned int)MEMORY_POOL::ENTITY_POOL, Config::MemoryAllocatorEntityPoolSize, sizeof(Entity));
+	EEMemoryAllocator->CreatePool((unsigned int)MEMORY_POOL::MESH_POOL, Config::MemoryAllocatorMeshPoolSize, sizeof(Mesh));
+	EEMemoryAllocator->CreatePool((unsigned int)MEMORY_POOL::MATERIAL_POOL, Config::MemoryAllocatorMaterialPoolSize, sizeof(Material));
 
 	EECamera = new Camera();
 	EECamera->UpdateProjectionMatrix();
@@ -143,6 +145,9 @@ void Game::Init()
 	testLight->Color = XMFLOAT3(1.f, 1.f, 1.f);
 	testLight->Range = 10.f;
 	testLight->SpotFalloff = 20.f;*/
+
+	DecalHandler::SetupInstance();
+	EEDecalHandler = DecalHandler::GetInstance();
 
 	Renderer::SetupInstance();
 	EERenderer = Renderer::GetInstance();
@@ -478,13 +483,15 @@ void Game::GarbageCollect()
 			EESceneLoader->sceneEntitiesMap.erase(name);
 			EESceneLoader->sceneEntities.erase(EESceneLoader->sceneEntities.begin() + i - 1);
 
+			EEDecalHandler->DestroyDecals(name);
+
 			if (Config::EtherealDebugLinesEnabled) {
 				DebugLines::debugLinesMap[name]->destroyed = true;
 				DebugLines::debugLinesMap.erase(name);
 			}
 
 			e->FreeMemory();
-			EEMemoryAllocator->DeallocateFromPool(ENTITY_POOL, e, sizeof(Entity));
+			EEMemoryAllocator->DeallocateFromPool((unsigned int)MEMORY_POOL::ENTITY_POOL, e, sizeof(Entity));
 
 			vector<ScriptManager*> scriptFuncs = ScriptManager::scriptFunctionsMap[name];
 			size_t cnt = scriptFuncs.size();
@@ -613,6 +620,10 @@ void Game::OnMouseDown(WPARAM buttonState, int x, int y)
 			transform.setOrigin(btVector3(x, y, z));
 			rigidBody->getCollisionShape()->setLocalScaling(btVector3(1, 1, 1));
 			rigidBody->setWorldTransform(transform); */
+
+			btVector3 h = closestResult.m_hitPointWorld;
+			XMFLOAT3 hitLocation(h.getX(), h.getY(), h.getZ());
+			EEDecalHandler->GenerateDecal(hit, XMFLOAT3(end.x - start.x, end.y - start.y, end.z - start.z), hitLocation, XMFLOAT3(1.0f, 1.0f, 4.0f), DecalType::BLOOD1);
 
 			Config::DynamicsWorld->addRigidBody(rigidBody); // Add the rigid body back into bullet		
 

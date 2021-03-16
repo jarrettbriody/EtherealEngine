@@ -89,6 +89,14 @@ void Renderer::SetRendererShaders(RendererShaders rShaders)
 	shaders = rShaders;
 }
 
+void Renderer::SetDecals(ID3D11ShaderResourceView* decals[8])
+{
+	for (size_t i = 0; i < 8; i++)
+	{
+		this->decals[i] = decals[i];
+	}
+}
+
 void Renderer::InitDepthStencil()
 {
 	// Create the actual texture that will be the depth stencil map
@@ -316,6 +324,27 @@ void Renderer::RenderFrame()
 			e->SetDepthStencilData(d);
 		}
 		
+		/*
+		if (*e->layer == "decal") {
+			SimplePixelShader* pixelShader = mat->GetPixelShader();
+			if (DecalHandler::decalsMap.count(e->GetName())) {
+				DecalBucket& bucket = DecalHandler::decalsMap[e->GetName()];
+				pixelShader->SetData(
+					"decals",
+					&bucket.decals,
+					sizeof(Decal) * MAX_DECALS_PER_ENTITY
+				);
+				pixelShader->SetData(
+					"decalCount",
+					&bucket.count,
+					sizeof(bucket.count)
+				);
+				pixelShader->SetMatrix4x4("worldMatrix", e->GetWorldMatrix());
+				pixelShader->SetShaderResourceView("Decals", decals[0]);
+			}
+		}
+		*/
+
 		ID3D11Buffer* vbo = mesh->GetVertexBuffer();
 		ID3D11Buffer* ind = mesh->GetIndexBuffer();
 		Config::Context->IASetVertexBuffers(0, 1, &vbo, &stride, &offset);

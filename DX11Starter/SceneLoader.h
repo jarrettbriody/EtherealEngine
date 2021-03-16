@@ -49,6 +49,7 @@ private:
 	regex materialNameRegex = regex("material=\"(\\w+)\"");
 	regex repeatTextureRegex = regex("repeatTexture=\"(\\d*\\.\\d*|\\d+),(\\d*\\.\\d*|\\d+)\"");
 	regex tagNameRegex = regex("tag=\"(\\w+)\""); //for getting the entity tag
+	regex layerNameRegex = regex("layer=\"(\\w+)\""); //for getting the entity layer
 	regex scriptNamesRegex = regex("scripts=\"([\\w+|,]+)\""); //getting script names associated with entity
 	regex scriptNamesIteratorRegex = regex("\\w+"); //iterating over each script name associated with entity
 	regex collidersEnabledRegex = regex("colliders=\"(\\w+)\"");
@@ -111,9 +112,7 @@ public:
 	void LoadDefaultTextures();
 	void LoadDefaultMaterials();
 
-	void BuildDefaultEntity(string entityName, string objName, Entity* e);
-
-	Utility::MESH_TYPE AutoLoadOBJMTL(string name);
+	MESH_TYPE AutoLoadOBJMTL(string name);
 	void LoadScene(string sceneName = "scene");
 	void SetModelPath(string path);
 	void SetScriptLoader(void (*callback)(Entity* e, string script));

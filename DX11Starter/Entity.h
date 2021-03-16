@@ -61,6 +61,7 @@ public:
 	bool colliderDebugLinesEnabled = false;
 	bool isEmptyObj = false;
 	string* tag;
+	string* layer;
 	Entity();
 	Entity(string entityName);
 	Entity(string entityName, Mesh* entityMesh, Material* mat = nullptr);
@@ -94,6 +95,7 @@ public:
 	int GetMeshIndexCount(int childIndex = -1);
 	string GetMeshMaterialName(int childIndex = -1);
 	void CalcWorldMatrix();
+	XMMATRIX CalcWorldToModelMatrix();
 	void PrepareMaterialForDraw(string n, DirectX::XMFLOAT4X4 view, DirectX::XMFLOAT4X4 proj);
 	Material* GetMaterial(string n);
 	bool MeshHasChildren();

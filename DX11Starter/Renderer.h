@@ -6,6 +6,7 @@
 #include "Entity.h"
 #include "Camera.h"
 #include "DebugLines.h"
+#include "DecalHandler.h"
 
 using namespace std;
 
@@ -73,6 +74,8 @@ private:
 	DepthStencilComponents depthStencilComponents;
 	HBAOPlusComponents hbaoPlusComponents;
 
+	ID3D11ShaderResourceView* decals[8];
+
 	Renderer();
 	~Renderer();
 public:
@@ -82,6 +85,7 @@ public:
 
 	void SetEntities(vector<Entity*>* entities);
 	void SetRendererShaders(RendererShaders rShaders);
+	void SetDecals(ID3D11ShaderResourceView* decals[8]);
 
 	void InitDepthStencil();
 
