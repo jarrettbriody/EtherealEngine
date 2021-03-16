@@ -55,7 +55,7 @@ private:
 	regex colliderTypeRegex = regex("colliderType=\"(\\w+)\"");
 	regex massRegex = regex("mass=\"(\\d*\\.\\d*|\\d+)\"");
 	regex debugRegex = regex("debug=\"(\\w+)\"");
-	regex transformationDataRegex = regex("P\(.*\)R\(.*\)S\(.*\)");
+	regex transformationDataRegex = regex("P\\(.*\\)R\\(.*\\)S\\(.*\\)");
 	regex transformNumIteratorRegex = regex("-\\d*\\.\\d*|\\d*\\.\\d*|-\\d+|\\d+"); //for iterating over each line to get the float values for transformations
 
 	//Material loading regular expressions
