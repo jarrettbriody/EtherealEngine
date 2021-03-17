@@ -23,6 +23,11 @@ XMFLOAT4X4 Camera::GetViewMatrix()
 	return viewMatrix;
 }
 
+XMFLOAT4X4 Camera::GetInverseViewMatrix()
+{
+	return invViewMatrix;
+}
+
 XMFLOAT4X4 Camera::GetProjMatrix()
 {
 	return projMatrix;
@@ -110,8 +115,10 @@ void Camera::Update()
 	XMVECTOR quat = XMQuaternionRotationRollPitchYaw(xRotation, yRotation, 0.0f);
 	XMVECTOR newDir = XMVector3Rotate(XMLoadFloat3(&zAxis), quat);
 	XMMATRIX view = XMMatrixLookToLH(pos, dir, XMLoadFloat3(&yAxis));
+	XMMATRIX inverseView = XMMatrixInverse(nullptr, view);
 
 	XMStoreFloat4x4(&viewMatrix, XMMatrixTranspose(view));
+	XMStoreFloat4x4(&invViewMatrix, XMMatrixTranspose(inverseView));
 	XMStoreFloat3(&direction, newDir);
 
 	//cout << "Pos: (" << position.x << ", " << position.y << ", " << position.z << ")" << endl;

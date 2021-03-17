@@ -105,6 +105,7 @@ void Game::Init()
 	EEMemoryAllocator->CreatePool((unsigned int)MEMORY_POOL::ENTITY_POOL, Config::MemoryAllocatorEntityPoolSize, sizeof(Entity));
 	EEMemoryAllocator->CreatePool((unsigned int)MEMORY_POOL::MESH_POOL, Config::MemoryAllocatorMeshPoolSize, sizeof(Mesh));
 	EEMemoryAllocator->CreatePool((unsigned int)MEMORY_POOL::MATERIAL_POOL, Config::MemoryAllocatorMaterialPoolSize, sizeof(Material));
+	EEMemoryAllocator->CreatePool((unsigned int)MEMORY_POOL::DECAL_POOL, Config::MemoryAllocatorDecalPoolSize, sizeof(DecalBucket));
 
 	EECamera = new Camera();
 	EECamera->UpdateProjectionMatrix();
@@ -157,6 +158,8 @@ void Game::Init()
 	rShaders.depthStencilVS = EESceneLoader->vertexShadersMap["DepthStencil"];
 	rShaders.debugLineVS = EESceneLoader->vertexShadersMap["DebugLine"];
 	rShaders.debugLinePS = EESceneLoader->pixelShadersMap["DebugLine"];
+	rShaders.decalVS = EESceneLoader->vertexShadersMap["Decal"];
+	rShaders.decalPS = EESceneLoader->pixelShadersMap["Decal"];
 	EERenderer->SetRendererShaders(rShaders);
 	EERenderer->SetEntities(&(EESceneLoader->sceneEntities));
 	EERenderer->AddLight("Sun", dLight);
@@ -167,6 +170,10 @@ void Game::Init()
 	EERenderer->InitDepthStencil();
 	EERenderer->InitHBAOPlus();
 	EESceneLoader->EERenderer = EERenderer;
+
+	ID3D11ShaderResourceView* decals[8];
+	decals[0] = EESceneLoader->defaultTexturesMap["Red"];
+	EERenderer->SetDecals(EESceneLoader->defaultMeshesMap["Cube"], decals);
 
 	Entity* e;
 	for (size_t i = 0; i < EESceneLoader->sceneEntities.size(); i++)
@@ -597,6 +604,7 @@ void Game::OnMouseDown(WPARAM buttonState, int x, int y)
 			printf("Hit: %s\n", hit->GetName().c_str());
 			btRigidBody* rigidBody = hit->GetRBody();
 
+			/*
 			// In order to update the values associated with the rigid body we need to remove it from the dynamics world first
 			Config::DynamicsWorld->removeRigidBody(rigidBody);
 			btVector3 inertia(0, 0, 0);
@@ -620,16 +628,18 @@ void Game::OnMouseDown(WPARAM buttonState, int x, int y)
 			transform.setOrigin(btVector3(x, y, z));
 			rigidBody->getCollisionShape()->setLocalScaling(btVector3(1, 1, 1));
 			rigidBody->setWorldTransform(transform); */
-
+			//*/
 			btVector3 h = closestResult.m_hitPointWorld;
 			XMFLOAT3 hitLocation(h.getX(), h.getY(), h.getZ());
 			EEDecalHandler->GenerateDecal(hit, XMFLOAT3(end.x - start.x, end.y - start.y, end.z - start.z), hitLocation, XMFLOAT3(1.0f, 1.0f, 4.0f), DecalType::BLOOD1);
 
+			/*
 			Config::DynamicsWorld->addRigidBody(rigidBody); // Add the rigid body back into bullet		
 
 			if (hit->MeshHasChildren()) {
 				EESceneLoader->SplitMeshIntoChildEntities(hit, 0.5f);
 			}
+			*/
 		}
 	}
 	

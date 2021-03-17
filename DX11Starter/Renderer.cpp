@@ -89,8 +89,9 @@ void Renderer::SetRendererShaders(RendererShaders rShaders)
 	shaders = rShaders;
 }
 
-void Renderer::SetDecals(ID3D11ShaderResourceView* decals[8])
+void Renderer::SetDecals(Mesh* cube, ID3D11ShaderResourceView* decals[8])
 {
+	this->cube = cube;
 	for (size_t i = 0; i < 8; i++)
 	{
 		this->decals[i] = decals[i];
@@ -358,6 +359,59 @@ void Renderer::RenderFrame()
 			0);											// Offset to add to each index when looking up vertices
 
 		mat->GetPixelShader()->SetShaderResourceView("ShadowMap", NULL);
+	}
+
+	if (Config::DecalsEnabled) {
+		ID3D11Buffer* vbo = cube->GetVertexBuffer();
+		ID3D11Buffer* ind = cube->GetIndexBuffer();
+		Config::Context->IASetVertexBuffers(0, 1, &vbo, &stride, &offset);
+		Config::Context->IASetIndexBuffer(ind, DXGI_FORMAT_R32_UINT, 0);
+		for (size_t i = 0; i < DecalHandler::decalsVec.size(); i++)
+		{
+			DecalBucket* db = DecalHandler::decalsVec[i];
+			for (size_t j = 0; j < db->count; j++)
+			{
+				shaders.decalVS->SetMatrix4x4("ownerWorld", db->owner->GetWorldMatrix());
+				shaders.decalVS->SetMatrix4x4("localWorld", db->decals[j].localTransform);
+				shaders.decalVS->SetMatrix4x4("view", camera->GetViewMatrix());
+				shaders.decalVS->SetMatrix4x4("projection", camera->GetProjMatrix());
+				shaders.decalVS->SetMatrix4x4("shadowView", shadowComponents.shadowViewMatrix);
+				shaders.decalVS->SetMatrix4x4("shadowProj", shadowComponents.shadowProjectionMatrix);
+
+				shaders.decalPS->SetShaderResourceView("DepthBuffer", depthStencilComponents.depthStencilSRV);
+				shaders.decalPS->SetShaderResourceView("Decals", decals[0]);
+				shaders.decalPS->SetMatrix4x4("inverseOwnerWorld", db->owner->GetInverseWorldMatrix());
+				shaders.decalPS->SetMatrix4x4("inverseLocalWorld", db->decals[j].invLocalTransform);
+				shaders.decalPS->SetFloat("farClip", 1000.0f);
+
+				shaders.decalVS->SetShader();
+				shaders.decalPS->SetShader();
+
+				shaders.decalVS->CopyAllBufferData();
+				shaders.decalPS->CopyAllBufferData();
+
+				Config::Context->DrawIndexed(
+					cube->GetIndexCount(),		// The number of indices to use (we could draw a subset if we wanted)
+					0,											// Offset to the first index we want to use
+					0);											// Offset to add to each index when looking up vertices
+			}
+			/*
+			shaders.debugLineVS->SetMatrix4x4("world", DebugLines::debugLines[i]->worldMatrix);
+			shaders.debugLineVS->SetMatrix4x4("view", camera->GetViewMatrix());
+			shaders.debugLineVS->SetMatrix4x4("projection", camera->GetProjMatrix());
+
+			shaders.debugLineVS->SetShader();
+			shaders.debugLinePS->SetShader();
+
+			shaders.debugLineVS->CopyAllBufferData();
+			shaders.debugLinePS->CopyAllBufferData();
+
+			Config::Context->DrawIndexed(
+				DebugLines::debugLines[i]->indexCount,		// The number of indices to use (we could draw a subset if we wanted)
+				0,											// Offset to the first index we want to use
+				0);											// Offset to add to each index when looking up vertices
+			*/
+		}
 	}
 
 	if (Config::HBAOPlusEnabled) {

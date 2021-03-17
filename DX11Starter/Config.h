@@ -10,7 +10,7 @@
 #define MEGABYTE 1048576
 #define GIGABYTE 1073741824
 #define MAX_KERNEL_SAMPLES 32
-#define MAX_DECALS_PER_ENTITY 32
+#define MAX_DECALS_PER_ENTITY 128
 
 enum class MESH_TYPE {
 	LOAD_FAILURE = -1,
@@ -23,6 +23,7 @@ enum class MEMORY_POOL {
 	ENTITY_POOL = 0,
 	MESH_POOL = 1,
 	MATERIAL_POOL = 2,
+	DECAL_POOL = 3,
 };
 
 class Config
@@ -44,6 +45,7 @@ public:
 	static unsigned int MemoryAllocatorEntityPoolSize;
 	static unsigned int MemoryAllocatorMeshPoolSize;
 	static unsigned int MemoryAllocatorMaterialPoolSize;
+	static unsigned int MemoryAllocatorDecalPoolSize;
 
 	static bool EtherealDebugLinesEnabled;
 	static bool BulletDebugLinesEnabled;
@@ -51,6 +53,7 @@ public:
 	static bool ShadowsEnabled;
 	static bool SSAOEnabled;
 	static bool HBAOPlusEnabled;
+	static bool DecalsEnabled;
 
 	static btDiscreteDynamicsWorld* DynamicsWorld;
 

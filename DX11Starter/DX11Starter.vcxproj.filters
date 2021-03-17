@@ -37,8 +37,11 @@
     <FxCompile Include="DepthStencilVS.hlsl">
       <Filter>EEShaders\Vertex Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="DefaultDecalPS.hlsl">
+    <FxCompile Include="DecalPS.hlsl">
       <Filter>EEShaders\Pixel Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="DecalVS.hlsl">
+      <Filter>EEShaders\Vertex Shaders</Filter>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
@@ -183,9 +186,6 @@
     </None>
     <None Include="packages.config">
       <Filter>Other</Filter>
-    </None>
-    <None Include="Decals.hlsli">
-      <Filter>EEShaders\Pixel Shaders</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

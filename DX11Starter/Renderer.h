@@ -16,6 +16,8 @@ struct RendererShaders {
 	SimpleVertexShader* depthStencilVS = nullptr;
 	SimpleVertexShader* debugLineVS = nullptr;
 	SimplePixelShader* debugLinePS = nullptr;
+	SimpleVertexShader* decalVS = nullptr;
+	SimplePixelShader* decalPS = nullptr;
 };
 
 struct RenderObject{
@@ -62,6 +64,8 @@ private:
 
 	RendererShaders shaders;
 
+	Mesh* cube = nullptr;
+
 	Camera* camera = nullptr;
 	map<string, Camera*> cameras;
 	unsigned int cameraCount = 0;
@@ -85,7 +89,7 @@ public:
 
 	void SetEntities(vector<Entity*>* entities);
 	void SetRendererShaders(RendererShaders rShaders);
-	void SetDecals(ID3D11ShaderResourceView* decals[8]);
+	void SetDecals(Mesh* cube, ID3D11ShaderResourceView* decals[8]);
 
 	void InitDepthStencil();
 

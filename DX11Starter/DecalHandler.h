@@ -1,5 +1,6 @@
 #pragma once
 #include "Entity.h"
+#include "MemoryAllocator.h"
 
 using namespace DirectX;
 using namespace std;
@@ -10,11 +11,14 @@ enum class DecalType {
 
 struct Decal {
 	XMFLOAT4X4 localTransform;
+	XMFLOAT4X4 invLocalTransform;
 	int type;
 };
 
 struct DecalBucket {
 	Decal decals[MAX_DECALS_PER_ENTITY];
+	Entity* owner;
+	unsigned int index = 0;
 	int counter = 0;
 	int count = 0;
 };
@@ -26,13 +30,14 @@ private:
 	DecalHandler();
 	~DecalHandler();
 public:
-	static map<string, DecalBucket> decalsMap;
+	static map<string, DecalBucket*> decalsMap;
+	static vector<DecalBucket*> decalsVec;
 
 	static bool SetupInstance();
 	static DecalHandler* GetInstance();
 	static bool DestroyInstance();
 
-	bool GenerateDecal(Entity* owner, XMFLOAT3 rayDirection, XMFLOAT3 rayHitPosition, XMFLOAT3 boxScale, DecalType decalType);
+	void GenerateDecal(Entity* owner, XMFLOAT3 rayDirection, XMFLOAT3 rayHitPosition, XMFLOAT3 boxScale, DecalType decalType);
 
 	bool DestroyDecals(string owner);
 };

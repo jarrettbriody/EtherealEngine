@@ -121,6 +121,10 @@ void SceneLoader::LoadShaders()
 	debugLineVS->LoadShaderFile(L"DebugLineVS.cso");
 	vertexShadersMap.insert({ "DebugLine", debugLineVS });
 
+	SimpleVertexShader* decalVS = new SimpleVertexShader(Config::Device, Config::Context);
+	decalVS->LoadShaderFile(L"DecalVS.cso");
+	vertexShadersMap.insert({ "Decal", decalVS });
+
 	//pixel shaders
 	SimplePixelShader* defaultPS = new SimplePixelShader(Config::Device, Config::Context);
 	defaultPS->LoadShaderFile(L"DefaultPS.cso");
@@ -153,9 +157,15 @@ void SceneLoader::LoadShaders()
 	pixelShadersMap.insert({ "DEFAULT_SSAO", defaultSSAOPS });
 	Utility::GenerateSSAOKernel(Config::SSAOSampleCount, Config::SSAOKernel);
 
+	SimplePixelShader* decalPS = new SimplePixelShader(Config::Device, Config::Context);
+	decalPS->LoadShaderFile(L"DecalPS.cso");
+	pixelShadersMap.insert({ "Decal", decalPS });
+
+	/*
 	SimplePixelShader* defaultDecalPS = new SimplePixelShader(Config::Device, Config::Context);
 	defaultDecalPS->LoadShaderFile(L"DefaultDecalPS.cso");
 	pixelShadersMap.insert({ "DEFAULTDecal", defaultDecalPS });
+	*/
 }
 
 void SceneLoader::LoadDefaultMeshes()
@@ -214,10 +224,6 @@ void SceneLoader::LoadDefaultTextures()
 	defaultTexturesMap.insert({ "Grey", Utility::LoadSRV("Default/grey.png") });
 	defaultTexturesMap.insert({ "Grey4", Utility::LoadSRV("Default/grey4.png") });
 	defaultTexturesMap.insert({ "White", Utility::LoadSRV("Default/white.png") });
-
-	ID3D11ShaderResourceView* decals[8];
-	decals[0] = defaultTexturesMap["Red"];
-	EERenderer->SetDecals(decals);
 }
 
 void SceneLoader::LoadDefaultMaterials()
@@ -923,7 +929,7 @@ void SceneLoader::SplitMeshIntoChildEntities(Entity* e, float componentMass)
 		allocatedEntity->SetScale(e->GetScale());
 		allocatedEntity->CalcWorldMatrix();
 		allocatedEntity->AddAutoBoxCollider();
-		allocatedEntity->InitRigidBody(BulletColliderShape::BOX, componentMass);
+		allocatedEntity->InitRigidBody(BulletColliderShape::BOX, componentMass, true);
 		sceneEntitiesMap.insert({ children[i]->GetName(), allocatedEntity });
 		sceneEntities.push_back(allocatedEntity);
 		EERenderer->AddRenderObject(allocatedEntity, children[i], e->GetMaterial(e->GetMeshMaterialName(i)));
