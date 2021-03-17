@@ -7,8 +7,6 @@ class FPSController : public ScriptManager
 
 	Camera* cam;
 
-	float deltatime = ScriptManager::deltaTime;
-
 	POINT prevMousePos;
 
 	XMFLOAT3 position;
@@ -18,13 +16,17 @@ class FPSController : public ScriptManager
 	
 	btRigidBody* playerRBody;
 	btVector3 controllerVelocity;
-	float dampingScalar = 0.09f;
 
 	float spd = 5.0f;
 	float maxSpeed = 20.0f;
+	float dampingScalar = 0.09f;
 
 	bool midAir = true; // true if starting character in the air
 	int jumpCount = 0;
+	float spacingTimer = 0.0f;
+
+	int dashCount = 5;
+	float dashScalar = 50.0f;
 
 	enum class PlayerState
 	{
@@ -40,8 +42,8 @@ class FPSController : public ScriptManager
 
 	void DampControllerVelocity();
 
-	void GroundCheck();
-
 	void OnMouseMove(WPARAM buttonState, int x, int y);
+
+	void OnCollision(btCollisionObject* other);
 };
 

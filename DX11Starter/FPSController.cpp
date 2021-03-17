@@ -13,7 +13,7 @@ void FPSController::Init()
 	
 	playerRBody = entity->GetRBody(); // Get the bullet rigidbody
 	playerRBody->setAngularFactor(btVector3(0, 1, 0)); // constrain rotations on x and z axes
-	playerRBody->setRestitution(0.1f);
+	// playerRBody->setRestitution(0.1f);
 	// playerRBody->setFriction(1.0f); --> debating using friction because it would probably result in weird interations with other level gemoetry, would rather just use pure velocity dampening
 	controllerVelocity = btVector3(0, 0, 0);
 
@@ -79,55 +79,90 @@ void FPSController::Move()
 	// ready the needed information
 	direction = cam->direction;
 	XMFLOAT3 yAxis = Y_AXIS;
+	XMFLOAT3 zAxis = Z_AXIS;
 	XMVECTOR pos = XMLoadFloat3(&position);
 	XMVECTOR dir = XMLoadFloat3(&direction);
 	XMVECTOR rightVec = XMVector3Cross(dir, XMLoadFloat3(&yAxis));
 	XMFLOAT3 right;
 	XMStoreFloat3(&right, rightVec);
-
-	GroundCheck();
+	XMVECTOR forwardVec = XMVector3Cross(dir, XMLoadFloat3(&zAxis));
+	XMFLOAT3 forward;
+	XMStoreFloat3(&forward, forwardVec);
 
 	// update the controller velocity vector based on input
-	playerRBody->activate();
 
-	if (DXCore::keyboard.KeyIsPressed(0x57)) {
+	// base movement
+	if (DXCore::keyboard.KeyIsPressed(0x57)) { // w
 		controllerVelocity += btVector3(direction.x, 0, direction.z) * spd;
 	}
-	if (DXCore::keyboard.KeyIsPressed(0x53)) {
+	if (DXCore::keyboard.KeyIsPressed(0x53)) { // s
 		controllerVelocity += btVector3(direction.x, 0, direction.z) * -spd;
 	}
-	if (DXCore::keyboard.KeyIsPressed(0x41)) {
+	if (DXCore::keyboard.KeyIsPressed(0x41)) { // a
 		controllerVelocity += btVector3(right.x, 0, right.z) * spd;
 	}
-	if (DXCore::keyboard.KeyIsPressed(0x44)) {
+	if (DXCore::keyboard.KeyIsPressed(0x44)) { // d
 		controllerVelocity += btVector3(right.x, 0, right.z) * -spd;
 	}
+
+	// jump/double jump
 	if (DXCore::keyboard.OnKeyDown(VK_SPACE)) { 
 		if (!midAir || midAir && jumpCount < 2) {
-			playerRBody->applyCentralImpulse(btVector3(0, 30.0f, 0));
-			midAir = true;
 			jumpCount++;
+			midAir = true;
+			spacingTimer = 0.1f;
+			playerRBody->activate();
+			playerRBody->applyCentralImpulse(btVector3(0, 35.0f, 0));
+			playerRBody->setGravity(btVector3(0.0f, -25.0f, 0.0f));
 		}
 	}
-	// TODO: Dash
-	/*
-	if () {
-		
-	}
-	*/
 
+	// dash
+	if (dashCount > 0 && DXCore::keyboard.OnKeyDown(VK_SHIFT))
+	{
+		dashCount--;
+		cout << dashCount << endl;
+		// default dash to forwards
+		btVector3 dashDirection = btVector3(direction.x, 0, direction.z);
+
+		if (DXCore::keyboard.KeyIsPressed(0x41)) // left
+		{
+			dashDirection = btVector3(right.x, 0, right.z);
+		}
+		if (DXCore::keyboard.KeyIsPressed(0x44)) // right
+		{
+			dashDirection = btVector3(right.x, 0, right.z) * -1;
+		}
+		if (DXCore::keyboard.KeyIsPressed(0x53)) // backwards
+		{
+			dashDirection = btVector3(direction.x, 0, direction.z) * -1;
+		}
+
+		dashDirection = dashDirection.normalized() * dashScalar;
+		
+		controllerVelocity += dashDirection;
+		// playerRBody->activate();
+		// playerRBody->applyCentralImpulse(dashDirection);
+	}
+	
+	// Setting the gradual increase in speed and cappig it
 	btScalar ySpd = playerRBody->getLinearVelocity().getY();
 	btScalar spd = controllerVelocity.length();
 	if (spd > maxSpeed) controllerVelocity = controllerVelocity.normalized() * maxSpeed;
 	controllerVelocity.setValue(controllerVelocity.getX(), ySpd, controllerVelocity.getZ());
 
 	DampControllerVelocity();
+
+	playerRBody->activate();
 	playerRBody->setLinearVelocity(controllerVelocity);
 	// cout << "Vel: (" << controllerVelocity.getX() << ", " << controllerVelocity.getY() << ", " << controllerVelocity.getZ() << ")" << endl;
 
 	XMFLOAT3 eulers = entity->GetEulerAngles();
 	eulers = XMFLOAT3(0.0f, eulers.y, 0.0f);
 	entity->SetRotation(eulers);
+
+	// cout << deltaTime << endl;
+	// cout << "Controller Velocity: (" << controllerVelocity.getX() << ", " << controllerVelocity.getY() << ", " << controllerVelocity.getZ() << ")" << endl;
 }
 
 void FPSController::DampControllerVelocity()
@@ -135,36 +170,11 @@ void FPSController::DampControllerVelocity()
 	btVector3 vel = btVector3(controllerVelocity.getX(), 0, controllerVelocity.getZ());
 	if (!vel.fuzzyZero()) 
 	{
-		vel *= dampingScalar;
-		controllerVelocity -= vel; // manual damping for X and Z
-		// cout << "DAMPING" << endl;
+		controllerVelocity -= vel * dampingScalar; // manual damping for X and Z
 	}
 	else
 	{
 		controllerVelocity -= vel; // so we don't get any leftover velocities from fuzzy zero check, zero out the x and z
-	}
-}
-
-void FPSController::GroundCheck()
-{
-	// TODO: Properly check for the ground using Bullet
-	// Ground Check
-	if (entity->CheckSATCollision((*eMap)["Floor (8)"])) {
-		midAir = false;
-		jumpCount = 0;
-		btVector3 vel = playerRBody->getLinearVelocity();
-		vel.setValue(vel.getX(), 0.0f, vel.getZ());
-		playerRBody->setLinearVelocity(vel);
-	}
-
-	// Only apply gravity to the player when in the air
-	if (!midAir)
-	{
-		playerRBody->setGravity(btVector3(0.0f, 0.0f, 0.0f));
-	}
-	else
-	{
-		playerRBody->setGravity(btVector3(0.0f, -25.0f, 0.0f));
 	}
 }
 
@@ -178,24 +188,20 @@ void FPSController::OnMouseMove(WPARAM buttonState, int x, int y)
 	}
 }
 
-//void FPSController::CheckCollisionWithFloor()
-//{
-//	int numManifolds = dispatcher->getNumManifolds();
-//	for (int i = 0; i < numManifolds; i++)
-//	{
-//		btPersistentManifold* contactManifold = dynamicsWorld->getDispatcher()->getManifoldByIndexInternal(i);
-//		auto* obA = contactManifold->getBody0();
-//		auto* obB = contactManifold->getBody1();
-//
-//		if (obA->getUserPointer() == "Player" && obB->getUserPointer() == "Floor")
-//		{
-//			int numContacts = contactManifold->getNumContacts();
-//			if (numContacts > 0 && !doubleJumpControl)
-//			{
-//				jumpCount = 0;
-//				doubleJumpControl = false;
-//			}
-//		}
-//	}
-//}
+void FPSController::OnCollision(btCollisionObject* other)
+{
+	Entity* otherE = (Entity*)other->getUserPointer();
+	
+	// Ground check -- constrain the y velocity if grounded for better control over dynamic controller
+	spacingTimer -= deltaTime; // needed to give the jump a chance to startup without getting zeroed out by Floor collision
+	if (otherE->tag->c_str() == std::string("Floor") && spacingTimer <= 0.0f)
+	{
+		midAir = false;
+		jumpCount = 0;
+		btVector3 vel = playerRBody->getLinearVelocity();
+		vel.setValue(vel.getX(), 0.0f, vel.getZ());
+		playerRBody->setLinearVelocity(vel);
+		playerRBody->setGravity(btVector3(0.0f, 0.0f, 0.0f));
+	}
+}
 
