@@ -46,16 +46,52 @@ void DecalHandler::GenerateDecal(Entity* owner, XMFLOAT3 rayDirection, XMFLOAT3 
 	XMVECTOR calculableDecalCenter = XMLoadFloat3(&rayHitPosition);
 	//calculableDecalCenter = XMVectorSubtract(calculableDecalCenter, calculableOwnerCenter);
 	XMMATRIX worldToModel = XMMatrixTranspose(XMLoadFloat4x4(&owner->GetInverseWorldMatrix()));
-	calculableDecalCenter = DirectX::XMVector3Transform(calculableDecalCenter, worldToModel);
+	//calculableDecalCenter = DirectX::XMVector3Transform(calculableDecalCenter, worldToModel);
 
 	XMMATRIX translation = XMMatrixTranslationFromVector(calculableDecalCenter);
 
-	XMFLOAT3 localRotation = XMFLOAT3(atan2(rayDirection.y, rayDirection.z), atan2(rayDirection.z, rayDirection.x), atan2(rayDirection.y, rayDirection.x));
-	XMMATRIX rotation = DirectX::XMMatrixRotationRollPitchYaw(localRotation.x, localRotation.y, localRotation.z);
+	//XMFLOAT3 localRotation = XMFLOAT3(atan2(rayDirection.y, rayDirection.z), atan2(rayDirection.z, rayDirection.x), atan2(rayDirection.y, rayDirection.x));
+	//XMMATRIX rotation = DirectX::XMMatrixRotationRollPitchYaw(localRotation.x, localRotation.y, localRotation.z);
+	//XMMATRIX rotation = XMMatrixRotationAxis(dir, 0.0f);
+
+	XMVECTOR dir = XMLoadFloat3(&rayDirection);
+	dir = XMVector3Normalize(dir);
+	XMFLOAT3 y = Y_AXIS;
+	XMVECTOR up = XMLoadFloat3(&y);
+	XMVECTOR right = XMVector3Cross(up,dir);
+	right = XMVector3Normalize(right);
+	up = XMVector3Cross(dir, right);
+	up = XMVector3Normalize(up);
+	XMFLOAT4 botRow(0.0f, 0.0f, 0.0f, 1.0f);
+	XMVECTOR trans = XMLoadFloat4(&botRow);
+	XMMATRIX rotation = XMMATRIX(right, up, dir, trans);
+
+	XMFLOAT3 start = rayHitPosition;
+	XMFLOAT3 end;
+	XMStoreFloat3(&end, XMVectorAdd(XMLoadFloat3(&rayHitPosition), XMVectorScale(up,5.0f)));
+
+	XMFLOAT3* rayPoints = new XMFLOAT3[8];
+	rayPoints[0] = start;
+	rayPoints[1] = start;
+	rayPoints[2] = start;
+	rayPoints[3] = start;
+	rayPoints[4] = end;
+	rayPoints[5] = end;
+	rayPoints[6] = end;
+	rayPoints[7] = end;
+	DebugLines* dl = new DebugLines("TestRay", 0, false);
+	dl->color = XMFLOAT3(0.0f, 0.0f, 1.0f);
+	// Create the world matrix for the debug line
+	XMFLOAT4X4 wm;
+	XMStoreFloat4x4(&wm, XMMatrixTranspose(DirectX::XMMatrixIdentity()));
+	dl->worldMatrix = wm;
+	dl->GenerateCuboidVertexBuffer(rayPoints, 8);
+	delete[] rayPoints;
 
 	XMMATRIX scale = DirectX::XMMatrixScaling(boxScale.x, boxScale.y, boxScale.z);
 	
 	XMMATRIX localTransform = scale * rotation * translation;
+	localTransform = XMMatrixMultiply(localTransform, worldToModel);
 	XMStoreFloat4x4(&newDecal.localTransform, XMMatrixTranspose(localTransform));
 
 	XMStoreFloat4x4(&newDecal.invLocalTransform, XMMatrixTranspose(XMMatrixInverse(nullptr, localTransform)));

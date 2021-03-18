@@ -44,9 +44,11 @@ cbuffer externalData : register(b1) {
 cbuffer matrices : register(b2) {
 	//matrix ownerWorld;
 	//matrix localWorld;
+	matrix inverseWorldMatrix;
 	matrix inverseOwnerWorld;
 	matrix inverseLocalWorld;
 	matrix inverseView;
+	matrix projection;
 }
 
 Texture2D Decals		  :  register(t0);
@@ -69,27 +71,67 @@ SamplerComparisonState ShadowSampler	: register(s1);
 // --------------------------------------------------------
 float4 main(VertexToPixel input) : SV_TARGET
 {
-	return float4(1.0f, 0.0f, 0.0f, 1.0f);
+	//return float4(1.0f, 0.0f, 0.0f, 1.0f);
+
+	//return float4(input.position.xyz / input.position.w,1.0f);
 
 	float2 screenPosition = input.position.xy / input.position.w;
 
+	float2 depthBufferUV = screenPosition * float2(0.5f, -0.5f) + float2(0.5f, 0.5f);
+	depthBufferUV += float2(0.5f, 0.5f);
+
+	//Sample a value from the depth buffer
+	float depth = DepthBuffer.Load(int3(depthBufferUV,0)).r;
+
+	float2 deproject = float2(projection._11, projection._22);
+	float4 scenePosView = float4(input.position.xy * depth / (deproject.xy * input.position.w), -depth, 1);
+
+	float3 pos = mul(scenePosView, inverseWorldMatrix);
+	clip(0.5f - abs(pos.xyz));
+
+	return float4(1.0f, 0.0f, 0.0f, 1.0f);
+
+	/*
+
 	//convert to UV so we can sample depth buffer
-	float2 depthBufferUV = screenPosition * 0.5f + 0.5f;
-	depthBufferUV.y = 1.0f - depthBufferUV.y;
+	//float2 depthBufferUV = screenPosition * 0.5f + 0.5f;
+	//depthBufferUV.y = 1.0f - depthBufferUV.y;
+	//Convert into a texture coordinate
+	float2 depthBufferUV = float2(
+		(1 + screenPosition.x) / 2 + (0.5 / 1600),
+		(1 - screenPosition.y) / 2 + (0.5 / 900)
+		);
 
-	float4 depthSample = DepthBuffer.Sample(BasicSampler, depthBufferUV);
+	//float4 depthSample = DepthBuffer.Sample(ShadowSampler, depthBufferUV);
 
-	float3 viewRay = input.positionViewSpace.xyz * (farClip / -input.positionViewSpace.z);
+	//return float4(depthSample.xxx, 1.0f);
 
-	float3 viewPosition = viewRay * depthSample.r;
+	float3 viewRay = normalize(input.positionViewSpace.xyz * (farClip / -input.positionViewSpace.z));
+
+	float3 viewPosition = viewRay.xyz * depthSample.r;
 
 	float3 worldPosOfPixelOnWall = mul(float4(viewPosition, 1), inverseView).xyz;
 
-	float4 objectPosOfPixelOnWall = mul(mul(float4(worldPosOfPixelOnWall, 1), inverseOwnerWorld), inverseLocalWorld);
+	//return float4(viewPosition, 1.0f);
 
-	clip(0.5 - abs(objectPosOfPixelOnWall.xyz));
+	//return float4(worldPosOfPixelOnWall.xyz, 1.0f);
 
-	//return float4(1.0f, 0.0f, 0.0f, 1.0f);
+	//matrix actualInverseWorld = mul(inverseLocalWorld, inverseOwnerWorld);
+
+	float4 objectPosOfPixelOnWall = mul(float4(worldPosOfPixelOnWall, 1), inverseWorldMatrix);
+
+	//float4 objectPosOfPixelOnWall = mul(float4(input.worldPos, 1), inverseWorldMatrix);
+
+	//objectPosOfPixelOnWall = mul(objectPosOfPixelOnWall, inverseLocalWorld);
+
+	//return objectPosOfPixelOnWall;
+
+	clip(0.5f - abs(objectPosOfPixelOnWall.xyz));
+	//clip(1.0f - abs(objectPosOfPixelOnWall.y));
+	//clip(1.0f - abs(objectPosOfPixelOnWall.z));
+
+	return float4(1.0f, 0.0f, 0.0f, 1.0f);
+	*/
 
 	/*
 	input.uv = float2(input.uv.x * uvMult.x, input.uv.y * uvMult.y);

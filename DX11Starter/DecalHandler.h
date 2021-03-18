@@ -1,6 +1,7 @@
 #pragma once
 #include "Entity.h"
 #include "MemoryAllocator.h"
+#include "DebugLines.h"
 
 using namespace DirectX;
 using namespace std;

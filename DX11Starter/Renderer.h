@@ -42,6 +42,8 @@ struct DepthStencilComponents {
 	ID3D11ShaderResourceView* depthStencilSRV;
 	ID3D11SamplerState* depthStencilSampler;
 	ID3D11RasterizerState* depthStencilRasterizer;
+	ID3D11DepthStencilState* depthStencilState;
+	ID3D11BlendState* decalBlendState;
 };
 
 struct HBAOPlusComponents {

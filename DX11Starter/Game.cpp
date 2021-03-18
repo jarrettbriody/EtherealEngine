@@ -631,7 +631,7 @@ void Game::OnMouseDown(WPARAM buttonState, int x, int y)
 			//*/
 			btVector3 h = closestResult.m_hitPointWorld;
 			XMFLOAT3 hitLocation(h.getX(), h.getY(), h.getZ());
-			EEDecalHandler->GenerateDecal(hit, XMFLOAT3(end.x - start.x, end.y - start.y, end.z - start.z), hitLocation, XMFLOAT3(1.0f, 1.0f, 4.0f), DecalType::BLOOD1);
+			EEDecalHandler->GenerateDecal(hit, XMFLOAT3(hitLocation.x - start.x, hitLocation.y - start.y, hitLocation.z - start.z), hitLocation, XMFLOAT3(5.0f, 5.0f, 10.0f), DecalType::BLOOD1);
 
 			/*
 			Config::DynamicsWorld->addRigidBody(rigidBody); // Add the rigid body back into bullet		

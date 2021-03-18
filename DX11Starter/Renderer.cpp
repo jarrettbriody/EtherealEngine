@@ -156,6 +156,53 @@ void Renderer::InitDepthStencil()
 	depthStencilRastDesc.DepthBiasClamp = 0.0f;
 	depthStencilRastDesc.SlopeScaledDepthBias = 1.0f;
 	Config::Device->CreateRasterizerState(&depthStencilRastDesc, &depthStencilComponents.depthStencilRasterizer);
+
+	D3D11_DEPTH_STENCIL_DESC dsDesc;
+
+	dsDesc.DepthEnable = false;
+	dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
+	dsDesc.DepthFunc = D3D11_COMPARISON_ALWAYS;
+
+	// Stencil test parameters
+	dsDesc.StencilEnable = false;
+	dsDesc.StencilReadMask = 0xFF;
+	dsDesc.StencilWriteMask = 0xFF;
+
+	// Stencil operations if pixel is front-facing
+	dsDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+	dsDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_INCR;
+	dsDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+	dsDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+
+	// Stencil operations if pixel is back-facing
+	dsDesc.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+	dsDesc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_DECR;
+	dsDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+	dsDesc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+
+	// Create depth stencil state
+	ID3D11DepthStencilState* pDSState;
+	Config::Device->CreateDepthStencilState(&dsDesc, &pDSState);
+
+	depthStencilComponents.depthStencilState = pDSState;
+
+	ID3D11BlendState* decalBlendState;
+
+	D3D11_BLEND_DESC BlendState;
+	ZeroMemory(&BlendState, sizeof(D3D11_BLEND_DESC));
+	BlendState.RenderTarget[0].BlendEnable = TRUE;
+	BlendState.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+	BlendState.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_COLOR; //D3D11_BLEND_SRC_ALPHA
+	BlendState.RenderTarget[0].DestBlend = D3D11_BLEND_SRC_COLOR;//D3D11_BLEND_INV_SRC_ALPHA
+	BlendState.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+
+	// These control how the alpha channel is combined
+	//BlendState.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+	//BlendState.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ONE;
+	//BlendState.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+	Config::Device->CreateBlendState(&BlendState, &decalBlendState);
+
+	depthStencilComponents.decalBlendState = decalBlendState;
 }
 
 void Renderer::InitHBAOPlus()
@@ -362,6 +409,10 @@ void Renderer::RenderFrame()
 	}
 
 	if (Config::DecalsEnabled) {
+		//ID3D11BlendState* originalBlend;
+		//Config::Context->OMGetBlendState(&originalBlend);
+		//Config::Context->OMSetDepthStencilState(depthStencilComponents.depthStencilState, 0);
+		//Config::Context->OMSetBlendState(depthStencilComponents.decalBlendState, 0, 0xFFFFFFFF);
 		ID3D11Buffer* vbo = cube->GetVertexBuffer();
 		ID3D11Buffer* ind = cube->GetIndexBuffer();
 		Config::Context->IASetVertexBuffers(0, 1, &vbo, &stride, &offset);
@@ -380,8 +431,15 @@ void Renderer::RenderFrame()
 
 				shaders.decalPS->SetShaderResourceView("DepthBuffer", depthStencilComponents.depthStencilSRV);
 				shaders.decalPS->SetShaderResourceView("Decals", decals[0]);
+				XMFLOAT4X4 invWorld;
+				XMMATRIX ownerWorld = XMMatrixTranspose(XMLoadFloat4x4(&db->owner->GetWorldMatrix()));
+				XMMATRIX localWorld = XMMatrixTranspose(XMLoadFloat4x4(&db->decals[j].localTransform));
+				XMStoreFloat4x4(&invWorld, XMMatrixTranspose(XMMatrixInverse(nullptr,XMMatrixMultiply(localWorld, ownerWorld))));
+				shaders.decalPS->SetMatrix4x4("inverseWorldMatrix", invWorld);
 				shaders.decalPS->SetMatrix4x4("inverseOwnerWorld", db->owner->GetInverseWorldMatrix());
 				shaders.decalPS->SetMatrix4x4("inverseLocalWorld", db->decals[j].invLocalTransform);
+				shaders.decalPS->SetMatrix4x4("inverseView", camera->GetInverseViewMatrix());
+				shaders.decalPS->SetMatrix4x4("projection", camera->GetProjMatrix());
 				shaders.decalPS->SetFloat("farClip", 1000.0f);
 
 				shaders.decalVS->SetShader();
@@ -412,6 +470,8 @@ void Renderer::RenderFrame()
 				0);											// Offset to add to each index when looking up vertices
 			*/
 		}
+		//Config::Context->OMSetDepthStencilState(NULL, 0);
+		//Config::Context->OMSetBlendState(NULL, 0, 0xFFFFFFFF);
 	}
 
 	if (Config::HBAOPlusEnabled) {
