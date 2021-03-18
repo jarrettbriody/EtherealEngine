@@ -50,6 +50,19 @@ bool Keyboard::OnKeyUp(const unsigned char keycode)
 	}
 }
 
+bool Keyboard::NoKeyDown()
+{
+	for each(bool key in keyStates)
+	{
+		if (key)
+		{
+			return false;
+		}
+	}
+
+	return true;
+}
+
 bool Keyboard::KeyBufferIsEmpty()
 {
 	return this->keyBuffer.empty();

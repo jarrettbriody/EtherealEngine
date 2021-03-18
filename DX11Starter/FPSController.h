@@ -16,17 +16,21 @@ class FPSController : public ScriptManager
 	
 	btRigidBody* playerRBody;
 	btVector3 controllerVelocity;
+	btVector3 impulseSumVec;
 
-	float spd = 5.0f;
-	float maxSpeed = 20.0f;
+	float spd = 10.0f;
+	float maxSpeed = 25.0f;
 	float dampingScalar = 0.09f;
 
 	bool midAir = true; // true if starting character in the air
 	int jumpCount = 0;
 	float spacingTimer = 0.0f;
+	float jumpForceScalar = 3.0f;
 
 	int dashCount = 5;
-	float dashScalar = 50.0f;
+	float dashDampTimer = 0.0f;
+	float dashImpulseScalar = 125.0f;
+
 
 	enum class PlayerState
 	{
@@ -40,7 +44,7 @@ class FPSController : public ScriptManager
 
 	void Move();
 
-	void DampControllerVelocity();
+	void DampForces();
 
 	void OnMouseMove(WPARAM buttonState, int x, int y);
 
