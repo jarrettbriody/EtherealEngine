@@ -6,11 +6,17 @@ class FPSController : public ScriptManager
 	map<string, Entity*>* eMap;
 
 	Camera* cam;
+	float headbobOffset = 0.0f;
+	const float HEADBOB_OFFSET_INTERVAL = 0.06f;
+	const float HEADBOB_OFFSET_MIN = 0.0f;
+	const float HEADBOB_OFFSET_MAX = 0.5f;
+	bool resetHeadbob = false;
 
 	POINT prevMousePos;
 
 	XMFLOAT3 position;
 	XMFLOAT3 direction;
+	XMFLOAT3 right;
 
 	Collider* collider;
 	
@@ -24,7 +30,7 @@ class FPSController : public ScriptManager
 
 	bool midAir = true; // true if starting character in the air
 	int jumpCount = 0;
-	float spacingTimer = 0.0f;
+	float groundSpacingTimer = 0.0f;
 	float jumpForceScalar = 3.0f;
 
 	int dashCount = 5;
@@ -43,6 +49,12 @@ class FPSController : public ScriptManager
 	void Update();
 
 	void Move();
+
+	void UpdateHeadbob();
+	
+	btVector3 JumpForceFromInput();
+
+	btVector3 DashImpulseFromInput();
 
 	void DampForces();
 

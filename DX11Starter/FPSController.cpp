@@ -42,7 +42,7 @@ void FPSController::Update()
 
 		case PlayerState::Normal:
 			Move();
-			cam->SetPosition(XMFLOAT3(entity->GetPosition().x, entity->GetPosition().y + entity->GetScale().y, entity->GetPosition().z)); // after all updates make sure camera is following the affected entity
+			cam->SetPosition(XMFLOAT3(entity->GetPosition().x, entity->GetPosition().y + entity->GetScale().y + headbobOffset, entity->GetPosition().z)); // after all updates make sure camera is following the affected entity
 			break;
 
 		case PlayerState::HookshotThrown:
@@ -65,7 +65,7 @@ void FPSController::Update()
 			// ragdoll the player
 			playerRBody->setAngularFactor(btVector3(1, 1, 1)); // free rotations on x and z axes
 			playerRBody->setGravity(btVector3(0.0f, -25.0f, 0.0f));
-			cam->SetPosition(XMFLOAT3(entity->GetPosition().x, entity->GetPosition().y + entity->GetScale().y, entity->GetPosition().z)); // after all updates make sure camera is following the affected entity
+			cam->SetPosition(XMFLOAT3(entity->GetPosition().x, entity->GetPosition().y + entity->GetScale().y + headbobOffset, entity->GetPosition().z)); // after all updates make sure camera is following the affected entity
 
 			break;
 
@@ -83,7 +83,7 @@ void FPSController::Move()
 {
 	// Choosing to go with a dynamic character controller to ensure ease of interaction with Bullet, many people online mentioned funky things going on when trying to get kinematic to work
 
-	// Set gravity 
+	// Set gravity if in mid air
 	if (midAir)
 	{
 		playerRBody->setGravity(btVector3(0.0f, -25.0f, 0.0f));
@@ -96,18 +96,14 @@ void FPSController::Move()
 	// ready the needed information
 	direction = cam->direction;
 	XMFLOAT3 yAxis = Y_AXIS;
-	XMFLOAT3 zAxis = Z_AXIS;
 	XMVECTOR pos = XMLoadFloat3(&position);
 	XMVECTOR dir = XMLoadFloat3(&direction);
 	XMVECTOR rightVec = XMVector3Cross(dir, XMLoadFloat3(&yAxis));
-	XMFLOAT3 right;
 	XMStoreFloat3(&right, rightVec);
-	XMVECTOR forwardVec = XMVector3Cross(dir, XMLoadFloat3(&zAxis));
-	XMFLOAT3 forward;
-	XMStoreFloat3(&forward, forwardVec);
 
 	// update the controller velocity vector based on input
-
+	UpdateHeadbob();
+	
 	// base movement
 	if (DXCore::keyboard.KeyIsPressed(0x57)) { // w
 		controllerVelocity += btVector3(direction.x, 0, direction.z) * spd;
@@ -123,59 +119,10 @@ void FPSController::Move()
 	}
 
 	// jump/double jump
-	if (spacingTimer > 0)
-	{
-		spacingTimer -= deltaTime; // needed to give the jump a chance to startup without getting zeroed out by Floor collision
-	}
-	
-	btVector3 jumpForce = btVector3(0, 0, 0);
-	if (DXCore::keyboard.OnKeyDown(VK_SPACE)) { 
-		if (!midAir || midAir && jumpCount < 2) {
-			
-			if (!midAir)
-			{
-				jumpForce = btVector3(direction.x, 10.0f, direction.z) * jumpForceScalar;
-			}
-			else
-			{
-				jumpForce = btVector3(direction.x, 12.0f * jumpForceScalar, direction.z); // not allowing as much lateral movement on second jump but giving more height
-			}
-			
-			jumpCount++;
-			midAir = true;
-			spacingTimer = 0.1f;
-		}
-	}
+	btVector3 jumpForce = JumpForceFromInput();
 	
 	// dash
-	if (dashDampTimer > 0)
-	{
-		dashDampTimer -= deltaTime;
-	}
-
-	btVector3 dashImpulse = btVector3(0, 0, 0);
-	if (/*dashCount > 0 &&*/ DXCore::keyboard.OnKeyDown(VK_SHIFT))
-	{
-		dashCount--;
-		cout << dashCount << endl;
-		// default dash to forwards
-		dashImpulse = btVector3(direction.x, 0, direction.z) * dashImpulseScalar;
-
-		if (DXCore::keyboard.KeyIsPressed(0x41)) // left
-		{
-			dashImpulse = btVector3(right.x, 0, right.z) * dashImpulseScalar;
-		}
-		if (DXCore::keyboard.KeyIsPressed(0x44)) // right
-		{
-			dashImpulse = btVector3(right.x, 0, right.z) * -dashImpulseScalar;
-		}
-		if (DXCore::keyboard.KeyIsPressed(0x53)) // backwards
-		{
-			dashImpulse = btVector3(direction.x, 0, direction.z) * -dashImpulseScalar;
-		}
-
-		dashDampTimer = 0.25f;
-	}
+	btVector3 dashImpulse = DashImpulseFromInput();
 	
 	// Ensuring current speed does not overtake maxSpeed
 	btScalar ySpd = playerRBody->getLinearVelocity().getY();
@@ -202,6 +149,103 @@ void FPSController::Move()
 
 	// cout << deltaTime << endl;
 	// cout << "Controller Velocity: (" << controllerVelocity.getX() << ", " << controllerVelocity.getY() << ", " << controllerVelocity.getZ() << ")" << endl;
+}
+
+void FPSController::UpdateHeadbob()
+{
+	if (!DXCore::keyboard.NoKeyDown() && !midAir) // if keys are down and we are on the ground we want to headbob
+	{
+		if (headbobOffset < HEADBOB_OFFSET_MAX && !resetHeadbob) // increase headbob offset if it is less than the max and we are not resetting 
+		{
+			headbobOffset += HEADBOB_OFFSET_INTERVAL;
+		}
+		else
+		{
+			resetHeadbob = true; // reset headbob sice we reached the max
+		}
+
+		if (headbobOffset > HEADBOB_OFFSET_MIN && resetHeadbob) // decrease headbob offset if it is greater than the min and we are resetting
+		{
+			headbobOffset -= HEADBOB_OFFSET_INTERVAL;
+		}
+		else
+		{
+			resetHeadbob = false; // resetting is complete after reaching the min
+		}
+
+	}
+	else // return to min headbob position if no keys are down or we are in midair
+	{
+		if (headbobOffset > HEADBOB_OFFSET_MIN)
+		{
+			headbobOffset -= HEADBOB_OFFSET_INTERVAL;
+		}
+	}
+
+	// cout << headbobOffset << endl;
+}
+
+btVector3 FPSController::JumpForceFromInput()
+{
+	if (groundSpacingTimer > 0)
+	{
+		groundSpacingTimer -= deltaTime; // needed to give the jump a chance to startup without getting zeroed out by Floor collision
+	}
+
+	btVector3 jumpForce = btVector3(0, 0, 0);
+	if (DXCore::keyboard.OnKeyDown(VK_SPACE)) {
+		if (!midAir || midAir && jumpCount < 2) {
+
+			if (!midAir)
+			{
+				jumpForce = btVector3(direction.x, 10.0f, direction.z) * jumpForceScalar;
+			}
+			else
+			{
+				jumpForce = btVector3(direction.x, 12.0f * jumpForceScalar, direction.z); // not allowing as much lateral movement on second jump but giving more height
+			}
+
+			jumpCount++;
+			midAir = true;
+			groundSpacingTimer = 0.1f;
+		}
+	}
+
+	return jumpForce;
+}
+
+btVector3 FPSController::DashImpulseFromInput()
+{
+	if (dashDampTimer > 0)
+	{
+		dashDampTimer -= deltaTime;
+	}
+
+	btVector3 dashImpulse = btVector3(0, 0, 0);
+	if (/*dashCount > 0 &&*/ DXCore::keyboard.OnKeyDown(VK_SHIFT))
+	{
+		dashCount--;
+		// cout << dashCount << endl;
+		// default dash to forwards
+		dashImpulse = btVector3(direction.x, 0, direction.z) * dashImpulseScalar;
+
+		if (DXCore::keyboard.KeyIsPressed(0x41)) // left
+		{
+			dashImpulse = btVector3(right.x, 0, right.z) * dashImpulseScalar;
+		}
+		if (DXCore::keyboard.KeyIsPressed(0x44)) // right
+		{
+			dashImpulse = btVector3(right.x, 0, right.z) * -dashImpulseScalar;
+		}
+		if (DXCore::keyboard.KeyIsPressed(0x53)) // backwards
+		{
+			dashImpulse = btVector3(direction.x, 0, direction.z) * -dashImpulseScalar;
+		}
+
+		dashDampTimer = 0.25f;
+	}
+
+	return dashImpulse;
 }
 
 void FPSController::DampForces()
@@ -232,10 +276,11 @@ void FPSController::OnCollision(btCollisionObject* other)
 	Entity* otherE = (Entity*)other->getUserPointer();
 	
 	// Ground check -- constrain the y velocity if grounded for better control over dynamic controller
-	if (otherE->tag->c_str() == std::string("Floor") && spacingTimer <= 0.0f)
+	if (otherE->tag->c_str() == std::string("Floor") && groundSpacingTimer <= 0.0f)
 	{
 		midAir = false;
 		jumpCount = 0;
 	}
 }
+
 
