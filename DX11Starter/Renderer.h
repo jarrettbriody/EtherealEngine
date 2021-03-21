@@ -56,8 +56,11 @@ private:
 
 	vector<Entity*>* entities = nullptr;
 	RenderObject* renderObjects;
+	RenderObject* transparentObjects;
 	int renderObjectCount = 0;
+	int transparentObjectCount = 0;
 	int maxRenderObjects = 0;
+	int maxTransparentObjects = 0;
 
 	RendererShaders shaders;
 
@@ -113,4 +116,5 @@ public:
 	void SendSSAOKernelToShader(SimplePixelShader* pixelShader);
 
 	void AddRenderObject(Entity* e, Mesh* mesh, Material* mat = nullptr);
+	void AddTransparentObject(Entity* e, Mesh* mesh, Material* mat = nullptr);
 };
