@@ -42,6 +42,7 @@ void FPSController::Update()
 
 		case PlayerState::Normal:
 			Move();
+			
 			cam->SetPosition(XMFLOAT3(entity->GetPosition().x, entity->GetPosition().y + entity->GetScale().y + headbobOffset, entity->GetPosition().z)); // after all updates make sure camera is following the affected entity
 			break;
 
@@ -65,8 +66,8 @@ void FPSController::Update()
 			// ragdoll the player
 			playerRBody->setAngularFactor(btVector3(1, 1, 1)); // free rotations on x and z axes
 			playerRBody->setGravity(btVector3(0.0f, -25.0f, 0.0f));
-			cam->SetPosition(XMFLOAT3(entity->GetPosition().x, entity->GetPosition().y + entity->GetScale().y + headbobOffset, entity->GetPosition().z)); // after all updates make sure camera is following the affected entity
 
+			cam->SetPosition(XMFLOAT3(entity->GetPosition().x, entity->GetPosition().y + entity->GetScale().y + headbobOffset, entity->GetPosition().z)); // after all updates make sure camera is following the affected entity
 			break;
 
 		case PlayerState::Victory:
@@ -82,17 +83,7 @@ void FPSController::Update()
 void FPSController::Move()
 {
 	// Choosing to go with a dynamic character controller to ensure ease of interaction with Bullet, many people online mentioned funky things going on when trying to get kinematic to work
-
-	// Set gravity if in mid air
-	if (midAir)
-	{
-		playerRBody->setGravity(btVector3(0.0f, -25.0f, 0.0f));
-	}
-	else
-	{
-		playerRBody->setGravity(btVector3(0.0f, 0.0f, 0.0f)); // TODO: Current issue with this is that if you walk off a heightened platform without jumping you won't fall, may have to do raycast check for distance to ground
-	}
-
+	
 	// ready the needed information
 	direction = cam->direction;
 	XMFLOAT3 yAxis = Y_AXIS;
@@ -102,8 +93,8 @@ void FPSController::Move()
 	XMStoreFloat3(&right, rightVec);
 
 	// update the controller velocity vector based on input
+	GroundCheck();
 	UpdateHeadbob();
-	
 	// base movement
 	if (DXCore::keyboard.KeyIsPressed(0x57)) { // w
 		controllerVelocity += btVector3(direction.x, 0, direction.z) * spd;
@@ -151,6 +142,39 @@ void FPSController::Move()
 	// cout << "Controller Velocity: (" << controllerVelocity.getX() << ", " << controllerVelocity.getY() << ", " << controllerVelocity.getZ() << ")" << endl;
 }
 
+void FPSController::GroundCheck()
+{
+	// Ground check
+	Config::DynamicsWorld->updateAabbs();
+	Config::DynamicsWorld->computeOverlappingPairs();
+
+	// Redefine our vectors using bullet's silly types
+	btVector3 from(entity->GetPosition().x, entity->GetPosition().y, entity->GetPosition().z);
+	btVector3 to(entity->GetPosition().x, entity->GetPosition().y - 1, entity->GetPosition().z); // check a little below the player for any surface to stand on 
+
+	// Create variable to store the ray hit and set flags
+	btCollisionWorld::ClosestRayResultCallback closestResult(from, to);
+	closestResult.m_flags |= btTriangleRaycastCallback::kF_FilterBackfaces;
+
+	Config::DynamicsWorld->rayTest(from, to, closestResult); // Raycast
+
+	if (closestResult.hasHit()) // if there is a surface to stand on
+	{
+		// Get the entity associated with the rigid body we hit
+		/*Entity* hit = (Entity*)(closestResult.m_collisionObject->getUserPointer());
+		printf("Hit: %s\n", hit->GetName().c_str());*/
+		
+		midAir = false;
+		playerRBody->setGravity(btVector3(0.0f, 0.0f, 0.0f));
+		jumpCount = 0;
+	}
+	else
+	{
+		midAir = true;
+		playerRBody->setGravity(btVector3(0.0f, -25.0f, 0.0f));
+	}
+}
+
 void FPSController::UpdateHeadbob()
 {
 	if (!DXCore::keyboard.NoKeyDown() && !midAir) // if keys are down and we are on the ground we want to headbob
@@ -187,11 +211,6 @@ void FPSController::UpdateHeadbob()
 
 btVector3 FPSController::JumpForceFromInput()
 {
-	if (groundSpacingTimer > 0)
-	{
-		groundSpacingTimer -= deltaTime; // needed to give the jump a chance to startup without getting zeroed out by Floor collision
-	}
-
 	btVector3 jumpForce = btVector3(0, 0, 0);
 	if (DXCore::keyboard.OnKeyDown(VK_SPACE)) {
 		if (!midAir || midAir && jumpCount < 2) {
@@ -207,7 +226,6 @@ btVector3 FPSController::JumpForceFromInput()
 
 			jumpCount++;
 			midAir = true;
-			groundSpacingTimer = 0.1f;
 		}
 	}
 
@@ -263,11 +281,19 @@ void FPSController::DampForces()
 
 void FPSController::OnMouseMove(WPARAM buttonState, int x, int y)
 {
-	if (buttonState & 0x0001) {
-		cam->RotateCamera(x - (int)prevMousePos.x, y - (int)prevMousePos.y);
+	if (buttonState & 0x0001) { // holding LMB to look around only happens if Config::FPSControllerEnabled = false
+		cam->RotateCamera(x - (int)prevMousePos.x, y - (int)prevMousePos.y); 
 
 		prevMousePos.x = x;
 		prevMousePos.y = y;
+	}
+}
+
+void FPSController::OnMouseDown(WPARAM buttonState, int x, int y)
+{
+	if (buttonState & 0x0001) {
+		// sword slash
+		cout << "LMB" << endl;
 	}
 }
 
@@ -275,12 +301,6 @@ void FPSController::OnCollision(btCollisionObject* other)
 {
 	Entity* otherE = (Entity*)other->getUserPointer();
 	
-	// Ground check -- constrain the y velocity if grounded for better control over dynamic controller
-	if (otherE->tag->c_str() == std::string("Floor") && groundSpacingTimer <= 0.0f)
-	{
-		midAir = false;
-		jumpCount = 0;
-	}
 }
 
 

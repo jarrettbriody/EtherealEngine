@@ -30,7 +30,6 @@ class FPSController : public ScriptManager
 
 	bool midAir = true; // true if starting character in the air
 	int jumpCount = 0;
-	float groundSpacingTimer = 0.0f;
 	float jumpForceScalar = 3.0f;
 
 	int dashCount = 5;
@@ -50,6 +49,8 @@ class FPSController : public ScriptManager
 
 	void Move();
 
+	void GroundCheck();
+
 	void UpdateHeadbob();
 	
 	btVector3 JumpForceFromInput();
@@ -59,6 +60,8 @@ class FPSController : public ScriptManager
 	void DampForces();
 
 	void OnMouseMove(WPARAM buttonState, int x, int y);
+
+	void OnMouseDown(WPARAM buttonState, int x, int y);
 
 	void OnCollision(btCollisionObject* other);
 };
