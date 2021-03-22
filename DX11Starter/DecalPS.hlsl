@@ -19,7 +19,6 @@ struct VertexToPixel
 	//float2 uv           : TEXCOORD;
 	float3 worldPos		: POSITION;
 	float3 tangent		: TANGENT;
-	float4 posForShadow : SHADOW;
 	float3 viewRay      : TEXCOORD0;
 };
 
@@ -33,9 +32,16 @@ cbuffer externalData : register(b1) {
 	int illumination;
 	int specularValue;
 	float3 manualColor;
-	float3 cameraPos;
+	matrix worldMatrix;
 	matrix inverseWorldMatrix;
-}
+};
+
+cbuffer constantPerFrame : register(b2) {
+	float3 cameraPos;
+	matrix shadowViewProj;
+	matrix shadowView;
+	matrix shadowProj;
+};
 
 Texture2D DepthBuffer	  : register(t0);
 Texture2D ShadowMap		  : register(t1);
@@ -60,15 +66,21 @@ float4 main(VertexToPixel input) : SV_TARGET
 
 	input.viewRay = normalize(input.viewRay);
 
-	float3 pos = cameraPos + input.viewRay * depth;
+	float3 worldPos = cameraPos + input.viewRay * depth;
 
-	pos = mul(float4(pos, 1.0f), inverseWorldMatrix);
+	float3 objPos = mul(float4(worldPos, 1.0f), inverseWorldMatrix);
 
-	clip(0.5f - abs(pos.xyz));
+	clip(0.5f - abs(objPos.xyz));
 
-	float2 decalUV = pos.xy + 0.5f;
+	//return float4(1.0f, 0.0f, 0.0f, 1.0f);
+
+	float2 decalUV = objPos.xy + 0.5f;
 
 	float4 surfaceColor = Decal.Sample(BasicSampler, decalUV);
+
+	//float3 decalUV = float3((pos.xy + 0.5f) * 512, 0);
+
+	//float4 surfaceColor = Decal.Load(decalUV);
 
 	if (surfaceColor.a < 0.1f) discard;
 
@@ -77,18 +89,20 @@ float4 main(VertexToPixel input) : SV_TARGET
 	}
 
 	// Shadow calculations
-	float2 shadowUV = input.posForShadow.xy / input.posForShadow.w * 0.5f + 0.5f;
+
+	// Calculate shadow map position
+	float4 posForShadow = mul(mul(float4(worldPos, 1.0f), shadowView), shadowProj);
+	float2 shadowUV = ((posForShadow.xy / posForShadow.w) * 0.5f) + 0.5f;
 	shadowUV.y = 1.0f - shadowUV.y;
 
 	// This pixel's actual depth from the light
-	float depthFromLight = input.posForShadow.z / input.posForShadow.w;
+	float depthFromLight = posForShadow.z / posForShadow.w;
 
 	// Sample the shadow map in the same location to get
 	// the closest depth along that "ray" from the light
 	// (Samples the shadow map with comparison built in)
-	float shadowAmount = ShadowMap.SampleCmpLevelZero(ShadowSampler, shadowUV, depthFromLight);
 
-	//return ShadowMap.Sample(BasicSampler, shadowUV);
+	float shadowAmount = ShadowMap.SampleCmpLevelZero(ShadowSampler, shadowUV, depthFromLight);
 
 	float3 toCameraVector = normalize(cameraPos - input.worldPos);
 

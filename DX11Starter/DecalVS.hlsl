@@ -10,8 +10,8 @@ cbuffer externalData : register(b0)
 	matrix world;
 	matrix view;
 	matrix projection;
-	matrix shadowView;
-	matrix shadowProj;
+	//matrix shadowView;
+	//matrix shadowProj;
 	float3 cameraPos;
 };
 
@@ -50,7 +50,6 @@ struct VertexToPixel
 	//float2 uv           : TEXCOORD;
 	float3 worldPos		: POSITION;
 	float3 tangent		: TANGENT;
-	float4 posForShadow : SHADOW;
 	float3 viewRay      : TEXCOORD0;
 };
 
@@ -90,11 +89,6 @@ VertexToPixel main(VertexShaderInput input)
 	output.normal = normalize(mul(input.normal, (float3x3)world));
 
 	//output.uv = input.uv;
-
-
-	// Calculate shadow map position
-	matrix shadowWVP = mul(mul(world, shadowView), shadowProj);
-	output.posForShadow = mul(float4(input.position, 1.0f), shadowWVP);
 
 	output.viewRay = output.worldPos - cameraPos;
 

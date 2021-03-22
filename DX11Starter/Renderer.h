@@ -36,6 +36,7 @@ struct ShadowComponents {
 
 	DirectX::XMFLOAT4X4 shadowViewMatrix;
 	DirectX::XMFLOAT4X4 shadowProjectionMatrix;
+	DirectX::XMFLOAT4X4 shadowViewProj;
 };
 
 struct DepthStencilComponents {

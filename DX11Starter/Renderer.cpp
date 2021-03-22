@@ -201,19 +201,19 @@ void Renderer::InitDepthStencil()
 	dsDesc.DepthFunc = D3D11_COMPARISON_ALWAYS;
 
 	// Stencil test parameters
-	dsDesc.StencilEnable = false;
+	dsDesc.StencilEnable = true;
 	dsDesc.StencilReadMask = 0xFF;
 	dsDesc.StencilWriteMask = 0xFF;
 
 	// Stencil operations if pixel is front-facing
-	dsDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
-	dsDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_INCR;
-	dsDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+	dsDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_DECR;
+	dsDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_DECR;
+	dsDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_DECR;
 	dsDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
 
 	// Stencil operations if pixel is back-facing
 	dsDesc.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
-	dsDesc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_DECR;
+	dsDesc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_INCR;
 	dsDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
 	dsDesc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
 
@@ -353,6 +353,8 @@ void Renderer::InitShadows()
 		0.1f,
 		1000.0f));
 	XMStoreFloat4x4(&shadowComponents.shadowProjectionMatrix, shadowProj);
+
+	XMStoreFloat4x4(&shadowComponents.shadowViewProj, XMMatrixTranspose(XMMatrixMultiply(shadowView, shadowProj)));
 }
 
 void Renderer::SetShadowMapResolution(unsigned int res)
@@ -459,6 +461,16 @@ void Renderer::RenderFrame()
 		shaders.decalVS->SetShader();
 		shaders.decalPS->SetShader();
 
+		shaders.decalVS->SetFloat3("cameraPos", camera->position);
+
+		//shaders.decalPS->SetMatrix4x4("shadowViewProj", shadowComponents.shadowViewProj);
+		shaders.decalPS->SetMatrix4x4("shadowView", shadowComponents.shadowViewMatrix);
+		shaders.decalPS->SetMatrix4x4("shadowProj", shadowComponents.shadowProjectionMatrix);
+		shaders.decalPS->SetShaderResourceView("DepthBuffer", depthStencilComponents.depthStencilSRV);
+		shaders.decalPS->SetShaderResourceView("ShadowMap", shadowComponents.shadowSRV);
+		shaders.decalPS->SetSamplerState("ShadowSampler", shadowComponents.shadowSampler);
+		shaders.decalPS->SetFloat3("cameraPos", camera->position);
+
 		for (size_t i = 0; i < DecalHandler::decalsVec.size(); i++)
 		{
 			DecalBucket* db = DecalHandler::decalsVec[i];
@@ -475,16 +487,12 @@ void Renderer::RenderFrame()
 				shaders.decalVS->SetMatrix4x4("world", world);
 				shaders.decalVS->SetMatrix4x4("view", camera->GetViewMatrix());
 				shaders.decalVS->SetMatrix4x4("projection", camera->GetProjMatrix());
-				shaders.decalVS->SetMatrix4x4("shadowView", shadowComponents.shadowViewMatrix);
-				shaders.decalVS->SetMatrix4x4("shadowProj", shadowComponents.shadowProjectionMatrix);
-				shaders.decalVS->SetFloat3("cameraPos", camera->position);
-
-				shaders.decalPS->SetShaderResourceView("DepthBuffer", depthStencilComponents.depthStencilSRV);
-				shaders.decalPS->SetShaderResourceView("ShadowMap", shadowComponents.shadowSRV);
+				//shaders.decalVS->SetMatrix4x4("shadowView", shadowComponents.shadowViewMatrix);
+				//shaders.decalVS->SetMatrix4x4("shadowProj", shadowComponents.shadowProjectionMatrix);
 				//Config::Context->PSSetShaderResources(2, 8, decals);
 				shaders.decalPS->SetShaderResourceView("Decal", decals[db->decals[j].type]);
+				shaders.decalPS->SetMatrix4x4("worldMatrix", world);
 				shaders.decalPS->SetMatrix4x4("inverseWorldMatrix", invWorld);
-				shaders.decalPS->SetFloat3("cameraPos", camera->position);
 
 				shaders.decalVS->CopyAllBufferData();
 				shaders.decalPS->CopyAllBufferData();
@@ -568,8 +576,11 @@ void Renderer::RenderShadowMap()
 
 	// Set up the shaders
 	shaders.depthStencilVS->SetShader();
+	//shaders.depthStencilPS->SetShader();
 	shaders.depthStencilVS->SetMatrix4x4("view", shadowComponents.shadowViewMatrix);
 	shaders.depthStencilVS->SetMatrix4x4("projection", shadowComponents.shadowProjectionMatrix);
+	//shaders.depthStencilPS->SetFloat3("cameraPosition", lights["Sun"]->Position);
+	//shaders.depthStencilPS->CopyAllBufferData();
 
 	Config::Context->PSSetShader(0, 0, 0); // Turns OFF the pixel shader
 
