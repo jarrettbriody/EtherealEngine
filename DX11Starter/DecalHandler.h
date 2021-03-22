@@ -8,12 +8,20 @@ using namespace std;
 
 enum class DecalType {
 	BLOOD1,
+	BLOOD2,
+	BLOOD3,
+	BLOOD4,
+	BLOOD5,
+	BLOOD6,
+	BLOOD7,
+	BLOOD8,
 };
 
 struct Decal {
 	XMFLOAT4X4 localTransform;
 	XMFLOAT4X4 invLocalTransform;
 	int type;
+	//TODO add custom color
 };
 
 struct DecalBucket {

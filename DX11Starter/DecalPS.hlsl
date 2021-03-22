@@ -1,8 +1,6 @@
-//#include "Lighting.hlsli"
+#include "Lighting.hlsli"
 
 #define MAX_LIGHTS 32
-
-
 
 // Struct representing the data we expect to receive from earlier pipeline stages
 // - Should match the output of our corresponding vertex shader
@@ -18,44 +16,30 @@ struct VertexToPixel
 	//  v    v                v
 	float4 position		: SV_POSITION;
 	float3 normal       : NORMAL;
-	float2 uv           : TEXCOORD;
+	//float2 uv           : TEXCOORD;
 	float3 worldPos		: POSITION;
 	float3 tangent		: TANGENT;
 	float4 posForShadow : SHADOW;
-	float4 positionViewSpace : VIEWSPACEPOS;
+	float3 viewRay      : TEXCOORD0;
 };
 
-/*
 cbuffer lightCBuffer : register(b0)
 {
 	Light lights[MAX_LIGHTS];
 	int lightCount;
 };
-*/
 
 cbuffer externalData : register(b1) {
-
+	int illumination;
 	int specularValue;
-	float3 cameraPosition;
-	float farClip;
-	float3 decalPosition;
-}
-
-cbuffer matrices : register(b2) {
-	//matrix ownerWorld;
-	//matrix localWorld;
+	float3 manualColor;
+	float3 cameraPos;
 	matrix inverseWorldMatrix;
-	matrix inverseOwnerWorld;
-	matrix inverseLocalWorld;
-	matrix inverseView;
-	matrix projection;
 }
 
-Texture2D Decals		  :  register(t0);
-
-Texture2D DepthBuffer	  : register(t1);
-
-Texture2D ShadowMap		  : register(t2);
+Texture2D DepthBuffer	  : register(t0);
+Texture2D ShadowMap		  : register(t1);
+Texture2D Decal			  :  register(t2);
 
 SamplerState BasicSampler               : register(s0);
 SamplerComparisonState ShadowSampler	: register(s1);
@@ -71,76 +55,26 @@ SamplerComparisonState ShadowSampler	: register(s1);
 // --------------------------------------------------------
 float4 main(VertexToPixel input) : SV_TARGET
 {
-	//return float4(1.0f, 0.0f, 0.0f, 1.0f);
+	float3 pixelIndex = float3(input.position.xy, 0);
+	float  depth = DepthBuffer.Load(pixelIndex).r;
 
-	//return float4(input.position.xyz / input.position.w,1.0f);
+	input.viewRay = normalize(input.viewRay);
 
-	float2 screenPosition = input.position.xy / input.position.w;
+	float3 pos = cameraPos + input.viewRay * depth;
 
-	float2 depthBufferUV = screenPosition * float2(0.5f, -0.5f) + float2(0.5f, 0.5f);
-	depthBufferUV += float2(0.5f, 0.5f);
+	pos = mul(float4(pos, 1.0f), inverseWorldMatrix);
 
-	//Sample a value from the depth buffer
-	float depth = DepthBuffer.Load(int3(depthBufferUV,0)).r;
-
-	float2 deproject = float2(projection._11, projection._22);
-	float4 scenePosView = float4(input.position.xy * depth / (deproject.xy * input.position.w), -depth, 1);
-
-	float3 pos = mul(scenePosView, inverseWorldMatrix);
 	clip(0.5f - abs(pos.xyz));
 
-	return float4(1.0f, 0.0f, 0.0f, 1.0f);
+	float2 decalUV = pos.xy + 0.5f;
 
-	/*
+	float4 surfaceColor = Decal.Sample(BasicSampler, decalUV);
 
-	//convert to UV so we can sample depth buffer
-	//float2 depthBufferUV = screenPosition * 0.5f + 0.5f;
-	//depthBufferUV.y = 1.0f - depthBufferUV.y;
-	//Convert into a texture coordinate
-	float2 depthBufferUV = float2(
-		(1 + screenPosition.x) / 2 + (0.5 / 1600),
-		(1 - screenPosition.y) / 2 + (0.5 / 900)
-		);
+	if (surfaceColor.a < 0.1f) discard;
 
-	//float4 depthSample = DepthBuffer.Sample(ShadowSampler, depthBufferUV);
-
-	//return float4(depthSample.xxx, 1.0f);
-
-	float3 viewRay = normalize(input.positionViewSpace.xyz * (farClip / -input.positionViewSpace.z));
-
-	float3 viewPosition = viewRay.xyz * depthSample.r;
-
-	float3 worldPosOfPixelOnWall = mul(float4(viewPosition, 1), inverseView).xyz;
-
-	//return float4(viewPosition, 1.0f);
-
-	//return float4(worldPosOfPixelOnWall.xyz, 1.0f);
-
-	//matrix actualInverseWorld = mul(inverseLocalWorld, inverseOwnerWorld);
-
-	float4 objectPosOfPixelOnWall = mul(float4(worldPosOfPixelOnWall, 1), inverseWorldMatrix);
-
-	//float4 objectPosOfPixelOnWall = mul(float4(input.worldPos, 1), inverseWorldMatrix);
-
-	//objectPosOfPixelOnWall = mul(objectPosOfPixelOnWall, inverseLocalWorld);
-
-	//return objectPosOfPixelOnWall;
-
-	clip(0.5f - abs(objectPosOfPixelOnWall.xyz));
-	//clip(1.0f - abs(objectPosOfPixelOnWall.y));
-	//clip(1.0f - abs(objectPosOfPixelOnWall.z));
-
-	return float4(1.0f, 0.0f, 0.0f, 1.0f);
-	*/
-
-	/*
-	input.uv = float2(input.uv.x * uvMult.x, input.uv.y * uvMult.y);
-
-	float4 surfaceColor = DiffuseTexture.Sample(BasicSampler, input.uv);
-	// Just return the input color
-	// - This color (like most values passing through the rasterizer) is 
-	//   interpolated for each pixel between the corresponding vertices 
-	//   of the triangle we're rendering
+	if (illumination == 11) {
+		surfaceColor = surfaceColor.xyzw - (1 - float4(manualColor.xyz, 0));
+	}
 
 	// Shadow calculations
 	float2 shadowUV = input.posForShadow.xy / input.posForShadow.w * 0.5f + 0.5f;
@@ -156,10 +90,12 @@ float4 main(VertexToPixel input) : SV_TARGET
 
 	//return ShadowMap.Sample(BasicSampler, shadowUV);
 
-	float3 toCameraVector = normalize(cameraPosition - input.worldPos);
+	float3 toCameraVector = normalize(cameraPos - input.worldPos);
 
 
-	float3 finalColor = float3(0.f,0.f,0.f);
+	float3 finalColor = (surfaceColor * 0.1f) * shadowAmount + (surfaceColor * 0.01f);;
+	/*
+	float3 finalColor = float3(0.f, 0.f, 0.f);
 	for (int i = 0; i < lightCount; i++)
 	{
 		switch (lights[i].Type) {
@@ -174,9 +110,9 @@ float4 main(VertexToPixel input) : SV_TARGET
 			break;
 		}
 	}
+	*/
 
 	float3 gammaCorrect = pow(abs(finalColor), 1.0f / 2.2f);
 
 	return float4(gammaCorrect, 1.f);
-	*/
 }

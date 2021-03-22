@@ -4,7 +4,7 @@
 
 Camera::Camera()
 {
-	position = XMFLOAT3(-410.543f, 30.0f, -90.21f);
+	position = XMFLOAT3(0.0f, 30.0f, -10.0f);
 	direction = XMFLOAT3(0.0f, 0.0f, 1.0f);
 	XMVECTOR dir = XMLoadFloat3(&direction);
 	dir = XMVector3Normalize(dir);
@@ -31,6 +31,11 @@ XMFLOAT4X4 Camera::GetInverseViewMatrix()
 XMFLOAT4X4 Camera::GetProjMatrix()
 {
 	return projMatrix;
+}
+
+XMFLOAT4X4 Camera::GetInverseProjMatrix()
+{
+	return invProjMatrix;
 }
 
 void Camera::SetProjMatrix(XMFLOAT4X4 pm)
@@ -70,6 +75,8 @@ void Camera::UpdateProjectionMatrix()
 		nearClip,												// Near clip plane distance
 		farClip);												// Far clip plane distance
 	XMStoreFloat4x4(&projMatrix, XMMatrixTranspose(P));			// Transpose for HLSL!
+
+	XMStoreFloat4x4(&invProjMatrix, XMMatrixTranspose(XMMatrixInverse(nullptr, P)));
 }
 
 void Camera::Update()

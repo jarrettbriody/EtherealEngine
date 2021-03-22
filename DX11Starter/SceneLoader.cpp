@@ -161,6 +161,10 @@ void SceneLoader::LoadShaders()
 	decalPS->LoadShaderFile(L"DecalPS.cso");
 	pixelShadersMap.insert({ "Decal", decalPS });
 
+	SimplePixelShader* depthBufferPS = new SimplePixelShader(Config::Device, Config::Context);
+	depthBufferPS->LoadShaderFile(L"DepthStencilPS.cso");
+	pixelShadersMap.insert({ "DepthStencil", depthBufferPS });
+
 	/*
 	SimplePixelShader* defaultDecalPS = new SimplePixelShader(Config::Device, Config::Context);
 	defaultDecalPS->LoadShaderFile(L"DefaultDecalPS.cso");
@@ -224,6 +228,14 @@ void SceneLoader::LoadDefaultTextures()
 	defaultTexturesMap.insert({ "Grey", Utility::LoadSRV("Default/grey.png") });
 	defaultTexturesMap.insert({ "Grey4", Utility::LoadSRV("Default/grey4.png") });
 	defaultTexturesMap.insert({ "White", Utility::LoadSRV("Default/white.png") });
+	defaultTexturesMap.insert({ "BLOOD1", Utility::LoadSRV("Default/BLOOD/BLOOD1.png") });
+	defaultTexturesMap.insert({ "BLOOD2", Utility::LoadSRV("Default/BLOOD/BLOOD2.png") });
+	defaultTexturesMap.insert({ "BLOOD3", Utility::LoadSRV("Default/BLOOD/BLOOD3.png") });
+	defaultTexturesMap.insert({ "BLOOD4", Utility::LoadSRV("Default/BLOOD/BLOOD4.png") });
+	defaultTexturesMap.insert({ "BLOOD5", Utility::LoadSRV("Default/BLOOD/BLOOD5.png") });
+	defaultTexturesMap.insert({ "BLOOD6", Utility::LoadSRV("Default/BLOOD/BLOOD6.png") });
+	defaultTexturesMap.insert({ "BLOOD7", Utility::LoadSRV("Default/BLOOD/BLOOD7.png") });
+	defaultTexturesMap.insert({ "BLOOD8", Utility::LoadSRV("Default/BLOOD/BLOOD8.png") });
 }
 
 void SceneLoader::LoadDefaultMaterials()

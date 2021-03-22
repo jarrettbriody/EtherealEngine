@@ -7,12 +7,12 @@
 // - The name of the cbuffer itself is unimportant
 cbuffer externalData : register(b0)
 {
-	matrix ownerWorld;
-	matrix localWorld;
+	matrix world;
 	matrix view;
 	matrix projection;
 	matrix shadowView;
 	matrix shadowProj;
+	float3 cameraPos;
 };
 
 // Struct representing a single vertex worth of data
@@ -47,11 +47,11 @@ struct VertexToPixel
 	//  v    v                v
 	float4 position		: SV_POSITION;	// XYZW position (System Value Position)
 	float3 normal       : NORMAL;
-	float2 uv           : TEXCOORD;
+	//float2 uv           : TEXCOORD;
 	float3 worldPos		: POSITION;
 	float3 tangent		: TANGENT;
 	float4 posForShadow : SHADOW;
-	float4 positionViewSpace : VIEWSPACEPOS;
+	float3 viewRay      : TEXCOORD0;
 };
 
 // --------------------------------------------------------
@@ -73,9 +73,9 @@ VertexToPixel main(VertexShaderInput input)
 	//
 	// First we multiply them together to get a single matrix which represents
 	// all of those transformations (world to view to projection space)
-	matrix actualWorld = mul(localWorld, ownerWorld);
+	//matrix actualWorld = mul(localWorld, ownerWorld);
 
-	matrix worldViewProj = mul(mul(actualWorld, view), projection);
+	matrix worldViewProj = mul(mul(world, view), projection);
 
 	// Then we convert our 3-component position vector to a 4-component vector
 	// and multiply it by our final 4x4 matrix.
@@ -83,20 +83,20 @@ VertexToPixel main(VertexShaderInput input)
 	// The result is essentially the position (XY) of the vertex on our 2D 
 	// screen and the distance (Z) from the camera (the "depth" of the pixel)
 
-	output.positionViewSpace = mul(mul(float4(input.position, 1.0f), actualWorld), view);
-
 	output.position = mul(float4(input.position, 1.0f), worldViewProj);
 
-	output.worldPos = mul(float4(input.position, 1.0f), actualWorld).xyz;
+	output.worldPos = mul(float4(input.position, 1.0f), world).xyz;
 
-	output.normal = normalize(mul(input.normal, (float3x3)actualWorld));
+	output.normal = normalize(mul(input.normal, (float3x3)world));
 
-	output.uv = input.uv;
+	//output.uv = input.uv;
 
 
 	// Calculate shadow map position
-	matrix shadowWVP = mul(mul(actualWorld, shadowView), shadowProj);
+	matrix shadowWVP = mul(mul(world, shadowView), shadowProj);
 	output.posForShadow = mul(float4(input.position, 1.0f), shadowWVP);
+
+	output.viewRay = output.worldPos - cameraPos;
 
 	// Whatever we return will make its way through the pipeline to the
 	// next programmable stage we're using (the pixel shader for now)

@@ -70,6 +70,7 @@ void DecalHandler::GenerateDecal(Entity* owner, XMFLOAT3 rayDirection, XMFLOAT3 
 	XMFLOAT3 end;
 	XMStoreFloat3(&end, XMVectorAdd(XMLoadFloat3(&rayHitPosition), XMVectorScale(up,5.0f)));
 
+	/*
 	XMFLOAT3* rayPoints = new XMFLOAT3[8];
 	rayPoints[0] = start;
 	rayPoints[1] = start;
@@ -87,6 +88,7 @@ void DecalHandler::GenerateDecal(Entity* owner, XMFLOAT3 rayDirection, XMFLOAT3 
 	dl->worldMatrix = wm;
 	dl->GenerateCuboidVertexBuffer(rayPoints, 8);
 	delete[] rayPoints;
+	*/
 
 	XMMATRIX scale = DirectX::XMMatrixScaling(boxScale.x, boxScale.y, boxScale.z);
 	
@@ -101,8 +103,7 @@ void DecalHandler::GenerateDecal(Entity* owner, XMFLOAT3 rayDirection, XMFLOAT3 
 	if (!decalsMap.count(ownerName)) {
 		bool success;
 		DecalBucket* b = (DecalBucket*)MemoryAllocator::GetInstance()->AllocateToPool((unsigned int)MEMORY_POOL::DECAL_POOL, sizeof(DecalBucket), success);
-		DecalBucket buc;
-		*b = buc;
+		ZeroMemory(b, sizeof(DecalBucket));
 		b->owner = owner;
 		decalsMap.insert({ ownerName, b });
 		b->index = decalsVec.size();

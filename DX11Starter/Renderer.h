@@ -14,6 +14,7 @@ using namespace std;
 
 struct RendererShaders {
 	SimpleVertexShader* depthStencilVS = nullptr;
+	SimplePixelShader* depthStencilPS = nullptr;
 	SimpleVertexShader* debugLineVS = nullptr;
 	SimplePixelShader* debugLinePS = nullptr;
 	SimpleVertexShader* decalVS = nullptr;
@@ -39,6 +40,7 @@ struct ShadowComponents {
 
 struct DepthStencilComponents {
 	ID3D11DepthStencilView* depthStencilDSV;
+	ID3D11RenderTargetView* depthStencilRTV;
 	ID3D11ShaderResourceView* depthStencilSRV;
 	ID3D11SamplerState* depthStencilSampler;
 	ID3D11RasterizerState* depthStencilRasterizer;

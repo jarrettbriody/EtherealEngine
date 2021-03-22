@@ -43,6 +43,9 @@
     <FxCompile Include="DecalVS.hlsl">
       <Filter>EEShaders\Vertex Shaders</Filter>
     </FxCompile>
+    <FxCompile Include="DepthStencilPS.hlsl">
+      <Filter>EEShaders\Pixel Shaders</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Camera.cpp">
