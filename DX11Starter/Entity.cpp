@@ -268,6 +268,7 @@ void Entity::InitRigidBody(BulletColliderShape shape, float entityMass, bool zer
 	//rBody->setCollisionFlags(btCollisionObject::CF_KINEMATIC_OBJECT);
 
 	// Have the rigid body register a pointer to the entity it belongs to so we can access it
+	// TODO: Change this to a struct with everything included (name, entity pointer, tag)
 	rBody->setUserPointer((void*)(this));
 
 	Config::DynamicsWorld->addRigidBody(rBody);

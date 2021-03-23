@@ -7,6 +7,7 @@
 // Define the static instance variable so our OS-level 
 // message handling function below can talk to our object
 DXCore* DXCore::DXCoreInstance = 0;
+Keyboard DXCore::keyboard;
 
 // --------------------------------------------------------
 // The global callback function for handling windows OS-level messages.
@@ -360,7 +361,7 @@ HRESULT DXCore::Run()
 		{
 			// Update timer and title bar (if necessary)
 			UpdateTimer();
-			if(titleBarStats)
+			if (titleBarStats)
 				UpdateTitleBarStats();
 
 			// The game loop
@@ -494,10 +495,6 @@ void DXCore::CreateConsoleWindow(int bufferLines, int bufferColumns, int windowL
 	EnableMenuItem(hmenu, SC_CLOSE, MF_GRAYED);
 }
 
-
-
-
-
 // --------------------------------------------------------
 // Handles messages that are sent to our window by the
 // operating system.  Ignoring these messages would cause
@@ -509,22 +506,22 @@ LRESULT DXCore::ProcessMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 	// Check the incoming message and handle any we care about
 	switch (uMsg)
 	{
-	// This is the message that signifies the window closing
+		// This is the message that signifies the window closing
 	case WM_DESTROY:
 		PostQuitMessage(0); // Send a quit message to our own program
 		return 0;
 
-	// Prevent beeping when we "alt-enter" into fullscreen
-	case WM_MENUCHAR: 
+		// Prevent beeping when we "alt-enter" into fullscreen
+	case WM_MENUCHAR:
 		return MAKELRESULT(0, MNC_CLOSE);
 
-	// Prevent the overall window from becoming too small
+		// Prevent the overall window from becoming too small
 	case WM_GETMINMAXINFO:
 		((MINMAXINFO*)lParam)->ptMinTrackSize.x = 200;
 		((MINMAXINFO*)lParam)->ptMinTrackSize.y = 200;
 		return 0;
 
-	// Sent when the window size changes
+		// Sent when the window size changes
 	case WM_SIZE:
 		// Don't adjust anything when minimizing,
 		// since we end up with a Config::ViewPortWidth/Config::ViewPortHeight of zero
@@ -538,35 +535,61 @@ LRESULT DXCore::ProcessMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 
 		// If DX is initialized, resize 
 		// our required buffers
-		if (Config::Device) 
+		if (Config::Device)
 			OnResize();
 
 		return 0;
 
-	// Mouse button being pressed (while the cursor is currently over our window)
+		// Mouse button being pressed (while the cursor is currently over our window)
 	case WM_LBUTTONDOWN:
 	case WM_MBUTTONDOWN:
 	case WM_RBUTTONDOWN:
 		OnMouseDown(wParam, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
 		return 0;
 
-	// Mouse button being released (while the cursor is currently over our window)
+		// Mouse button being released (while the cursor is currently over our window)
 	case WM_LBUTTONUP:
 	case WM_MBUTTONUP:
 	case WM_RBUTTONUP:
 		OnMouseUp(wParam, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
 		return 0;
 
-	// Cursor moves over the window (or outside, while we're currently capturing it)
+		// Cursor moves over the window (or outside, while we're currently capturing it)
 	case WM_MOUSEMOVE:
 		OnMouseMove(wParam, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
 		return 0;
 
-	// Mouse wheel is scrolled
+		// Mouse wheel is scrolled
 	case WM_MOUSEWHEEL:
 		OnMouseWheel(GET_WHEEL_DELTA_WPARAM(wParam) / (float)WHEEL_DELTA, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
 		return 0;
+
+	// Input handling
+	case WM_KEYDOWN:
+	{
+		unsigned char keycode = static_cast<unsigned char>(wParam);
+		if (keyboard.IsKeysAutoRepeat())
+		{
+			keyboard.RegisterKeyPress(keycode);
+		}
+		else
+		{
+			const bool wasPressed = lParam & 0x40000000;
+			if (!wasPressed)
+			{
+				keyboard.RegisterKeyPress(keycode);
+			}
+		}
+		return 0;
 	}
+	case WM_KEYUP:
+	{
+		unsigned char keycode = static_cast<unsigned char>(wParam);
+		keyboard.RegisterKeyRelease(keycode);
+		return 0;
+	}
+	}
+
 
 	// Let Windows handle any messages we're not touching
 	return DefWindowProc(hWnd, uMsg, wParam, lParam);
