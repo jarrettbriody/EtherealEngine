@@ -11,6 +11,7 @@ Camera::Camera()
 	XMStoreFloat3(&direction, dir);
 	xRotation = 0.0f;
 	yRotation = 0.0f;
+	zRotation = 0.0f;
 }
 
 
@@ -48,10 +49,11 @@ void Camera::SetViewMatrix(XMFLOAT4X4 vm)
 	viewMatrix = vm;
 }
 
-void Camera::RotateCamera(int x, int y)
+void Camera::RotateCamera(int x, int y, int z)
 {
 	xRotation += (float)y / 100.0f;
 	yRotation += (float)x / 100.0f;
+	zRotation += (float)z / 100.0f;
 
 	if (xRotation > (89.0f * XM_PI) / 180.0f) xRotation = (89.0f * XM_PI) / 180.0f;
 	if (xRotation < (-89.0f * XM_PI) / 180.0f) xRotation = (-89.0f * XM_PI) / 180.0f;
@@ -117,11 +119,18 @@ void Camera::Update()
 			pos = XMVectorAdd(pos, XMVectorScale(XMLoadFloat3(&yAxis), -0.05f));
 			XMStoreFloat3(&position, pos);
 		}
+		if (GetAsyncKeyState('K') & 0x8000) {
+			RotateCamera(0, 0, 1);
+		}
+		if (GetAsyncKeyState('L') & 0x8000) {
+			RotateCamera(0, 0, -1);
+		}
 	}
 
-	XMVECTOR quat = XMQuaternionRotationRollPitchYaw(xRotation, yRotation, 0.0f);
+	XMVECTOR quat = XMQuaternionRotationRollPitchYaw(xRotation, yRotation, zRotation);
 	XMVECTOR newDir = XMVector3Rotate(XMLoadFloat3(&zAxis), quat);
-	XMMATRIX view = XMMatrixLookToLH(pos, dir, XMLoadFloat3(&yAxis));
+	XMVECTOR newUp = XMVector3Rotate(XMLoadFloat3(&yAxis), quat);
+	XMMATRIX view = XMMatrixLookToLH(pos, dir, newUp);
 	XMMATRIX inverseView = XMMatrixInverse(nullptr, view);
 
 	XMStoreFloat4x4(&viewMatrix, XMMatrixTranspose(view));

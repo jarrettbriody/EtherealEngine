@@ -82,7 +82,7 @@ float4 main(VertexToPixel input) : SV_TARGET
 
 	//float4 surfaceColor = Decal.Load(decalUV);
 
-	if (surfaceColor.a < 0.1f) discard;
+	if (surfaceColor.a < 0.3f) discard;
 
 	if (illumination == 11) {
 		surfaceColor = surfaceColor.xyzw - (1 - float4(manualColor.xyz, 0));
