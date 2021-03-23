@@ -6,6 +6,7 @@
 #include "Entity.h"
 #include "Camera.h"
 #include "DebugLines.h"
+#include "DecalHandler.h"
 
 using namespace std;
 
@@ -13,8 +14,11 @@ using namespace std;
 
 struct RendererShaders {
 	SimpleVertexShader* depthStencilVS = nullptr;
+	SimplePixelShader* depthStencilPS = nullptr;
 	SimpleVertexShader* debugLineVS = nullptr;
 	SimplePixelShader* debugLinePS = nullptr;
+	SimpleVertexShader* decalVS = nullptr;
+	SimplePixelShader* decalPS = nullptr;
 };
 
 struct RenderObject{
@@ -32,13 +36,17 @@ struct ShadowComponents {
 
 	DirectX::XMFLOAT4X4 shadowViewMatrix;
 	DirectX::XMFLOAT4X4 shadowProjectionMatrix;
+	DirectX::XMFLOAT4X4 shadowViewProj;
 };
 
 struct DepthStencilComponents {
 	ID3D11DepthStencilView* depthStencilDSV;
+	ID3D11RenderTargetView* depthStencilRTV;
 	ID3D11ShaderResourceView* depthStencilSRV;
 	ID3D11SamplerState* depthStencilSampler;
 	ID3D11RasterizerState* depthStencilRasterizer;
+	ID3D11DepthStencilState* depthStencilState;
+	ID3D11BlendState* decalBlendState;
 };
 
 struct HBAOPlusComponents {
@@ -61,6 +69,8 @@ private:
 
 	RendererShaders shaders;
 
+	Mesh* cube = nullptr;
+
 	Camera* camera = nullptr;
 	map<string, Camera*> cameras;
 	unsigned int cameraCount = 0;
@@ -73,6 +83,8 @@ private:
 	DepthStencilComponents depthStencilComponents;
 	HBAOPlusComponents hbaoPlusComponents;
 
+	ID3D11ShaderResourceView* decals[8];
+
 	Renderer();
 	~Renderer();
 public:
@@ -82,6 +94,7 @@ public:
 
 	void SetEntities(vector<Entity*>* entities);
 	void SetRendererShaders(RendererShaders rShaders);
+	void SetDecals(Mesh* cube, ID3D11ShaderResourceView* decals[8]);
 
 	void InitDepthStencil();
 

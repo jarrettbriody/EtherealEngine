@@ -55,6 +55,8 @@ Game::~Game()
 	}
 
 	MemoryAllocator::DestroyInstance();
+
+	DecalHandler::DestroyInstance();
 }
 
 void Game::Init()
@@ -100,9 +102,10 @@ void Game::Init()
 
 	MemoryAllocator::SetupInstance(Config::MemoryAllocatorSize, Config::MemoryAllocatorAlignment);
 	EEMemoryAllocator = MemoryAllocator::GetInstance();
-	EEMemoryAllocator->CreatePool(Utility::ENTITY_POOL, Config::MemoryAllocatorEntityPoolSize, sizeof(Entity));
-	EEMemoryAllocator->CreatePool(Utility::MESH_POOL, Config::MemoryAllocatorMeshPoolSize, sizeof(Mesh));
-	EEMemoryAllocator->CreatePool(Utility::MATERIAL_POOL, Config::MemoryAllocatorMaterialPoolSize, sizeof(Material));
+	EEMemoryAllocator->CreatePool((unsigned int)MEMORY_POOL::ENTITY_POOL, Config::MemoryAllocatorEntityPoolSize, sizeof(Entity));
+	EEMemoryAllocator->CreatePool((unsigned int)MEMORY_POOL::MESH_POOL, Config::MemoryAllocatorMeshPoolSize, sizeof(Mesh));
+	EEMemoryAllocator->CreatePool((unsigned int)MEMORY_POOL::MATERIAL_POOL, Config::MemoryAllocatorMaterialPoolSize, sizeof(Material));
+	EEMemoryAllocator->CreatePool((unsigned int)MEMORY_POOL::DECAL_POOL, Config::MemoryAllocatorDecalPoolSize, sizeof(DecalBucket));
 
 	EECamera = new Camera();
 	EECamera->UpdateProjectionMatrix();
@@ -144,24 +147,42 @@ void Game::Init()
 	testLight->Range = 10.f;
 	testLight->SpotFalloff = 20.f;*/
 
+	DecalHandler::SetupInstance();
+	EEDecalHandler = DecalHandler::GetInstance();
+
 	Renderer::SetupInstance();
 	EERenderer = Renderer::GetInstance();
 	EERenderer->AddCamera("main", EECamera);
 	EERenderer->EnableCamera("main");
 	RendererShaders rShaders;
 	rShaders.depthStencilVS = EESceneLoader->vertexShadersMap["DepthStencil"];
+	rShaders.depthStencilPS = EESceneLoader->pixelShadersMap["DepthStencil"];
 	rShaders.debugLineVS = EESceneLoader->vertexShadersMap["DebugLine"];
 	rShaders.debugLinePS = EESceneLoader->pixelShadersMap["DebugLine"];
+	rShaders.decalVS = EESceneLoader->vertexShadersMap["Decal"];
+	rShaders.decalPS = EESceneLoader->pixelShadersMap["Decal"];
 	EERenderer->SetRendererShaders(rShaders);
 	EERenderer->SetEntities(&(EESceneLoader->sceneEntities));
 	EERenderer->AddLight("Sun", dLight);
 	EERenderer->SendAllLightsToShader(EESceneLoader->pixelShadersMap["DEFAULT"]);
 	EERenderer->SendAllLightsToShader(EESceneLoader->pixelShadersMap["Normal"]);
+	EERenderer->SendAllLightsToShader(EESceneLoader->pixelShadersMap["Decal"]);
 	EERenderer->SetShadowMapResolution(4096);
 	EERenderer->InitShadows();
 	EERenderer->InitDepthStencil();
 	EERenderer->InitHBAOPlus();
 	EESceneLoader->EERenderer = EERenderer;
+
+	ID3D11ShaderResourceView* decals[8];
+	decals[0] = EESceneLoader->defaultTexturesMap["BLOOD1"];
+	decals[1] = EESceneLoader->defaultTexturesMap["BLOOD2"];
+	decals[2] = EESceneLoader->defaultTexturesMap["BLOOD3"];
+	decals[3] = EESceneLoader->defaultTexturesMap["BLOOD4"];
+	decals[4] = EESceneLoader->defaultTexturesMap["BLOOD5"];
+	decals[5] = EESceneLoader->defaultTexturesMap["BLOOD6"];
+	decals[6] = EESceneLoader->defaultTexturesMap["BLOOD7"];
+	decals[7] = EESceneLoader->defaultTexturesMap["BLOOD8"];
+	EERenderer->SetDecals(EESceneLoader->defaultMeshesMap["Cube"], decals);
 
 	Entity* e;
 	for (size_t i = 0; i < EESceneLoader->sceneEntities.size(); i++)
@@ -425,6 +446,7 @@ void Game::Draw(float deltaTime, float totalTime)
 
 	EERenderer->SendAllLightsToShader(EESceneLoader->pixelShadersMap["DEFAULT"]);
 	EERenderer->SendAllLightsToShader(EESceneLoader->pixelShadersMap["Normal"]);
+	EERenderer->SendAllLightsToShader(EESceneLoader->pixelShadersMap["Decal"]);
 	//EERenderer->SendAllLightsToShader(EESceneLoader->pixelShadersMap["Water"]);
 	//EERenderer->SendAllLightsToShader(EESceneLoader->pixelShadersMap["Terrain"]);
 
@@ -478,13 +500,15 @@ void Game::GarbageCollect()
 			EESceneLoader->sceneEntitiesMap.erase(name);
 			EESceneLoader->sceneEntities.erase(EESceneLoader->sceneEntities.begin() + i - 1);
 
+			EEDecalHandler->DestroyDecals(name);
+
 			if (Config::EtherealDebugLinesEnabled) {
 				DebugLines::debugLinesMap[name]->destroyed = true;
 				DebugLines::debugLinesMap.erase(name);
 			}
 
 			e->FreeMemory();
-			EEMemoryAllocator->DeallocateFromPool(ENTITY_POOL, e, sizeof(Entity));
+			EEMemoryAllocator->DeallocateFromPool((unsigned int)MEMORY_POOL::ENTITY_POOL, e, sizeof(Entity));
 
 			vector<ScriptManager*> scriptFuncs = ScriptManager::scriptFunctionsMap[name];
 			size_t cnt = scriptFuncs.size();
@@ -533,16 +557,10 @@ void Game::OnMouseDown(WPARAM buttonState, int x, int y)
 
 	// printf("Mouse Pos: %d, %d\n", x, y);
 
-	// Create debug line
-	DebugLines* dl = new DebugLines("TestRay", 0, false);
-	XMFLOAT3 c = XMFLOAT3(0.0f, 1.0f, 0.0f);
-	dl->color = c;
-
 	// Create the world matrix for the debug line
 	XMFLOAT4X4 wm;
 	XMStoreFloat4x4(&wm, XMMatrixTranspose(DirectX::XMMatrixIdentity()));
-	dl->worldMatrix = wm;
-
+	
 	// Create the transformation matrices for our raycast
 	XMMATRIX proj = XMMatrixTranspose(XMLoadFloat4x4(&(EECamera->GetProjMatrix())));
 	XMMATRIX view = XMMatrixTranspose(XMLoadFloat4x4(&(EECamera->GetViewMatrix())));
@@ -550,11 +568,18 @@ void Game::OnMouseDown(WPARAM buttonState, int x, int y)
 
 	// Get the unprojected vector of the mouse click position in world space
 	XMVECTOR unprojVec = XMVector3Unproject(XMVectorSet(x, y, 1.0f, 1.0f), 0, 0, 1600, 900, 0.0f, 1.0f, proj, view, world);
+	XMFLOAT3 start = EECamera->position;
 	XMFLOAT3 end = XMFLOAT3(XMVectorGetX(unprojVec), XMVectorGetY(unprojVec), XMVectorGetZ(unprojVec));
 	//printf("Projected values|- X: %f, Y: %f, Z: %f\n", end.x, end.y, end.z);
 
+	/*
+	// Create debug line
+	DebugLines* dl = new DebugLines("TestRay", 0, false);
+	XMFLOAT3 c = XMFLOAT3(0.0f, 1.0f, 0.0f);
+	dl->color = c;
+	dl->worldMatrix = wm;
+
 	// Draw the debug line to show the raycast
-	XMFLOAT3 start = EECamera->position;
 	XMFLOAT3* rayPoints = new XMFLOAT3[8];
 	rayPoints[0] = start;
 	rayPoints[1] = start;
@@ -566,6 +591,7 @@ void Game::OnMouseDown(WPARAM buttonState, int x, int y)
 	rayPoints[7] = end;
 	dl->GenerateCuboidVertexBuffer(rayPoints, 8);
 	delete[] rayPoints;
+	*/
 
 	if (Config::DynamicsWorld)
 	{
@@ -590,6 +616,7 @@ void Game::OnMouseDown(WPARAM buttonState, int x, int y)
 			printf("Hit: %s\n", hit->GetName().c_str());
 			btRigidBody* rigidBody = hit->GetRBody();
 
+			/*
 			// In order to update the values associated with the rigid body we need to remove it from the dynamics world first
 			Config::DynamicsWorld->removeRigidBody(rigidBody);
 			btVector3 inertia(0, 0, 0);
@@ -613,12 +640,18 @@ void Game::OnMouseDown(WPARAM buttonState, int x, int y)
 			transform.setOrigin(btVector3(x, y, z));
 			rigidBody->getCollisionShape()->setLocalScaling(btVector3(1, 1, 1));
 			rigidBody->setWorldTransform(transform); */
+			//*/
+			btVector3 h = closestResult.m_hitPointWorld;
+			XMFLOAT3 hitLocation(h.getX(), h.getY(), h.getZ());
+			EEDecalHandler->GenerateDecal(hit, XMFLOAT3(hitLocation.x - start.x, hitLocation.y - start.y, hitLocation.z - start.z), hitLocation, XMFLOAT3(10.0f, 10.0f, 15.0f), DecalType(rand() % 8));
 
+			/*
 			Config::DynamicsWorld->addRigidBody(rigidBody); // Add the rigid body back into bullet		
 
 			if (hit->MeshHasChildren()) {
 				EESceneLoader->SplitMeshIntoChildEntities(hit, 0.5f);
 			}
+			*/
 		}
 	}
 	

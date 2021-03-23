@@ -4,13 +4,14 @@
 
 Camera::Camera()
 {
-	position = XMFLOAT3(-410.543f, 30.0f, -90.21f);
+	position = XMFLOAT3(0.0f, 30.0f, -10.0f);
 	direction = XMFLOAT3(0.0f, 0.0f, 1.0f);
 	XMVECTOR dir = XMLoadFloat3(&direction);
 	dir = XMVector3Normalize(dir);
 	XMStoreFloat3(&direction, dir);
 	xRotation = 0.0f;
 	yRotation = 0.0f;
+	zRotation = 0.0f;
 }
 
 
@@ -23,9 +24,19 @@ XMFLOAT4X4 Camera::GetViewMatrix()
 	return viewMatrix;
 }
 
+XMFLOAT4X4 Camera::GetInverseViewMatrix()
+{
+	return invViewMatrix;
+}
+
 XMFLOAT4X4 Camera::GetProjMatrix()
 {
 	return projMatrix;
+}
+
+XMFLOAT4X4 Camera::GetInverseProjMatrix()
+{
+	return invProjMatrix;
 }
 
 void Camera::SetProjMatrix(XMFLOAT4X4 pm)
@@ -38,10 +49,11 @@ void Camera::SetViewMatrix(XMFLOAT4X4 vm)
 	viewMatrix = vm;
 }
 
-void Camera::RotateCamera(int x, int y)
+void Camera::RotateCamera(int x, int y, int z)
 {
 	xRotation += (float)y / 100.0f;
 	yRotation += (float)x / 100.0f;
+	zRotation += (float)z / 100.0f;
 
 	if (xRotation > (89.0f * XM_PI) / 180.0f) xRotation = (89.0f * XM_PI) / 180.0f;
 	if (xRotation < (-89.0f * XM_PI) / 180.0f) xRotation = (-89.0f * XM_PI) / 180.0f;
@@ -65,6 +77,8 @@ void Camera::UpdateProjectionMatrix()
 		nearClip,												// Near clip plane distance
 		farClip);												// Far clip plane distance
 	XMStoreFloat4x4(&projMatrix, XMMatrixTranspose(P));			// Transpose for HLSL!
+
+	XMStoreFloat4x4(&invProjMatrix, XMMatrixTranspose(XMMatrixInverse(nullptr, P)));
 }
 
 void Camera::Update()
@@ -105,13 +119,22 @@ void Camera::Update()
 			pos = XMVectorAdd(pos, XMVectorScale(XMLoadFloat3(&yAxis), -0.05f));
 			XMStoreFloat3(&position, pos);
 		}
+		if (GetAsyncKeyState('K') & 0x8000) {
+			RotateCamera(0, 0, 1);
+		}
+		if (GetAsyncKeyState('L') & 0x8000) {
+			RotateCamera(0, 0, -1);
+		}
 	}
 
-	XMVECTOR quat = XMQuaternionRotationRollPitchYaw(xRotation, yRotation, 0.0f);
+	XMVECTOR quat = XMQuaternionRotationRollPitchYaw(xRotation, yRotation, zRotation);
 	XMVECTOR newDir = XMVector3Rotate(XMLoadFloat3(&zAxis), quat);
-	XMMATRIX view = XMMatrixLookToLH(pos, dir, XMLoadFloat3(&yAxis));
+	XMVECTOR newUp = XMVector3Rotate(XMLoadFloat3(&yAxis), quat);
+	XMMATRIX view = XMMatrixLookToLH(pos, dir, newUp);
+	XMMATRIX inverseView = XMMatrixInverse(nullptr, view);
 
 	XMStoreFloat4x4(&viewMatrix, XMMatrixTranspose(view));
+	XMStoreFloat4x4(&invViewMatrix, XMMatrixTranspose(inverseView));
 	XMStoreFloat3(&direction, newDir);
 
 	//cout << "Pos: (" << position.x << ", " << position.y << ", " << position.z << ")" << endl;

@@ -10,6 +10,7 @@ Entity::Entity(string entityName)
 {
 	name = new string();
 	tag = new string();
+	layer = new string();
 	materialMap = new map<string, Material*>;
 	children = new vector<Entity*>;
 	colliders = new vector<Collider*>;
@@ -31,6 +32,7 @@ Entity::Entity(string entityName, Mesh* entityMesh, Material* mat)
 {
 	name = new string();
 	tag = new string();
+	layer = new string();
 	materialMap = new map<string, Material*>;
 	children = new vector<Entity*>;
 	colliders = new vector<Collider*>;
@@ -93,6 +95,7 @@ Entity::~Entity()
 
 	delete name;
 	delete tag;
+	delete layer;
 }
 
 void Entity::operator=(const Entity& e)
@@ -102,9 +105,11 @@ void Entity::operator=(const Entity& e)
 	children = new vector<Entity*>();
 	colliders = new vector<Collider*>();
 	tag = new string();
+	layer = new string();
 
 	*name = *e.name;
 	*tag = *e.tag;
+	*layer = *e.layer;
 	*children = vector<Entity*>(*e.children);
 	*colliders = vector<Collider*>(*e.colliders);
 	*materialMap = map<string, Material*>(*e.materialMap);
@@ -132,7 +137,7 @@ void Entity::operator=(const Entity& e)
 	colliderCnt = e.colliderCnt;
 }
 
-void Entity::InitRigidBody(BulletColliderShape shape, float entityMass)
+void Entity::InitRigidBody(BulletColliderShape shape, float entityMass, bool zeroObjects)
 {
 	assert(colliderCnt > 0);
 
@@ -226,6 +231,14 @@ void Entity::InitRigidBody(BulletColliderShape shape, float entityMass)
 
 	btDefaultMotionState* myMotionState = new btDefaultMotionState(transform);
 
+	if (colliderCnt == 1 && compoundShape != nullptr && zeroObjects) {
+		XMFLOAT3 centerLocal = (*colliders)[0]->GetCenterLocal();
+		btTransform localTransform;
+		localTransform.setIdentity();
+		localTransform.setOrigin(btVector3(centerLocal.x * scale.x, centerLocal.y * scale.y, centerLocal.z * scale.z));
+		myMotionState->m_centerOfMassOffset = localTransform;
+	}
+
 	if (compoundShape == nullptr) {
 		for (size_t i = 0; i < colliderCnt; i++)
 		{
@@ -242,7 +255,7 @@ void Entity::InitRigidBody(BulletColliderShape shape, float entityMass)
 	}
 
 
-	rBody->setFriction(0.7f);
+	rBody->setFriction(0.9f);
 
 	/*rBody->setActivationState(DISABLE_DEACTIVATION);
 	rBody->setMassProps(mass, localInertia);*/
@@ -264,6 +277,11 @@ void Entity::InitRigidBody(BulletColliderShape shape, float entityMass)
 DirectX::XMFLOAT4X4 Entity::GetWorldMatrix()
 {
 	return worldMatrix;
+}
+
+DirectX::XMFLOAT4X4 Entity::GetInverseWorldMatrix()
+{
+	return invWorldMatrix;
 }
 
 DirectX::XMFLOAT3 Entity::GetPosition()
@@ -477,6 +495,28 @@ void Entity::CalcWorldMatrix()
 	{
 		(*colliders)[i]->SetWorldMatrix(worldMatrix);
 	} 
+
+	XMStoreFloat4x4(&invWorldMatrix, XMMatrixTranspose(XMMatrixInverse(nullptr, world)));
+}
+
+XMMATRIX Entity::CalcWorldToModelMatrix()
+{
+	XMMATRIX worldToModel;
+	XMVECTOR t = XMLoadFloat3(&position);
+	XMVECTOR r = XMLoadFloat4(&quaternion);
+	XMVECTOR s = XMLoadFloat3(&scale);
+	t = XMVectorScale(t, -1.0f);
+	s = XMVectorReciprocal(s);
+
+	XMMATRIX trans = XMMatrixTranslationFromVector(t);
+
+	XMMATRIX rot = XMMatrixRotationQuaternion(r);
+	rot = XMMatrixTranspose(rot);
+
+	XMMATRIX scl = XMMatrixScalingFromVector(s);
+
+	worldToModel = scl * rot * trans;
+	return worldToModel;
 }
 
 void Entity::PrepareMaterialForDraw(string n, DirectX::XMFLOAT4X4 view, DirectX::XMFLOAT4X4 proj)
@@ -732,6 +772,7 @@ void Entity::FreeMemory()
 
 	delete name;
 	delete tag;
+	delete layer;
 }
 
 

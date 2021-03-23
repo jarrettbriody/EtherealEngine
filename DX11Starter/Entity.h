@@ -28,6 +28,7 @@ class Entity
 {
 private:
 	DirectX::XMFLOAT4X4 worldMatrix;
+	DirectX::XMFLOAT4X4 invWorldMatrix;
 	Mesh* mesh = nullptr;
 	DirectX::XMFLOAT4 quaternion;
 	DirectX::XMFLOAT3 position;
@@ -61,13 +62,15 @@ public:
 	bool colliderDebugLinesEnabled = false;
 	bool isEmptyObj = false;
 	string* tag;
+	string* layer;
 	Entity();
 	Entity(string entityName);
 	Entity(string entityName, Mesh* entityMesh, Material* mat = nullptr);
 	~Entity();
 	void operator= (const Entity& e);
-	void InitRigidBody(BulletColliderShape shape, float entityMass);
+	void InitRigidBody(BulletColliderShape shape, float entityMass, bool zeroObjects = false);
 	DirectX::XMFLOAT4X4 GetWorldMatrix();
+	DirectX::XMFLOAT4X4 GetInverseWorldMatrix();
 	DirectX::XMFLOAT3 GetPosition();
 	DirectX::XMFLOAT3 GetScale();
 	DirectX::XMFLOAT3 GetEulerAngles();
@@ -94,6 +97,7 @@ public:
 	int GetMeshIndexCount(int childIndex = -1);
 	string GetMeshMaterialName(int childIndex = -1);
 	void CalcWorldMatrix();
+	XMMATRIX CalcWorldToModelMatrix();
 	void PrepareMaterialForDraw(string n, DirectX::XMFLOAT4X4 view, DirectX::XMFLOAT4X4 proj);
 	Material* GetMaterial(string n);
 	bool MeshHasChildren();

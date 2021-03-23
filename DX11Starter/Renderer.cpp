@@ -14,10 +14,13 @@ Renderer::~Renderer()
 	shadowComponents.shadowRasterizer->Release();
 	shadowComponents.shadowSampler->Release();
 
-	depthStencilComponents.depthStencilDSV->Release();
+	//depthStencilComponents.depthStencilDSV->Release();
 	depthStencilComponents.depthStencilSRV->Release();
-	depthStencilComponents.depthStencilRasterizer->Release();
-	depthStencilComponents.depthStencilSampler->Release();
+	depthStencilComponents.depthStencilRTV->Release();
+	//depthStencilComponents.depthStencilRasterizer->Release();
+	//depthStencilComponents.depthStencilSampler->Release();
+	depthStencilComponents.depthStencilState->Release();
+	depthStencilComponents.decalBlendState->Release();
 
 	map<string, Light*>::iterator lightMapIterator;
 	for (int i = 0; i < lightCount; i++)
@@ -89,8 +92,49 @@ void Renderer::SetRendererShaders(RendererShaders rShaders)
 	shaders = rShaders;
 }
 
+void Renderer::SetDecals(Mesh* cube, ID3D11ShaderResourceView* decals[8])
+{
+	this->cube = cube;
+	for (size_t i = 0; i < 8; i++)
+	{
+		this->decals[i] = decals[i];
+	}
+}
+
 void Renderer::InitDepthStencil()
 {
+	// Set up the texture itself
+	D3D11_TEXTURE2D_DESC texDesc = {};
+	texDesc.ArraySize = 1;
+	texDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
+	texDesc.Format = DXGI_FORMAT_R32_FLOAT;
+	texDesc.MipLevels = 1;
+	texDesc.Height = Config::ViewPortHeight;
+	texDesc.Width = Config::ViewPortWidth;
+	texDesc.SampleDesc.Count = 1;
+
+	// Actually create the texture
+	ID3D11Texture2D* texture;
+	Config::Device->CreateTexture2D(&texDesc, 0, &texture);
+
+	// Create the shader resource view for this texture
+	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Format = DXGI_FORMAT_R32_FLOAT;
+	srvDesc.Texture2D.MipLevels = 1;
+	srvDesc.Texture2D.MostDetailedMip = 0;
+	Config::Device->CreateShaderResourceView(texture, &srvDesc, &depthStencilComponents.depthStencilSRV);
+
+	// Make a render target view desc and RTV
+	D3D11_RENDER_TARGET_VIEW_DESC rtvDesc = {};
+	rtvDesc.Format = DXGI_FORMAT_R32_FLOAT;
+	rtvDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+	rtvDesc.Texture2D.MipSlice = 0;
+	Config::Device->CreateRenderTargetView(texture, &rtvDesc, &depthStencilComponents.depthStencilRTV);
+
+	// Clean up extra texture ref
+	texture->Release();
+	/*
 	// Create the actual texture that will be the depth stencil map
 	D3D11_TEXTURE2D_DESC depthStencilDesc = {};
 	depthStencilDesc.Width = Config::ViewPortWidth;
@@ -147,6 +191,56 @@ void Renderer::InitDepthStencil()
 	depthStencilRastDesc.DepthBiasClamp = 0.0f;
 	depthStencilRastDesc.SlopeScaledDepthBias = 1.0f;
 	Config::Device->CreateRasterizerState(&depthStencilRastDesc, &depthStencilComponents.depthStencilRasterizer);
+
+	*/
+
+	D3D11_DEPTH_STENCIL_DESC dsDesc;
+
+	dsDesc.DepthEnable = false;
+	dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
+	dsDesc.DepthFunc = D3D11_COMPARISON_ALWAYS;
+
+	// Stencil test parameters
+	dsDesc.StencilEnable = false;
+	dsDesc.StencilReadMask = 0xFF;
+	dsDesc.StencilWriteMask = 0xFF;
+
+	// Stencil operations if pixel is front-facing
+	dsDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+	dsDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_INCR;
+	dsDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_INCR;
+	dsDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+
+	// Stencil operations if pixel is back-facing
+	dsDesc.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+	dsDesc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_DECR;
+	dsDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+	dsDesc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+
+	// Create depth stencil state
+	ID3D11DepthStencilState* pDSState;
+	Config::Device->CreateDepthStencilState(&dsDesc, &pDSState);
+
+	depthStencilComponents.depthStencilState = pDSState;
+
+	ID3D11BlendState* decalBlendState;
+
+	D3D11_BLEND_DESC BlendState;
+
+	BlendState.AlphaToCoverageEnable = false;
+	BlendState.IndependentBlendEnable = false;
+	BlendState.RenderTarget[0].BlendEnable = true;
+	BlendState.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+	BlendState.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+	BlendState.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+	BlendState.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+	BlendState.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ONE;
+	BlendState.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+	BlendState.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+
+	Config::Device->CreateBlendState(&BlendState, &decalBlendState);
+
+	depthStencilComponents.decalBlendState = decalBlendState;
 }
 
 void Renderer::InitHBAOPlus()
@@ -161,7 +255,7 @@ void Renderer::InitHBAOPlus()
 
 	//(2.) SET INPUT DEPTHS
 
-	hbaoPlusComponents.Input.DepthData.DepthTextureType = GFSDK_SSAO_HARDWARE_DEPTHS;
+	hbaoPlusComponents.Input.DepthData.DepthTextureType = GFSDK_SSAO_VIEW_DEPTHS;//GFSDK_SSAO_HARDWARE_DEPTHS;
 	hbaoPlusComponents.Input.DepthData.pFullResDepthTextureSRV = depthStencilComponents.depthStencilSRV;
 	XMFLOAT4X4 proj = camera->GetProjMatrix();
 	float mat[16];
@@ -259,6 +353,8 @@ void Renderer::InitShadows()
 		0.1f,
 		1000.0f));
 	XMStoreFloat4x4(&shadowComponents.shadowProjectionMatrix, shadowProj);
+
+	XMStoreFloat4x4(&shadowComponents.shadowViewProj, XMMatrixTranspose(XMMatrixMultiply(shadowView, shadowProj)));
 }
 
 void Renderer::SetShadowMapResolution(unsigned int res)
@@ -316,6 +412,27 @@ void Renderer::RenderFrame()
 			e->SetDepthStencilData(d);
 		}
 		
+		/*
+		if (*e->layer == "decal") {
+			SimplePixelShader* pixelShader = mat->GetPixelShader();
+			if (DecalHandler::decalsMap.count(e->GetName())) {
+				DecalBucket& bucket = DecalHandler::decalsMap[e->GetName()];
+				pixelShader->SetData(
+					"decals",
+					&bucket.decals,
+					sizeof(Decal) * MAX_DECALS_PER_ENTITY
+				);
+				pixelShader->SetData(
+					"decalCount",
+					&bucket.count,
+					sizeof(bucket.count)
+				);
+				pixelShader->SetMatrix4x4("worldMatrix", e->GetWorldMatrix());
+				pixelShader->SetShaderResourceView("Decals", decals[0]);
+			}
+		}
+		*/
+
 		ID3D11Buffer* vbo = mesh->GetVertexBuffer();
 		ID3D11Buffer* ind = mesh->GetIndexBuffer();
 		Config::Context->IASetVertexBuffers(0, 1, &vbo, &stride, &offset);
@@ -329,6 +446,65 @@ void Renderer::RenderFrame()
 			0);											// Offset to add to each index when looking up vertices
 
 		mat->GetPixelShader()->SetShaderResourceView("ShadowMap", NULL);
+	}
+
+	if (Config::DecalsEnabled) {
+		//ID3D11BlendState* originalBlend;
+		//Config::Context->OMGetBlendState(&originalBlend);
+		Config::Context->OMSetDepthStencilState(depthStencilComponents.depthStencilState, 0);
+		//Config::Context->OMSetBlendState(depthStencilComponents.decalBlendState, 0, 0xFFFFFFFF);
+		ID3D11Buffer* vbo = cube->GetVertexBuffer();
+		ID3D11Buffer* ind = cube->GetIndexBuffer();
+		Config::Context->IASetVertexBuffers(0, 1, &vbo, &stride, &offset);
+		Config::Context->IASetIndexBuffer(ind, DXGI_FORMAT_R32_UINT, 0);
+
+		shaders.decalVS->SetShader();
+		shaders.decalPS->SetShader();
+
+		shaders.decalVS->SetFloat3("cameraPos", camera->position);
+
+		//shaders.decalPS->SetMatrix4x4("shadowViewProj", shadowComponents.shadowViewProj);
+		shaders.decalPS->SetMatrix4x4("shadowView", shadowComponents.shadowViewMatrix);
+		shaders.decalPS->SetMatrix4x4("shadowProj", shadowComponents.shadowProjectionMatrix);
+		shaders.decalPS->SetShaderResourceView("DepthBuffer", depthStencilComponents.depthStencilSRV);
+		shaders.decalPS->SetShaderResourceView("ShadowMap", shadowComponents.shadowSRV);
+		shaders.decalPS->SetSamplerState("ShadowSampler", shadowComponents.shadowSampler);
+		shaders.decalPS->SetFloat3("cameraPos", camera->position);
+
+		for (size_t i = 0; i < DecalHandler::decalsVec.size(); i++)
+		{
+			DecalBucket* db = DecalHandler::decalsVec[i];
+			for (size_t j = 0; j < db->count; j++)
+			{
+				XMFLOAT4X4 world;
+				XMFLOAT4X4 invWorld;
+				XMMATRIX ownerWorld = XMMatrixTranspose(XMLoadFloat4x4(&db->owner->GetWorldMatrix()));
+				XMMATRIX localWorld = XMMatrixTranspose(XMLoadFloat4x4(&db->decals[j].localTransform));
+				XMMATRIX cWorld = XMMatrixMultiply(localWorld, ownerWorld);
+				XMStoreFloat4x4(&world, XMMatrixTranspose(cWorld));
+				XMStoreFloat4x4(&invWorld, XMMatrixTranspose(XMMatrixInverse(nullptr, cWorld)));
+
+				shaders.decalVS->SetMatrix4x4("world", world);
+				shaders.decalVS->SetMatrix4x4("view", camera->GetViewMatrix());
+				shaders.decalVS->SetMatrix4x4("projection", camera->GetProjMatrix());
+				//shaders.decalVS->SetMatrix4x4("shadowView", shadowComponents.shadowViewMatrix);
+				//shaders.decalVS->SetMatrix4x4("shadowProj", shadowComponents.shadowProjectionMatrix);
+				//Config::Context->PSSetShaderResources(2, 8, decals);
+				shaders.decalPS->SetShaderResourceView("Decal", decals[db->decals[j].type]);
+				shaders.decalPS->SetMatrix4x4("worldMatrix", world);
+				shaders.decalPS->SetMatrix4x4("inverseWorldMatrix", invWorld);
+
+				shaders.decalVS->CopyAllBufferData();
+				shaders.decalPS->CopyAllBufferData();
+
+				Config::Context->DrawIndexed(
+					cube->GetIndexCount(),						// The number of indices to use (we could draw a subset if we wanted)
+					0,											// Offset to the first index we want to use
+					0);											// Offset to add to each index when looking up vertices
+			}
+		}
+		Config::Context->OMSetDepthStencilState(NULL, 0);
+		//Config::Context->OMSetBlendState(NULL, 0, 0xFFFFFFFF);
 	}
 
 	if (Config::HBAOPlusEnabled) {
@@ -400,8 +576,11 @@ void Renderer::RenderShadowMap()
 
 	// Set up the shaders
 	shaders.depthStencilVS->SetShader();
+	//shaders.depthStencilPS->SetShader();
 	shaders.depthStencilVS->SetMatrix4x4("view", shadowComponents.shadowViewMatrix);
 	shaders.depthStencilVS->SetMatrix4x4("projection", shadowComponents.shadowProjectionMatrix);
+	//shaders.depthStencilPS->SetFloat3("cameraPosition", lights["Sun"]->Position);
+	//shaders.depthStencilPS->CopyAllBufferData();
 
 	Config::Context->PSSetShader(0, 0, 0); // Turns OFF the pixel shader
 
@@ -457,26 +636,22 @@ void Renderer::RenderDepthStencil()
 		return;
 
 	// Initial setup - No RTV necessary - Clear depthStencil map
-	Config::Context->OMSetRenderTargets(0, 0, depthStencilComponents.depthStencilDSV);
-	Config::Context->ClearDepthStencilView(depthStencilComponents.depthStencilDSV, D3D11_CLEAR_DEPTH, 1.0f, 0);
-	Config::Context->RSSetState(depthStencilComponents.depthStencilRasterizer);
-
-	// SET A VIEWPORT!!!
-	D3D11_VIEWPORT vp = {};
-	vp.TopLeftX = 0;
-	vp.TopLeftY = 0;
-	vp.Width = (float)Config::ViewPortWidth;
-	vp.Height = (float)Config::ViewPortHeight;
-	vp.MinDepth = 0.0f;
-	vp.MaxDepth = 1.0f;
-	Config::Context->RSSetViewports(1, &vp);
+	//Config::Context->OMSetRenderTargets(0, 0, depthStencilComponents.depthStencilDSV);
+	Config::Context->OMSetRenderTargets(1, &depthStencilComponents.depthStencilRTV, Config::DepthStencilView);
+	//Config::Context->ClearDepthStencilView(depthStencilComponents.depthStencilDSV, D3D11_CLEAR_DEPTH, 1.0f, 0);
+	const float color[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
+	Config::Context->ClearRenderTargetView(depthStencilComponents.depthStencilRTV, color);
+	//Config::Context->RSSetState(depthStencilComponents.depthStencilRasterizer);
 
 	// Set up the shaders
 	shaders.depthStencilVS->SetShader();
+	shaders.depthStencilPS->SetShader();
 	shaders.depthStencilVS->SetMatrix4x4("view", camera->GetViewMatrix());
 	shaders.depthStencilVS->SetMatrix4x4("projection", camera->GetProjMatrix());
+	shaders.depthStencilPS->SetFloat3("cameraPosition", camera->position);
+	shaders.depthStencilPS->CopyAllBufferData();
 
-	Config::Context->PSSetShader(0, 0, 0); // Turns OFF the pixel shader
+	//Config::Context->PSSetShader(0, 0, 0); // Turns OFF the pixel shader
 
 	// Set buffers in the input assembler
 	UINT stride = sizeof(Vertex);
@@ -506,11 +681,10 @@ void Renderer::RenderDepthStencil()
 	}
 
 	// Revert to original pipeline state
+
+	Config::Context->ClearDepthStencilView(Config::DepthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 	Config::Context->OMSetRenderTargets(1, &Config::BackBufferRTV, Config::DepthStencilView);
-	vp.Width = (float)Config::ViewPortWidth;
-	vp.Height = (float)Config::ViewPortHeight;
-	Config::Context->RSSetViewports(1, &vp);
-	Config::Context->RSSetState(0);
+	//Config::Context->RSSetState(0);
 }
 
 bool Renderer::AddCamera(string name, Camera* newCamera)

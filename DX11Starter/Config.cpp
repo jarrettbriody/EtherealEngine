@@ -17,6 +17,7 @@ unsigned int Config::MemoryAllocatorAlignment = 16; //16 byte boundary
 unsigned int Config::MemoryAllocatorEntityPoolSize = MEGABYTE * 128; //250 MB
 unsigned int Config::MemoryAllocatorMeshPoolSize = MEGABYTE * 128; //250 MB
 unsigned int Config::MemoryAllocatorMaterialPoolSize = MEGABYTE * 64; //250 MB
+unsigned int Config::MemoryAllocatorDecalPoolSize = MEGABYTE * 64;
 
 bool Config::EtherealDebugLinesEnabled = false;
 bool Config::BulletDebugLinesEnabled = false;
@@ -24,6 +25,7 @@ bool Config::BulletDebugLinesEnabled = false;
 bool Config::ShadowsEnabled = true;
 bool Config::SSAOEnabled = false;
 bool Config::HBAOPlusEnabled = true;
+bool Config::DecalsEnabled = true;
 
 btDiscreteDynamicsWorld* Config::DynamicsWorld = nullptr;
 

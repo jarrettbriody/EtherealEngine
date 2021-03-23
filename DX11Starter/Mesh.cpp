@@ -529,7 +529,7 @@ void Mesh::AllocateChildren()
 		bool success = false;
 		for (size_t i = 0; i < childCount; i++)
 		{
-			children[i] = (Mesh*)mem->AllocateToPool(Utility::MESH_POOL, sizeof(Mesh), success);
+			children[i] = (Mesh*)mem->AllocateToPool((unsigned int)MEMORY_POOL::MESH_POOL, sizeof(Mesh), success);
 			if (success) {
 				*(children[i]) = *(*childrenVec)[i];
 				delete (*childrenVec)[i];

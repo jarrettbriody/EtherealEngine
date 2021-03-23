@@ -37,6 +37,15 @@
     <FxCompile Include="DepthStencilVS.hlsl">
       <Filter>EEShaders\Vertex Shaders</Filter>
     </FxCompile>
+    <FxCompile Include="DecalPS.hlsl">
+      <Filter>EEShaders\Pixel Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="DecalVS.hlsl">
+      <Filter>EEShaders\Vertex Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="DepthStencilPS.hlsl">
+      <Filter>EEShaders\Pixel Shaders</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Camera.cpp">
@@ -101,6 +110,9 @@
     </ClCompile>
     <ClCompile Include="Keyboard.cpp">
       <Filter>EECore\Source Files\Keyboard</Filter>
+    </ClCompile>
+    <ClCompile Include="DecalHandler.cpp">
+      <Filter>EECore\Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -172,6 +184,9 @@
     </ClInclude>
     <ClInclude Include="FPSController.h">
       <Filter>EEScripts\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="DecalHandler.h">
+      <Filter>EECore\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="KeyboardEvent.h">
       <Filter>EECore\Header Files\Keyboard</Filter>
