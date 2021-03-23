@@ -14,17 +14,9 @@ void FPSController::Init()
 	playerRBody->setAngularFactor(btVector3(0, 1, 0)); // constrain rotations on x and z axes
 	// playerRBody->setRestitution(0.1f);
 	// playerRBody->setFriction(1.0f); --> debating using friction because it would probably result in weird interations with other level gemoetry, would rather just use pure velocity dampening
+	
 	controllerVelocity = btVector3(0, 0, 0);
 	impulseSumVec = btVector3(0, 0, 0);
-
-	if (midAir)
-	{
-		playerRBody->setGravity(btVector3(0.0f, -25.0f, 0.0f)); // set gravity again when in the air
-	}
-	else
-	{
-		playerRBody->setGravity(btVector3(0.0f, 0.0f, 0.0f)); // set gravity again when on the ground
-	}
 
 	collider = entity->GetCollider();
 
@@ -41,8 +33,8 @@ void FPSController::Update()
 			break;
 
 		case PlayerState::Normal:
+			CheckAbilities();
 			Move();
-			
 			cam->SetPosition(XMFLOAT3(entity->GetPosition().x, entity->GetPosition().y + entity->GetScale().y + headbobOffset, entity->GetPosition().z)); // after all updates make sure camera is following the affected entity
 			break;
 
@@ -77,6 +69,61 @@ void FPSController::Update()
 		default:
 
 			break;
+	}
+}
+
+
+void FPSController::CheckAbilities()
+{
+	Hookshot();
+}
+
+void FPSController::Hookshot()
+{
+	if (DXCore::keyboard.OnKeyDown(0x45)) // e
+	{
+		Config::DynamicsWorld->updateAabbs();
+		Config::DynamicsWorld->computeOverlappingPairs();
+
+		// Redefine our vectors using bullet's silly types
+		btVector3 from(entity->GetPosition().x, entity->GetPosition().y, entity->GetPosition().z);
+		btVector3 to(entity->GetPosition().x + direction.x, entity->GetPosition().y + direction.y, entity->GetPosition().z + direction.z); // raycast direction the camera is looking
+
+		// debug
+		DebugLines* hookshotDebugLines = new DebugLines("hookshotDebugLines", 0, false); // cannot turn on the willUpdate paramater currently because not sure how to figure out which lines to update via the input Bullet gives 
+		XMFLOAT4X4 wm;
+		XMStoreFloat4x4(&wm, XMMatrixTranspose(DirectX::XMMatrixIdentity()));
+		hookshotDebugLines->worldMatrix = wm;
+		hookshotDebugLines->color = XMFLOAT3(0.0f, 0.0f, 1.0f);
+
+		XMFLOAT3 fromVec = XMFLOAT3(from.getX(), from.getY(), from.getZ());
+		XMFLOAT3 toVec = XMFLOAT3(to.getX(), to.getY(), to.getZ());
+		XMFLOAT3* linePoints = new XMFLOAT3[8];
+		linePoints[0] = fromVec;
+		linePoints[1] = fromVec;
+		linePoints[2] = fromVec;
+		linePoints[3] = fromVec;
+		linePoints[4] = toVec;
+		linePoints[5] = toVec;
+		linePoints[6] = toVec;
+		linePoints[7] = toVec;
+		hookshotDebugLines->GenerateCuboidVertexBuffer(linePoints, 8);
+		delete[] linePoints;
+
+		// Create variable to store the ray hit and set flags
+		btCollisionWorld::ClosestRayResultCallback closestResult(from, to);
+		closestResult.m_flags |= btTriangleRaycastCallback::kF_FilterBackfaces;
+
+		Config::DynamicsWorld->rayTest(from, to, closestResult); // Raycast
+
+		if (closestResult.hasHit()) // if there is a surface to stand on
+		{
+			// Get the entity associated with the rigid body we hit
+			Entity* hit = (Entity*)(closestResult.m_collisionObject->getUserPointer());
+			printf("Hookshot Hit: %s\n", hit->GetName().c_str());
+
+			// impulseSumVec += (closestResult.m_hitPointWorld - from).normalize() * 10.0f;
+		}
 	}
 }
 
@@ -177,6 +224,8 @@ void FPSController::GroundCheck()
 
 void FPSController::UpdateHeadbob()
 {
+	// TODO: Right now framrerate will cause this to move faster
+
 	if (!DXCore::keyboard.NoKeyDown() && !midAir) // if keys are down and we are on the ground we want to headbob
 	{
 		if (headbobOffset < HEADBOB_OFFSET_MAX && !resetHeadbob) // increase headbob offset if it is less than the max and we are not resetting 
@@ -302,5 +351,6 @@ void FPSController::OnCollision(btCollisionObject* other)
 	Entity* otherE = (Entity*)other->getUserPointer();
 	
 }
+
 
 

@@ -36,6 +36,7 @@ class FPSController : public ScriptManager
 	float dashDampTimer = 0.0f;
 	float dashImpulseScalar = 125.0f;
 
+	float hookshotRangeScalar = 10.0f;
 
 	enum class PlayerState
 	{
@@ -46,7 +47,11 @@ class FPSController : public ScriptManager
 	void Init();
 
 	void Update();
+	
+	void CheckAbilities();
 
+	void Hookshot();
+	
 	void Move();
 
 	void GroundCheck();
