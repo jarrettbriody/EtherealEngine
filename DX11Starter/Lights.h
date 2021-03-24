@@ -1,5 +1,5 @@
 #pragma once
-#include <DirectXMath.h>
+#include "pch.h"
 
 #define LIGHT_TYPE_DIR 0
 #define LIGHT_TYPE_POINT 1

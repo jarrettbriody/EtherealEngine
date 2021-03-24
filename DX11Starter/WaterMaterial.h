@@ -1,6 +1,5 @@
 #pragma once
-#include "SimpleShader.h"
-#include <string>
+#include "pch.h"
 #include "Material.h"
 #define MAX_TEXTURE_LAYERS 10
 

@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "Game.h"
 #include "Vertex.h"
 
@@ -6,14 +7,13 @@ using namespace DirectX;
 Game::Game(HINSTANCE hInstance)
 	: DXCore(
 		hInstance,					// The application's handle
-		"Small Shooting Arena",	   	// Text for the window's title bar
-		1600,						// Width of the window's client area
-		900,						// Height of the window's client area
+		"Ethereal Engine",		 	// Text for the window's title bar
 		true)						// Show extra stats (fps) in title bar?
 {
 
 #if defined(DEBUG) || defined(_DEBUG)
 	CreateConsoleWindow(500, 120, 32, 120);
+	if (Config::FPSControllerEnabled) ShowCursor(false);
 	printf("Console window created successfully.  Feel free to printf() here.\n");
 #endif
 	
@@ -21,87 +21,62 @@ Game::Game(HINSTANCE hInstance)
 
 Game::~Game()
 {
-	//defaults
-	for (auto texMapIter = defaultTexturesMap.begin(); texMapIter != defaultTexturesMap.end(); ++texMapIter)
-	{
-		texMapIter->second->Release();
-		//cout << "Releasing " << texMapIter->first << endl;
-	}
+	SceneLoader::DestroyInstance();
 
-	for (auto matMapIter = defaultMaterialsMap.begin(); matMapIter != defaultMaterialsMap.end(); ++matMapIter)
-	{
-		delete matMapIter->second;
-		//cout << "Deleting " << matMapIter->first << endl;
-	}
-
-	for (auto meshMapIter = defaultMeshesMap.begin(); meshMapIter != defaultMeshesMap.end(); ++meshMapIter)
-	{
-		if (meshMapIter->first != "Ground") {
-			delete meshMapIter->second;
-			//cout << "Deleting " << meshMapIter->first << endl;
-		}
-	}
-
-	//generated
-	for (auto texMapIter = generatedTexturesMap.begin(); texMapIter != generatedTexturesMap.end(); ++texMapIter)
-	{
-		texMapIter->second->Release();
-		//cout << "Releasing " << texMapIter->first << endl;
-	}
-
-	for (auto matMapIter = generatedMaterialsMap.begin(); matMapIter != generatedMaterialsMap.end(); ++matMapIter)
-	{
-		delete matMapIter->second;
-		//cout << "Deleting " << matMapIter->first << endl;
-	}
-
-	for (auto meshMapIter = generatedMeshesMap.begin(); meshMapIter != generatedMeshesMap.end(); ++meshMapIter)
-	{
-		delete meshMapIter->second;
-		//cout << "Deleting " << meshMapIter->first << endl;
-	}
-
-	for (size_t i = 0; i < sceneEntities.size(); i++)
-	{
-		delete sceneEntities[i];
-	}
-
-	//delete shaders
-	for (auto vertSIter = vertexShadersMap.begin(); vertSIter != vertexShadersMap.end(); ++vertSIter)
-	{
-		delete vertSIter->second;
-	}
-
-	for (auto pixSIter = pixelShadersMap.begin(); pixSIter != pixelShadersMap.end(); ++pixSIter)
-	{
-		delete pixSIter->second;
-	}
-
-	sampler->Release();
+	Config::Sampler->Release();
 
 	skySRV->Release();
 	skyDepthState->Release();
 	skyRasterState->Release();
 
-	delete terrain;
+	// FMOD
+	sound[0]->release(); // For now just release the one sound we have assigned
+	backgroundMusic->release();
+	sfxGroup->release();
+	fmodSystem->close();
+	fmodSystem->release();
+	//delete terrain;
+	//delete water;
 
-	delete camera;
-	delete renderer;
+	delete collisionConfiguration;
+	delete dispatcher;
+	delete broadphase;
+	delete solver;
+	delete Config::DynamicsWorld;
+	// delete physicsDraw;
+
+
+	//delete EECamera;
+	Renderer::DestroyInstance();
+
+	for (size_t i = 0; i < ScriptManager::scriptFunctions.size(); i++)
+	{
+		delete ScriptManager::scriptFunctions[i];
+	}
+
+	MemoryAllocator::DestroyInstance();
+
+	DecalHandler::DestroyInstance();
 }
 
 void Game::Init()
 {
-	//EtherealEngine::GetInstance()->SetDevice(device);
-	//EtherealEngine::GetInstance()->SetContext(context);
-	DebugLines::device = device;
+	//dont delete this, its for finding mem leaks
+	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+	//_CrtSetBreakAlloc(327967);
+	//_CrtSetBreakAlloc(49892);
 
-	LoadShaders();
+	// Physics -----------------
+	collisionConfiguration = new btDefaultCollisionConfiguration();
+	dispatcher = new  btCollisionDispatcher(collisionConfiguration);
+	broadphase = new  btDbvtBroadphase();
+	solver = new  btSequentialImpulseConstraintSolver;
+	Config::DynamicsWorld = new btDiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
+	Config::DynamicsWorld->setGravity(btVector3(0, -10.0f, 0));
 
-	camera = new Camera();
-	camera->UpdateProjectionMatrix(width, height);
-	//EtherealEngine::GetInstance()->SetCamera(camera);
-
-	DirectX::CreateDDSTextureFromFile(device, L"../../Assets/Textures/SunnyCubeMap.dds", 0, &skySRV);
+	//DirectX::CreateDDSTextureFromFile(Config::Device, L"../../Assets/Textures/SunnyCubeMap.dds", 0, &skySRV);
+	DirectX::CreateDDSTextureFromFile(Config::Device, L"../../Assets/Textures/night4.dds", 0, &skySRV);
+	//DirectX::CreateDDSTextureFromFile(Config::Device, L"../../Assets/Textures/pink.dds", 0, &skySRV);
 
 	D3D11_SAMPLER_DESC samplerDesc = {};
 	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
@@ -111,106 +86,57 @@ void Game::Init()
 	samplerDesc.MaxAnisotropy = 16;
 	samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
 
-	device->CreateSamplerState(&samplerDesc, &sampler);
+	Config::Device->CreateSamplerState(&samplerDesc, &Config::Sampler);
 
 	D3D11_RASTERIZER_DESC skyRD = {};
 	skyRD.CullMode = D3D11_CULL_FRONT;
 	skyRD.FillMode = D3D11_FILL_SOLID;
 	skyRD.DepthClipEnable = true;
-	device->CreateRasterizerState(&skyRD, &skyRasterState);
+	Config::Device->CreateRasterizerState(&skyRD, &skyRasterState);
 
 	D3D11_DEPTH_STENCIL_DESC skyDS = {};
 	skyDS.DepthEnable = true;
 	skyDS.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
 	skyDS.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
-	device->CreateDepthStencilState(&skyDS, &skyDepthState);
+	Config::Device->CreateDepthStencilState(&skyDS, &skyDepthState);
 
-	LoadDefaultMeshes();
-	LoadDefaultTextures();
-	LoadDefaultMaterials();
+	MemoryAllocator::SetupInstance(Config::MemoryAllocatorSize, Config::MemoryAllocatorAlignment);
+	EEMemoryAllocator = MemoryAllocator::GetInstance();
+	EEMemoryAllocator->CreatePool((unsigned int)MEMORY_POOL::ENTITY_POOL, Config::MemoryAllocatorEntityPoolSize, sizeof(Entity));
+	EEMemoryAllocator->CreatePool((unsigned int)MEMORY_POOL::MESH_POOL, Config::MemoryAllocatorMeshPoolSize, sizeof(Mesh));
+	EEMemoryAllocator->CreatePool((unsigned int)MEMORY_POOL::MATERIAL_POOL, Config::MemoryAllocatorMaterialPoolSize, sizeof(Material));
+	EEMemoryAllocator->CreatePool((unsigned int)MEMORY_POOL::DECAL_POOL, Config::MemoryAllocatorDecalPoolSize, sizeof(DecalBucket));
 
-	LoadScene("ArenaV2");
+	EECamera = new Camera();
+	EECamera->UpdateProjectionMatrix();
 
-	//test area --------------------------
-	/*
-	CUBE ALWAYS TRIES TO APPLY GRASS MATERIAL BECAUSE OF GROUND NEED TO FIX
+	SceneLoader::SetupInstance();
+	EESceneLoader = SceneLoader::GetInstance();
 
-	Entity* cube1;
-	cube1 = new Entity("cube1", defaultMeshesMap["Cube"]);
-	cube1->AddMaterial(defaultMaterialsMap["DEFAULT"]);
-	cube1->AddMaterialNameToMesh("DEFAULT");
-	cube1->SetPosition(8.0f, 8.0f, 8.0f);
-	cube1->SetRotation(DirectX::XMConvertToRadians(30), DirectX::XMConvertToRadians(30), DirectX::XMConvertToRadians(30));
-	cube1->SetScale(1.0f, 2.0f, 1.0f);
-	sceneEntitiesMap.insert({ "cube1", cube1 });
-	sceneEntities.push_back(cube1);
+	EESceneLoader->LoadShaders();
 
-	Entity* cube2;
-	cube2 = new Entity("cube2", defaultMeshesMap["Cube"]);
-	cube2->AddMaterial(defaultMaterialsMap["DEFAULT"]);
-	cube2->AddMaterialNameToMesh("DEFAULT");
-	cube2->SetPosition(1.0f, 1.0f, 1.0f);
-	cube2->SetRotation(DirectX::XMConvertToRadians(30), DirectX::XMConvertToRadians(30), DirectX::XMConvertToRadians(30));
-	cube2->SetScale(1.0f, 1.0f, 1.0f);
-	sceneEntitiesMap.insert({ "cube2", cube2 });
-	sceneEntities.push_back(cube2);
+	EESceneLoader->LoadDefaultMeshes();
+	EESceneLoader->LoadDefaultTextures();
+	EESceneLoader->LoadDefaultMaterials();
 
-	cube1->AddChildEntity(cube2);
+	EESceneLoader->SetScriptLoader([](Entity* e, string script) {Scripts::CreateScript(e, script); });
 
-	cube1->CalcWorldMatrix();
-	*/
+	//EESceneLoader->LoadScene("ArenaV2");
 
-	Entity* sphere1;
-	sphere1 = new Entity("sphere1", defaultMeshesMap["Sphere"]);
-	sphere1->AddMaterial(defaultMaterialsMap["DEFAULT"]);
-	sphere1->AddMaterialNameToMesh("DEFAULT");
-	sphere1->SetPosition(8.0f, 8.0f, 8.0f);
-	sphere1->SetRotation(DirectX::XMConvertToRadians(30), DirectX::XMConvertToRadians(30), DirectX::XMConvertToRadians(30));
-	sphere1->SetScale(1.0f, 2.0f, 1.0f);
-	sceneEntitiesMap.insert({ "sphere1", sphere1 });
-	sceneEntities.push_back(sphere1);
-
-	Entity* sphere2;
-	sphere2 = new Entity("sphere2", defaultMeshesMap["Sphere"]);
-	sphere2->AddMaterial(defaultMaterialsMap["DEFAULT"]);
-	sphere2->AddMaterialNameToMesh("DEFAULT");
-	sphere2->SetPosition(2.0f, 2.0f, 2.0f);
-	sphere2->SetRotation(0.0f, 0.0f, 0.0f);
-	sphere2->SetScale(1.0f, 1.0f, 2.0f);
-	sceneEntitiesMap.insert({ "sphere2", sphere2 });
-	sceneEntities.push_back(sphere2);
-
-	sphere1->AddChildEntity(sphere2);
-
-	Entity* sphere3;
-	sphere3 = new Entity("sphere3", defaultMeshesMap["Sphere"]);
-	sphere3->AddMaterial(defaultMaterialsMap["DEFAULT"]);
-	sphere3->AddMaterialNameToMesh("DEFAULT");
-	sphere3->SetPosition(2.0f, 2.0f, 0.0f);
-	sphere3->SetRotation(0.0f, 0.0f, 90.0f);
-	sphere3->SetScale(1.0f, 1.0f, 1.0f);
-	sceneEntitiesMap.insert({ "sphere3", sphere3 });
-	sceneEntities.push_back(sphere3);
-
-	sphere2->AddChildEntity(sphere3);
-
-	sphere1->CalcWorldMatrix();
-
-	sceneEntitiesMap["barrel_1"]->AddAutoBoxCollider();
-	sceneEntitiesMap["barrel_1"]->CalcWorldMatrix();
-	sceneEntitiesMap["barrel_1 (1)"]->AddAutoBoxCollider();
-	sceneEntitiesMap["barrel_1 (1)"]->CalcWorldMatrix();
-
-	//------------------------------------
+	EESceneLoader->SetModelPath("../../Assets/Models/City/");
+	EESceneLoader->LoadScene("City");
 
 	prevMousePos.x = 0;
 	prevMousePos.y = 0;
 
 	Light* dLight = new Light;
 	dLight->Type = LIGHT_TYPE_DIR;
-	dLight->Color = XMFLOAT3(1.0f, 244.0f / 255.0f, 214.0f / 255.0f);
-	dLight->Direction = XMFLOAT3(0.5f, -1.0f, 1.0f);
-	dLight->Intensity = 1.f;
+	XMFLOAT3 c = XMFLOAT3(1.0f, 252.0f / 255.0f, 222.0f / 255.0f);
+	dLight->Color = c;
+	XMFLOAT3 d = XMFLOAT3(-0.265943f, -0.92075f, 0.28547f);
+	dLight->Direction = d;
+	dLight->Intensity = 0.25f;
+	dLight->Position = XMFLOAT3(-334.0f, 179.5f, -175.9f);
 
 	/*testLight = new Light;
 	testLight->Type = LIGHT_TYPE_SPOT;
@@ -221,618 +147,192 @@ void Game::Init()
 	testLight->Range = 10.f;
 	testLight->SpotFalloff = 20.f;*/
 
-	renderer = new Renderer(device, context, swapChain, backBufferRTV, depthStencilView, width, height);
-	renderer->SetCamera(camera);
-	renderer->SetShadowVertexShader(vertexShadersMap["Shadow"]);
-	renderer->SetDebugLineVertexShader(vertexShadersMap["DebugLine"]);
-	renderer->SetDebugLinePixelShader(pixelShadersMap["DebugLine"]);
-	renderer->SetEntities(&sceneEntities);
-	renderer->AddLight("Sun", dLight);
-	//renderer->AddLight("testLight", testLight);
-	renderer->SendAllLightsToShader(pixelShadersMap["DEFAULT"]);
-	renderer->SendAllLightsToShader(pixelShadersMap["Normal"]);
-	renderer->SetShadowMapResolution(4096);
-	renderer->InitShadows();
-	//EtherealEngine::GetInstance()->SetRenderer(renderer);
+	DecalHandler::SetupInstance();
+	EEDecalHandler = DecalHandler::GetInstance();
 
-	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	Renderer::SetupInstance();
+	EERenderer = Renderer::GetInstance();
+	EERenderer->AddCamera("main", EECamera);
+	EERenderer->EnableCamera("main");
+	RendererShaders rShaders;
+	rShaders.depthStencilVS = EESceneLoader->vertexShadersMap["DepthStencil"];
+	rShaders.depthStencilPS = EESceneLoader->pixelShadersMap["DepthStencil"];
+	rShaders.debugLineVS = EESceneLoader->vertexShadersMap["DebugLine"];
+	rShaders.debugLinePS = EESceneLoader->pixelShadersMap["DebugLine"];
+	rShaders.decalVS = EESceneLoader->vertexShadersMap["Decal"];
+	rShaders.decalPS = EESceneLoader->pixelShadersMap["Decal"];
+	EERenderer->SetRendererShaders(rShaders);
+	EERenderer->SetEntities(&(EESceneLoader->sceneEntities));
+	EERenderer->AddLight("Sun", dLight);
+	EERenderer->SendAllLightsToShader(EESceneLoader->pixelShadersMap["DEFAULT"]);
+	EERenderer->SendAllLightsToShader(EESceneLoader->pixelShadersMap["Normal"]);
+	EERenderer->SendAllLightsToShader(EESceneLoader->pixelShadersMap["Decal"]);
+	EERenderer->SetShadowMapResolution(4096);
+	EERenderer->InitShadows();
+	EERenderer->InitDepthStencil();
+	EERenderer->InitHBAOPlus();
+	EESceneLoader->EERenderer = EERenderer;
 
-	//terrain -----------------
+	ID3D11ShaderResourceView* decals[8];
+	decals[0] = EESceneLoader->defaultTexturesMap["BLOOD1"];
+	decals[1] = EESceneLoader->defaultTexturesMap["BLOOD2"];
+	decals[2] = EESceneLoader->defaultTexturesMap["BLOOD3"];
+	decals[3] = EESceneLoader->defaultTexturesMap["BLOOD4"];
+	decals[4] = EESceneLoader->defaultTexturesMap["BLOOD5"];
+	decals[5] = EESceneLoader->defaultTexturesMap["BLOOD6"];
+	decals[6] = EESceneLoader->defaultTexturesMap["BLOOD7"];
+	decals[7] = EESceneLoader->defaultTexturesMap["BLOOD8"];
+	EERenderer->SetDecals(EESceneLoader->defaultMeshesMap["Cube"], decals);
 
-	terrain = new Terrain(device, "../../Assets/valley.raw16", 513, 513, 1.0f, 50.0f, 1.0f);
-	Entity* terrainEntity = new Entity("Terrain", terrain);
-	terrainEntity->AddMaterial(defaultMaterialsMap["Terrain"]);
-	terrainEntity->AddMaterialNameToMesh("Terrain");
-	terrainEntity->SetPosition(0.f, -10.f, 0.f);
-	terrainEntity->SetRotation(0.f, 0.f, 0.f);
-	terrainEntity->SetScale(1.0f, 1.0f, 1.0f);
-	sceneEntitiesMap.insert({ "Terrain", terrainEntity });
-	sceneEntities.push_back(terrainEntity);
-	terrainEntity->CalcWorldMatrix();
-
-	water = new Water(0.0002f, device, 513, 513, 1.f, 1.f, 1.f, pixelShadersMap["Water"]);
-	water->SetOffsets(0.2f, 0.1f, 0.1f, 0.2f);
-	Entity* waterEntity = new Entity("Water", water->terrain);
-	waterEntity->AddMaterial(defaultMaterialsMap["Water"]);
-	waterEntity->AddMaterialNameToMesh("Water");
-	waterEntity->SetPosition(0.f, -3.f, 0.f);
-	waterEntity->SetRotation(0.f, 0.f, 0.f);
-	waterEntity->SetScale(1.f, 1.f, 1.f);
-	sceneEntitiesMap.insert({ "Water", waterEntity });
-	sceneEntities.push_back(waterEntity);
-	waterEntity->CalcWorldMatrix();
-
-}
-
-void Game::LoadShaders()
-{
-	//vertex shaders
-	SimpleVertexShader* defaultVS = new SimpleVertexShader(device, context);
-	defaultVS->LoadShaderFile(L"DefaultVS.cso");
-	vertexShadersMap.insert({ "DEFAULT", defaultVS });
-
-	SimpleVertexShader* shadowVS = new SimpleVertexShader(device, context);
-	shadowVS->LoadShaderFile(L"ShadowVS.cso");
-	vertexShadersMap.insert({ "Shadow", shadowVS });
-
-	SimpleVertexShader* skyVS = new SimpleVertexShader(device, context);
-	skyVS->LoadShaderFile(L"SkyVS.cso");
-	vertexShadersMap.insert({ "Sky", skyVS });
-
-	SimpleVertexShader* normalVS = new SimpleVertexShader(device, context);
-	normalVS->LoadShaderFile(L"NormalVS.cso");
-	vertexShadersMap.insert({ "Normal", normalVS });
-
-	SimpleVertexShader* debugLineVS = new SimpleVertexShader(device, context);
-	debugLineVS->LoadShaderFile(L"DebugLineVS.cso");
-	vertexShadersMap.insert({ "DebugLine", debugLineVS });
-
-	//pixel shaders
-	SimplePixelShader* defaultPS = new SimplePixelShader(device, context);
-	defaultPS->LoadShaderFile(L"DefaultPS.cso");
-	pixelShadersMap.insert({ "DEFAULT", defaultPS });
-
-	SimplePixelShader* skyPS = new SimplePixelShader(device, context);
-	skyPS->LoadShaderFile(L"SkyPS.cso");
-	pixelShadersMap.insert({ "Sky", skyPS });
-
-	SimplePixelShader* normalPS = new SimplePixelShader(device, context);
-	normalPS->LoadShaderFile(L"NormalPS.cso");
-	pixelShadersMap.insert({ "Normal", normalPS });
-
-	SimplePixelShader* debugLinePS = new SimplePixelShader(device, context);
-	debugLinePS->LoadShaderFile(L"DebugLinePS.cso");
-	pixelShadersMap.insert({ "DebugLine", debugLinePS });
-  
-	SimplePixelShader* terrainPS = new SimplePixelShader(device, context);
-	terrainPS->LoadShaderFile(L"TerrainPS.cso");
-	pixelShadersMap.insert({ "Terrain", terrainPS });
-
-	SimplePixelShader* waterPS = new SimplePixelShader(device, context);
-	waterPS->LoadShaderFile(L"WaterPS.cso");
-	pixelShadersMap.insert({ "Water", waterPS });
-
-}
-
-void Game::LoadDefaultMeshes()
-{
-	defaultMeshesMap.insert({ "Cube", new Mesh("Cube", "../../Assets/Models/Default/cube.obj", device) });
-	defaultMeshesMap.insert({ "Cylinder", new Mesh("Cylinder", "../../Assets/Models/Default/cylinder.obj", device) });
-	defaultMeshesMap.insert({ "Cone", new Mesh("Cone", "../../Assets/Models/Default/cone.obj", device) });
-	defaultMeshesMap.insert({ "Sphere", new Mesh("Sphere", "../../Assets/Models/Default/sphere.obj", device) });
-	defaultMeshesMap.insert({ "Helix", new Mesh("Helix", "../../Assets/Models/Default/helix.obj", device) });
-	defaultMeshesMap.insert({ "Torus", new Mesh("Torus", "../../Assets/Models/Default/torus.obj", device) });
-	defaultMeshesMap.insert({ "Ground", defaultMeshesMap["Cube"] });
-}
-
-void Game::LoadDefaultTextures()
-{
-	defaultTexturesMap.insert({ "GrassDiffuse", Utility::LoadSRV(device,context,"Default/Grass/DefaultGrassDiffuse.jpg") });
-	defaultTexturesMap.insert({ "GrassNormal", Utility::LoadSRV(device,context,"Default/Grass/DefaultGrassNormal.jpg") });
-	defaultTexturesMap.insert({ "Red", Utility::LoadSRV(device,context,"Default/red.png") });
-	defaultTexturesMap.insert({ "Marble", Utility::LoadSRV(device,context,"Default/marble.png") });
-	defaultTexturesMap.insert({ "Hedge", Utility::LoadSRV(device,context,"Default/hedge.jpg") });
-	defaultTexturesMap.insert({ "terrain2", Utility::LoadSRV(device,context,"grass.png") });
-	defaultTexturesMap.insert({ "terrain3", Utility::LoadSRV(device,context,"rocky.png") });
-	defaultTexturesMap.insert({ "terrain1", Utility::LoadSRV(device,context,"snow.jpg") });
-	defaultTexturesMap.insert({ "terrainNormal2", Utility::LoadSRV(device,context,"grass_normal.png") });
-	defaultTexturesMap.insert({ "terrainNormal3", Utility::LoadSRV(device,context,"rocky_normal.png") });
-	defaultTexturesMap.insert({ "terrainNormal1", Utility::LoadSRV(device,context,"snow_normal.jpg") });
-	defaultTexturesMap.insert({ "terrainBlendMap", Utility::LoadSRV(device,context,"blendMap.png") });
-	defaultTexturesMap.insert({ "waterBase", Utility::LoadSRV(device,context,"water_base.png") });
-	defaultTexturesMap.insert({ "waterFoam", Utility::LoadSRV(device,context,"water_foam.jpg") });
-	defaultTexturesMap.insert({ "waterNormal1", Utility::LoadSRV(device,context,"water_normal1.jpeg") });
-	defaultTexturesMap.insert({ "waterNormal2", Utility::LoadSRV(device,context,"water_normal2.png") });
-}
-
-void Game::LoadDefaultMaterials()
-{
-	MaterialData materialData = {};
-	defaultMaterialsMap.insert({"DEFAULT", new Material("DEFAULT", materialData, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], sampler)});
-
-	materialData = {};
-	materialData.DiffuseTextureMapSRV = defaultTexturesMap["GrassDiffuse"];
-	materialData.NormalTextureMapSRV = defaultTexturesMap["GrassNormal"];
-	defaultMaterialsMap.insert({ "Grass", new Material("Grass", materialData, vertexShadersMap["Normal"], pixelShadersMap["Normal"], sampler) });
-
-	materialData = {};
-	materialData.DiffuseTextureMapSRV = defaultTexturesMap["Red"];
-	defaultMaterialsMap.insert({ "Red", new Material("Red", materialData, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], sampler) });
-
-	materialData = {};
-	materialData.DiffuseTextureMapSRV = defaultTexturesMap["Marble"];
-	defaultMaterialsMap.insert({ "Marble", new Material("Marble", materialData, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], sampler) });
-
-	materialData = {};
-	materialData.DiffuseTextureMapSRV = defaultTexturesMap["Hedge"];
-	defaultMaterialsMap.insert({ "Hedge", new Material("Hedge", materialData, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], sampler) });
-
-	TerrainMaterialData terrainMaterialData = {};
-	terrainMaterialData.SurfaceTexture1 = defaultTexturesMap["terrain1"];
-	terrainMaterialData.SurfaceTexture2 = defaultTexturesMap["terrain2"];
-	terrainMaterialData.SurfaceTexture3 = defaultTexturesMap["terrain3"];
-	terrainMaterialData.SurfaceNormal1 = defaultTexturesMap["terrainNormal1"];
-	terrainMaterialData.SurfaceNormal2 = defaultTexturesMap["terrainNormal2"];
-	terrainMaterialData.SurfaceNormal3 = defaultTexturesMap["terrainNormal3"];
-	terrainMaterialData.uvScale = 50.0f;
-	terrainMaterialData.BlendMap = defaultTexturesMap["terrainBlendMap"];
-	defaultMaterialsMap.insert({ "Terrain", new TerrainMaterial("Terrain", terrainMaterialData, vertexShadersMap["DEFAULT"], pixelShadersMap["Terrain"], sampler) });
-
-	WaterMaterialData waterMaterialData = {};
-	waterMaterialData.SurfaceTexture1 = defaultTexturesMap["waterBase"];
-	waterMaterialData.SurfaceTexture2 = defaultTexturesMap["waterFoam"];
-	waterMaterialData.SurfaceNormal1 = defaultTexturesMap["waterNormal1"];
-	waterMaterialData.SurfaceNormal2 = defaultTexturesMap["waterNormal2"];
-	waterMaterialData.uvScale = 20.0f;
-	defaultMaterialsMap.insert({ "Water", new WaterMaterial("Water", waterMaterialData, vertexShadersMap["DEFAULT"], pixelShadersMap["Water"], sampler) });
-
-}
-
-void Game::BuildDefaultEntity(string entityName, string objName, Entity* e)
-{
-	if (objName == "Ground") {
-		e->AddMaterial(defaultMaterialsMap["Grass"]);
-		e->AddMaterialNameToMesh("Grass");
-		XMFLOAT3 s = e->GetScale();
-		e->SetRepeatTexture(s.x / 2.0f, s.z / 2.0f);
-	}
-}
-
-Utility::MESH_TYPE Game::AutoLoadOBJMTL(string name)
-{
-	//mesh exists in default meshes map, which will remain untouched during program execution
-	if (defaultMeshesMap.count(name))
-		return Utility::MESH_TYPE::DEFAULT_MESH;
-
-	//if mesh is already loaded
-	if (generatedMeshesMap.count(name)) {
-		//if the mesh is not already recorded as utilized, utilize it
-		if (!utilizedMeshesMap.count(name)){
-			utilizedMeshesMap.insert({ name, true });
-			//get the material names utilized under the mesh
-			vector<string> utilizedMaterials = generatedMeshesMap[name]->GetMaterialNameList();
-			for (int i = 0; i < utilizedMaterials.size(); i++)
-			{
-				//if the material is not already utilized, utilize it
-				if (!utilizedMaterialsMap.count(utilizedMaterials[i])) {
-					utilizedMaterialsMap.insert({ utilizedMaterials[i], true });
-					//get the texture names utilized under the material
-					vector<string> utilizedTextures = generatedMaterialsMap[utilizedMaterials[i]]->GetMaterialData().SRVNames;
-					for (int j = 0; j < utilizedTextures.size(); j++)
-					{
-						//if the texture is not already utilized, utilize it
-						if (!utilizedTexturesMap.count(utilizedTextures[i]))
-							utilizedTexturesMap.insert({ utilizedTextures[i], true });
-					}
-				}
-			}
-		}
-		//mesh is already loaded and mesh, materials, and textures are now marked as utilized, exit func
-		return Utility::MESH_TYPE::GENERATED_MESH;
-	}
-
-	string objPath = "../../Assets/Models/" + name + ".obj";
-
-	//Mesh will change bool ref to false if OBJ file does not exist, otherwise it will generate it and add to map
-	bool success;
-	generatedMeshesMap.insert({ name, new Mesh(name, (char*)objPath.c_str(), device, &success) });
-	if (!success) {
-		cout << "Cannot load Object (OBJ) file: " + string(objPath) << endl;
-		return Utility::MESH_TYPE::LOAD_FAILURE;
-	}
-
-	//record mesh as utilized
-	utilizedMeshesMap.insert({ name,true });
-
-	string mtlPath = generatedMeshesMap[name]->GetMTLPath();
-
-	if (mtlPath == "") {
-		cout << "Material Template Library (MTL) link not found inside \"" + name + ".obj\". If this is unintentional, link MTL file inside OBJ file." << endl;
-		return Utility::MESH_TYPE::GENERATED_MESH;
-	}
-
-	ifstream infile("../../Assets/Models/" + mtlPath);
-
-	if (!infile.is_open()) {
-		cout << "Material Template Library (MTL) file not found. Please include MTL file in same directory as OBJ file or remove the internal OBJ link to " + mtlPath + "." << endl;
-		return Utility::MESH_TYPE::GENERATED_MESH;
-	}
-
-	using namespace Utility;
-
-	regex newMtlRgx("^(newmtl )");
-	regex ambientColorRgx("^(Ka )");
-	regex diffuseColorRgx("^(Kd )");
-	regex specularColorRgx("^(Ks )");
-	regex specularExpRgx("^(Ns )");
-	regex dTransparencyRgx("^(d )");
-	regex trTransparencyRgx("^(Tr )");
-	regex illuminationRgx("^(illum )");
-	regex ambientTextureRgx("^(map_Ka )");
-	regex diffuseTextureRgx("^(map_Kd )");
-	regex specularColorTextureRgx("^(map_Ks )");
-	regex specularHighlightTextureRgx("^(map_Ns )");
-	regex alphaTextureRgx("^(map_d )");
-	regex normalTextureRgx("^(map_Bump )");
-
-	bool ongoingMat = false;
-	string ongoingMatName = "";
-	MaterialData matData;
-
-	string line;
-	smatch match;
-
-	while (getline(infile, line)) {
-		if (line != "" && !regex_search(line, match, regex("^#"))) {
-			//search for new material line
-			if (regex_search(line, match, newMtlRgx)) {
-				line = regex_replace(line, newMtlRgx, "");
-				//new material line was found but a material was in progress, complete this material before continuing
-				if (ongoingMat) {
-					//Different shaders based on matData values
-					if (matData.NormalTextureMapSRV) {
-						generatedMaterialsMap.insert({ ongoingMatName, new Material(ongoingMatName, matData, vertexShadersMap["Normal"], pixelShadersMap["Normal"], sampler) });
-					}
-					else {
-						generatedMaterialsMap.insert({ ongoingMatName, new Material(ongoingMatName, matData, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], sampler) });
-					}
-					matData = {};
-				}
-				ongoingMat = true;
-				ongoingMatName = line;
-
-				//record material as utilized
-				utilizedMaterialsMap.insert({ ongoingMatName,true });
-			}
-			//ambient color
-			else if (regex_search(line, match, ambientColorRgx)) {
-				line = regex_replace(line, ambientColorRgx, "");
-				ParseFloat3FromString(line, matData.AmbientColor);
-			}
-			//diffuse color
-			else if (regex_search(line, match, diffuseColorRgx)) {
-				line = regex_replace(line, diffuseColorRgx, "");
-				ParseFloat3FromString(line, matData.DiffuseColor);
-			}
-			//specular color
-			else if (regex_search(line, match, specularColorRgx)) {
-				line = regex_replace(line, specularColorRgx, "");
-				ParseFloat3FromString(line, matData.SpecularColor);
-			}
-			//specular value
-			else if (regex_search(line, match, specularExpRgx)) {
-				line = regex_replace(line, specularExpRgx, "");
-				ParseFloatFromString(line, matData.SpecularExponent);
-			}
-			//transparency value
-			else if (regex_search(line, match, dTransparencyRgx)) {
-				line = regex_replace(line, dTransparencyRgx, "");
-				ParseFloatFromString(line, matData.Transparency);
-			}
-			//transparency value
-			else if (regex_search(line, match, trTransparencyRgx)) {
-				line = regex_replace(line, trTransparencyRgx, "");
-				ParseFloatFromString(line, matData.Transparency);
-				matData.Transparency = 1.0f - matData.Transparency;
-			}
-			//illumination value
-			else if (regex_search(line, match, illuminationRgx)) {
-				line = regex_replace(line, illuminationRgx, "");
-				ParseIntFromString(line, matData.Illumination);
-			}
-			//ambient occlusion map
-			else if (regex_search(line, match, ambientTextureRgx)) {
-				line = regex_replace(line, ambientTextureRgx, "");
-				if (!generatedTexturesMap.count(line)) {
-					generatedTexturesMap.insert({ line, LoadSRV(device,context,line) });
-
-					//record texture as utilized
-					utilizedTexturesMap.insert({ line,true });
-				}
-				matData.AmbientTextureMapSRV = generatedTexturesMap[line];
-				matData.SRVNames.push_back(line);
-			}
-			//diffuse map
-			else if (regex_search(line, match, diffuseTextureRgx)) {
-				line = regex_replace(line, diffuseTextureRgx, "");
-				if (!generatedTexturesMap.count(line)) {
-					generatedTexturesMap.insert({ line, LoadSRV(device,context,line) });
-
-					//record texture as utilized
-					utilizedTexturesMap.insert({ line,true });
-				}
-				matData.DiffuseTextureMapSRV = generatedTexturesMap[line];
-				matData.SRVNames.push_back(line);
-			}
-			//specular color map
-			else if (regex_search(line, match, specularColorTextureRgx)) {
-				line = regex_replace(line, specularColorTextureRgx, "");
-				if (!generatedTexturesMap.count(line)) {
-					generatedTexturesMap.insert({ line, LoadSRV(device,context,line) });
-
-					//record texture as utilized
-					utilizedTexturesMap.insert({ line,true });
-				}
-				matData.SpecularColorTextureMapSRV = generatedTexturesMap[line];
-				matData.SRVNames.push_back(line);
-			}
-			//specular highlight map
-			else if (regex_search(line, match, specularHighlightTextureRgx)) {
-				line = regex_replace(line, specularHighlightTextureRgx, "");
-				if (!generatedTexturesMap.count(line)) {
-					generatedTexturesMap.insert({ line, LoadSRV(device,context,line) });
-
-					//record texture as utilized
-					utilizedTexturesMap.insert({ line,true });
-				}
-				matData.SpecularHighlightTextureMapSRV = generatedTexturesMap[line];
-				matData.SRVNames.push_back(line);
-			}
-			//alpha map
-			else if (regex_search(line, match, alphaTextureRgx)) {
-				line = regex_replace(line, alphaTextureRgx, "");
-				if (!generatedTexturesMap.count(line)) {
-					generatedTexturesMap.insert({ line, LoadSRV(device,context,line) });
-
-					//record texture as utilized
-					utilizedTexturesMap.insert({ line,true });
-				}
-				matData.AlphaTextureMapSRV = generatedTexturesMap[line];
-				matData.SRVNames.push_back(line);
-			}
-			//bump map
-			else if (regex_search(line, match, normalTextureRgx)) {
-				line = regex_replace(line, normalTextureRgx, "");
-				if (!generatedTexturesMap.count(line)) {
-					generatedTexturesMap.insert({ line, LoadSRV(device,context,line) });
-
-					//record texture as utilized
-					utilizedTexturesMap.insert({ line,true });
-				}
-				matData.NormalTextureMapSRV = generatedTexturesMap[line];
-				matData.SRVNames.push_back(line);
-			}
-		}
-	}
-	//basically only executes if the end of the file is reached and there was an ongoing material being created
-	if (ongoingMat) {
-		if (matData.NormalTextureMapSRV) {
-			generatedMaterialsMap.insert({ ongoingMatName, new Material(ongoingMatName, matData, vertexShadersMap["Normal"], pixelShadersMap["Normal"], sampler) });
-		}
-		else {
-			generatedMaterialsMap.insert({ ongoingMatName, new Material(ongoingMatName, matData, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], sampler) });
-		}
-		matData = {};
-		ongoingMat = false;
-	}
-	infile.close();
-	return Utility::MESH_TYPE::GENERATED_MESH;
-}
-
-void Game::LoadScene(string sceneName)
-{
-	//remove all current entities loaded
-	for (size_t i = 0; i < sceneEntities.size(); i++)
+	Entity* e;
+	for (size_t i = 0; i < EESceneLoader->sceneEntities.size(); i++)
 	{
-		delete sceneEntities[i];
-	}
-	sceneEntities.clear();
-	sceneEntitiesMap.clear();
-	utilizedMeshesMap.clear();
-	utilizedMaterialsMap.clear();
-	utilizedTexturesMap.clear();
-
-	//for iterating over each line to get the float values for transformations
-	regex iteratorRegex = regex("-\\d*\\.\\d*|\\d*\\.\\d*|-\\d+|\\d+");
-
-	ifstream infile("../../Assets/Scenes/" + sceneName + ".txt");
-	string line;
-	smatch match;
-	float parsedNumbers[9];
-	string objName;
-	while (getline(infile, line))
-	{
-		//cout << line << endl;
-		if (line != "") {
-			//if the line does not start with "//"
-			if (!regex_match(line, regex("//.*"))) {
-				//search for OBJ name at start of line
-				regex_search(line, match, regex("^(\\S+)"));
-				objName = match[0];
-
-				//load mesh, material, and textures, and if they already exist then mark them as utilized
-				Utility::MESH_TYPE meshType = AutoLoadOBJMTL(objName);
-
-				Entity* someEntity;
-
-				//naming of entity internally
-				string entityName = objName; //temporary, should have entity name in scene file
-				int sameNameEntityCnt = 1;
-				while (sceneEntitiesMap.count(entityName)) {
-					entityName = objName + " (" + to_string(sameNameEntityCnt) + ")";
-					sameNameEntityCnt++;
-				}
-
-				//figure out what map to pull from
-				switch (meshType) {
-				case Utility::LOAD_FAILURE:
-					continue;
-				case Utility::DEFAULT_MESH:
-					someEntity = new Entity(entityName, defaultMeshesMap[objName]);
-					break;
-				case Utility::GENERATED_MESH: {
-					someEntity = new Entity(entityName, generatedMeshesMap[objName]);
-
-					//generated meshes should have a list of required materials,
-					//add them if they do or add the default (just black) if they dont
-					vector<string> requiredMaterials = someEntity->GetMaterialNameList();
-					for (int i = 0; i < requiredMaterials.size(); i++)
-					{
-						string requiredMat = requiredMaterials[i];
-						if (generatedMaterialsMap.count(requiredMat))
-							someEntity->AddMaterial(generatedMaterialsMap[requiredMat]);
-					}
-					if (requiredMaterials.size() == 0) {
-						someEntity->AddMaterial(defaultMaterialsMap["DEFAULT"]);
-						someEntity->AddMaterialNameToMesh("DEFAULT");
-					}
-					break;
-				}
-				default:
-					break;
-				}
-				
-				//get the transformation data associated with this entity
-				line = regex_replace(line, regex("^(\\S+ )"), "");
-				std::sregex_iterator iter(line.begin(), line.end(), iteratorRegex);
-				int counter = 0;
-				for (; iter != std::sregex_iterator(); ++iter) {
-					if (counter < 9) {
-						match = *iter;
-						parsedNumbers[counter] = std::stof(match.str());
-					}
-					counter++;
-				}
-				someEntity->SetPosition(parsedNumbers[0], parsedNumbers[1], parsedNumbers[2]);
-				someEntity->SetRotation(DirectX::XMConvertToRadians(parsedNumbers[3]), DirectX::XMConvertToRadians(parsedNumbers[4]), DirectX::XMConvertToRadians(parsedNumbers[5]));
-				someEntity->SetScale(parsedNumbers[6], parsedNumbers[7], parsedNumbers[8]);
-				someEntity->CalcWorldMatrix();
-
-				if (meshType == Utility::DEFAULT_MESH)
-					BuildDefaultEntity(entityName, objName, someEntity);
-
-				//finally add the entity to the appropriate lists
-				sceneEntitiesMap.insert({ entityName,someEntity });
-				sceneEntities.push_back(someEntity);
-			}
-		}
+		e = EESceneLoader->sceneEntities[i];
+		if(!e->isEmptyObj)
+			EERenderer->AddRenderObject(e, e->GetMesh(), e->GetMaterial(e->GetMeshMaterialName()));
 	}
 
-	infile.close();
+	ScriptManager::EERenderer = EERenderer;
 
-	//clean up memory from prior scene, wont reload any resources that already exist and that
-	//are needed, but will remove unused resources in the current scene
-	vector<string> meshesToDelete;
-	for (auto meshMapIter = generatedMeshesMap.begin(); meshMapIter != generatedMeshesMap.end(); ++meshMapIter)
+	Config::Context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	// Audio -----------------
+	fmodResult = FMOD::System_Create(&fmodSystem); // Create the Studio System object
+	if (fmodResult != FMOD_OK)
 	{
-		if (!utilizedMeshesMap.count(meshMapIter->first)) {
-			meshesToDelete.push_back(meshMapIter->first);
-		}
-	}
-	for (size_t i = 0; i < meshesToDelete.size(); i++)
-	{
-		delete generatedMeshesMap[meshesToDelete[i]];
-		generatedMeshesMap.erase(meshesToDelete[i]);
+		printf("FMOD error! (%d) %s\n", fmodResult, FMOD_ErrorString(fmodResult));
+		exit(-1);
 	}
 
-	vector<string> texturesToDelete;
-	for (auto texMapIter = generatedTexturesMap.begin(); texMapIter != generatedTexturesMap.end(); ++texMapIter)
+	fmodResult = fmodSystem->init(32, FMOD_INIT_NORMAL, 0); // Initialize FMOD with 32 max channels
+	if (fmodResult != FMOD_OK)
 	{
-		if (!utilizedTexturesMap.count(texMapIter->first)) {
-			texturesToDelete.push_back(texMapIter->first);
-		}
-	}
-	for (size_t i = 0; i < texturesToDelete.size(); i++)
-	{
-		delete generatedTexturesMap[texturesToDelete[i]];
-		generatedTexturesMap.erase(texturesToDelete[i]);
+		printf("FMOD error! (%d) %s\n", fmodResult, FMOD_ErrorString(fmodResult));
+		exit(-1);
 	}
 
-	vector<string> materialsToDelete;
-	for (auto matMapIter = generatedMaterialsMap.begin(); matMapIter != generatedMaterialsMap.end(); ++matMapIter)
+	// Test to see if 3D/2D audio works - EXAMPLE CODE
+
+	fmodResult = fmodSystem->createSound("../../Assets/Audio/CityofDawn.wav", FMOD_3D | FMOD_3D_LINEARROLLOFF | FMOD_LOOP_NORMAL, 0, &backgroundMusic); // Create a 3D/Looping sound with linear roll off
+	FmodErrorCheck(fmodResult);
+
+	fmodResult = fmodSystem->createSound("../../Assets/Audio/wow.wav", FMOD_2D | FMOD_LOOP_OFF, 0, &sound[0]); // Create a non-looping 2D sound in the first slot
+	FmodErrorCheck(fmodResult);
+
+	fmodResult = fmodSystem->createChannelGroup("SFX Group", &sfxGroup); // Create a channel group for sound effects
+	FmodErrorCheck(fmodResult);
+
+	fmodResult = fmodSystem->getMasterChannelGroup(&masterGroup); // Assign masterGroup as the master channel
+	FmodErrorCheck(fmodResult);
+
+	// Add the SFX group as a child of the master group as an example. Technically doesn't need to be done because the master group already controls everything
+	fmodResult = masterGroup->addGroup(sfxGroup); 
+	FmodErrorCheck(fmodResult);
+
+	fmodResult = fmodSystem->playSound(backgroundMusic, 0, false, &musicChannel); // Start playing the 3D sound
+	FmodErrorCheck(fmodResult);
+
+	FMOD_VECTOR pos = { 1.0f, 1.0f, 1.0f };
+	FMOD_VECTOR vel = { 0, 0, 0 };
+
+	// Set the 3D values for the channel
+	musicChannel->set3DAttributes(&pos, &vel);
+	musicChannel->set3DMinMaxDistance(0, 15.0f);
+
+	for (size_t i = 0; i < ScriptManager::scriptFunctions.size(); i++)
 	{
-		if (!utilizedMaterialsMap.count(matMapIter->first)) {
-			materialsToDelete.push_back(matMapIter->first);
-		}
+		ScriptManager* sf = ScriptManager::scriptFunctions[i];
+		sf->CallInit();
 	}
-	for (size_t i = 0; i < materialsToDelete.size(); i++)
+
+
+	if(Config::Fullscreen)
+		Config::SwapChain->SetFullscreenState(true, NULL);
+
+	//cout << sizeof(Entity);
+
+	// Physics debug lines initialization once all physical bodies are set-up
+	// https://pybullet.org/Bullet/BulletFull/classbtIDebugDraw.html\
+
+	if (Config::BulletDebugLinesEnabled)
 	{
-		delete generatedMaterialsMap[materialsToDelete[i]];
-		generatedMaterialsMap.erase(materialsToDelete[i]);
+		DebugLines* physicsDraw = new DebugLines("PhysicsDebugCore", 0, false);
+		physicsDraw->setDebugMode(btIDebugDraw::DBG_DrawWireframe);
+		Config::DynamicsWorld->setDebugDrawer(physicsDraw);
+		Config::DynamicsWorld->debugDrawWorld(); // Use this to draw physics world once on start 
 	}
 }
 
 void Game::OnResize()
 {
 	DXCore::OnResize();
-	camera->UpdateProjectionMatrix(width, height);
+	EECamera->UpdateProjectionMatrix();
 }
 
 void Game::Update(float deltaTime, float totalTime)
 {
-	if (GetAsyncKeyState(VK_ESCAPE))
+	if (GetAsyncKeyState(VK_ESCAPE)) {
+		Config::SwapChain->SetFullscreenState(false, NULL);
 		Quit();
-
-	if (GetAsyncKeyState('F') & 0x8000) {
-		DirectX::XMFLOAT3 rot = sceneEntitiesMap["sphere1"]->GetRotation();
-		rot.y += DirectX::XMConvertToRadians(2.0f);
-		sceneEntitiesMap["sphere1"]->SetRotation(rot.x,rot.y,rot.z);
-		sceneEntitiesMap["sphere1"]->CalcWorldMatrix();
 	}
 
-	if (GetAsyncKeyState('G') & 0x8000) {
-		DirectX::XMFLOAT3 rot = sceneEntitiesMap["sphere1"]->GetRotation();
-		rot.y -= DirectX::XMConvertToRadians(2.0f);
-		sceneEntitiesMap["sphere1"]->SetRotation(rot.x, rot.y, rot.z);
-		sceneEntitiesMap["sphere1"]->CalcWorldMatrix();
+	GarbageCollect();
+
+	PhysicsStep(deltaTime);
+
+	// Play the 2D sound only if the channel group is not playing something
+	sfxGroup->isPlaying(&isPlaying);
+	//if (GetAsyncKeyState('P') & 0x8000 && !isPlaying) {
+		//fmodResult = fmodSystem->playSound(sound[0], sfxGroup, false, 0); // Play the sound using any channel in the sfx group (free channels are used first)
+		//FmodErrorCheck(fmodResult);
+	//}
+
+	// Mute/unmute the master group
+	if (GetAsyncKeyState('M') & 0x8000)
+	{
+		bool mute = true;
+		masterGroup->getMute(&mute);
+		masterGroup->setMute(!mute);
+	}
+	
+	for (size_t i = 0; i < ScriptManager::scriptFunctions.size(); i++)
+	{
+		ScriptManager* sf = ScriptManager::scriptFunctions[i];
+		sf->CallUpdate(deltaTime);
 	}
 
-	if (GetAsyncKeyState(VK_LEFT))
+	int numManifolds = Config::DynamicsWorld->getDispatcher()->getNumManifolds();
+	for (int i = 0; i < numManifolds; i++)
 	{
-		DirectX::XMFLOAT3 trans = sceneEntitiesMap["barrel_1"]->GetPosition();
-		trans.x -= 0.1f;
-		sceneEntitiesMap["barrel_1"]->SetPosition(trans.x, trans.y, trans.z);
-		sceneEntitiesMap["barrel_1"]->CalcWorldMatrix();
-	}
-	if (GetAsyncKeyState(VK_RIGHT))
-	{
-		DirectX::XMFLOAT3 trans = sceneEntitiesMap["barrel_1"]->GetPosition();
-		trans.x += 0.1f;
-		sceneEntitiesMap["barrel_1"]->SetPosition(trans.x, trans.y, trans.z);
-		sceneEntitiesMap["barrel_1"]->CalcWorldMatrix();
-	}
-	if (GetAsyncKeyState(VK_UP))
-	{
-		DirectX::XMFLOAT3 trans = sceneEntitiesMap["barrel_1"]->GetPosition();
-		trans.z += 0.1f;
-		sceneEntitiesMap["barrel_1"]->SetPosition(trans.x, trans.y, trans.z);
-		sceneEntitiesMap["barrel_1"]->CalcWorldMatrix();
-	}
-	if (GetAsyncKeyState(VK_DOWN))
-	{
-		DirectX::XMFLOAT3 trans = sceneEntitiesMap["barrel_1"]->GetPosition();
-		trans.z -= 0.1f;
-		sceneEntitiesMap["barrel_1"]->SetPosition(trans.x, trans.y, trans.z);
-		sceneEntitiesMap["barrel_1"]->CalcWorldMatrix();
+		btPersistentManifold* contactManifold = Config::DynamicsWorld->getDispatcher()->getManifoldByIndexInternal(i);
+		btCollisionObject* obA = (btCollisionObject*)(contactManifold->getBody0());
+		btCollisionObject* obB = (btCollisionObject*)(contactManifold->getBody1());
+
+		Entity* a = (Entity*)obA->getUserPointer();
+
+		if (ScriptManager::scriptFunctionsMap.count(a->GetName())) {
+			vector<ScriptManager*> scripts = ScriptManager::scriptFunctionsMap[a->GetName()];
+			for (size_t j = 0; j < scripts.size(); j++)
+			{
+				scripts[j]->CallOnCollision(obB);
+			}
+		}
 	}
 
-	if (sceneEntitiesMap["barrel_1"]->CheckSATCollision(sceneEntitiesMap["barrel_1 (1)"])) 
+	EnforcePhysics();
+
+	for (size_t i = 0; i < DebugLines::debugLines.size(); i++)
 	{
-		cout << "colliding" << endl;
+		DebugLines* dbl = DebugLines::debugLines[i];
+		if (dbl->willUpdate) {
+			dbl->worldMatrix = EESceneLoader->sceneEntitiesMap[dbl->entityName]->GetCollider(dbl->colliderID)->GetWorldMatrix();
+		}
 	}
 
-	camera->Update();
-	water->Update();
+	EECamera->Update();
+
+	AudioStep();
+
 	/*if (!GetAsyncKeyState(VK_CONTROL))
 	{
 		testLight->Position = camera->position;
@@ -840,50 +340,205 @@ void Game::Update(float deltaTime, float totalTime)
 	}*/
 }
 
+void Game::PhysicsStep(float deltaTime)
+{
+	btCollisionObject* obj = nullptr;
+	btRigidBody* body = nullptr;
+	btTransform transform;
+	Entity* entity = nullptr;
+
+	Config::DynamicsWorld->applyGravity();
+	Config::DynamicsWorld->stepSimulation(deltaTime , 1, btScalar(1.0) / btScalar(60.0));
+
+	for (int i = 0; i < Config::DynamicsWorld->getNumCollisionObjects(); i++)
+	{
+		obj = Config::DynamicsWorld->getCollisionObjectArray()[i];
+		body = btRigidBody::upcast(obj);
+
+		//transform = body->getWorldTransform();
+		entity = (Entity*)body->getUserPointer();
+
+		transform = body->getCenterOfMassTransform();
+		btVector3 p = transform.getOrigin();
+		//XMFLOAT3 centerLocal = entity->GetCollider()->GetCenterLocal();
+		//XMFLOAT3 scale = entity->GetScale();
+		//centerLocal = XMFLOAT3(centerLocal.x * scale.x, centerLocal.y * scale.y, centerLocal.z * scale.z);
+		//XMFLOAT3 pos = XMFLOAT3(p.getX() - centerLocal.x, p.getY() - centerLocal.y, p.getZ() - centerLocal.z);
+		XMFLOAT3 pos = XMFLOAT3(p.getX(), p.getY(), p.getZ());
+
+		btQuaternion q = transform.getRotation();
+		entity->SetPosition(pos);
+		entity->SetRotation(XMFLOAT4(q.getX(), q.getY(), q.getZ(), q.getW()));
+		entity->CalcWorldMatrix();
+	}
+
+	//EESceneLoader->sceneEntities[0]->GetRBody()->setLinearVelocity(btVector3(0.0f, EESceneLoader->sceneEntities[0]->GetRBody()->getLinearVelocity().getY(), 0.0f));
+}
+
+void Game::EnforcePhysics()
+{
+	btCollisionObject* obj = nullptr;
+	btRigidBody* body = nullptr;
+	btTransform transform;
+	Entity* entity = nullptr;
+
+	for (int i = 0; i < Config::DynamicsWorld->getNumCollisionObjects(); i++)
+	{
+		obj = Config::DynamicsWorld->getCollisionObjectArray()[i];
+		body = btRigidBody::upcast(obj);
+
+		transform = body->getCenterOfMassTransform();
+		entity = (Entity*)body->getUserPointer();
+		entity->CalcWorldMatrix();
+
+		XMFLOAT3 pos = entity->GetPosition();
+		//XMFLOAT3 centerLocal = entity->GetCollider()->GetCenterLocal();
+		//XMFLOAT3 scale = entity->GetScale();
+		//centerLocal = XMFLOAT3(centerLocal.x * scale.x, centerLocal.y * scale.y, centerLocal.z * scale.z);
+		//pos = XMFLOAT3(pos.x + centerLocal.x, pos.y + centerLocal.y, pos.z + centerLocal.z);
+		pos = XMFLOAT3(pos.x, pos.y, pos.z);
+
+		XMFLOAT4 rot = entity->GetRotationQuaternion();
+
+		btVector3 transformPos = btVector3(pos.x, pos.y, pos.z);
+		transform.setOrigin(transformPos);
+
+		btQuaternion res = btQuaternion(rot.x, rot.y, rot.z, rot.w);
+		transform.setRotation(res);
+
+		//TODO: ENFORCE LOCAL SCALING OF COLLIDER
+
+		body->setCenterOfMassTransform(transform);
+
+		// body->getMotionState()->setWorldTransform(transform);
+
+		// body->getMotionState()->getWorldTransform(transform);
+	}
+}
+
+void Game::AudioStep()
+{
+	// Set our listener position as the camera's position for now
+	listener_pos.x = EECamera->position.x;
+	listener_pos.y = EECamera->position.y;
+	listener_pos.z = EECamera->position.z;
+
+	// Set the listener forward to the camera's forward
+	listener_forward.x = EECamera->direction.x;
+	listener_forward.y = EECamera->direction.y;
+	listener_forward.z = EECamera->direction.z;
+
+	// Set the listener up to the camera's up
+	XMFLOAT3 yAxis = Y_AXIS;
+	listener_up.x = yAxis.x;
+	listener_up.y = yAxis.y;
+	listener_up.z = yAxis.z;
+
+	//printf("Listener forward = x: %f y: %f z: %f \n", listener_forward.x, listener_forward.y, listener_forward.z);
+
+	fmodSystem->set3DListenerAttributes(0, &listener_pos, 0, &listener_forward, &listener_up); // Update 'ears'
+	fmodSystem->update();
+}
+
 void Game::Draw(float deltaTime, float totalTime)
 {
-	renderer->ClearFrame();
+	EERenderer->ClearFrame();
 
-	renderer->SendAllLightsToShader(pixelShadersMap["DEFAULT"]);
-	renderer->SendAllLightsToShader(pixelShadersMap["Normal"]);
-	renderer->SendAllLightsToShader(pixelShadersMap["Water"]);
-	renderer->SendAllLightsToShader(pixelShadersMap["Terrain"]);
+	EERenderer->SendAllLightsToShader(EESceneLoader->pixelShadersMap["DEFAULT"]);
+	EERenderer->SendAllLightsToShader(EESceneLoader->pixelShadersMap["Normal"]);
+	EERenderer->SendAllLightsToShader(EESceneLoader->pixelShadersMap["Decal"]);
+	//EERenderer->SendAllLightsToShader(EESceneLoader->pixelShadersMap["Water"]);
+	//EERenderer->SendAllLightsToShader(EESceneLoader->pixelShadersMap["Terrain"]);
 
-	renderer->RenderShadowMap();
+	//EERenderer->SendSSAOKernelToShader(EESceneLoader->pixelShadersMap["DEFAULT_SSAO"]);
 
-	renderer->RenderFrame();
+	EERenderer->RenderShadowMap();
+	EERenderer->RenderDepthStencil();
+	EERenderer->RenderFrame();
 
 	DrawSky();
 
-	renderer->PresentFrame();
+	EERenderer->PresentFrame();
 }
 
 
 void Game::DrawSky() {
-	ID3D11Buffer* vb = defaultMeshesMap["Cube"]->GetVertexBuffer();
-	ID3D11Buffer* ib = defaultMeshesMap["Cube"]->GetIndexBuffer();
+	ID3D11Buffer* vb = EESceneLoader->defaultMeshesMap["Cube"]->GetVertexBuffer();
+	ID3D11Buffer* ib = EESceneLoader->defaultMeshesMap["Cube"]->GetIndexBuffer();
 
 	UINT stride = sizeof(Vertex);
 	UINT offset = 0;
-	context->IASetVertexBuffers(0, 1, &vb, &stride, &offset);
-	context->IASetIndexBuffer(ib, DXGI_FORMAT_R32_UINT, 0);
+	Config::Context->IASetVertexBuffers(0, 1, &vb, &stride, &offset);
+	Config::Context->IASetIndexBuffer(ib, DXGI_FORMAT_R32_UINT, 0);
 
-	vertexShadersMap["Sky"]->SetMatrix4x4("view", camera->GetViewMatrix());
-	vertexShadersMap["Sky"]->SetMatrix4x4("projection", camera->GetProjMatrix());
-	vertexShadersMap["Sky"]->CopyAllBufferData();
-	vertexShadersMap["Sky"]->SetShader();
+	EESceneLoader->vertexShadersMap["Sky"]->SetMatrix4x4("view", EECamera->GetViewMatrix());
+	EESceneLoader->vertexShadersMap["Sky"]->SetMatrix4x4("projection", EECamera->GetProjMatrix());
+	EESceneLoader->vertexShadersMap["Sky"]->CopyAllBufferData();
+	EESceneLoader->vertexShadersMap["Sky"]->SetShader();
 
-	pixelShadersMap["Sky"]->SetShaderResourceView("Sky", skySRV);
-	pixelShadersMap["Sky"]->SetSamplerState("BasicSampler", sampler);
-	pixelShadersMap["Sky"]->SetShader();
+	EESceneLoader->pixelShadersMap["Sky"]->SetShaderResourceView("Sky", skySRV);
+	EESceneLoader->pixelShadersMap["Sky"]->SetSamplerState("BasicSampler", Config::Sampler);
+	EESceneLoader->pixelShadersMap["Sky"]->SetShader();
 
-	context->RSSetState(skyRasterState);
-	context->OMSetDepthStencilState(skyDepthState, 0);
+	Config::Context->RSSetState(skyRasterState);
+	Config::Context->OMSetDepthStencilState(skyDepthState, 0);
 
-	context->DrawIndexed(defaultMeshesMap["Cube"]->GetIndexCount(), 0, 0);
+	Config::Context->DrawIndexed(EESceneLoader->defaultMeshesMap["Cube"]->GetIndexCount(), 0, 0);
 
-	context->RSSetState(0);
-	context->OMSetDepthStencilState(0, 0);
+	Config::Context->RSSetState(0);
+	Config::Context->OMSetDepthStencilState(0, 0);
+}
+
+void Game::GarbageCollect()
+{
+	size_t start = EESceneLoader->sceneEntities.size();
+	for (size_t i = start; i > 0; i--)
+	{
+		Entity* e = EESceneLoader->sceneEntities[i - 1];
+		if (e->destroyed) {
+			string name = e->GetName();
+			EESceneLoader->sceneEntitiesMap.erase(name);
+			EESceneLoader->sceneEntities.erase(EESceneLoader->sceneEntities.begin() + i - 1);
+
+			EEDecalHandler->DestroyDecals(name);
+
+			if (Config::EtherealDebugLinesEnabled) {
+				DebugLines::debugLinesMap[name]->destroyed = true;
+				DebugLines::debugLinesMap.erase(name);
+			}
+
+			e->FreeMemory();
+			EEMemoryAllocator->DeallocateFromPool((unsigned int)MEMORY_POOL::ENTITY_POOL, e, sizeof(Entity));
+
+			vector<ScriptManager*> scriptFuncs = ScriptManager::scriptFunctionsMap[name];
+			size_t cnt = scriptFuncs.size();
+			for (size_t j = cnt; j > 0; j--)
+			{
+				scriptFuncs[j - 1]->destroyed = true;
+			}
+			ScriptManager::scriptFunctionsMap.erase(name);
+		}
+	}
+
+	start = ScriptManager::scriptFunctions.size();
+	for (size_t i = start; i > 0; i--)
+	{
+		ScriptManager* s = ScriptManager::scriptFunctions[i - 1];
+		if (s->destroyed) {
+			ScriptManager::scriptFunctions.erase(ScriptManager::scriptFunctions.begin() + i - 1);
+			delete s;
+		}
+	}
+
+	start = DebugLines::debugLines.size();
+	for (size_t i = start; i > 0; i--)
+	{
+		DebugLines* d = DebugLines::debugLines[i - 1];
+		if (d->destroyed) {
+			DebugLines::debugLines.erase(DebugLines::debugLines.begin() + i - 1);
+			delete d;
+		}
+	}
 }
 
 #pragma region Mouse Input
@@ -892,19 +547,139 @@ void Game::OnMouseDown(WPARAM buttonState, int x, int y)
 	prevMousePos.x = x;
 	prevMousePos.y = y;
 
+
+	for (size_t i = 0; i < ScriptManager::scriptFunctions.size(); i++)
+	{
+		ScriptManager* sf = ScriptManager::scriptFunctions[i];
+		if (!sf->inputEnabled) continue;
+		sf->CallOnMouseDown(buttonState, x, y);
+	}
+
+	// printf("Mouse Pos: %d, %d\n", x, y);
+
+	// Create the world matrix for the debug line
+	XMFLOAT4X4 wm;
+	XMStoreFloat4x4(&wm, XMMatrixTranspose(DirectX::XMMatrixIdentity()));
+	
+	// Create the transformation matrices for our raycast
+	XMMATRIX proj = XMMatrixTranspose(XMLoadFloat4x4(&(EECamera->GetProjMatrix())));
+	XMMATRIX view = XMMatrixTranspose(XMLoadFloat4x4(&(EECamera->GetViewMatrix())));
+	XMMATRIX world = XMMatrixTranspose(XMLoadFloat4x4(&wm));
+
+	// Get the unprojected vector of the mouse click position in world space
+	XMVECTOR unprojVec = XMVector3Unproject(XMVectorSet(x, y, 1.0f, 1.0f), 0, 0, 1600, 900, 0.0f, 1.0f, proj, view, world);
+	XMFLOAT3 start = EECamera->position;
+	XMFLOAT3 end = XMFLOAT3(XMVectorGetX(unprojVec), XMVectorGetY(unprojVec), XMVectorGetZ(unprojVec));
+	//printf("Projected values|- X: %f, Y: %f, Z: %f\n", end.x, end.y, end.z);
+
+	/*
+	// Create debug line
+	DebugLines* dl = new DebugLines("TestRay", 0, false);
+	XMFLOAT3 c = XMFLOAT3(0.0f, 1.0f, 0.0f);
+	dl->color = c;
+	dl->worldMatrix = wm;
+
+	// Draw the debug line to show the raycast
+	XMFLOAT3* rayPoints = new XMFLOAT3[8];
+	rayPoints[0] = start;
+	rayPoints[1] = start;
+	rayPoints[2] = start;
+	rayPoints[3] = start;
+	rayPoints[4] = end;
+	rayPoints[5] = end;
+	rayPoints[6] = end;
+	rayPoints[7] = end;
+	dl->GenerateCuboidVertexBuffer(rayPoints, 8);
+	delete[] rayPoints;
+	*/
+
+	if (Config::DynamicsWorld)
+	{
+		// Update physics
+		Config::DynamicsWorld->updateAabbs();
+		Config::DynamicsWorld->computeOverlappingPairs();
+
+		// Redefine our vectors using bullet's silly types
+		btVector3 from(start.x, start.y, start.z);
+		btVector3 to(end.x, end.y, end.z);
+
+		// Create variable to store the ray hit and set flags
+		btCollisionWorld::ClosestRayResultCallback closestResult(from, to);
+		closestResult.m_flags |= btTriangleRaycastCallback::kF_FilterBackfaces;
+
+		Config::DynamicsWorld->rayTest(from, to, closestResult); // Raycast
+
+		if (closestResult.hasHit())
+		{
+			// Get the entity associated with the rigid body we hit
+			Entity* hit = (Entity*)(closestResult.m_collisionObject->getUserPointer());
+			printf("Hit: %s\n", hit->GetName().c_str());
+			btRigidBody* rigidBody = hit->GetRBody();
+
+			/*
+			// In order to update the values associated with the rigid body we need to remove it from the dynamics world first
+			Config::DynamicsWorld->removeRigidBody(rigidBody);
+			btVector3 inertia(0, 0, 0);
+			float mass = 1.0f;
+			rigidBody->getCollisionShape()->calculateLocalInertia(mass, inertia);
+			rigidBody->setActivationState(DISABLE_DEACTIVATION);
+			rigidBody->setMassProps(mass, inertia);
+
+			// Useful functions for updating an object in motion, but not really needed here
+			/*
+			rigidBody->setLinearFactor(btVector3(1, 1, 1));
+			rigidBody->setAngularFactor(btVector3(1, 1, 1));
+			rigidBody->updateInertiaTensor();
+			rigidBody->clearForces();
+			btTransform transform;
+			transform.setIdentity();
+			rigidBody->getMotionState()->getWorldTransform(transform);
+			float x = transform.getOrigin().getX();
+			float y = transform.getOrigin().getY();
+			float z = transform.getOrigin().getZ();
+			transform.setOrigin(btVector3(x, y, z));
+			rigidBody->getCollisionShape()->setLocalScaling(btVector3(1, 1, 1));
+			rigidBody->setWorldTransform(transform); */
+			//*/
+			btVector3 h = closestResult.m_hitPointWorld;
+			XMFLOAT3 hitLocation(h.getX(), h.getY(), h.getZ());
+			EEDecalHandler->GenerateDecal(hit, XMFLOAT3(hitLocation.x - start.x, hitLocation.y - start.y, hitLocation.z - start.z), hitLocation, XMFLOAT3(10.0f, 10.0f, 15.0f), DecalType(rand() % 8));
+
+			/*
+			Config::DynamicsWorld->addRigidBody(rigidBody); // Add the rigid body back into bullet		
+
+			if (hit->MeshHasChildren()) {
+				EESceneLoader->SplitMeshIntoChildEntities(hit, 0.5f);
+			}
+			*/
+		}
+	}
+	
 	SetCapture(hWnd);
 }
 
 void Game::OnMouseUp(WPARAM buttonState, int x, int y)
 {
+	for (size_t i = 0; i < ScriptManager::scriptFunctions.size(); i++)
+	{
+		ScriptManager* sf = ScriptManager::scriptFunctions[i];
+		if (!sf->inputEnabled) continue;
+		sf->CallOnMouseUp(buttonState, x, y);
+	}
 
 	ReleaseCapture();
 }
 
 void Game::OnMouseMove(WPARAM buttonState, int x, int y)
 {
-	if (buttonState & 0x0001) {
-		camera->RotateCamera(x - (int)prevMousePos.x, y - (int)prevMousePos.y);
+	for (size_t i = 0; i < ScriptManager::scriptFunctions.size(); i++)
+	{
+		ScriptManager* sf = ScriptManager::scriptFunctions[i];
+		if (!sf->inputEnabled) continue;
+		sf->CallOnMouseMove(buttonState, x, y);
+	}
+	if (Config::FPSControllerEnabled || (!Config::FPSControllerEnabled && buttonState & 0x0001)) {
+		EECamera->RotateCamera(x - (int)prevMousePos.x, y - (int)prevMousePos.y);
 
 		prevMousePos.x = x;
 		prevMousePos.y = y;
@@ -913,6 +688,19 @@ void Game::OnMouseMove(WPARAM buttonState, int x, int y)
 
 void Game::OnMouseWheel(float wheelDelta, int x, int y)
 {
-	
+	for (size_t i = 0; i < ScriptManager::scriptFunctions.size(); i++)
+	{
+		ScriptManager* sf = ScriptManager::scriptFunctions[i];
+		if (!sf->inputEnabled) continue;
+		sf->CallOnMouseWheel(wheelDelta, x, y);
+	}
+}
+
+void Game::FmodErrorCheck(FMOD_RESULT result)
+{
+	if (result != FMOD_OK)
+	{
+		printf("FMOD error! (%d) %s\n", result, FMOD_ErrorString(result));
+	}
 }
 #pragma endregion

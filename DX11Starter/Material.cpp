@@ -1,16 +1,18 @@
+#include "pch.h"
 #include "Material.h"
 
 Material::Material()
 {
 }
 
-Material::Material(string n, MaterialData matData, SimpleVertexShader * vShader, SimplePixelShader * pShader, ID3D11SamplerState* sampler)
+Material::Material(string n, MaterialData matData, ShaderType shaderType, SimpleVertexShader * vShader, SimplePixelShader * pShader, ID3D11SamplerState* sampler)
 {
 	vertexShader = vShader;
 	pixelShader = pShader;
 	materialData = matData;
+	this->shaderType = shaderType;
 	samplerState = sampler;
-	name = n;
+	name = new string(n);
 }
 
 Material::~Material()
@@ -18,6 +20,24 @@ Material::~Material()
 	vertexShader = nullptr;
 	pixelShader = nullptr;
 	samplerState = nullptr;
+	if (name != nullptr)
+		delete name;
+}
+
+void Material::operator=(const Material& m)
+{
+	if(m.name != nullptr)
+		this->name = new string(*m.name);
+	this->vertexShader = m.vertexShader;
+	this->pixelShader = m.pixelShader;
+	this->materialData = m.materialData;
+	this->samplerState = m.samplerState;
+}
+
+void Material::FreeMemory()
+{
+	if(name != nullptr)
+		delete name;
 }
 
 SimpleVertexShader * Material::GetVertexShader()
@@ -42,10 +62,22 @@ ID3D11SamplerState * Material::GetSamplerState()
 
 void Material::Prepare()
 {
+	/*
+	static SimpleVertexShader* lastVertShader = nullptr;
+	static SimplePixelShader* lastPixelShader = nullptr;
 	// Set the vertex and pixel shaders to use for the next Draw() command
 	//  - These don't technically need to be set every frame...YET
 	//  - Once you start applying different shaders to different objects,
 	//    you'll need to swap the current shaders before each draw
+	if (vertexShader != lastVertShader) {
+		vertexShader->SetShader();
+		lastVertShader = vertexShader;
+	}
+	if (pixelShader != lastPixelShader) {
+		pixelShader->SetShader();
+		lastPixelShader = pixelShader;
+	}
+	*/
 	vertexShader->SetShader();
 	pixelShader->SetShader();
 
@@ -60,6 +92,32 @@ void Material::Prepare()
 	{
 		pixelShader->SetInt("specularValue", materialData.SpecularExponent);
 	}
+		
+	pixelShader->SetInt("illumination", materialData.Illumination);
+
+	if (shaderType == ShaderType::DEFAULT)
+		pixelShader->SetFloat3("manualColor", materialData.DiffuseColor);
+
+	/*
+	if (materialData.SSAO) {
+		pixelShader->SetData(
+			"kernel",
+			&Config::SSAOKernel[0],
+			sizeof(XMFLOAT4) * Config::SSAOSampleCount
+		);
+		pixelShader->SetData(
+			"sampleCount",
+			&Config::SSAOSampleCount,
+			sizeof(Config::SSAOSampleCount)
+		);
+		pixelShader->SetData(
+			"kernelRadius",
+			&Config::SSAOKernelRadius,
+			sizeof(Config::SSAOKernelRadius)
+		);
+	}
+	*/
+
 	// Once you've set all of the data you care to change for
 	// the next draw call, you need to actually send it to the GPU
 	//  - If you skip this, the "SetMatrix" calls above won't make it to the GPU!
@@ -69,5 +127,5 @@ void Material::Prepare()
 
 string Material::GetName()
 {
-	return name;
+	return *name;
 }

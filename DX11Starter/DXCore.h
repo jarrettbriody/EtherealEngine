@@ -1,9 +1,8 @@
 #pragma once
 
-#include <Windows.h>
-#include <d3d11.h>
-#include <string>
-
+#include "pch.h"
+#include "Config.h"
+#include "Keyboard.h"
 // We can include the correct library files here
 // instead of in Visual Studio settings if we want
 #pragma comment(lib, "d3d11.lib")
@@ -14,8 +13,6 @@ public:
 	DXCore(
 		HINSTANCE hInstance,		// The application's handle
 		char* titleBarText,			// Text for the window's title bar
-		unsigned int windowWidth,	// Width of the window's client area
-		unsigned int windowHeight,	// Height of the window's client area
 		bool debugTitleBarStats);	// Show extra stats (fps) in title bar?
 	~DXCore();
 
@@ -50,24 +47,16 @@ public:
 	virtual void OnMouseMove (WPARAM buttonState, int x, int y) { }
 	virtual void OnMouseWheel(float wheelDelta,   int x, int y) { }
 	
+	static Keyboard keyboard;
 protected:
 	HINSTANCE	hInstance;		// The handle to the application
 	HWND		hWnd;			// The handle to the window itself
 	std::string titleBarText;	// Custom text in window's title bar
 	bool		titleBarStats;	// Show extra stats in title bar?
 	
-	// Size of the window's client area
-	unsigned int width;
-	unsigned int height;
-	
+
 	// DirectX related objects and variables
 	D3D_FEATURE_LEVEL		dxFeatureLevel;
-	IDXGISwapChain*			swapChain;
-	ID3D11Device*			device;
-	ID3D11DeviceContext*	context;
-
-	ID3D11RenderTargetView* backBufferRTV;
-	ID3D11DepthStencilView* depthStencilView;
 
 	// Helper function for allocating a console window
 	void CreateConsoleWindow(int bufferLines, int bufferColumns, int windowLines, int windowColumns);

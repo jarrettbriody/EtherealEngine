@@ -1,22 +1,8 @@
 #pragma once
-#include <DirectXMath.h>
-#include <string>
-#include <regex>
-#include "WICTextureLoader.h"
-#include "DDSTextureLoader.h"
-
-#define ZERO_VECTOR3 XMFLOAT3(0.0f,0.0f,0.0f);
-#define X_AXIS XMFLOAT3(1.0f,0.0f,0.0f);
-#define Y_AXIS XMFLOAT3(0.0f,1.0f,0.0f);
-#define Z_AXIS XMFLOAT3(0.0f,0.0f,1.0f);
+#include "pch.h"
+#include "Config.h"
 
 namespace Utility {
-	enum MESH_TYPE {
-		LOAD_FAILURE = -1,
-		DEFAULT_MESH = 0,
-		GENERATED_MESH = 1,
-	};
-
 	static void ParseFloat3FromString(std::string s, DirectX::XMFLOAT3& f) {
 		std::smatch match;
 		int i = 0;
@@ -63,12 +49,38 @@ namespace Utility {
 		return rval;
 	}
 
-	static ID3D11ShaderResourceView* LoadSRV(ID3D11Device* device, ID3D11DeviceContext*	context, string texture){
+	static ID3D11ShaderResourceView* LoadSRV(std::string texture){
 		ID3D11ShaderResourceView* srv;
 		wchar_t path[100] = L"../../Assets/Textures/";
 		wchar_t fileName[50];
 		::MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, &texture.c_str()[0], -1, &fileName[0], 50);
-		DirectX::CreateWICTextureFromFile(device, context, wcsncat(path, fileName, 100), 0, &srv);
+		DirectX::CreateWICTextureFromFile(Config::Device, Config::Context, wcsncat(path, fileName, 100), 0, &srv);
 		return srv;
+	}
+
+	static float DegToRad(float deg) {
+		return (deg * DirectX::XM_PI) / 180.0f;
+	}
+
+	static float RadToDeg(float rad) {
+		return (rad * 180.0f) / DirectX::XM_PI;
+	}
+
+	static void GenerateSSAOKernel(unsigned int sampleCount, DirectX::XMFLOAT4* kernel) {
+		//kernel.reserve(sampleCount);
+		DirectX::XMVECTOR calculableVector;
+		for (size_t i = 0; i < sampleCount; i++)
+		{
+			const float x = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+			const float y = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+			const float z = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+			kernel[i] = DirectX::XMFLOAT4(x, y, z, 1.0f);
+			DirectX::XMFLOAT4& currentSample = kernel[i];
+			calculableVector = DirectX::XMLoadFloat4(&currentSample);
+			calculableVector = DirectX::XMVector4Normalize(calculableVector);
+			const float scalar = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+			calculableVector = DirectX::XMVectorScale(calculableVector, scalar);
+			DirectX::XMStoreFloat4(&currentSample, calculableVector);
+		}
 	}
 }

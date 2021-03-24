@@ -1,7 +1,7 @@
 #pragma once
-#include <DirectXMath.h>
-#include <d3d11.h>
-#include <iostream>
+#include "pch.h"
+#include "Utility.h"
+#include "Config.h"
 //#include "EtherealEngine.h"
 
 using namespace DirectX;
@@ -17,10 +17,11 @@ struct DebugLinesVertex {
 	XMFLOAT3 Color;
 };
 
-class DebugLines {
+class DebugLines : public btIDebugDraw {
 
 public:
-	static ID3D11Device* device;
+	static vector<DebugLines*> debugLines;
+	static map<string, DebugLines*> debugLinesMap;
 
 	ID3D11Buffer* vertexBuffer = nullptr;
 	ID3D11Buffer* indexBuffer = nullptr;
@@ -30,10 +31,31 @@ public:
 	int indexCount = 0;
 	XMFLOAT3 color;
 	XMFLOAT4X4 worldMatrix;
+	string entityName;
+	int colliderID;
+	bool willUpdate;
+	bool destroyed = false;
+	int m_debugMode;
 
-	DebugLines();
+	DebugLines(string entityName = "UNNAMED", int colliderID = 0, bool willUpdate = true);
 
 	~DebugLines();
 
-	void GenerateVertexBuffer(XMFLOAT3* verts, int vertCount);
+	void GenerateCuboidVertexBuffer(XMFLOAT3* verts, int vertCount);
+
+	// https://www.cs.kent.edu/~ruttan/GameEngines/lectures/Bullet_User_Manual Page 16 of Bullet Manual
+
+	void drawLine(const btVector3& from, const btVector3& to, const btVector3& color) override;
+
+	void drawContactPoint(const btVector3& PointOnB, const btVector3& normalOnB, btScalar distance, int lifeTime, const btVector3& color) override;
+
+	void reportErrorWarning(const char* warningString) override;
+	
+	void draw3dText(const btVector3& location, const char* textString) override;
+	
+	void setDebugMode(int debugMode) override;
+	
+	int getDebugMode() const override;
+
+	void Destroy();
 };

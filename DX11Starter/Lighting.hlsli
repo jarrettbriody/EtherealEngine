@@ -46,7 +46,7 @@ float3 CalcDirectionalLight(float4 surfaceColor, float3 normal, Light light, flo
 
 	finalColor *= light.Intensity * light.Color;
 
-	return (finalColor * shadowAmount) + (surfaceColor * 0.05f);
+	return (finalColor * shadowAmount) + (surfaceColor * 0.01f);
 }
 
 float3 CalcPointLight(float4 surfaceColor, float normal, Light light, float3 toCameraVector, float specularValue, float3 worldPos) 
@@ -65,7 +65,7 @@ float3 CalcPointLight(float4 surfaceColor, float normal, Light light, float3 toC
 	finalColor *= atten * light.Intensity * light.Color;
 
 	
-	return finalColor + (surfaceColor * 0.05f);
+	return finalColor + (surfaceColor * 0.01f);
 }
 
 float3 CalcSpotLight(float4 surfaceColor, float normal, Light light, float3 toCameraVector, float specularValue, float3 worldPos)
