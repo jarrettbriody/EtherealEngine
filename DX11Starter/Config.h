@@ -38,7 +38,7 @@ public:
 	static unsigned int ViewPortWidth;
 	static unsigned int ViewPortHeight;
 	static bool Fullscreen;
-	static bool FPSControllerEnabled;
+	static bool ShowCursor;
 
 	static unsigned int MemoryAllocatorSize; //1 gig ish
 	static unsigned int MemoryAllocatorAlignment; //32 byte boundary

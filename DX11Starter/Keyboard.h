@@ -9,6 +9,7 @@ public:
 	bool KeyIsPressed(const unsigned char keycode);
 	bool OnKeyDown(const unsigned char keycode);
 	bool OnKeyUp(const unsigned char keycode);
+	bool CheckKeysPressed(const unsigned char keycode[], int arrLength);
 	bool NoKeyDown();
 	bool KeyBufferIsEmpty();
 	void RegisterKeyPress(const unsigned char key);

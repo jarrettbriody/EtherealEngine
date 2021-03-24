@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "FPSController.h"
-#include <WinUser.h>
+
 
 void FPSController::Init()
 {
@@ -14,9 +14,10 @@ void FPSController::Init()
 	playerRBody->setAngularFactor(btVector3(0, 1, 0)); // constrain rotations on x and z axes
 	// playerRBody->setRestitution(0.1f);
 	// playerRBody->setFriction(1.0f); --> debating using friction because it would probably result in weird interations with other level gemoetry, would rather just use pure velocity dampening
-	
+
 	controllerVelocity = btVector3(0, 0, 0);
 	impulseSumVec = btVector3(0, 0, 0);
+	hookshotPoint = btVector3(0, 0, 0);
 
 	collider = entity->GetCollider();
 
@@ -38,12 +39,9 @@ void FPSController::Update()
 			cam->SetPosition(XMFLOAT3(entity->GetPosition().x, entity->GetPosition().y + entity->GetScale().y + headbobOffset, entity->GetPosition().z)); // after all updates make sure camera is following the affected entity
 			break;
 
-		case PlayerState::HookshotThrown:
-
-			break;
-
 		case PlayerState::HookshotFlight:
-
+			HookshotFlight();
+			cam->SetPosition(XMFLOAT3(entity->GetPosition().x, entity->GetPosition().y + entity->GetScale().y + headbobOffset, entity->GetPosition().z)); // after all updates make sure camera is following the affected entity
 			break;
 
 		case PlayerState::HookshotLeash:
@@ -58,7 +56,6 @@ void FPSController::Update()
 			// ragdoll the player
 			playerRBody->setAngularFactor(btVector3(1, 1, 1)); // free rotations on x and z axes
 			playerRBody->setGravity(btVector3(0.0f, -25.0f, 0.0f));
-
 			cam->SetPosition(XMFLOAT3(entity->GetPosition().x, entity->GetPosition().y + entity->GetScale().y + headbobOffset, entity->GetPosition().z)); // after all updates make sure camera is following the affected entity
 			break;
 
@@ -75,10 +72,10 @@ void FPSController::Update()
 
 void FPSController::CheckAbilities()
 {
-	Hookshot();
+	StartHookshot();
 }
 
-void FPSController::Hookshot()
+void FPSController::StartHookshot()
 {
 	if (DXCore::keyboard.OnKeyDown(0x45)) // e
 	{
@@ -87,9 +84,9 @@ void FPSController::Hookshot()
 
 		// Redefine our vectors using bullet's silly types
 		btVector3 from(entity->GetPosition().x, entity->GetPosition().y, entity->GetPosition().z);
-		btVector3 to(entity->GetPosition().x + direction.x, entity->GetPosition().y + direction.y, entity->GetPosition().z + direction.z); // raycast direction the camera is looking
+		btVector3 to(entity->GetPosition().x + direction.x * hookshotRangeScalar, entity->GetPosition().y + direction.y * hookshotRangeScalar, entity->GetPosition().z + direction.z * hookshotRangeScalar); // raycast direction the camera is looking
 
-		// debug
+		// debug line
 		DebugLines* hookshotDebugLines = new DebugLines("hookshotDebugLines", 0, false); // cannot turn on the willUpdate paramater currently because not sure how to figure out which lines to update via the input Bullet gives 
 		XMFLOAT4X4 wm;
 		XMStoreFloat4x4(&wm, XMMatrixTranspose(DirectX::XMMatrixIdentity()));
@@ -116,14 +113,49 @@ void FPSController::Hookshot()
 
 		Config::DynamicsWorld->rayTest(from, to, closestResult); // Raycast
 
-		if (closestResult.hasHit()) // if there is a surface to stand on
+		if (closestResult.hasHit()) // if there is a surface to grapple to
 		{
 			// Get the entity associated with the rigid body we hit
 			Entity* hit = (Entity*)(closestResult.m_collisionObject->getUserPointer());
 			printf("Hookshot Hit: %s\n", hit->GetName().c_str());
 
-			// impulseSumVec += (closestResult.m_hitPointWorld - from).normalize() * 10.0f;
+			hookshotPoint = closestResult.m_hitPointWorld;
+
+			if (hit->tag->c_str() == "Enemy")
+			{
+				ps = PlayerState::HookshotLeash;
+			}
+			else
+			{
+				playerRBody->clearForces();
+				ps = PlayerState::HookshotFlight;
+			}
+			
+			// cout << hookshotImpulseDir.getX() << " " << hookshotImpulseDir.getY() << " " << hookshotImpulseDir.getZ() << endl;
 		}
+	}
+}
+
+void FPSController::HookshotFlight()
+{
+	playerRBody->setGravity(btVector3(0,0,0));
+
+	if (DXCore::keyboard.KeyIsPressed(0x45)) // cancel if not holding e
+	{
+		btScalar distanceToHitPoint = playerRBody->getCenterOfMassPosition().distance(hookshotPoint);
+
+		// float hookshotSpeed = (Vector3.Distance(transform.position, hookshotPosition), HOOKSHOT_SPEED_MIN, HOOKSHOT_SPEED_MAX);
+
+		playerRBody->applyCentralForce((hookshotPoint - playerRBody->getCenterOfMassPosition()).normalized() * distanceToHitPoint * 2.0f);
+
+		if (distanceToHitPoint < 5.0f)
+		{
+			ps = PlayerState::Normal;
+		}
+	}
+	else
+	{
+		ps = PlayerState::Normal;
 	}
 }
 
@@ -178,6 +210,7 @@ void FPSController::Move()
 	playerRBody->activate();
 	playerRBody->setLinearVelocity(controllerVelocity + jumpForce);
 	playerRBody->applyCentralImpulse(impulseSumVec);
+
 	// cout << "Vel: (" << controllerVelocity.getX() << ", " << controllerVelocity.getY() << ", " << controllerVelocity.getZ() << ")" << endl;
 
 	// set Ethereal Engine rotations
@@ -224,13 +257,11 @@ void FPSController::GroundCheck()
 
 void FPSController::UpdateHeadbob()
 {
-	// TODO: Right now framrerate will cause this to move faster
-
-	if (!DXCore::keyboard.NoKeyDown() && !midAir) // if keys are down and we are on the ground we want to headbob
+	if (DXCore::keyboard.CheckKeysPressed(baseMovementKeys, 4) && !midAir) // if any base movement keys are down and we are on the ground we want to headbob
 	{
 		if (headbobOffset < HEADBOB_OFFSET_MAX && !resetHeadbob) // increase headbob offset if it is less than the max and we are not resetting 
 		{
-			headbobOffset += HEADBOB_OFFSET_INTERVAL;
+			headbobOffset += HEADBOB_OFFSET_INTERVAL * deltaTime;
 		}
 		else
 		{
@@ -239,7 +270,7 @@ void FPSController::UpdateHeadbob()
 
 		if (headbobOffset > HEADBOB_OFFSET_MIN && resetHeadbob) // decrease headbob offset if it is greater than the min and we are resetting
 		{
-			headbobOffset -= HEADBOB_OFFSET_INTERVAL;
+			headbobOffset -= HEADBOB_OFFSET_INTERVAL * deltaTime;
 		}
 		else
 		{
@@ -251,7 +282,7 @@ void FPSController::UpdateHeadbob()
 	{
 		if (headbobOffset > HEADBOB_OFFSET_MIN)
 		{
-			headbobOffset -= HEADBOB_OFFSET_INTERVAL;
+			headbobOffset -= HEADBOB_OFFSET_INTERVAL * deltaTime;
 		}
 	}
 
@@ -315,6 +346,7 @@ btVector3 FPSController::DashImpulseFromInput()
 	return dashImpulse;
 }
 
+
 void FPSController::DampForces()
 {
 	if (dashDampTimer <= 0) // always damp the impulse vec unless player is the player just initiated a dash
@@ -322,7 +354,7 @@ void FPSController::DampForces()
 		impulseSumVec -= impulseSumVec * dampingScalar;
 	}
 
-	if (DXCore::keyboard.NoKeyDown() && !midAir) // Only damp overall movement if nothing is being pressed while on the ground
+	if (!DXCore::keyboard.CheckKeysPressed(baseMovementKeys, 4) && !midAir) // Only damp overall movement if none of the base movement keys are pressed while on the ground
 	{
 		controllerVelocity -= controllerVelocity * dampingScalar;
 	}
@@ -351,6 +383,3 @@ void FPSController::OnCollision(btCollisionObject* other)
 	Entity* otherE = (Entity*)other->getUserPointer();
 	
 }
-
-
-

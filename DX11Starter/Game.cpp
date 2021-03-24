@@ -13,7 +13,7 @@ Game::Game(HINSTANCE hInstance)
 
 #if defined(DEBUG) || defined(_DEBUG)
 	CreateConsoleWindow(500, 120, 32, 120);
-	if (Config::FPSControllerEnabled) ShowCursor(false);
+	if (!Config::ShowCursor) ShowCursor(false);
 	printf("Console window created successfully.  Feel free to printf() here.\n");
 #endif
 	
@@ -678,7 +678,7 @@ void Game::OnMouseMove(WPARAM buttonState, int x, int y)
 		if (!sf->inputEnabled) continue;
 		sf->CallOnMouseMove(buttonState, x, y);
 	}
-	if (Config::FPSControllerEnabled || (!Config::FPSControllerEnabled && buttonState & 0x0001)) {
+	if (buttonState & 0x0001 || !Config::ShowCursor) {
 		EECamera->RotateCamera(x - (int)prevMousePos.x, y - (int)prevMousePos.y);
 
 		prevMousePos.x = x;

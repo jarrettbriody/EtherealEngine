@@ -1,13 +1,15 @@
 #pragma once
 #include "ScriptManager.h"
+#include <WinUser.h>
 
 class FPSController : public ScriptManager
 {
 	map<string, Entity*>* eMap;
 
 	Camera* cam;
+	float camRollAngle = 0.0f;
 	float headbobOffset = 0.0f;
-	const float HEADBOB_OFFSET_INTERVAL = 0.06f;
+	const float HEADBOB_OFFSET_INTERVAL = 3.5f;
 	const float HEADBOB_OFFSET_MIN = 0.0f;
 	const float HEADBOB_OFFSET_MAX = 0.5f;
 	bool resetHeadbob = false;
@@ -28,6 +30,8 @@ class FPSController : public ScriptManager
 	float maxSpeed = 25.0f;
 	float dampingScalar = 0.09f;
 
+	const unsigned char baseMovementKeys[4] = { 0x57, 0x53, 0x41, 0x44 }; // WASD
+
 	bool midAir = true; // true if starting character in the air
 	int jumpCount = 0;
 	float jumpForceScalar = 3.0f;
@@ -36,11 +40,12 @@ class FPSController : public ScriptManager
 	float dashDampTimer = 0.0f;
 	float dashImpulseScalar = 125.0f;
 
-	float hookshotRangeScalar = 10.0f;
+	btVector3 hookshotPoint;
+	float hookshotRangeScalar = 100.0f;
 
 	enum class PlayerState
 	{
-		Intro, Normal, HookshotThrown, HookshotFlight, HookshotLeash, Paused, Death, Victory
+		Intro, Normal, HookshotFlight, HookshotLeash, Paused, Death, Victory
 	};
 	PlayerState ps;
 
@@ -50,7 +55,9 @@ class FPSController : public ScriptManager
 	
 	void CheckAbilities();
 
-	void Hookshot();
+	void StartHookshot();
+
+	void HookshotFlight();
 	
 	void Move();
 

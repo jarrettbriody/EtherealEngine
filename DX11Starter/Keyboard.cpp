@@ -50,6 +50,25 @@ bool Keyboard::OnKeyUp(const unsigned char keycode)
 	}
 }
 
+bool Keyboard::CheckKeysPressed(const unsigned char keycode[], int arrLength)
+{
+	// return true if any of the passed in keys are pressed
+
+	bool keysDown = false;
+
+	for (int i = 0; i < arrLength; i++)
+	{
+		keysDown = KeyIsPressed(keycode[i]);
+
+		if (keysDown)
+		{
+			break;
+		}
+	}
+
+	return keysDown;
+}
+
 bool Keyboard::NoKeyDown()
 {
 	for each(bool key in keyStates)
