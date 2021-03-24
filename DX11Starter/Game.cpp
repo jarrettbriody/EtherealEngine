@@ -282,10 +282,10 @@ void Game::Update(float deltaTime, float totalTime)
 
 	// Play the 2D sound only if the channel group is not playing something
 	sfxGroup->isPlaying(&isPlaying);
-	if (GetAsyncKeyState('P') & 0x8000 && !isPlaying) {
-		fmodResult = fmodSystem->playSound(sound[0], sfxGroup, false, 0); // Play the sound using any channel in the sfx group (free channels are used first)
-		FmodErrorCheck(fmodResult);
-	}
+	//if (GetAsyncKeyState('P') & 0x8000 && !isPlaying) {
+		//fmodResult = fmodSystem->playSound(sound[0], sfxGroup, false, 0); // Play the sound using any channel in the sfx group (free channels are used first)
+		//FmodErrorCheck(fmodResult);
+	//}
 
 	// Mute/unmute the master group
 	if (GetAsyncKeyState('M') & 0x8000)

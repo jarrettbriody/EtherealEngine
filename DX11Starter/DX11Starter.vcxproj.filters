@@ -114,6 +114,9 @@
     <ClCompile Include="DecalHandler.cpp">
       <Filter>EECore\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ParticleEmitter.cpp">
+      <Filter>EECore\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h">
@@ -193,6 +196,9 @@
     </ClInclude>
     <ClInclude Include="Keyboard.h">
       <Filter>EECore\Header Files\Keyboard</Filter>
+    </ClInclude>
+    <ClInclude Include="ParticleEmitter.h">
+      <Filter>EECore\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
