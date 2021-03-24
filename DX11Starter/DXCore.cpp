@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "DXCore.h"
 
 #include <WindowsX.h>
@@ -6,6 +7,7 @@
 // Define the static instance variable so our OS-level 
 // message handling function below can talk to our object
 DXCore* DXCore::DXCoreInstance = 0;
+Keyboard DXCore::keyboard;
 
 // --------------------------------------------------------
 // The global callback function for handling windows OS-level messages.
@@ -30,8 +32,6 @@ LRESULT DXCore::WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 DXCore::DXCore(
 	HINSTANCE hInstance,		// The application's handle
 	char* titleBarText,			// Text for the window's title bar
-	unsigned int windowWidth,	// Width of the window's client area
-	unsigned int windowHeight,	// Height of the window's client area
 	bool debugTitleBarStats)	// Show extra stats (fps) in title bar?
 {
 	// Save a static reference to this object.
@@ -43,19 +43,11 @@ DXCore::DXCore(
 	// Save params
 	this->hInstance = hInstance;
 	this->titleBarText = titleBarText;
-	this->width = windowWidth;
-	this->height = windowHeight;
 	this->titleBarStats = debugTitleBarStats;
 
 	// Initialize fields
 	fpsFrameCount = 0;
 	fpsTimeElapsed = 0.0f;
-	
-	device = 0;
-	context = 0;
-	swapChain = 0;
-	backBufferRTV = 0;
-	depthStencilView = 0;
 
 	// Query performance counter for accurate timing information
 	__int64 perfFreq;
@@ -69,12 +61,12 @@ DXCore::DXCore(
 DXCore::~DXCore()
 {
 	// Release all DirectX resources
-	if (depthStencilView) { depthStencilView->Release(); }
-	if (backBufferRTV) { backBufferRTV->Release();}
+	if (Config::DepthStencilView) { Config::DepthStencilView->Release(); }
+	if (Config::BackBufferRTV) { Config::BackBufferRTV->Release();}
 
-	if (swapChain) { swapChain->Release();}
-	if (context) { context->Release();}
-	if (device) { device->Release();}
+	if (Config::SwapChain) { Config::SwapChain->Release();}
+	if (Config::Context) { Config::Context->Release();}
+	if (Config::Device) { Config::Device->Release();}
 }
 
 // --------------------------------------------------------
@@ -111,7 +103,7 @@ HRESULT DXCore::InitWindow()
 	// Adjust the width and height so the "client size" matches
 	// the width and height given (the inner-area of the window)
 	RECT clientRect;
-	SetRect(&clientRect, 0, 0, width, height);
+	SetRect(&clientRect, 0, 0, Config::ViewPortWidth, Config::ViewPortHeight);
 	AdjustWindowRect(
 		&clientRect,
 		WS_OVERLAPPEDWINDOW,	// Has a title bar, border, min and max buttons, etc.
@@ -177,8 +169,8 @@ HRESULT DXCore::InitDirectX()
 	// chain should work
 	DXGI_SWAP_CHAIN_DESC swapDesc = {};
 	swapDesc.BufferCount = 1;
-	swapDesc.BufferDesc.Width = width;
-	swapDesc.BufferDesc.Height = height;
+	swapDesc.BufferDesc.Width = Config::ViewPortWidth;
+	swapDesc.BufferDesc.Height = Config::ViewPortHeight;
 	swapDesc.BufferDesc.RefreshRate.Numerator = 60;
 	swapDesc.BufferDesc.RefreshRate.Denominator = 1;
 	swapDesc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -205,16 +197,16 @@ HRESULT DXCore::InitDirectX()
 		0,							// The number of fallbacks in the above param
 		D3D11_SDK_VERSION,			// Current version of the SDK
 		&swapDesc,					// Address of swap chain options
-		&swapChain,					// Pointer to our Swap Chain pointer
-		&device,					// Pointer to our Device pointer
+		&Config::SwapChain,					// Pointer to our Swap Chain pointer
+		&Config::Device,					// Pointer to our Device pointer
 		&dxFeatureLevel,			// This will hold the actual feature level the app will use
-		&context);					// Pointer to our Device Context pointer
+		&Config::Context);					// Pointer to our Device Context pointer
 	if (FAILED(hr)) return hr;
 
 	// The above function created the back buffer render target
 	// for us, but we need a reference to it
 	ID3D11Texture2D* backBufferTexture;
-	swapChain->GetBuffer(
+	Config::SwapChain->GetBuffer(
 		0,
 		__uuidof(ID3D11Texture2D),
 		(void**)&backBufferTexture);
@@ -222,16 +214,16 @@ HRESULT DXCore::InitDirectX()
 	// Now that we have the texture, create a render target view
 	// for the back buffer so we can render into it.  Then release
 	// our local reference to the texture, since we have the view.
-	device->CreateRenderTargetView(
+	Config::Device->CreateRenderTargetView(
 		backBufferTexture,
 		0,
-		&backBufferRTV);
+		&Config::BackBufferRTV);
 	backBufferTexture->Release();
 
 	// Set up the description of the texture to use for the depth buffer
 	D3D11_TEXTURE2D_DESC depthStencilDesc = {};
-	depthStencilDesc.Width				= width;
-	depthStencilDesc.Height				= height;
+	depthStencilDesc.Width				= Config::ViewPortWidth;
+	depthStencilDesc.Height				= Config::ViewPortHeight;
 	depthStencilDesc.MipLevels			= 1;
 	depthStencilDesc.ArraySize			= 1;
 	depthStencilDesc.Format				= DXGI_FORMAT_D24_UNORM_S8_UINT;
@@ -245,24 +237,24 @@ HRESULT DXCore::InitDirectX()
 	// Create the depth buffer and its view, then 
 	// release our reference to the texture
 	ID3D11Texture2D* depthBufferTexture;
-	device->CreateTexture2D(&depthStencilDesc, 0, &depthBufferTexture);
-	device->CreateDepthStencilView(depthBufferTexture, 0, &depthStencilView);
+	Config::Device->CreateTexture2D(&depthStencilDesc, 0, &depthBufferTexture);
+	Config::Device->CreateDepthStencilView(depthBufferTexture, 0, &Config::DepthStencilView);
 	depthBufferTexture->Release();
 
 	// Bind the views to the pipeline, so rendering properly 
 	// uses their underlying textures
-	context->OMSetRenderTargets(1, &backBufferRTV, depthStencilView);
+	Config::Context->OMSetRenderTargets(1, &Config::BackBufferRTV, Config::DepthStencilView);
 
 	// Lastly, set up a viewport so we render into
 	// to correct portion of the window
 	D3D11_VIEWPORT viewport = {};
 	viewport.TopLeftX	= 0;
 	viewport.TopLeftY	= 0;
-	viewport.Width		= (float)width;
-	viewport.Height		= (float)height;
+	viewport.Width		= (float)Config::ViewPortWidth;
+	viewport.Height		= (float)Config::ViewPortHeight;
 	viewport.MinDepth	= 0.0f;
 	viewport.MaxDepth	= 1.0f;
-	context->RSSetViewports(1, &viewport);
+	Config::Context->RSSetViewports(1, &viewport);
 
 	// Return the "everything is ok" HRESULT value
 	return S_OK;
@@ -279,28 +271,28 @@ HRESULT DXCore::InitDirectX()
 void DXCore::OnResize()
 {
 	// Release existing DirectX views and buffers
-	if (depthStencilView) { depthStencilView->Release(); }
-	if (backBufferRTV) { backBufferRTV->Release(); }
+	if (Config::DepthStencilView) { Config::DepthStencilView->Release(); }
+	if (Config::BackBufferRTV) { Config::BackBufferRTV->Release(); }
 
 	// Resize the underlying swap chain buffers
-	swapChain->ResizeBuffers(
+	Config::SwapChain->ResizeBuffers(
 		2,
-		width,
-		height,
+		Config::ViewPortWidth,
+		Config::ViewPortHeight,
 		DXGI_FORMAT_R8G8B8A8_UNORM,
 		0);
 
 	// Recreate the render target view for the back buffer
 	// texture, then release our local texture reference
 	ID3D11Texture2D* backBufferTexture;
-	swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(&backBufferTexture));
-	device->CreateRenderTargetView(backBufferTexture, 0, &backBufferRTV);
+	Config::SwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(&backBufferTexture));
+	Config::Device->CreateRenderTargetView(backBufferTexture, 0, &Config::BackBufferRTV);
 	backBufferTexture->Release();
 
 	// Set up the description of the texture to use for the depth buffer
 	D3D11_TEXTURE2D_DESC depthStencilDesc;
-	depthStencilDesc.Width				= width;
-	depthStencilDesc.Height				= height;
+	depthStencilDesc.Width				= Config::ViewPortWidth;
+	depthStencilDesc.Height				= Config::ViewPortHeight;
 	depthStencilDesc.MipLevels			= 1;
 	depthStencilDesc.ArraySize			= 1;
 	depthStencilDesc.Format				= DXGI_FORMAT_D24_UNORM_S8_UINT;
@@ -314,24 +306,24 @@ void DXCore::OnResize()
 	// Create the depth buffer and its view, then 
 	// release our reference to the texture
 	ID3D11Texture2D* depthBufferTexture;
-	device->CreateTexture2D(&depthStencilDesc, 0, &depthBufferTexture);
-	device->CreateDepthStencilView(depthBufferTexture, 0, &depthStencilView);
+	Config::Device->CreateTexture2D(&depthStencilDesc, 0, &depthBufferTexture);
+	Config::Device->CreateDepthStencilView(depthBufferTexture, 0, &Config::DepthStencilView);
 	depthBufferTexture->Release();
 
 	// Bind the views to the pipeline, so rendering properly 
 	// uses their underlying textures
-	context->OMSetRenderTargets(1, &backBufferRTV, depthStencilView);
+	Config::Context->OMSetRenderTargets(1, &Config::BackBufferRTV, Config::DepthStencilView);
 
 	// Lastly, set up a viewport so we render into
 	// to correct portion of the window
 	D3D11_VIEWPORT viewport = {};
 	viewport.TopLeftX = 0;
 	viewport.TopLeftY = 0;
-	viewport.Width = (float)width;
-	viewport.Height = (float)height;
+	viewport.Width = (float)Config::ViewPortWidth;
+	viewport.Height = (float)Config::ViewPortHeight;
 	viewport.MinDepth = 0.0f;
 	viewport.MaxDepth = 1.0f;
-	context->RSSetViewports(1, &viewport);
+	Config::Context->RSSetViewports(1, &viewport);
 }
 
 
@@ -369,7 +361,7 @@ HRESULT DXCore::Run()
 		{
 			// Update timer and title bar (if necessary)
 			UpdateTimer();
-			if(titleBarStats)
+			if (titleBarStats)
 				UpdateTitleBarStats();
 
 			// The game loop
@@ -441,8 +433,8 @@ void DXCore::UpdateTitleBarStats()
 	std::ostringstream output;
 	output.precision(6);
 	output << titleBarText <<
-		"    Width: "		<< width <<
-		"    Height: "		<< height <<
+		"    Width: "		<< Config::ViewPortWidth <<
+		"    Height: "		<< Config::ViewPortHeight <<
 		"    FPS: "			<< fpsFrameCount <<
 		"    Frame Time: "	<< mspf << "ms";
 
@@ -503,10 +495,6 @@ void DXCore::CreateConsoleWindow(int bufferLines, int bufferColumns, int windowL
 	EnableMenuItem(hmenu, SC_CLOSE, MF_GRAYED);
 }
 
-
-
-
-
 // --------------------------------------------------------
 // Handles messages that are sent to our window by the
 // operating system.  Ignoring these messages would cause
@@ -518,64 +506,90 @@ LRESULT DXCore::ProcessMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 	// Check the incoming message and handle any we care about
 	switch (uMsg)
 	{
-	// This is the message that signifies the window closing
+		// This is the message that signifies the window closing
 	case WM_DESTROY:
 		PostQuitMessage(0); // Send a quit message to our own program
 		return 0;
 
-	// Prevent beeping when we "alt-enter" into fullscreen
-	case WM_MENUCHAR: 
+		// Prevent beeping when we "alt-enter" into fullscreen
+	case WM_MENUCHAR:
 		return MAKELRESULT(0, MNC_CLOSE);
 
-	// Prevent the overall window from becoming too small
+		// Prevent the overall window from becoming too small
 	case WM_GETMINMAXINFO:
 		((MINMAXINFO*)lParam)->ptMinTrackSize.x = 200;
 		((MINMAXINFO*)lParam)->ptMinTrackSize.y = 200;
 		return 0;
 
-	// Sent when the window size changes
+		// Sent when the window size changes
 	case WM_SIZE:
 		// Don't adjust anything when minimizing,
-		// since we end up with a width/height of zero
+		// since we end up with a Config::ViewPortWidth/Config::ViewPortHeight of zero
 		// and that doesn't play well with DirectX
 		if (wParam == SIZE_MINIMIZED)
 			return 0;
 
 		// Save the new client area dimensions.
-		width = LOWORD(lParam);
-		height = HIWORD(lParam);
+		Config::ViewPortWidth = LOWORD(lParam);
+		Config::ViewPortHeight = HIWORD(lParam);
 
 		// If DX is initialized, resize 
 		// our required buffers
-		if (device) 
+		if (Config::Device)
 			OnResize();
 
 		return 0;
 
-	// Mouse button being pressed (while the cursor is currently over our window)
+		// Mouse button being pressed (while the cursor is currently over our window)
 	case WM_LBUTTONDOWN:
 	case WM_MBUTTONDOWN:
 	case WM_RBUTTONDOWN:
 		OnMouseDown(wParam, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
 		return 0;
 
-	// Mouse button being released (while the cursor is currently over our window)
+		// Mouse button being released (while the cursor is currently over our window)
 	case WM_LBUTTONUP:
 	case WM_MBUTTONUP:
 	case WM_RBUTTONUP:
 		OnMouseUp(wParam, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
 		return 0;
 
-	// Cursor moves over the window (or outside, while we're currently capturing it)
+		// Cursor moves over the window (or outside, while we're currently capturing it)
 	case WM_MOUSEMOVE:
 		OnMouseMove(wParam, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
 		return 0;
 
-	// Mouse wheel is scrolled
+		// Mouse wheel is scrolled
 	case WM_MOUSEWHEEL:
 		OnMouseWheel(GET_WHEEL_DELTA_WPARAM(wParam) / (float)WHEEL_DELTA, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
 		return 0;
+
+	// Input handling
+	case WM_KEYDOWN:
+	{
+		unsigned char keycode = static_cast<unsigned char>(wParam);
+		if (keyboard.IsKeysAutoRepeat())
+		{
+			keyboard.RegisterKeyPress(keycode);
+		}
+		else
+		{
+			const bool wasPressed = lParam & 0x40000000;
+			if (!wasPressed)
+			{
+				keyboard.RegisterKeyPress(keycode);
+			}
+		}
+		return 0;
 	}
+	case WM_KEYUP:
+	{
+		unsigned char keycode = static_cast<unsigned char>(wParam);
+		keyboard.RegisterKeyRelease(keycode);
+		return 0;
+	}
+	}
+
 
 	// Let Windows handle any messages we're not touching
 	return DefWindowProc(hWnd, uMsg, wParam, lParam);

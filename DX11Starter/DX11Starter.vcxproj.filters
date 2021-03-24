@@ -2,202 +2,272 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <FxCompile Include="DebugLineVS.hlsl">
-      <Filter>Vertex Shaders</Filter>
+      <Filter>EEShaders\Vertex Shaders</Filter>
     </FxCompile>
     <FxCompile Include="DefaultVS.hlsl">
-      <Filter>Vertex Shaders</Filter>
+      <Filter>EEShaders\Vertex Shaders</Filter>
     </FxCompile>
     <FxCompile Include="NormalVS.hlsl">
-      <Filter>Vertex Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="ShadowVS.hlsl">
-      <Filter>Vertex Shaders</Filter>
+      <Filter>EEShaders\Vertex Shaders</Filter>
     </FxCompile>
     <FxCompile Include="SkyVS.hlsl">
-      <Filter>Vertex Shaders</Filter>
+      <Filter>EEShaders\Vertex Shaders</Filter>
     </FxCompile>
     <FxCompile Include="DebugLinePS.hlsl">
-      <Filter>Pixel Shaders</Filter>
+      <Filter>EEShaders\Pixel Shaders</Filter>
     </FxCompile>
     <FxCompile Include="DefaultPS.hlsl">
-      <Filter>Pixel Shaders</Filter>
+      <Filter>EEShaders\Pixel Shaders</Filter>
     </FxCompile>
     <FxCompile Include="NormalPS.hlsl">
-      <Filter>Pixel Shaders</Filter>
+      <Filter>EEShaders\Pixel Shaders</Filter>
     </FxCompile>
     <FxCompile Include="SkyPS.hlsl">
-      <Filter>Pixel Shaders</Filter>
+      <Filter>EEShaders\Pixel Shaders</Filter>
     </FxCompile>
     <FxCompile Include="TerrainPS.hlsl">
-      <Filter>Pixel Shaders</Filter>
+      <Filter>EEShaders\Pixel Shaders</Filter>
     </FxCompile>
     <FxCompile Include="WaterPS.hlsl">
-      <Filter>Pixel Shaders</Filter>
+      <Filter>EEShaders\Pixel Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="DefaultPS_SSAO.hlsl">
+      <Filter>EEShaders\Pixel Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="DepthStencilVS.hlsl">
+      <Filter>EEShaders\Vertex Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="DecalPS.hlsl">
+      <Filter>EEShaders\Pixel Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="DecalVS.hlsl">
+      <Filter>EEShaders\Vertex Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="DepthStencilPS.hlsl">
+      <Filter>EEShaders\Pixel Shaders</Filter>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Camera.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>EECore\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Collider.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>EECore\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="DebugLines.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>EECore\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="DXCore.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>EECore\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Entity.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>EECore\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Game.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>EECore\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Main.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>EECore\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Material.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>EECore\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Mesh.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>EECore\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Renderer.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>EECore\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="RigidBody.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>EECore\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="SceneLoader.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>EECore\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="SimpleShader.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Terrain.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="TerrainMaterial.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Water.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="WaterMaterial.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>EECore\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Config.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>EECore\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ScriptManager.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>EECore\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Barrel.cpp" />
+    <ClCompile Include="MemoryAllocator.cpp">
+      <Filter>EECore\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Barrel.cpp">
+      <Filter>EEScripts\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="FPSController.cpp">
+      <Filter>EEScripts\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="pch.cpp">
+      <Filter>EECore\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="KeyboardEvent.cpp">
+      <Filter>EECore\Source Files\Keyboard</Filter>
+    </ClCompile>
+    <ClCompile Include="Keyboard.cpp">
+      <Filter>EECore\Source Files\Keyboard</Filter>
+    </ClCompile>
+    <ClCompile Include="DecalHandler.cpp">
+      <Filter>EECore\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ParticleEmitter.cpp">
+      <Filter>EECore\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h">
-      <Filter>Header Files</Filter>
+      <Filter>EECore\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Collider.h">
-      <Filter>Header Files</Filter>
+      <Filter>EECore\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="DebugLines.h">
-      <Filter>Header Files</Filter>
+      <Filter>EECore\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="DXCore.h">
-      <Filter>Header Files</Filter>
+      <Filter>EECore\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Entity.h">
-      <Filter>Header Files</Filter>
+      <Filter>EECore\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Game.h">
-      <Filter>Header Files</Filter>
+      <Filter>EECore\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Lights.h">
-      <Filter>Header Files</Filter>
+      <Filter>EECore\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Material.h">
-      <Filter>Header Files</Filter>
+      <Filter>EECore\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Mesh.h">
-      <Filter>Header Files</Filter>
+      <Filter>EECore\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Renderer.h">
-      <Filter>Header Files</Filter>
+      <Filter>EECore\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="RigidBody.h">
-      <Filter>Header Files</Filter>
+      <Filter>EECore\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="SceneLoader.h">
-      <Filter>Header Files</Filter>
+      <Filter>EECore\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Shadows.h">
-      <Filter>Header Files</Filter>
+      <Filter>EECore\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="SimpleShader.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Terrain.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="TerrainMaterial.h">
-      <Filter>Header Files</Filter>
+      <Filter>EECore\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Utility.h">
-      <Filter>Header Files</Filter>
+      <Filter>EECore\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Vertex.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Water.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="WaterMaterial.h">
-      <Filter>Header Files</Filter>
+      <Filter>EECore\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Config.h">
-      <Filter>Header Files</Filter>
+      <Filter>EECore\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ScriptManager.h">
-      <Filter>Header Files</Filter>
+      <Filter>EECore\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Barrel.h" />
     <ClInclude Include="Scripts.h">
-      <Filter>Header Files</Filter>
+      <Filter>EECore\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="pch.h">
+      <Filter>EECore\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MemoryAllocator.h">
+      <Filter>EECore\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Barrel.h">
+      <Filter>EEScripts\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="FPSController.h">
+      <Filter>EEScripts\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="DecalHandler.h">
+      <Filter>EECore\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="KeyboardEvent.h">
+      <Filter>EECore\Header Files\Keyboard</Filter>
+    </ClInclude>
+    <ClInclude Include="Keyboard.h">
+      <Filter>EECore\Header Files\Keyboard</Filter>
+    </ClInclude>
+    <ClInclude Include="ParticleEmitter.h">
+      <Filter>EECore\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Lighting.hlsli">
-      <Filter>Pixel Shaders</Filter>
+      <Filter>EEShaders\Pixel Shaders</Filter>
     </None>
     <None Include="packages.config">
       <Filter>Other</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Filter Include="Source Files">
-      <UniqueIdentifier>{cd35fe6d-2e82-4caf-b163-9deac70dd6e2}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files">
-      <UniqueIdentifier>{0940d3a7-1870-4825-aa75-6ead6ee6b7b2}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Pixel Shaders">
-      <UniqueIdentifier>{e07896d8-d5cd-419c-9bdf-f3d8177b5d28}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Vertex Shaders">
-      <UniqueIdentifier>{16fbe4d5-4511-45e1-b971-938c635a7e34}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Scenes">
-      <UniqueIdentifier>{10bb6dee-8673-4f20-9d6d-8b5e6a9458e8}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Other">
       <UniqueIdentifier>{4aa53eb7-556a-4700-95b7-4360786e05f4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="EECore">
+      <UniqueIdentifier>{c77af2b2-bfcb-48bc-bbd6-8486db419b46}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="EEScripts">
+      <UniqueIdentifier>{fe87e0ec-79c1-4cfa-bfb0-eb3997dc5c8c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="EEScripts\Headers">
+      <UniqueIdentifier>{2383e04e-157f-4e98-83db-ab428b98f2d4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="EEScripts\Source">
+      <UniqueIdentifier>{4d2927d5-2e85-45bc-829c-bb76cb29ec64}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="EECore\Source Files">
+      <UniqueIdentifier>{cd35fe6d-2e82-4caf-b163-9deac70dd6e2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="EECore\Header Files">
+      <UniqueIdentifier>{0940d3a7-1870-4825-aa75-6ead6ee6b7b2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="EEShaders">
+      <UniqueIdentifier>{197caef3-f5d0-4939-8dff-f8d37056ea43}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="EEShaders\Pixel Shaders">
+      <UniqueIdentifier>{e07896d8-d5cd-419c-9bdf-f3d8177b5d28}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="EEShaders\Vertex Shaders">
+      <UniqueIdentifier>{16fbe4d5-4511-45e1-b971-938c635a7e34}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="EEScenes">
+      <UniqueIdentifier>{10bb6dee-8673-4f20-9d6d-8b5e6a9458e8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="EEShaders\Compute Shaders">
+      <UniqueIdentifier>{cf4c20e1-06bf-4688-a8c4-8fccea182adf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="EEShaders\Geometry Shaders">
+      <UniqueIdentifier>{ee0ab75f-3663-4ccb-bfa3-6b5a731e270d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="EECore\Header Files\Keyboard">
+      <UniqueIdentifier>{72ff7ae4-872c-4f1a-9a4a-cf79f1e2dad4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="EECore\Source Files\Keyboard">
+      <UniqueIdentifier>{aa161763-d20f-462e-a089-4f34139a2f99}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="scene.txt">
-      <Filter>Scenes</Filter>
+    <Text Include="..\Assets\Scenes\Arena.txt">
+      <Filter>EEScenes</Filter>
+    </Text>
+    <Text Include="..\Assets\Scenes\ArenaV2.txt">
+      <Filter>EEScenes</Filter>
+    </Text>
+    <Text Include="..\Assets\Scenes\Tutorial.txt">
+      <Filter>EEScenes</Filter>
+    </Text>
+    <Text Include="..\Assets\Scenes\City.txt">
+      <Filter>EEScenes</Filter>
     </Text>
   </ItemGroup>
   <ItemGroup>

@@ -1,6 +1,5 @@
 #pragma once
 #include "ScriptManager.h"
-#include <iostream>
 
 using namespace std;
 
@@ -13,5 +12,7 @@ class TestScript : public ScriptManager
 	void Init();
 
 	void Update();
+
+	void OnCollision(btCollisionObject* other);
 };
 

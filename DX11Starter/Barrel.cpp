@@ -1,12 +1,18 @@
+#include "pch.h"
 #include "Barrel.h"
 
 void TestScript::Init()
 {
+	/*
 	cout << "initializing barrel" << endl;
+	(*eMap)["barrel_1"]->isCollisionStatic = false;
+	(*eMap)["barrel_1 (2)"]->isCollisionStatic = false;
+	*/
 }
 
 void TestScript::Update()
 {
+	/*
 	//collision barrels
 	if (GetAsyncKeyState(VK_LEFT))
 	{
@@ -28,7 +34,7 @@ void TestScript::Update()
 		entity->Move(0, 0, -0.05f);
 		entity->CalcWorldMatrix();
 	}
-	if (entity->CheckSATCollisionAndCorrect((*eMap)["barrel_1 (2)"]))
+	if (entity->CheckSATCollisionAndCorrect((*eMap)["Rock (1)"]))
 	{
 		cout << test << endl;
 	}
@@ -45,11 +51,23 @@ void TestScript::Update()
 
 	//transform hierarchy spheres
 	if (GetAsyncKeyState('F') & 0x8000) {
-		(*eMap)["sphere1"]->RotateAroundAxis(Y_AXIS, 0.05f);
-		(*eMap)["sphere1"]->CalcWorldMatrix();
+		(*eMap)["cube1"]->RotateAroundAxis(Y_AXIS, 0.05f);
+		(*eMap)["cube1"]->CalcWorldMatrix();
 	}
 	if (GetAsyncKeyState('G') & 0x8000) {
-		(*eMap)["sphere1"]->RotateAroundAxis(Y_AXIS, -0.05f);
-		(*eMap)["sphere1"]->CalcWorldMatrix();
+		(*eMap)["cube1"]->RotateAroundAxis(Y_AXIS, -0.05f);
+		(*eMap)["cube1"]->CalcWorldMatrix();
 	}
+
+	//delete barrel
+	if (GetAsyncKeyState('L') & 0x8000) {
+		entity->Destroy();
+	}
+	*/
+}
+
+void TestScript::OnCollision(btCollisionObject* other)
+{
+	Entity* otherE = (Entity*)other->getUserPointer();
+	cout << otherE->GetName() << endl;
 }

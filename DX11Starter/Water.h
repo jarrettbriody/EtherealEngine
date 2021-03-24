@@ -1,10 +1,8 @@
 #pragma once
+#include "pch.h"
 #include "Terrain.h"
-#include <d3d11.h>
 #include "DXCore.h"
-#include <DirectXMath.h>
 #include "Vertex.h"
-#include "SimpleShader.h"
 
 
 class Water

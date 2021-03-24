@@ -1,6 +1,6 @@
 #pragma once
-#include "SimpleShader.h"
-#include <string>
+#include "pch.h"
+#include "Config.h"
 
 using namespace std;
 using namespace DirectX;
@@ -16,6 +16,7 @@ using namespace DirectX;
 //8. Reflection on and Ray trace off
 //9. Transparency : Glass on, Reflection : Ray trace off
 //10. Casts shadows onto invisible surfaces
+//11. Custom color
 struct MaterialData {
 	XMFLOAT3 AmbientColor = XMFLOAT3(0.0f, 0.0f, 0.0f); //Ka
 	XMFLOAT3 DiffuseColor = XMFLOAT3(0.0f, 0.0f, 0.0f); //Kd
@@ -29,26 +30,34 @@ struct MaterialData {
 	ID3D11ShaderResourceView* SpecularHighlightTextureMapSRV = nullptr; //map_Ns
 	ID3D11ShaderResourceView* AlphaTextureMapSRV = nullptr; //map_d
 	ID3D11ShaderResourceView* NormalTextureMapSRV = nullptr; //map_Bump
-	vector<string> SRVNames;
+	bool SSAO = false;
+};
+
+enum class ShaderType {
+	DEFAULT,
+	NORMAL,
 };
 
 class Material
 {
 protected:
+	ShaderType shaderType;
 	SimpleVertexShader* vertexShader;
 	SimplePixelShader* pixelShader;
 	MaterialData materialData;
 	ID3D11SamplerState* samplerState;
-	string name;
+	string* name = nullptr;
 public:
 	Material();
-	Material(string n, MaterialData matData, SimpleVertexShader* vShader, SimplePixelShader* pShader, ID3D11SamplerState* sampler);
+	Material(string n, MaterialData matData, ShaderType shaderType, SimpleVertexShader* vShader, SimplePixelShader* pShader, ID3D11SamplerState* sampler);
 	~Material();
+	void operator= (const Material& m);
+	void FreeMemory();
 	SimpleVertexShader* GetVertexShader();
 	SimplePixelShader* GetPixelShader();
 	MaterialData GetMaterialData();
 	ID3D11SamplerState* GetSamplerState();
-	virtual void Prepare();
+	void Prepare();
 	string GetName();
 };
 

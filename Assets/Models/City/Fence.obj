@@ -1,0 +1,39 @@
+# ProBuilder 4.2.3
+# https://unity3d.com/unity/features/worldbuilding/probuilder
+# 2/16/2021 4:05:33 PM
+
+mtllib ./Fence.mtl
+o Fence
+
+g Fence
+v -1 0 29
+v -1 4.5 29
+v -1 11.5 29
+v -1 0 -1
+v -1 11.5 -1
+v -1 4.5 -1
+
+vt 0 0
+vt 29 0
+vt -1 0
+vt 29 11.5
+vt -1 11.5
+vt 1 0
+vt -29 0
+vt 1 4.5
+vt -29 4.5
+vt -29 11.5
+vt 1 11.5
+
+vn 0 0 0
+vn -1 0 0
+vn 1 0 0
+
+usemtl Fence
+f 2/1/1 3/1/1 1/1/1 1/1/1
+f 3/4/2 5/5/2 4/3/2 1/2/2
+f 5/1/1 6/1/1 4/1/1 4/1/1
+f 6/8/3 2/9/3 1/7/3 4/6/3
+f 6/8/3 5/11/3 3/10/3 2/9/3
+f 1/1/1 1/1/1 4/1/1 4/1/1
+
