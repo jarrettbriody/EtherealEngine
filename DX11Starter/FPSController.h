@@ -43,6 +43,14 @@ class FPSController : public ScriptManager
 	btVector3 hookshotPoint;
 	float hookshotRangeScalar = 100.0f;
 
+	Entity* leashedEnemy;
+	float leashSize = 0.0f; 
+	float leashedScalar = 10.0f;
+
+	const float BULLET_TIME_SCALAR = 0.5f;
+	const float NORMAL_TIME_SCALAR = 1.0f;
+	float bulletTimeRampDown = 0.25f;
+
 	enum class PlayerState
 	{
 		Intro, Normal, HookshotFlight, HookshotLeash, Paused, Death, Victory
@@ -53,11 +61,17 @@ class FPSController : public ScriptManager
 
 	void Update();
 	
-	void CheckAbilities();
+	void CheckAllAbilities();
 
-	void StartHookshot();
+	void CheckBloodIcicle();
+	
+	void CheckBulletTime();
+
+	void CheckHookshot();
 
 	void HookshotFlight();
+
+	void HookshotLeash();
 	
 	void Move();
 

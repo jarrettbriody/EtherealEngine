@@ -8,6 +8,7 @@
 // message handling function below can talk to our object
 DXCore* DXCore::DXCoreInstance = 0;
 Keyboard DXCore::keyboard;
+float DXCore::deltaTimeScalar = 1.0f;
 
 // --------------------------------------------------------
 // The global callback function for handling windows OS-level messages.

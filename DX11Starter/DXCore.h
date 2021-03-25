@@ -48,6 +48,7 @@ public:
 	virtual void OnMouseWheel(float wheelDelta,   int x, int y) { }
 	
 	static Keyboard keyboard;
+	static float deltaTimeScalar;
 protected:
 	HINSTANCE	hInstance;		// The handle to the application
 	HWND		hWnd;			// The handle to the window itself

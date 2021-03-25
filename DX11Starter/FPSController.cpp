@@ -34,7 +34,7 @@ void FPSController::Update()
 			break;
 
 		case PlayerState::Normal:
-			CheckAbilities();
+			CheckAllAbilities();
 			Move();
 			cam->SetPosition(XMFLOAT3(entity->GetPosition().x, entity->GetPosition().y + entity->GetScale().y + headbobOffset, entity->GetPosition().z)); // after all updates make sure camera is following the affected entity
 			break;
@@ -45,7 +45,9 @@ void FPSController::Update()
 			break;
 
 		case PlayerState::HookshotLeash:
-
+			HookshotLeash();
+			Move();
+			cam->SetPosition(XMFLOAT3(entity->GetPosition().x, entity->GetPosition().y + entity->GetScale().y + headbobOffset, entity->GetPosition().z)); // after all updates make sure camera is following the affected entity
 			break;
 
 		case PlayerState::Paused:
@@ -70,14 +72,61 @@ void FPSController::Update()
 }
 
 
-void FPSController::CheckAbilities()
+void FPSController::CheckAllAbilities()
 {
-	StartHookshot();
+	// 2.5 hours by 6
+	CheckBloodIcicle();
+	CheckHookshot();
+	CheckBulletTime();
 }
 
-void FPSController::StartHookshot()
+void FPSController::CheckBloodIcicle()
 {
-	if (DXCore::keyboard.OnKeyDown(0x45)) // e
+	if (DXCore::keyboard.OnKeyDown(0x58)) // TODO: Change this to on a mouse button down
+	{
+		// blood icicle
+
+		EntityCreationParameters icicleParams = {
+			"Blood Icicle",
+			"Blood Icicle Mesh",
+			"White",
+			XMFLOAT3(entity->GetPosition().x + direction.x, entity->GetPosition().y, entity->GetPosition().z + direction.z),
+			ZERO_VECTOR3,
+			XMFLOAT3(1.0f, 1.0f, 2.0f)
+		};
+
+		ScriptManager::CreateEntity(icicleParams);
+
+	}
+}
+
+void FPSController::CheckBulletTime()
+{
+	// Slow time instantly and keep it slowed while Q is pressed but gradually ramp time back up to normal time when not pressed 
+	if (DXCore::keyboard.KeyIsPressed(0x51)) 
+	{
+		bulletTimeRampDown = BULLET_TIME_SCALAR;
+		DXCore::deltaTimeScalar = BULLET_TIME_SCALAR;
+
+	}
+	else
+	{
+		if (bulletTimeRampDown < NORMAL_TIME_SCALAR)
+		{
+			bulletTimeRampDown += deltaTime;
+		}
+		else
+		{
+			bulletTimeRampDown = NORMAL_TIME_SCALAR;
+		}
+
+		DXCore::deltaTimeScalar = bulletTimeRampDown;
+	}
+}
+
+void FPSController::CheckHookshot()
+{
+	if (DXCore::keyboard.OnKeyDown(0x45)) // E
 	{
 		Config::DynamicsWorld->updateAabbs();
 		Config::DynamicsWorld->computeOverlappingPairs();
@@ -117,17 +166,20 @@ void FPSController::StartHookshot()
 		{
 			// Get the entity associated with the rigid body we hit
 			Entity* hit = (Entity*)(closestResult.m_collisionObject->getUserPointer());
-			printf("Hookshot Hit: %s\n", hit->GetName().c_str());
+			// printf("Hookshot Hit: %s\n", hit->GetName().c_str());
 
 			hookshotPoint = closestResult.m_hitPointWorld;
 
-			if (hit->tag->c_str() == "Enemy")
+			if (hit->tag->c_str() == std::string("Enemy"))
 			{
 				ps = PlayerState::HookshotLeash;
+				leashedEnemy = (Entity*)hit->GetRBody()->getUserPointer();
+				leashSize = playerRBody->getCenterOfMassPosition().distance(leashedEnemy->GetRBody()->getCenterOfMassPosition());
+				cout << leashSize << endl;
 			}
 			else
 			{
-				playerRBody->clearForces();
+				// playerRBody->clearForces(); --> don't know if needed
 				ps = PlayerState::HookshotFlight;
 			}
 			
@@ -140,22 +192,37 @@ void FPSController::HookshotFlight()
 {
 	playerRBody->setGravity(btVector3(0,0,0));
 
-	if (DXCore::keyboard.KeyIsPressed(0x45)) // cancel if not holding e
+	if (DXCore::keyboard.KeyIsPressed(0x45)) 
 	{
 		btScalar distanceToHitPoint = playerRBody->getCenterOfMassPosition().distance(hookshotPoint);
 
-		// float hookshotSpeed = (Vector3.Distance(transform.position, hookshotPosition), HOOKSHOT_SPEED_MIN, HOOKSHOT_SPEED_MAX);
-
-		playerRBody->applyCentralForce((hookshotPoint - playerRBody->getCenterOfMassPosition()).normalized() * distanceToHitPoint * 2.0f);
+		playerRBody->activate();
+		playerRBody->applyCentralForce((hookshotPoint - playerRBody->getCenterOfMassPosition()).normalized() * distanceToHitPoint * 2.0f); // adjust speed according to distance away with an added small scalar
 
 		if (distanceToHitPoint < 5.0f)
 		{
 			ps = PlayerState::Normal;
 		}
 	}
-	else
+	else // cancel if not holding E
 	{
 		ps = PlayerState::Normal;
+	}
+}
+
+void FPSController::HookshotLeash()
+{
+	if (DXCore::keyboard.OnKeyDown(0x45)) // cancel after pressing E again
+	{
+		ps = PlayerState::Normal;
+	}
+
+	// pull enemy into range if they are "stretching" over the initial leash size
+	float leashDistanceToEnemy = playerRBody->getCenterOfMassPosition().distance(leashedEnemy->GetRBody()->getCenterOfMassPosition());
+	if (leashDistanceToEnemy >= leashSize)
+	{
+		leashedEnemy->GetRBody()->activate();
+		leashedEnemy->GetRBody()->applyCentralImpulse((playerRBody->getCenterOfMassPosition() - leashedEnemy->GetRBody()->getCenterOfMassPosition()).normalized() * (leashDistanceToEnemy/leashedScalar));
 	}
 }
 
@@ -346,7 +413,6 @@ btVector3 FPSController::DashImpulseFromInput()
 	return dashImpulse;
 }
 
-
 void FPSController::DampForces()
 {
 	if (dashDampTimer <= 0) // always damp the impulse vec unless player is the player just initiated a dash
@@ -362,7 +428,7 @@ void FPSController::DampForces()
 
 void FPSController::OnMouseMove(WPARAM buttonState, int x, int y)
 {
-	if (buttonState & 0x0001) { // holding LMB to look around only happens if Config::FPSControllerEnabled = false
+	if (buttonState & 0x0001) { 
 		cam->RotateCamera(x - (int)prevMousePos.x, y - (int)prevMousePos.y); 
 
 		prevMousePos.x = x;
@@ -373,8 +439,7 @@ void FPSController::OnMouseMove(WPARAM buttonState, int x, int y)
 void FPSController::OnMouseDown(WPARAM buttonState, int x, int y)
 {
 	if (buttonState & 0x0001) {
-		// sword slash
-		cout << "LMB" << endl;
+		
 	}
 }
 
