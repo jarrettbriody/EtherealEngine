@@ -616,42 +616,103 @@ void Game::OnMouseDown(WPARAM buttonState, int x, int y)
 			printf("Hit: %s\n", hit->GetName().c_str());
 			btRigidBody* rigidBody = hit->GetRBody();
 
-			/*
-			// In order to update the values associated with the rigid body we need to remove it from the dynamics world first
-			Config::DynamicsWorld->removeRigidBody(rigidBody);
-			btVector3 inertia(0, 0, 0);
-			float mass = 1.0f;
-			rigidBody->getCollisionShape()->calculateLocalInertia(mass, inertia);
-			rigidBody->setActivationState(DISABLE_DEACTIVATION);
-			rigidBody->setMassProps(mass, inertia);
+			if (hit->GetName() == "CuttingBox")
+			{
+				// Define a plane that goes through the center of the entity
+					// plane = (entity.x, entity.y, entity.z)
+					// meshAVerts = entity.verticies that are to the left of plane
+					// meshBVerts = entity.verticies that are to the right of plane
 
-			// Useful functions for updating an object in motion, but not really needed here
-			/*
-			rigidBody->setLinearFactor(btVector3(1, 1, 1));
-			rigidBody->setAngularFactor(btVector3(1, 1, 1));
-			rigidBody->updateInertiaTensor();
-			rigidBody->clearForces();
-			btTransform transform;
-			transform.setIdentity();
-			rigidBody->getMotionState()->getWorldTransform(transform);
-			float x = transform.getOrigin().getX();
-			float y = transform.getOrigin().getY();
-			float z = transform.getOrigin().getZ();
-			transform.setOrigin(btVector3(x, y, z));
-			rigidBody->getCollisionShape()->setLocalScaling(btVector3(1, 1, 1));
-			rigidBody->setWorldTransform(transform); */
-			//*/
-			btVector3 h = closestResult.m_hitPointWorld;
-			XMFLOAT3 hitLocation(h.getX(), h.getY(), h.getZ());
-			EEDecalHandler->GenerateDecal(hit, XMFLOAT3(hitLocation.x - start.x, hitLocation.y - start.y, hitLocation.z - start.z), hitLocation, XMFLOAT3(10.0f, 10.0f, 15.0f), DecalType(rand() % 8));
+				std::vector<Vertex> meshAVerts;
+				std::vector<Vertex> meshBVerts;
+				std::vector<unsigned int> meshAIndicies;
+				std::vector<unsigned int> meshBIndicies;
+				std::map<Vertex, unsigned int> meshAVertexToIndexMap;
+				std::map<Vertex, unsigned int> meshBVertexToIndexMap;
 
-			/*
-			Config::DynamicsWorld->addRigidBody(rigidBody); // Add the rigid body back into bullet		
+				/*
+				Make get function on mesh for index array
+				Loop through original mesh index array using original mesh index count
+				Use the unsigned int value at that index (indexArray[5]) as the index into the original mesh vertex vector
+				Now you have a vertex, so do your calculation to see what new mesh it belongs to
+				You dont want to repeat the vertex in the new buffers if it already exists
+				whateverMap.count(someVertex), function returns true if it exists, false if it doesnt
+				if it returns true, then the value that it returns is the index in the new whatever vector you made, add that index to the whatever vector
+				if it returns false, then encode the current size() of the whatever vector, because that will be its new index once you push_back(), encoding will look like whateverMap.insert({someVertex, someUnsignedInt});
+				So, push_back that vertex onto the whatever vector, then push_back that index you encoded in the map onto the whatever index vector
+				create new meshes, do not destroy old mesh
+				*/
 
-			if (hit->MeshHasChildren()) {
-				EESceneLoader->SplitMeshIntoChildEntities(hit, 0.5f);
+				Vertex* originalVerticies = hit->GetMesh()->GetVertexArray();
+				unsigned int* originalIndices = hit->GetMesh()->GetIndexArray();
+				int originalIndexCount = hit->GetMesh()->GetIndexCount();
+				int originalVertexCount = hit->GetMesh()->GetVertexCount();
+
+				for (int i = 0; i < originalIndexCount; i++)
+				{
+					if(originalVerticies[i].Position.x < hit->GetPosition().x)
+					{
+						meshAVerts.push_back(originalVerticies[i]);
+						
+					}
+					else
+					{
+						meshBVerts.push_back(originalVerticies[i]);
+					}
+				}
+
+				std::cout << "Original Mesh Vertex Count: " << originalVertexCount << endl;
+				std::cout << "Original Index Count: " << hit->GetMesh()->GetIndexCount() << endl;
+				std::cout << "MeshA Vertex Count: " << meshAVerts.size() << endl;
+				std::cout << "MeshB Vertex Count: " << meshBVerts.size() << endl;
+
+				// Generate two meshes for each side of the cut
+				//Mesh meshA = new Mesh()
+
+
+				// Create new entities for each of the pieces, and enable physics
+
+				// Get rid of original entity
+
 			}
-			*/
+			else {
+				/*
+				// In order to update the values associated with the rigid body we need to remove it from the dynamics world first
+				Config::DynamicsWorld->removeRigidBody(rigidBody);
+				btVector3 inertia(0, 0, 0);
+				float mass = 1.0f;
+				rigidBody->getCollisionShape()->calculateLocalInertia(mass, inertia);
+				rigidBody->setActivationState(DISABLE_DEACTIVATION);
+				rigidBody->setMassProps(mass, inertia);
+
+				// Useful functions for updating an object in motion, but not really needed here
+				/*
+				rigidBody->setLinearFactor(btVector3(1, 1, 1));
+				rigidBody->setAngularFactor(btVector3(1, 1, 1));
+				rigidBody->updateInertiaTensor();
+				rigidBody->clearForces();
+				btTransform transform;
+				transform.setIdentity();
+				rigidBody->getMotionState()->getWorldTransform(transform);
+				float x = transform.getOrigin().getX();
+				float y = transform.getOrigin().getY();
+				float z = transform.getOrigin().getZ();
+				transform.setOrigin(btVector3(x, y, z));
+				rigidBody->getCollisionShape()->setLocalScaling(btVector3(1, 1, 1));
+				rigidBody->setWorldTransform(transform); */
+				//*/
+				btVector3 h = closestResult.m_hitPointWorld;
+				XMFLOAT3 hitLocation(h.getX(), h.getY(), h.getZ());
+				EEDecalHandler->GenerateDecal(hit, XMFLOAT3(hitLocation.x - start.x, hitLocation.y - start.y, hitLocation.z - start.z), hitLocation, XMFLOAT3(10.0f, 10.0f, 15.0f), DecalType(rand() % 8));
+
+				/*
+				Config::DynamicsWorld->addRigidBody(rigidBody); // Add the rigid body back into bullet
+
+				if (hit->MeshHasChildren()) {
+					EESceneLoader->SplitMeshIntoChildEntities(hit, 0.5f);
+				}
+				*/
+			}
 		}
 	}
 	

@@ -9,7 +9,7 @@ Mesh::Mesh()
 {
 }
 
-Mesh::Mesh(Vertex * vertexObjects, int vertexCount, unsigned int * indices, int indexCnt, ID3D11Device * device, string meshN, string matName)
+Mesh::Mesh(Vertex * vertexObjects, int vertexCnt, unsigned int * indices, int indexCnt, ID3D11Device * device, string meshN, string matName)
 {
 	vertices = new vector<DirectX::XMFLOAT3>();
 	childrenVec = new vector<Mesh*>();
@@ -24,6 +24,10 @@ Mesh::Mesh(Vertex * vertexObjects, int vertexCount, unsigned int * indices, int 
 	materialNameList->push_back(matName);
 	CreateBuffers(vertexObjects, vertexCount, indices, indexCnt, device);
 	childCount = 0;
+	indexArray = new unsigned int[indexCnt];
+	vertexArray = new Vertex[vertexCnt];
+	memcpy(indexArray, &indices[0], sizeof(unsigned int) * indexCnt);
+	memcpy(vertexArray, &vertexObjects[0], sizeof(Vertex) * vertexCnt);
 }
 
 Mesh::Mesh(string meshN, char * objFile, ID3D11Device* device, bool* success)
@@ -243,6 +247,10 @@ Mesh::Mesh(string meshN, char * objFile, ID3D11Device* device, bool* success)
 		}
 		CreateBuffers(&verts[0], vertCounter, &indices[0], vertCounter, device);
 	}
+	indexArray = new unsigned int[indexCount];
+	memcpy(indexArray, &indices[0], sizeof(unsigned int) * indexCount);
+	vertexArray = new Vertex[vertexCount];
+	memcpy(vertexArray, &verts[0], sizeof(Vertex) * vertexCount);
 	if (success != nullptr)
 		*success = true;
 }
@@ -279,7 +287,8 @@ Mesh::~Mesh()
 		delete meshName;
 		meshName = nullptr;
 	}
-		
+	if (indexArray != nullptr) delete[] indexArray;
+	if (vertexArray != nullptr) delete[] vertexArray;
 }
 
 void Mesh::operator=(const Mesh& m)
@@ -293,6 +302,7 @@ void Mesh::operator=(const Mesh& m)
 	*vertices = vector<DirectX::XMFLOAT3>(*m.vertices);
 	vertexBuffer = m.vertexBuffer;
 	indexBuffer = m.indexBuffer;
+	vertexCount = m.vertexCount;
 	indexCount = m.indexCount;
 	*childrenVec = vector<Mesh*>(*m.childrenVec);
 	*mtlPath = *m.mtlPath;
@@ -300,6 +310,11 @@ void Mesh::operator=(const Mesh& m)
 	*meshName = *m.meshName;
 	childCount = m.childCount;
 	children = nullptr;
+
+	indexArray = new unsigned int[indexCount];
+	vertexArray = new Vertex[vertexCount];
+	memcpy(indexArray, m.indexArray, sizeof(unsigned int) * indexCount);
+	memcpy(vertexArray, m.vertexArray, sizeof(Vertex) * vertexCount);
 
 	if (m.children != nullptr && childCount > 0) {
 		children = new Mesh*[childCount];
@@ -321,16 +336,34 @@ ID3D11Buffer * Mesh::GetIndexBuffer()
 	return indexBuffer;
 }
 
+Vertex* Mesh::GetVertexArray()
+{
+	return vertexArray;
+}
+
+unsigned int* Mesh::GetIndexArray()
+{
+	return indexArray;
+}
+
+int Mesh::GetVertexCount()
+{
+	return vertexCount;
+}
+
 int Mesh::GetIndexCount()
 {
 	return indexCount;
 }
 
-void Mesh::CreateBuffers(Vertex* vertexObjects, int vertexCount, unsigned int* indices, int indexCnt, ID3D11Device* device)
+
+
+void Mesh::CreateBuffers(Vertex* vertexObjects, int vertexCnt, unsigned int* indices, int indexCnt, ID3D11Device* device)
 {
 	// Calculate the tangents before copying to buffer
 	CalculateTangents(vertexObjects, vertexCount, indices, indexCnt);
 
+	vertexCount = vertexCnt;
 	indexCount = indexCnt;
 
 	D3D11_BUFFER_DESC vbd;
@@ -511,6 +544,8 @@ void Mesh::FreeMemory()
 	delete mtlPath;
 	delete materialNameList;
 	delete meshName;
+	if (indexArray != nullptr) delete[] indexArray;
+	if (vertexArray != nullptr) delete[] vertexArray;
 }
 
 void Mesh::ReleaseBuffers()

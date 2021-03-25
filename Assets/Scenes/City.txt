@@ -107,3 +107,4 @@ obj="horneddemon2" colliders="true" P(-404.5,8.1,-209.9)R(0,180.2974,0)S(0.22313
 obj="horneddemon2" colliders="true" P(-417,8.1,-137.3)R(0,491.0051,0)S(0.2231389,0.2231389,0.2231389)
 obj="horneddemon2" colliders="true" P(-455.53,8.1,-96.37)R(0,180,0)S(0.2231389,0.2231389,0.2231389)
 //name="Antler Demon" obj="antlerdemon_separatedhead" tag="Boss" scripts="BARREL,FPSCONTROLLER" mass="0.0" repeatTexture="2.0,4.0" colliders="true" debug="true" P(-410.543,9.74101,-90.21)R(0,180,0)S(0.25,0.25,0.25)
+name="CuttingBox" obj="Cube" tag="Floor" layer="decal" material="Grey4" colliders="true" P(0,30,0)R(0,0,0)S(5,5,5)
