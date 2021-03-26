@@ -19,6 +19,8 @@ struct RendererShaders {
 	SimplePixelShader* debugLinePS = nullptr;
 	SimpleVertexShader* decalVS = nullptr;
 	SimplePixelShader* decalPS = nullptr;
+	SimpleVertexShader* skyVS = nullptr;
+	SimplePixelShader* skyPS = nullptr;
 };
 
 struct RenderObject{
@@ -29,10 +31,10 @@ struct RenderObject{
 
 struct ShadowComponents {
 	unsigned int shadowMapResolution = 2048;
-	ID3D11DepthStencilView* shadowDSV;
-	ID3D11ShaderResourceView* shadowSRV;
-	ID3D11SamplerState* shadowSampler;
-	ID3D11RasterizerState* shadowRasterizer;
+	ID3D11DepthStencilView* shadowDSV = nullptr;
+	ID3D11ShaderResourceView* shadowSRV = nullptr;
+	ID3D11SamplerState* shadowSampler = nullptr;
+	ID3D11RasterizerState* shadowRasterizer = nullptr;
 
 	DirectX::XMFLOAT4X4 shadowViewMatrix;
 	DirectX::XMFLOAT4X4 shadowProjectionMatrix;
@@ -40,13 +42,13 @@ struct ShadowComponents {
 };
 
 struct DepthStencilComponents {
-	ID3D11DepthStencilView* depthStencilDSV;
-	ID3D11RenderTargetView* depthStencilRTV;
-	ID3D11ShaderResourceView* depthStencilSRV;
-	ID3D11SamplerState* depthStencilSampler;
-	ID3D11RasterizerState* depthStencilRasterizer;
-	ID3D11DepthStencilState* depthStencilState;
-	ID3D11BlendState* decalBlendState;
+	ID3D11DepthStencilView* depthStencilDSV = nullptr;
+	ID3D11RenderTargetView* depthStencilRTV = nullptr;
+	ID3D11ShaderResourceView* depthStencilSRV = nullptr;
+	ID3D11SamplerState* depthStencilSampler = nullptr;
+	ID3D11RasterizerState* depthStencilRasterizer = nullptr;
+	ID3D11DepthStencilState* depthStencilState = nullptr;
+	ID3D11BlendState* decalBlendState = nullptr;
 };
 
 struct HBAOPlusComponents {
@@ -55,6 +57,12 @@ struct HBAOPlusComponents {
 	GFSDK_SSAO_Context_D3D11* pAOContext;
 	GFSDK_SSAO_InputData_D3D11 Input;
 	GFSDK_SSAO_Parameters_D3D11 Params;
+};
+
+struct SkyboxComponents {
+	ID3D11ShaderResourceView* skySRV = nullptr;
+	ID3D11RasterizerState* skyRasterizer = nullptr;
+	ID3D11DepthStencilState* skyDepthStencilState = nullptr;
 };
 
 class Renderer
@@ -82,6 +90,7 @@ private:
 	ShadowComponents shadowComponents;
 	DepthStencilComponents depthStencilComponents;
 	HBAOPlusComponents hbaoPlusComponents;
+	SkyboxComponents skyboxComponents;
 
 	ID3D11ShaderResourceView* decals[8];
 
@@ -97,10 +106,10 @@ public:
 	void SetDecals(Mesh* cube, ID3D11ShaderResourceView* decals[8]);
 
 	void InitDepthStencil();
-
 	void InitHBAOPlus();
-	
 	void InitShadows();
+	void InitSkybox();
+	void SetSkybox(ID3D11ShaderResourceView* srv);
 	void SetShadowMapResolution(unsigned int res);
 
 	void ClearFrame();
@@ -109,6 +118,7 @@ public:
 	void RenderDebugLines();
 	void RenderShadowMap();
 	void RenderDepthStencil();
+	void RenderSkybox();
 
 	bool AddCamera(string name, Camera* newCamera);
 	bool RemoveCamera(string name);

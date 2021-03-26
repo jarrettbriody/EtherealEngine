@@ -5,10 +5,6 @@
 #include "Utility.h"
 #include "Mesh.h"
 #include "Material.h"
-#include "Terrain.h"
-#include "TerrainMaterial.h"
-#include "Water.h"
-#include "WaterMaterial.h"
 #include "Entity.h"
 #include "Config.h"
 #include "MemoryAllocator.h"
@@ -31,7 +27,17 @@ struct EntityCreationParameters {
 	bool drawShadow = true;
 };
 
-static map<string, BulletColliderShape> bulletColliders = { { "BOX", BulletColliderShape::BOX }, {"CAPSULE", BulletColliderShape::CAPSULE} };
+static map<string, BulletColliderShape> bulletColliders = 
+										 { 
+											{ "BOX", BulletColliderShape::BOX }, 
+											{ "CAPSULE", BulletColliderShape::CAPSULE},
+										 };
+
+static map<string, int> sceneLineTypes = { 
+											{ "ENTITY", 0 }, 
+											{ "SKYBOX", 1 }, 
+											{ "DIRLIGHT", 2 },
+										 };
 
 class SceneLoader
 {
@@ -41,9 +47,20 @@ private:
 	SceneLoader();
 	~SceneLoader();
 
+	SimpleVertexShader* LoadVertexShader(string shaderName, LPCWSTR shaderFileName);
+	SimplePixelShader* LoadPixelShader(string shaderName, LPCWSTR shaderFileName);
+	SimpleComputeShader* LoadComputeShader(string shaderName, LPCWSTR shaderFileName);
 
 	//Scene loading regular expressions
 	regex commentedLineRegex = regex("//.*"); //checking if line is commented
+
+	regex typeRegex = regex("TYPE=\"(\\w+)\""); //getting line type
+	regex skyboxRegex = regex("dds=\"(\\w+)\""); //get dds name
+	regex lightPosRegex = regex("P\\(.*\\)");
+	regex lightDirRegex = regex("D\\(.*\\)");
+	regex lightColorRegex = regex("C\\(.*\\)");
+	regex lightIntensityRegex = regex("intensity=\"(\\d*\\.\\d*|\\d+)\"");
+
 	regex entityNameRegex = regex("name=\"([\\w|\\s]+)\""); //getting entity name
 	regex objNameRegex = regex("obj=\"(\\w+)\""); //getting obj model name
 	regex materialNameRegex = regex("material=\"(\\w+)\"");
@@ -76,12 +93,15 @@ private:
 	regex normalTextureRgx = regex("^(map_Bump\\s+)");
 
 	void (*scriptCallback)(Entity* e, string script);
+
+	XMFLOAT3 Float3FromString(string str);
 public:
 	MemoryAllocator* EEMemoryAllocator = nullptr;
 	Renderer* EERenderer = nullptr;
 
 	map<string, SimpleVertexShader*> vertexShadersMap;
 	map<string, SimplePixelShader*> pixelShadersMap;
+	map<string, SimpleComputeShader*> computeShadersMap;
 
 	map<string, bool> utilizedMeshesMap;
 	map<string, bool> utilizedMaterialsMap;

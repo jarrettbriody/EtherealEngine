@@ -1,5 +1,6 @@
 #pragma once
 #include "ScriptManager.h"
+#include "DXCore.h"
 
 class FPSController : public ScriptManager
 {

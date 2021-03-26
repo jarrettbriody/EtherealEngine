@@ -25,10 +25,6 @@ Game::~Game()
 
 	Config::Sampler->Release();
 
-	skySRV->Release();
-	skyDepthState->Release();
-	skyRasterState->Release();
-
 	// FMOD
 	sound[0]->release(); // For now just release the one sound we have assigned
 	backgroundMusic->release();
@@ -57,6 +53,8 @@ Game::~Game()
 	MemoryAllocator::DestroyInstance();
 
 	DecalHandler::DestroyInstance();
+
+	delete emitter;
 }
 
 void Game::Init()
@@ -74,10 +72,6 @@ void Game::Init()
 	Config::DynamicsWorld = new btDiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
 	Config::DynamicsWorld->setGravity(btVector3(0, -10.0f, 0));
 
-	//DirectX::CreateDDSTextureFromFile(Config::Device, L"../../Assets/Textures/SunnyCubeMap.dds", 0, &skySRV);
-	DirectX::CreateDDSTextureFromFile(Config::Device, L"../../Assets/Textures/night4.dds", 0, &skySRV);
-	//DirectX::CreateDDSTextureFromFile(Config::Device, L"../../Assets/Textures/pink.dds", 0, &skySRV);
-
 	D3D11_SAMPLER_DESC samplerDesc = {};
 	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
 	samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
@@ -87,18 +81,6 @@ void Game::Init()
 	samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
 
 	Config::Device->CreateSamplerState(&samplerDesc, &Config::Sampler);
-
-	D3D11_RASTERIZER_DESC skyRD = {};
-	skyRD.CullMode = D3D11_CULL_FRONT;
-	skyRD.FillMode = D3D11_FILL_SOLID;
-	skyRD.DepthClipEnable = true;
-	Config::Device->CreateRasterizerState(&skyRD, &skyRasterState);
-
-	D3D11_DEPTH_STENCIL_DESC skyDS = {};
-	skyDS.DepthEnable = true;
-	skyDS.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
-	skyDS.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
-	Config::Device->CreateDepthStencilState(&skyDS, &skyDepthState);
 
 	MemoryAllocator::SetupInstance(Config::MemoryAllocatorSize, Config::MemoryAllocatorAlignment);
 	EEMemoryAllocator = MemoryAllocator::GetInstance();
@@ -121,14 +103,10 @@ void Game::Init()
 
 	EESceneLoader->SetScriptLoader([](Entity* e, string script) {Scripts::CreateScript(e, script); });
 
-	//EESceneLoader->LoadScene("ArenaV2");
-
-	EESceneLoader->SetModelPath("../../Assets/Models/City/");
-	EESceneLoader->LoadScene("City");
-
 	prevMousePos.x = 0;
 	prevMousePos.y = 0;
 
+	/*
 	Light* dLight = new Light;
 	dLight->Type = LIGHT_TYPE_DIR;
 	XMFLOAT3 c = XMFLOAT3(1.0f, 252.0f / 255.0f, 222.0f / 255.0f);
@@ -137,6 +115,7 @@ void Game::Init()
 	dLight->Direction = d;
 	dLight->Intensity = 0.25f;
 	dLight->Position = XMFLOAT3(-334.0f, 179.5f, -175.9f);
+	*/
 
 	/*testLight = new Light;
 	testLight->Type = LIGHT_TYPE_SPOT;
@@ -154,6 +133,7 @@ void Game::Init()
 	EERenderer = Renderer::GetInstance();
 	EERenderer->AddCamera("main", EECamera);
 	EERenderer->EnableCamera("main");
+
 	RendererShaders rShaders;
 	rShaders.depthStencilVS = EESceneLoader->vertexShadersMap["DepthStencil"];
 	rShaders.depthStencilPS = EESceneLoader->pixelShadersMap["DepthStencil"];
@@ -161,17 +141,28 @@ void Game::Init()
 	rShaders.debugLinePS = EESceneLoader->pixelShadersMap["DebugLine"];
 	rShaders.decalVS = EESceneLoader->vertexShadersMap["Decal"];
 	rShaders.decalPS = EESceneLoader->pixelShadersMap["Decal"];
+	rShaders.skyVS = EESceneLoader->vertexShadersMap["Sky"];
+	rShaders.skyPS = EESceneLoader->pixelShadersMap["Sky"];
+
 	EERenderer->SetRendererShaders(rShaders);
-	EERenderer->SetEntities(&(EESceneLoader->sceneEntities));
-	EERenderer->AddLight("Sun", dLight);
-	EERenderer->SendAllLightsToShader(EESceneLoader->pixelShadersMap["DEFAULT"]);
-	EERenderer->SendAllLightsToShader(EESceneLoader->pixelShadersMap["Normal"]);
-	EERenderer->SendAllLightsToShader(EESceneLoader->pixelShadersMap["Decal"]);
-	EERenderer->SetShadowMapResolution(4096);
-	EERenderer->InitShadows();
 	EERenderer->InitDepthStencil();
 	EERenderer->InitHBAOPlus();
 	EESceneLoader->EERenderer = EERenderer;
+
+	//EESceneLoader->LoadScene("ArenaV2");
+
+	EESceneLoader->SetModelPath("../../Assets/Models/City/");
+	EESceneLoader->LoadScene("City");
+
+	EERenderer->SetShadowMapResolution(4096);
+	EERenderer->InitShadows();
+	EERenderer->InitSkybox();
+
+	EERenderer->SetEntities(&(EESceneLoader->sceneEntities));
+	
+	EERenderer->SendAllLightsToShader(EESceneLoader->pixelShadersMap["DEFAULT"]);
+	EERenderer->SendAllLightsToShader(EESceneLoader->pixelShadersMap["Normal"]);
+	EERenderer->SendAllLightsToShader(EESceneLoader->pixelShadersMap["Decal"]);
 
 	ID3D11ShaderResourceView* decals[8];
 	decals[0] = EESceneLoader->defaultTexturesMap["BLOOD1"];
@@ -183,6 +174,17 @@ void Game::Init()
 	decals[6] = EESceneLoader->defaultTexturesMap["BLOOD7"];
 	decals[7] = EESceneLoader->defaultTexturesMap["BLOOD8"];
 	EERenderer->SetDecals(EESceneLoader->defaultMeshesMap["Cube"], decals);
+
+	DefaultGPUParticleShaders gpuParticleShaders;
+	gpuParticleShaders.copyDrawCountCS = EESceneLoader->computeShadersMap["ParticleDrawArgs"];
+	gpuParticleShaders.initDeadListCS = EESceneLoader->computeShadersMap["InitDeadList"];
+	gpuParticleShaders.particleEmissionCS = EESceneLoader->computeShadersMap["EmitParticle"];
+	gpuParticleShaders.particleUpdateCS = EESceneLoader->computeShadersMap["UpdateParticle"];
+	gpuParticleShaders.particleVS = EESceneLoader->vertexShadersMap["Particle"];
+	gpuParticleShaders.particlePS = EESceneLoader->pixelShadersMap["Particle"];
+	GPUParticleEmitter::SetDefaultShaders(gpuParticleShaders);
+	emitter = new GPUParticleEmitter();
+	emitter->SetBlendingEnabled(true);
 
 	Entity* e;
 	for (size_t i = 0; i < EESceneLoader->sceneEntities.size(); i++)
@@ -338,6 +340,8 @@ void Game::Update(float deltaTime, float totalTime)
 		testLight->Position = camera->position;
 		testLight->Direction = camera->direction;
 	}*/
+
+	emitter->Update(deltaTime,totalTime);
 }
 
 void Game::PhysicsStep(float deltaTime)
@@ -456,37 +460,11 @@ void Game::Draw(float deltaTime, float totalTime)
 	EERenderer->RenderDepthStencil();
 	EERenderer->RenderFrame();
 
-	DrawSky();
+	EERenderer->RenderSkybox();
+
+	emitter->Draw(EERenderer->GetCamera("main")->GetViewMatrix(), EERenderer->GetCamera("main")->GetProjMatrix());
 
 	EERenderer->PresentFrame();
-}
-
-
-void Game::DrawSky() {
-	ID3D11Buffer* vb = EESceneLoader->defaultMeshesMap["Cube"]->GetVertexBuffer();
-	ID3D11Buffer* ib = EESceneLoader->defaultMeshesMap["Cube"]->GetIndexBuffer();
-
-	UINT stride = sizeof(Vertex);
-	UINT offset = 0;
-	Config::Context->IASetVertexBuffers(0, 1, &vb, &stride, &offset);
-	Config::Context->IASetIndexBuffer(ib, DXGI_FORMAT_R32_UINT, 0);
-
-	EESceneLoader->vertexShadersMap["Sky"]->SetMatrix4x4("view", EECamera->GetViewMatrix());
-	EESceneLoader->vertexShadersMap["Sky"]->SetMatrix4x4("projection", EECamera->GetProjMatrix());
-	EESceneLoader->vertexShadersMap["Sky"]->CopyAllBufferData();
-	EESceneLoader->vertexShadersMap["Sky"]->SetShader();
-
-	EESceneLoader->pixelShadersMap["Sky"]->SetShaderResourceView("Sky", skySRV);
-	EESceneLoader->pixelShadersMap["Sky"]->SetSamplerState("BasicSampler", Config::Sampler);
-	EESceneLoader->pixelShadersMap["Sky"]->SetShader();
-
-	Config::Context->RSSetState(skyRasterState);
-	Config::Context->OMSetDepthStencilState(skyDepthState, 0);
-
-	Config::Context->DrawIndexed(EESceneLoader->defaultMeshesMap["Cube"]->GetIndexCount(), 0, 0);
-
-	Config::Context->RSSetState(0);
-	Config::Context->OMSetDepthStencilState(0, 0);
 }
 
 void Game::GarbageCollect()

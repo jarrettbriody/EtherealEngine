@@ -3,14 +3,17 @@
 
 //define macros
 #define ZERO_VECTOR3 XMFLOAT3(0.0f,0.0f,0.0f)
+#define ONE_VECTOR3 XMFLOAT3(1.0f,1.0f,1.0f)
 #define X_AXIS XMFLOAT3(1.0f,0.0f,0.0f)
 #define Y_AXIS XMFLOAT3(0.0f,1.0f,0.0f)
 #define Z_AXIS XMFLOAT3(0.0f,0.0f,1.0f)
+#define MATRIX_IDENTITY XMFLOAT4X4(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)
 #define KILOBYTE 1024
 #define MEGABYTE 1048576
 #define GIGABYTE 1073741824
 #define MAX_KERNEL_SAMPLES 32
 #define MAX_DECALS_PER_ENTITY 128
+#define MAX_PARTICLE_COLORS 16
 
 enum class MESH_TYPE {
 	LOAD_FAILURE = -1,

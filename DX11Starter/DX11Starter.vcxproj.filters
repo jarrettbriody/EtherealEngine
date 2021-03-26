@@ -25,12 +25,6 @@
     <FxCompile Include="SkyPS.hlsl">
       <Filter>EEShaders\Pixel Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="TerrainPS.hlsl">
-      <Filter>EEShaders\Pixel Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="WaterPS.hlsl">
-      <Filter>EEShaders\Pixel Shaders</Filter>
-    </FxCompile>
     <FxCompile Include="DefaultPS_SSAO.hlsl">
       <Filter>EEShaders\Pixel Shaders</Filter>
     </FxCompile>
@@ -45,6 +39,24 @@
     </FxCompile>
     <FxCompile Include="DepthStencilPS.hlsl">
       <Filter>EEShaders\Pixel Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="InitDeadListCS.hlsl">
+      <Filter>EEShaders\Compute Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="ParticleDrawArgsCS.hlsl">
+      <Filter>EEShaders\Compute Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="EmitParticleCS.hlsl">
+      <Filter>EEShaders\Compute Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="UpdateParticleCS.hlsl">
+      <Filter>EEShaders\Compute Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="ParticlePS.hlsl">
+      <Filter>EEShaders\Pixel Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="ParticleVS.hlsl">
+      <Filter>EEShaders\Vertex Shaders</Filter>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
@@ -76,9 +88,6 @@
       <Filter>EECore\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Renderer.cpp">
-      <Filter>EECore\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="RigidBody.cpp">
       <Filter>EECore\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="SceneLoader.cpp">
@@ -115,7 +124,13 @@
       <Filter>EECore\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ParticleEmitter.cpp">
-      <Filter>EECore\Source Files</Filter>
+      <Filter>EECore\Source Files\Particle System</Filter>
+    </ClCompile>
+    <ClCompile Include="GPUParticleEmitter.cpp">
+      <Filter>EECore\Source Files\Particle System</Filter>
+    </ClCompile>
+    <ClCompile Include="CPUParticleEmitter.cpp">
+      <Filter>EECore\Source Files\Particle System</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -137,9 +152,6 @@
     <ClInclude Include="Game.h">
       <Filter>EECore\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Lights.h">
-      <Filter>EECore\Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Material.h">
       <Filter>EECore\Header Files</Filter>
     </ClInclude>
@@ -149,31 +161,16 @@
     <ClInclude Include="Renderer.h">
       <Filter>EECore\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="RigidBody.h">
-      <Filter>EECore\Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="SceneLoader.h">
       <Filter>EECore\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Shadows.h">
-      <Filter>EECore\Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="SimpleShader.h">
-      <Filter>EECore\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Utility.h">
-      <Filter>EECore\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Vertex.h">
       <Filter>EECore\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Config.h">
       <Filter>EECore\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ScriptManager.h">
-      <Filter>EECore\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Scripts.h">
       <Filter>EECore\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="pch.h">
@@ -197,16 +194,43 @@
     <ClInclude Include="Keyboard.h">
       <Filter>EECore\Header Files\Keyboard</Filter>
     </ClInclude>
+    <ClInclude Include="Utility.h">
+      <Filter>EECore\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="Lights.h">
+      <Filter>EECore\Utility\Structs</Filter>
+    </ClInclude>
+    <ClInclude Include="Scripts.h">
+      <Filter>EECore\Utility\Structs</Filter>
+    </ClInclude>
+    <ClInclude Include="Shadows.h">
+      <Filter>EECore\Utility\Structs</Filter>
+    </ClInclude>
+    <ClInclude Include="Vertex.h">
+      <Filter>EECore\Utility\Structs</Filter>
+    </ClInclude>
+    <ClInclude Include="Particles.h">
+      <Filter>EECore\Utility\Structs</Filter>
+    </ClInclude>
     <ClInclude Include="ParticleEmitter.h">
-      <Filter>EECore\Header Files</Filter>
+      <Filter>EECore\Header Files\Particle System</Filter>
+    </ClInclude>
+    <ClInclude Include="GPUParticleEmitter.h">
+      <Filter>EECore\Header Files\Particle System</Filter>
+    </ClInclude>
+    <ClInclude Include="CPUParticleEmitter.h">
+      <Filter>EECore\Header Files\Particle System</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Lighting.hlsli">
-      <Filter>EEShaders\Pixel Shaders</Filter>
-    </None>
     <None Include="packages.config">
       <Filter>Other</Filter>
+    </None>
+    <None Include="ParticleStructs.hlsli">
+      <Filter>EEShaders\Headers</Filter>
+    </None>
+    <None Include="Lighting.hlsli">
+      <Filter>EEShaders\Headers</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -254,6 +278,21 @@
     </Filter>
     <Filter Include="EECore\Source Files\Keyboard">
       <UniqueIdentifier>{aa161763-d20f-462e-a089-4f34139a2f99}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="EEShaders\Headers">
+      <UniqueIdentifier>{38885e00-7a45-4790-a0c0-d10b3ba76ced}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="EECore\Utility">
+      <UniqueIdentifier>{f0733142-ea50-4f52-afa4-3f0a5b63dff4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="EECore\Utility\Structs">
+      <UniqueIdentifier>{e56f4719-8306-4a5e-9e1a-ff3a54ce1105}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="EECore\Header Files\Particle System">
+      <UniqueIdentifier>{9300da03-bb20-4116-9528-68c88d6fcf81}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="EECore\Source Files\Particle System">
+      <UniqueIdentifier>{3bc807bf-bb34-40c9-9b5b-e4b0e16b8ecb}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

@@ -58,6 +58,15 @@ namespace Utility {
 		return srv;
 	}
 
+	static ID3D11ShaderResourceView* LoadDDSSRV(std::string texture) {
+		ID3D11ShaderResourceView* srv;
+		wchar_t path[100] = L"../../Assets/Textures/SKYBOXES/";
+		wchar_t fileName[50];
+		::MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, &texture.c_str()[0], -1, &fileName[0], 50);
+		DirectX::CreateDDSTextureFromFile(Config::Device, wcsncat(path, fileName, 100), 0, &srv);
+		return srv;
+	}
+
 	static float DegToRad(float deg) {
 		return (deg * DirectX::XM_PI) / 180.0f;
 	}

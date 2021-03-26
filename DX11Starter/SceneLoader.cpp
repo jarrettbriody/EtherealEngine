@@ -25,16 +25,15 @@ SceneLoader::~SceneLoader()
 
 	for (auto meshMapIter = defaultMeshesMap.begin(); meshMapIter != defaultMeshesMap.end(); ++meshMapIter)
 	{
-		if (meshMapIter->first != "Ground" &&
-			meshMapIter->first != "Blood_Button" &&
-			meshMapIter->first != "Graybox" &&
-			meshMapIter->first != "Wall" &&
-			meshMapIter->first != "Manhole" &&
-			meshMapIter->first != "Floor") {
-			//delete meshMapIter->second;
+		try
+		{
 			meshMapIter->second->FreeMemory();
-			//cout << "Deleting " << meshMapIter->first << endl;
 		}
+		catch (const std::exception&)
+		{
+			continue;
+		}
+		//cout << "Deleting " << meshMapIter->first << endl;
 	}
 
 	//generated
@@ -73,6 +72,51 @@ SceneLoader::~SceneLoader()
 	{
 		delete pixSIter->second;
 	}
+
+	for (auto compSIter = computeShadersMap.begin(); compSIter != computeShadersMap.end(); ++compSIter)
+	{
+		delete compSIter->second;
+	}
+}
+
+SimpleVertexShader* SceneLoader::LoadVertexShader(string shaderName, LPCWSTR shaderFileName)
+{
+	SimpleVertexShader* vs = new SimpleVertexShader(Config::Device, Config::Context);
+	vs->LoadShaderFile(shaderFileName);
+	vertexShadersMap.insert({ shaderName, vs });
+	return vs;
+}
+
+SimplePixelShader* SceneLoader::LoadPixelShader(string shaderName, LPCWSTR shaderFileName)
+{
+	SimplePixelShader* ps = new SimplePixelShader(Config::Device, Config::Context);
+	ps->LoadShaderFile(shaderFileName);
+	pixelShadersMap.insert({ shaderName, ps });
+	return ps;
+}
+
+SimpleComputeShader* SceneLoader::LoadComputeShader(string shaderName, LPCWSTR shaderFileName)
+{
+	SimpleComputeShader* cs = new SimpleComputeShader(Config::Device, Config::Context);
+	cs->LoadShaderFile(shaderFileName);
+	computeShadersMap.insert({ shaderName, cs });
+	return cs;
+}
+
+XMFLOAT3 SceneLoader::Float3FromString(string str)
+{
+	smatch match;
+	std::sregex_iterator iter(str.begin(), str.end(), transformNumIteratorRegex);
+	int counter = 0;
+	float parsedNumbers[3];
+	for (; iter != std::sregex_iterator(); ++iter) {
+		if (counter < 3) {
+			match = *iter;
+			parsedNumbers[counter] = std::stof(match.str());
+		}
+		counter++;
+	}
+	return XMFLOAT3(parsedNumbers[0], parsedNumbers[1], parsedNumbers[2]);
 }
 
 bool SceneLoader::SetupInstance()
@@ -101,75 +145,29 @@ bool SceneLoader::DestroyInstance()
 void SceneLoader::LoadShaders()
 {
 	//vertex shaders
-	SimpleVertexShader* defaultVS = new SimpleVertexShader(Config::Device, Config::Context);
-	defaultVS->LoadShaderFile(L"DefaultVS.cso");
-	vertexShadersMap.insert({ "DEFAULT", defaultVS });
-
-	SimpleVertexShader* depthStencilVS = new SimpleVertexShader(Config::Device, Config::Context);
-	depthStencilVS->LoadShaderFile(L"DepthStencilVS.cso");
-	vertexShadersMap.insert({ "DepthStencil", depthStencilVS });
-
-	SimpleVertexShader* skyVS = new SimpleVertexShader(Config::Device, Config::Context);
-	skyVS->LoadShaderFile(L"SkyVS.cso");
-	vertexShadersMap.insert({ "Sky", skyVS });
-
-	SimpleVertexShader* normalVS = new SimpleVertexShader(Config::Device, Config::Context);
-	normalVS->LoadShaderFile(L"NormalVS.cso");
-	vertexShadersMap.insert({ "Normal", normalVS });
-
-	SimpleVertexShader* debugLineVS = new SimpleVertexShader(Config::Device, Config::Context);
-	debugLineVS->LoadShaderFile(L"DebugLineVS.cso");
-	vertexShadersMap.insert({ "DebugLine", debugLineVS });
-
-	SimpleVertexShader* decalVS = new SimpleVertexShader(Config::Device, Config::Context);
-	decalVS->LoadShaderFile(L"DecalVS.cso");
-	vertexShadersMap.insert({ "Decal", decalVS });
+	LoadVertexShader("DEFAULT", L"DefaultVS.cso");
+	LoadVertexShader("DepthStencil", L"DepthStencilVS.cso");
+	LoadVertexShader("Sky", L"SkyVS.cso");
+	LoadVertexShader("Normal", L"NormalVS.cso");
+	LoadVertexShader("DebugLine", L"DebugLineVS.cso");
+	LoadVertexShader("Decal", L"DecalVS.cso");
+	LoadVertexShader("Particle", L"ParticleVS.cso");
 
 	//pixel shaders
-	SimplePixelShader* defaultPS = new SimplePixelShader(Config::Device, Config::Context);
-	defaultPS->LoadShaderFile(L"DefaultPS.cso");
-	pixelShadersMap.insert({ "DEFAULT", defaultPS });
+	LoadPixelShader("DEFAULT", L"DefaultPS.cso");
+	LoadPixelShader("Sky", L"SkyPS.cso");
+	LoadPixelShader("Normal", L"NormalPS.cso");
+	LoadPixelShader("DebugLine", L"DebugLinePS.cso");
+	LoadPixelShader("DEFAULT_SSAO", L"DefaultPS_SSAO.cso");
+	LoadPixelShader("Decal", L"DecalPS.cso");
+	LoadPixelShader("DepthStencil", L"DepthStencilPS.cso");
+	LoadPixelShader("Particle", L"ParticlePS.cso");
 
-	SimplePixelShader* skyPS = new SimplePixelShader(Config::Device, Config::Context);
-	skyPS->LoadShaderFile(L"SkyPS.cso");
-	pixelShadersMap.insert({ "Sky", skyPS });
-
-	SimplePixelShader* normalPS = new SimplePixelShader(Config::Device, Config::Context);
-	normalPS->LoadShaderFile(L"NormalPS.cso");
-	pixelShadersMap.insert({ "Normal", normalPS });
-
-	SimplePixelShader* debugLinePS = new SimplePixelShader(Config::Device, Config::Context);
-	debugLinePS->LoadShaderFile(L"DebugLinePS.cso");
-	pixelShadersMap.insert({ "DebugLine", debugLinePS });
-
-	/*
-	SimplePixelShader* terrainPS = new SimplePixelShader(Config::Device, Config::Context);
-	terrainPS->LoadShaderFile(L"TerrainPS.cso");
-	pixelShadersMap.insert({ "Terrain", terrainPS });
-
-	SimplePixelShader* waterPS = new SimplePixelShader(Config::Device, Config::Context);
-	waterPS->LoadShaderFile(L"WaterPS.cso");
-	pixelShadersMap.insert({ "Water", waterPS });
-	*/
-
-	SimplePixelShader* defaultSSAOPS = new SimplePixelShader(Config::Device, Config::Context);
-	defaultSSAOPS->LoadShaderFile(L"DefaultPS_SSAO.cso");
-	pixelShadersMap.insert({ "DEFAULT_SSAO", defaultSSAOPS });
-	Utility::GenerateSSAOKernel(Config::SSAOSampleCount, Config::SSAOKernel);
-
-	SimplePixelShader* decalPS = new SimplePixelShader(Config::Device, Config::Context);
-	decalPS->LoadShaderFile(L"DecalPS.cso");
-	pixelShadersMap.insert({ "Decal", decalPS });
-
-	SimplePixelShader* depthBufferPS = new SimplePixelShader(Config::Device, Config::Context);
-	depthBufferPS->LoadShaderFile(L"DepthStencilPS.cso");
-	pixelShadersMap.insert({ "DepthStencil", depthBufferPS });
-
-	/*
-	SimplePixelShader* defaultDecalPS = new SimplePixelShader(Config::Device, Config::Context);
-	defaultDecalPS->LoadShaderFile(L"DefaultDecalPS.cso");
-	pixelShadersMap.insert({ "DEFAULTDecal", defaultDecalPS });
-	*/
+	//compute shaders
+	LoadComputeShader("InitDeadList", L"InitDeadListCS.cso");
+	LoadComputeShader("ParticleDrawArgs", L"ParticleDrawArgsCS.cso");
+	LoadComputeShader("EmitParticle", L"EmitParticleCS.cso");
+	LoadComputeShader("UpdateParticle", L"UpdateParticleCS.cso");
 }
 
 void SceneLoader::LoadDefaultMeshes()
@@ -582,12 +580,72 @@ void SceneLoader::LoadScene(string sceneName)
 	smatch match;
 	float parsedNumbers[9];
 	string objName;
+	string type;
 	while (getline(infile, line))
 	{
 		//cout << line << endl;
 		if (line != "") {
 			//if the line does not start with "//"
 			if (!regex_match(line, commentedLineRegex)) {
+
+				if (regex_search(line, match, typeRegex)) {
+					type = match[1];
+
+					if (!sceneLineTypes.count(type)) continue;
+
+					int num = sceneLineTypes[type];
+
+					switch (num)
+					{
+					case 0: break; //entity
+
+					case 1:
+						{
+							//skybox
+							if (regex_search(line, match, skyboxRegex)) {
+								string name = match[1];
+								if (!generatedTexturesMap.count(name)) {
+									generatedTexturesMap.insert({ "DDS_" + name, Utility::LoadDDSSRV(name + ".dds") });
+									//record texture as utilized
+									utilizedTexturesMap.insert({ "DDS_" + name,true });
+								}
+								EERenderer->SetSkybox(generatedTexturesMap["DDS_" + name]);
+							}
+							continue;
+						}
+					case 2:
+						{
+							//directional light
+							string lightName;
+							Light * dLight = new Light;
+							dLight->Type = LIGHT_TYPE_DIR;
+							if (regex_search(line, match, entityNameRegex)) {
+								lightName = match[1];
+							}
+							if (regex_search(line, match, lightPosRegex)) {
+								string transformData = match[0];
+								dLight->Position = Float3FromString(transformData);
+							}
+							if (regex_search(line, match, lightDirRegex)) {
+								string transformData = match[0];
+								dLight->Direction = Float3FromString(transformData);
+							}
+							if (regex_search(line, match, lightColorRegex)) {
+								string transformData = match[0];
+								dLight->Color = Float3FromString(transformData);
+							}
+							if (regex_search(line, match, lightIntensityRegex)) {
+								string transformData = match[1];
+								dLight->Intensity = std::stof(transformData);
+							}
+							EERenderer->AddLight(lightName, dLight);
+							continue;
+						}
+					default:
+						break;
+					}
+				}
+
 				MESH_TYPE meshType;
 
 				//search for OBJ name at start of line

@@ -9,18 +9,21 @@ Renderer::Renderer()
 
 Renderer::~Renderer()
 {
-	shadowComponents.shadowDSV->Release();
-	shadowComponents.shadowSRV->Release();
-	shadowComponents.shadowRasterizer->Release();
-	shadowComponents.shadowSampler->Release();
+	if(shadowComponents.shadowDSV) shadowComponents.shadowDSV->Release();
+	if(shadowComponents.shadowSRV) shadowComponents.shadowSRV->Release();
+	if(shadowComponents.shadowRasterizer) shadowComponents.shadowRasterizer->Release();
+	if(shadowComponents.shadowSampler) shadowComponents.shadowSampler->Release();
 
-	//depthStencilComponents.depthStencilDSV->Release();
-	depthStencilComponents.depthStencilSRV->Release();
-	depthStencilComponents.depthStencilRTV->Release();
-	//depthStencilComponents.depthStencilRasterizer->Release();
-	//depthStencilComponents.depthStencilSampler->Release();
-	depthStencilComponents.depthStencilState->Release();
-	depthStencilComponents.decalBlendState->Release();
+	if(depthStencilComponents.depthStencilDSV) depthStencilComponents.depthStencilDSV->Release();
+	if(depthStencilComponents.depthStencilSRV) depthStencilComponents.depthStencilSRV->Release();
+	if(depthStencilComponents.depthStencilRTV) depthStencilComponents.depthStencilRTV->Release();
+	if(depthStencilComponents.depthStencilRasterizer) depthStencilComponents.depthStencilRasterizer->Release();
+	if(depthStencilComponents.depthStencilSampler) depthStencilComponents.depthStencilSampler->Release();
+	if(depthStencilComponents.depthStencilState) depthStencilComponents.depthStencilState->Release();
+	if(depthStencilComponents.decalBlendState) depthStencilComponents.decalBlendState->Release();
+
+	if(skyboxComponents.skyDepthStencilState) skyboxComponents.skyDepthStencilState->Release();
+	if(skyboxComponents.skyRasterizer) skyboxComponents.skyRasterizer->Release();
 
 	map<string, Light*>::iterator lightMapIterator;
 	for (int i = 0; i < lightCount; i++)
@@ -357,6 +360,26 @@ void Renderer::InitShadows()
 	XMStoreFloat4x4(&shadowComponents.shadowViewProj, XMMatrixTranspose(XMMatrixMultiply(shadowView, shadowProj)));
 }
 
+void Renderer::InitSkybox()
+{
+	D3D11_RASTERIZER_DESC skyRD = {};
+	skyRD.CullMode = D3D11_CULL_FRONT;
+	skyRD.FillMode = D3D11_FILL_SOLID;
+	skyRD.DepthClipEnable = true;
+	Config::Device->CreateRasterizerState(&skyRD, &skyboxComponents.skyRasterizer);
+
+	D3D11_DEPTH_STENCIL_DESC skyDS = {};
+	skyDS.DepthEnable = true;
+	skyDS.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+	skyDS.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
+	Config::Device->CreateDepthStencilState(&skyDS, &skyboxComponents.skyDepthStencilState);
+}
+
+void Renderer::SetSkybox(ID3D11ShaderResourceView* srv)
+{
+	skyboxComponents.skySRV = srv;
+}
+
 void Renderer::SetShadowMapResolution(unsigned int res)
 {
 	unsigned int exponent = (unsigned int)(log2((double)res) + 0.5);
@@ -411,27 +434,6 @@ void Renderer::RenderFrame()
 			d.depthStencilSampler = depthStencilComponents.depthStencilSampler;
 			e->SetDepthStencilData(d);
 		}
-		
-		/*
-		if (*e->layer == "decal") {
-			SimplePixelShader* pixelShader = mat->GetPixelShader();
-			if (DecalHandler::decalsMap.count(e->GetName())) {
-				DecalBucket& bucket = DecalHandler::decalsMap[e->GetName()];
-				pixelShader->SetData(
-					"decals",
-					&bucket.decals,
-					sizeof(Decal) * MAX_DECALS_PER_ENTITY
-				);
-				pixelShader->SetData(
-					"decalCount",
-					&bucket.count,
-					sizeof(bucket.count)
-				);
-				pixelShader->SetMatrix4x4("worldMatrix", e->GetWorldMatrix());
-				pixelShader->SetShaderResourceView("Decals", decals[0]);
-			}
-		}
-		*/
 
 		ID3D11Buffer* vbo = mesh->GetVertexBuffer();
 		ID3D11Buffer* ind = mesh->GetIndexBuffer();
@@ -503,6 +505,8 @@ void Renderer::RenderFrame()
 					0);											// Offset to add to each index when looking up vertices
 			}
 		}
+		shaders.decalPS->SetShaderResourceView("ShadowMap", NULL);
+		shaders.decalPS->SetShaderResourceView("DepthBuffer", NULL);
 		Config::Context->OMSetDepthStencilState(NULL, 0);
 		//Config::Context->OMSetBlendState(NULL, 0, 0xFFFFFFFF);
 	}
@@ -685,6 +689,34 @@ void Renderer::RenderDepthStencil()
 	Config::Context->ClearDepthStencilView(Config::DepthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 	Config::Context->OMSetRenderTargets(1, &Config::BackBufferRTV, Config::DepthStencilView);
 	//Config::Context->RSSetState(0);
+}
+
+void Renderer::RenderSkybox()
+{
+		ID3D11Buffer* vb = cube->GetVertexBuffer();
+		ID3D11Buffer* ib = cube->GetIndexBuffer();
+
+		UINT stride = sizeof(Vertex);
+		UINT offset = 0;
+		Config::Context->IASetVertexBuffers(0, 1, &vb, &stride, &offset);
+		Config::Context->IASetIndexBuffer(ib, DXGI_FORMAT_R32_UINT, 0);
+
+		shaders.skyVS->SetMatrix4x4("view", camera->GetViewMatrix());
+		shaders.skyVS->SetMatrix4x4("projection", camera->GetProjMatrix());
+		shaders.skyVS->CopyAllBufferData();
+		shaders.skyVS->SetShader();
+
+		shaders.skyPS->SetShaderResourceView("Sky", skyboxComponents.skySRV);
+		shaders.skyPS->SetSamplerState("BasicSampler", Config::Sampler);
+		shaders.skyPS->SetShader();
+
+		Config::Context->RSSetState(skyboxComponents.skyRasterizer);
+		Config::Context->OMSetDepthStencilState(skyboxComponents.skyDepthStencilState, 0);
+
+		Config::Context->DrawIndexed(cube->GetIndexCount(), 0, 0);
+
+		Config::Context->RSSetState(0);
+		Config::Context->OMSetDepthStencilState(0, 0);
 }
 
 bool Renderer::AddCamera(string name, Camera* newCamera)

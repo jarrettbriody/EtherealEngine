@@ -396,6 +396,8 @@ void Entity::CalcEulerAngles()
 	XMQuaternionToAxisAngle(&xs, &rotation.x, q);
 	XMQuaternionToAxisAngle(&ys, &rotation.y, q);
 	XMQuaternionToAxisAngle(&zs, &rotation.z, q);
+
+	rotationInDegrees = XMFLOAT3(DirectX::XMConvertToDegrees(rotation.x), DirectX::XMConvertToDegrees(rotation.y), DirectX::XMConvertToDegrees(rotation.z));
 }
 
 void Entity::SetRepeatTexture(float x, float y)
