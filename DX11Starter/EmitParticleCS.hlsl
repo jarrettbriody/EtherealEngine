@@ -6,8 +6,20 @@ cbuffer ExternalData : register(b0)
 	int emitCount;
 	int maxParticles;
 	float colorCount;
-	ParticleColor colors[MAX_PARTICLE_COLORS];
 
+	float emissionAngleRadians; //angle of the cone the emitter will emit particles within [0.0f,360.0f]
+	float particleMinLifetime; //minimum lifetime of emitted particles in seconds
+	float particleMaxLifetime; //maximum lifetime of emitted particles in seconds
+	float particleInitMinScale; //minimum initial scale of the particle
+	float particleInitMaxScale; //maximum initial scale of the particle
+	float particleInitMinAngularVelocity; //minimum initial angular velocity of the particle
+	float particleInitMaxAngularVelocity; //maximum initial angular velocity of the particle
+	float particleInitMinSpeed; //minimum initial speed of the particle
+	float particleInitMaxSpeed; //maximum initial speed of the particle
+
+	float2 padding;
+
+	ParticleColor colors[MAX_PARTICLE_COLORS];
 }
 
 // Order should match UpdateCS (RW binding issues)
@@ -27,14 +39,29 @@ void main(uint3 id : SV_DispatchThreadID)
 	// Update it in the particle pool
 	Particle newParticle = ParticlePool.Load(newParticleIndex);
 
+	float random = sin(totalTime);
+
+	newParticle.color = float4(1, 0, 0, 1);
+
 	// Color and position depend on the grid position and size
-	newParticle.color = float4(0.0f, 1.0f, 0.0f, 1);
-	newParticle.remainingLife = 5.0f;
+	for (int i = colorCount - 1; i >= 0; i--)
+	{
+		if (random <= colors[i].weight) {
+			newParticle.color = colors[i].color;
+			break;
+		}
+	}
+	
+	float speed = particleInitMinSpeed + (particleInitMaxSpeed - particleInitMinSpeed) * random;
+	float randomOffset = random * 2.0f - 1.0f;
+	float angle = (emissionAngleRadians / 2.0f) * randomOffset;
+
+	newParticle.remainingLife = particleMinLifetime + (particleMaxLifetime - particleMinLifetime) * random;
 	newParticle.position = float3(0, 0, 0);
-	newParticle.scale = 0.1f;
-	newParticle.velocity = float3(0.0f, 0.0f, 1.0f);
+	newParticle.scale = particleInitMinScale + (particleInitMaxScale - particleInitMinScale) * random;
+	newParticle.velocity = float3(cos(angle), sin(angle), 1.0f) * speed;
 	newParticle.rotationRadians = 0.0f;
-	newParticle.angularVelocity = 0.0f;
+	newParticle.angularVelocity = particleInitMinAngularVelocity + (particleInitMaxAngularVelocity - particleInitMinAngularVelocity) * random;
 
 	// Put it back
 	ParticlePool[newParticleIndex] = newParticle;

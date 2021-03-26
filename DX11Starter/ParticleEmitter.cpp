@@ -204,7 +204,22 @@ void ParticleEmitter::SetParticleInitialSpeed(float min, float max)
 
 void ParticleEmitter::SetParticleColors(unsigned int colorCount, ParticleColor* colors)
 {
+	if (colorCount > MAX_PARTICLE_COLORS) return;
 	this->colorCount = colorCount;
+	if (colors == nullptr) return;
+	float total = 0.0f;
+	for (size_t i = 0; i < colorCount; i++)
+	{
+		total += colors[i].weight;
+	}
+	for (size_t i = 0; i < colorCount; i++)
+	{
+		colors[i].weight = colors[i].weight / total;
+	}
+	for (int i = (int)colorCount - 2; i >= 0; i--)
+	{
+		colors[i].weight += colors[i + 1].weight;
+	}
 	memcpy(this->colors, colors, sizeof(ParticleColor) * (size_t)colorCount);
 }
 

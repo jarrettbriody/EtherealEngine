@@ -183,7 +183,25 @@ void Game::Init()
 	gpuParticleShaders.particleVS = EESceneLoader->vertexShadersMap["Particle"];
 	gpuParticleShaders.particlePS = EESceneLoader->pixelShadersMap["Particle"];
 	GPUParticleEmitter::SetDefaultShaders(gpuParticleShaders);
-	emitter = new GPUParticleEmitter();
+
+	ParticleEmitterDescription emitDesc;
+	emitDesc.colorCount = 8;
+	ParticleColor partColors[8] = {
+		{XMFLOAT4(1,0,0,1),10},
+		{XMFLOAT4(0,1,0,1),10},
+		{XMFLOAT4(0,0,1,1),10},
+		{XMFLOAT4(1,1,0,1),10},
+		{XMFLOAT4(1,1,1,1),10},
+		{XMFLOAT4(0,1,1,1),10},
+		{XMFLOAT4(1,0,1,1),10},
+		{XMFLOAT4(1,0,0,1),10},
+	};
+	emitDesc.colors = partColors;
+	emitDesc.emissionAngleDegrees = 90.0f;
+	emitDesc.maxParticles = 1500;
+	emitDesc.emissionRate = 1000.0f;
+
+	emitter = new GPUParticleEmitter(emitDesc);
 	emitter->SetBlendingEnabled(true);
 
 	Entity* e;

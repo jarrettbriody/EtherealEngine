@@ -29,6 +29,7 @@ void main(uint3 id : SV_DispatchThreadID)
 	// Update the particle
 	particle.remainingLife -= deltaTime;
 	particle.position += particle.velocity * deltaTime;
+	particle.rotationRadians += particle.angularVelocity * deltaTime;
 
 	// Put the particle back
 	ParticlePool[id.x] = particle;

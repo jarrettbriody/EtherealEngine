@@ -266,6 +266,17 @@ void GPUParticleEmitter::Update(float deltaTime, float totalTime)
 		emitCS->SetInt("emitCount", emitCount);
 		emitCS->SetInt("maxParticles", (int)maxParticles);
 		emitCS->SetFloat("colorCount", colorCount);
+
+		emitCS->SetFloat("emissionAngleRadians", emissionAngleRadians);
+		emitCS->SetFloat("particleMinLifetime", particleMinLifetime);
+		emitCS->SetFloat("particleMaxLifetime", particleMaxLifetime);
+		emitCS->SetFloat("particleInitMinScale", particleInitMinScale);
+		emitCS->SetFloat("particleInitMaxScale", particleInitMaxScale);
+		emitCS->SetFloat("particleInitMinAngularVelocity", particleInitMinAngularVelocity);
+		emitCS->SetFloat("particleInitMaxAngularVelocity", particleInitMaxAngularVelocity);
+		emitCS->SetFloat("particleInitMinSpeed", particleInitMinSpeed);
+		emitCS->SetFloat("particleInitMaxSpeed", particleInitMaxSpeed);
+
 		emitCS->SetData("colors", &colors[0], sizeof(ParticleColor) * MAX_PARTICLE_COLORS);
 		emitCS->SetUnorderedAccessView("ParticlePool", particlePoolUAV);
 		emitCS->SetUnorderedAccessView("DeadParticles", particleDeadUAV);

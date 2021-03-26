@@ -32,11 +32,13 @@ VStoPS main(uint id : SV_VertexID)
 	Particle particle = ParticlePool.Load(drawInfo.index);
 
 	// Offsets for triangles
+	//float angularOffsetX = cos(particle.rotationRadians);
+	//float angularOffsetY = sin(particle.rotationRadians);
 	float2 offsets[4];
-	offsets[0] = float2(-1.0f, +1.0f);  // TL
-	offsets[1] = float2(+1.0f, +1.0f);  // TR
-	offsets[2] = float2(+1.0f, -1.0f);  // BR
-	offsets[3] = float2(-1.0f, -1.0f);  // BL
+	offsets[0] = float2(-1.0f * particle.scale, +1.0f * particle.scale);  // TL
+	offsets[1] = float2(+1.0f * particle.scale, +1.0f * particle.scale);  // TR
+	offsets[2] = float2(+1.0f * particle.scale, -1.0f * particle.scale);  // BR
+	offsets[3] = float2(-1.0f * particle.scale, -1.0f * particle.scale);  // BL
 
 	// Calc position of this corner
 	float3 pos = particle.position;

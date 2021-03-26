@@ -9,14 +9,14 @@ struct ParticleEmitterDescription {
 	XMFLOAT3 emitterPosition = ZERO_VECTOR3; //position of particle emission point
 	XMFLOAT3 emissionDirection = Y_AXIS; //direction of the emission of particles
 	XMFLOAT3 emitterScale = ONE_VECTOR3; //scale of the emitter, scales all newly emitted particles
-	unsigned int maxParticles = 100; //set once when emitter is created, unchangeable thereafter
+	unsigned int maxParticles = 1000; //set once when emitter is created, unchangeable thereafter
 	float emissionAngleDegrees = 60.0f; //angle of the cone the emitter will emit particles within [0.0f,360.0f]
 	float emissionRate = 10.0f; //particles per second
 
-	float particleMinLifetime = 5.0f; //minimum lifetime of emitted particles in seconds
-	float particleMaxLifetime = 5.0f; //maximum lifetime of emitted particles in seconds
-	float particleInitMinScale = 1.0f; //minimum initial scale of the particle
-	float particleInitMaxScale = 1.0f; //maximum initial scale of the particle
+	float particleMinLifetime = 15.0f; //minimum lifetime of emitted particles in seconds
+	float particleMaxLifetime = 15.0f; //maximum lifetime of emitted particles in seconds
+	float particleInitMinScale = 0.25f; //minimum initial scale of the particle
+	float particleInitMaxScale = 0.5f; //maximum initial scale of the particle
 	float particleInitMinAngularVelocity = 0.0f; //minimum initial angular velocity of the particle
 	float particleInitMaxAngularVelocity = 0.0f; //maximum initial angular velocity of the particle
 	float particleInitMinSpeed = 0.5f; //minimum initial speed of the particle

@@ -7,6 +7,9 @@
 #define X_AXIS XMFLOAT3(1.0f,0.0f,0.0f)
 #define Y_AXIS XMFLOAT3(0.0f,1.0f,0.0f)
 #define Z_AXIS XMFLOAT3(0.0f,0.0f,1.0f)
+#define NEG_X_AXIS XMFLOAT3(-1.0f,0.0f,0.0f)
+#define NEG_Y_AXIS XMFLOAT3(0.0f,-1.0f,0.0f)
+#define NEG_Z_AXIS XMFLOAT3(0.0f,0.0f,-1.0f)
 #define MATRIX_IDENTITY XMFLOAT4X4(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)
 #define KILOBYTE 1024
 #define MEGABYTE 1048576
