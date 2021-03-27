@@ -3,6 +3,7 @@
 #include "pch.h"
 #include "Config.h"
 #include "Keyboard.h"
+#include "Mouse.h"
 // We can include the correct library files here
 // instead of in Visual Studio settings if we want
 #pragma comment(lib, "d3d11.lib")
@@ -39,15 +40,7 @@ public:
 	virtual void Init()										= 0;
 	virtual void Update(float deltaTime, float totalTime)	= 0;
 	virtual void Draw(float deltaTime, float totalTime)		= 0;
-
-	// Convenience methods for handling mouse input, since we
-	// can easily grab mouse input from OS-level messages
-	virtual void OnMouseDown (WPARAM buttonState, int x, int y) { }
-	virtual void OnMouseUp	 (WPARAM buttonState, int x, int y) { }
-	virtual void OnMouseMove (WPARAM buttonState, int x, int y) { }
-	virtual void OnMouseWheel(float wheelDelta,   int x, int y) { }
 	
-	static Keyboard keyboard;
 	static float deltaTimeScalar;
 protected:
 	HINSTANCE	hInstance;		// The handle to the application
@@ -59,6 +52,10 @@ protected:
 	// DirectX related objects and variables
 	D3D_FEATURE_LEVEL		dxFeatureLevel;
 
+	// Input variable references to singletons for processing window messages
+	Keyboard* keyboard;
+	Mouse* mouse;
+	
 	// Helper function for allocating a console window
 	void CreateConsoleWindow(int bufferLines, int bufferColumns, int windowLines, int windowColumns);
 

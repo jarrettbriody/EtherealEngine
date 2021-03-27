@@ -114,6 +114,12 @@
     <ClCompile Include="DecalHandler.cpp">
       <Filter>EECore\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Mouse.cpp">
+      <Filter>EECore\Source Files\Mouse</Filter>
+    </ClCompile>
+    <ClCompile Include="MouseEvent.cpp">
+      <Filter>EECore\Source Files\Mouse</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h">
@@ -194,6 +200,12 @@
     <ClInclude Include="Keyboard.h">
       <Filter>EECore\Header Files\Keyboard</Filter>
     </ClInclude>
+    <ClInclude Include="Mouse.h">
+      <Filter>EECore\Header Files\Mouse</Filter>
+    </ClInclude>
+    <ClInclude Include="MouseEvent.h">
+      <Filter>EECore\Header Files\Mouse</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Lighting.hlsli">
@@ -248,6 +260,12 @@
     </Filter>
     <Filter Include="EECore\Source Files\Keyboard">
       <UniqueIdentifier>{aa161763-d20f-462e-a089-4f34139a2f99}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="EECore\Header Files\Mouse">
+      <UniqueIdentifier>{3bdc881b-405f-4590-884a-1e7d742290cf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="EECore\Source Files\Mouse">
+      <UniqueIdentifier>{7b53909b-60ff-49bf-a1c8-616f0f49bd1d}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

@@ -7,6 +7,7 @@ class FPSController : public ScriptManager
 	map<string, Entity*>* eMap;
 
 	Camera* cam;
+	POINT prevMousePos = POINT();
 	float camRollAngle = 0.0f;
 	float headbobOffset = 0.0f;
 	const float HEADBOB_OFFSET_INTERVAL = 3.5f;
@@ -14,11 +15,13 @@ class FPSController : public ScriptManager
 	const float HEADBOB_OFFSET_MAX = 0.5f;
 	bool resetHeadbob = false;
 
-	POINT prevMousePos;
-
 	XMFLOAT3 position;
 	XMFLOAT3 direction;
 	XMFLOAT3 right;
+
+	// Input variable references to singletons 
+	Keyboard* keyboard;
+	Mouse* mouse;
 
 	Collider* collider;
 	
@@ -85,9 +88,7 @@ class FPSController : public ScriptManager
 
 	void DampForces();
 
-	void OnMouseMove(WPARAM buttonState, int x, int y);
-
-	void OnMouseDown(WPARAM buttonState, int x, int y);
+	void MouseLook();
 
 	void OnCollision(btCollisionObject* other);
 };
