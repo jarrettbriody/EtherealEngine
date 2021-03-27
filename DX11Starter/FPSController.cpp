@@ -6,6 +6,8 @@ void FPSController::Init()
 {
 	eMap = ScriptManager::sceneEntitiesMap;
 	cam = ScriptManager::EERenderer->GetCamera("main");
+	prevMousePos.x = 0;
+	prevMousePos.y = 0;
 	direction = cam->direction; 
 
 	// TODO: Easier setting of physics characteristics via Bullet (coll shape, mass, restitution, other properties)
@@ -14,6 +16,9 @@ void FPSController::Init()
 	playerRBody->setAngularFactor(btVector3(0, 1, 0)); // constrain rotations on x and z axes
 	// playerRBody->setRestitution(0.1f);
 	// playerRBody->setFriction(1.0f); --> debating using friction because it would probably result in weird interations with other level gemoetry, would rather just use pure velocity dampening
+
+	keyboard = Keyboard::GetInstance();
+	mouse = Mouse::GetInstance();
 
 	controllerVelocity = btVector3(0, 0, 0);
 	impulseSumVec = btVector3(0, 0, 0);
@@ -36,6 +41,7 @@ void FPSController::Update()
 		case PlayerState::Normal:
 			CheckAllAbilities();
 			Move();
+			MouseLook();
 			cam->SetPosition(XMFLOAT3(entity->GetPosition().x, entity->GetPosition().y + entity->GetScale().y + headbobOffset, entity->GetPosition().z)); // after all updates make sure camera is following the affected entity
 			break;
 
@@ -74,7 +80,6 @@ void FPSController::Update()
 
 void FPSController::CheckAllAbilities()
 {
-	// 2.5 hours by 6
 	CheckBloodIcicle();
 	CheckHookshot();
 	CheckBulletTime();
@@ -82,32 +87,39 @@ void FPSController::CheckAllAbilities()
 
 void FPSController::CheckBloodIcicle()
 {
-	if (DXCore::keyboard.OnKeyDown(0x58)) // TODO: Change this to on a mouse button down
+	if (mouse->OnRMBDown()) 
 	{
 		// blood icicle
+		cout << "Blood Icicle" << endl;
 
 		EntityCreationParameters icicleParams = {
 			"Blood Icicle",
-			"Blood Icicle Mesh",
+			"Cone",
 			"White",
 			XMFLOAT3(entity->GetPosition().x + direction.x, entity->GetPosition().y, entity->GetPosition().z + direction.z),
-			ZERO_VECTOR3,
-			XMFLOAT3(1.0f, 1.0f, 2.0f)
+			XMFLOAT3(-90.0f, 0.0f, 0.0f),
+			XMFLOAT3(1.0f, 1.0f, 2.0f),
+			1.0f
 		};
 
 		ScriptManager::CreateEntity(icicleParams);
 
+		Entity* bloodIcicle = (*eMap)["Floor (8)"]; 
+
+		btVector3 shotImpulse = btVector3(direction.x, direction.y, direction.z);
+
+		bloodIcicle->GetRBody()->activate();
+		bloodIcicle->GetRBody()->applyCentralImpulse(shotImpulse.normalized() * 10000.0f);
 	}
 }
 
 void FPSController::CheckBulletTime()
 {
 	// Slow time instantly and keep it slowed while Q is pressed but gradually ramp time back up to normal time when not pressed 
-	if (DXCore::keyboard.KeyIsPressed(0x51)) 
+	if (keyboard->KeyIsPressed(0x51)) 
 	{
 		bulletTimeRampDown = BULLET_TIME_SCALAR;
 		DXCore::deltaTimeScalar = BULLET_TIME_SCALAR;
-
 	}
 	else
 	{
@@ -126,7 +138,7 @@ void FPSController::CheckBulletTime()
 
 void FPSController::CheckHookshot()
 {
-	if (DXCore::keyboard.OnKeyDown(0x45)) // E
+	if (keyboard->OnKeyDown(0x45)) // E
 	{
 		Config::DynamicsWorld->updateAabbs();
 		Config::DynamicsWorld->computeOverlappingPairs();
@@ -192,7 +204,7 @@ void FPSController::HookshotFlight()
 {
 	playerRBody->setGravity(btVector3(0,0,0));
 
-	if (DXCore::keyboard.KeyIsPressed(0x45)) 
+	if (keyboard->KeyIsPressed(0x45))
 	{
 		btScalar distanceToHitPoint = playerRBody->getCenterOfMassPosition().distance(hookshotPoint);
 
@@ -212,7 +224,7 @@ void FPSController::HookshotFlight()
 
 void FPSController::HookshotLeash()
 {
-	if (DXCore::keyboard.OnKeyDown(0x45)) // cancel after pressing E again
+	if (keyboard->OnKeyDown(0x45)) // cancel after pressing E again
 	{
 		ps = PlayerState::Normal;
 	}
@@ -242,16 +254,16 @@ void FPSController::Move()
 	GroundCheck();
 	UpdateHeadbob();
 	// base movement
-	if (DXCore::keyboard.KeyIsPressed(0x57)) { // w
+	if (keyboard->KeyIsPressed(0x57)) { // w
 		controllerVelocity += btVector3(direction.x, 0, direction.z) * spd;
 	}
-	if (DXCore::keyboard.KeyIsPressed(0x53)) { // s
+	if (keyboard->KeyIsPressed(0x53)) { // s
 		controllerVelocity += btVector3(direction.x, 0, direction.z) * -spd;
 	}
-	if (DXCore::keyboard.KeyIsPressed(0x41)) { // a
+	if (keyboard->KeyIsPressed(0x41)) { // a
 		controllerVelocity += btVector3(right.x, 0, right.z) * spd;
 	}
-	if (DXCore::keyboard.KeyIsPressed(0x44)) { // d
+	if (keyboard->KeyIsPressed(0x44)) { // d
 		controllerVelocity += btVector3(right.x, 0, right.z) * -spd;
 	}
 
@@ -324,7 +336,7 @@ void FPSController::GroundCheck()
 
 void FPSController::UpdateHeadbob()
 {
-	if (DXCore::keyboard.CheckKeysPressed(baseMovementKeys, 4) && !midAir) // if any base movement keys are down and we are on the ground we want to headbob
+	if (keyboard->CheckKeysPressed(baseMovementKeys, 4) && !midAir) // if any base movement keys are down and we are on the ground we want to headbob
 	{
 		if (headbobOffset < HEADBOB_OFFSET_MAX && !resetHeadbob) // increase headbob offset if it is less than the max and we are not resetting 
 		{
@@ -359,7 +371,7 @@ void FPSController::UpdateHeadbob()
 btVector3 FPSController::JumpForceFromInput()
 {
 	btVector3 jumpForce = btVector3(0, 0, 0);
-	if (DXCore::keyboard.OnKeyDown(VK_SPACE)) {
+	if (keyboard->OnKeyDown(VK_SPACE)) {
 		if (!midAir || midAir && jumpCount < 2) {
 
 			if (!midAir)
@@ -387,22 +399,22 @@ btVector3 FPSController::DashImpulseFromInput()
 	}
 
 	btVector3 dashImpulse = btVector3(0, 0, 0);
-	if (/*dashCount > 0 &&*/ DXCore::keyboard.OnKeyDown(VK_SHIFT))
+	if (/*dashCount > 0 &&*/ keyboard->OnKeyDown(VK_SHIFT))
 	{
 		dashCount--;
 		// cout << dashCount << endl;
 		// default dash to forwards
 		dashImpulse = btVector3(direction.x, 0, direction.z) * dashImpulseScalar;
 
-		if (DXCore::keyboard.KeyIsPressed(0x41)) // left
+		if (keyboard->KeyIsPressed(0x41)) // left
 		{
 			dashImpulse = btVector3(right.x, 0, right.z) * dashImpulseScalar;
 		}
-		if (DXCore::keyboard.KeyIsPressed(0x44)) // right
+		if (keyboard->KeyIsPressed(0x44)) // right
 		{
 			dashImpulse = btVector3(right.x, 0, right.z) * -dashImpulseScalar;
 		}
-		if (DXCore::keyboard.KeyIsPressed(0x53)) // backwards
+		if (keyboard->KeyIsPressed(0x53)) // backwards
 		{
 			dashImpulse = btVector3(direction.x, 0, direction.z) * -dashImpulseScalar;
 		}
@@ -420,27 +432,18 @@ void FPSController::DampForces()
 		impulseSumVec -= impulseSumVec * dampingScalar;
 	}
 
-	if (!DXCore::keyboard.CheckKeysPressed(baseMovementKeys, 4) && !midAir) // Only damp overall movement if none of the base movement keys are pressed while on the ground
+	if (!keyboard->CheckKeysPressed(baseMovementKeys, 4) && !midAir) // Only damp overall movement if none of the base movement keys are pressed while on the ground
 	{
 		controllerVelocity -= controllerVelocity * dampingScalar;
 	}
 }
 
-void FPSController::OnMouseMove(WPARAM buttonState, int x, int y)
+void FPSController::MouseLook()
 {
-	if (buttonState & 0x0001) { 
-		cam->RotateCamera(x - (int)prevMousePos.x, y - (int)prevMousePos.y); 
-
-		prevMousePos.x = x;
-		prevMousePos.y = y;
-	}
-}
-
-void FPSController::OnMouseDown(WPARAM buttonState, int x, int y)
-{
-	if (buttonState & 0x0001) {
-		
-	}
+	cam->RotateCamera(mouse->GetPosX() - (int)prevMousePos.x, mouse->GetPosY() - (int)prevMousePos.y);
+	
+	prevMousePos.x = mouse->GetPosX();
+	prevMousePos.y = mouse->GetPosY();
 }
 
 void FPSController::OnCollision(btCollisionObject* other)

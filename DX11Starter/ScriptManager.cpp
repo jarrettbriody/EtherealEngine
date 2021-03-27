@@ -22,30 +22,6 @@ void ScriptManager::CallUpdate(float deltaTime)
 		Update();
 }
 
-void ScriptManager::CallOnMouseDown(WPARAM buttonState, int x, int y)
-{
-	if (initialized)
-		OnMouseDown(buttonState, x, y);
-}
-
-void ScriptManager::CallOnMouseUp(WPARAM buttonState, int x, int y)
-{
-	if (initialized)
-		OnMouseUp(buttonState, x, y);
-}
-
-void ScriptManager::CallOnMouseMove(WPARAM buttonState, int x, int y)
-{
-	if (initialized)
-		OnMouseMove(buttonState, x, y);
-}
-
-void ScriptManager::CallOnMouseWheel(float wheelDelta, int x, int y)
-{
-	if (initialized)
-		OnMouseWheel(wheelDelta, x, y);
-}
-
 void ScriptManager::CallOnCollision(btCollisionObject* other)
 {
 	if (initialized)

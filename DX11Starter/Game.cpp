@@ -45,6 +45,8 @@ Game::~Game()
 	delete Config::DynamicsWorld;
 	// delete physicsDraw;
 
+	Keyboard::DestroyInstance();
+	Mouse::DestroyInstance();
 
 	//delete EECamera;
 	Renderer::DestroyInstance();
@@ -65,6 +67,17 @@ void Game::Init()
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 	//_CrtSetBreakAlloc(327967);
 	//_CrtSetBreakAlloc(49892);
+
+	// Input 
+	if (Keyboard::SetupInstance())
+	{
+		keyboard = Keyboard::GetInstance();
+	}
+	
+	if (Mouse::SetupInstance())
+	{
+		mouse = Mouse::GetInstance();
+	}
 
 	// Physics -----------------
 	collisionConfiguration = new btDefaultCollisionConfiguration();
@@ -125,9 +138,6 @@ void Game::Init()
 
 	EESceneLoader->SetModelPath("../../Assets/Models/City/");
 	EESceneLoader->LoadScene("City");
-
-	prevMousePos.x = 0;
-	prevMousePos.y = 0;
 
 	Light* dLight = new Light;
 	dLight->Type = LIGHT_TYPE_DIR;
@@ -541,7 +551,9 @@ void Game::GarbageCollect()
 	}
 }
 
+/*
 #pragma region Mouse Input
+
 void Game::OnMouseDown(WPARAM buttonState, int x, int y)
 {
 	prevMousePos.x = x;
@@ -591,7 +603,7 @@ void Game::OnMouseDown(WPARAM buttonState, int x, int y)
 	rayPoints[7] = end;
 	dl->GenerateCuboidVertexBuffer(rayPoints, 8);
 	delete[] rayPoints;
-	*/
+	
 
 	if (Config::DynamicsWorld)
 	{
@@ -639,8 +651,9 @@ void Game::OnMouseDown(WPARAM buttonState, int x, int y)
 			float z = transform.getOrigin().getZ();
 			transform.setOrigin(btVector3(x, y, z));
 			rigidBody->getCollisionShape()->setLocalScaling(btVector3(1, 1, 1));
-			rigidBody->setWorldTransform(transform); */
-			//*/
+			rigidBody->setWorldTransform(transform); 
+			
+
 			btVector3 h = closestResult.m_hitPointWorld;
 			XMFLOAT3 hitLocation(h.getX(), h.getY(), h.getZ());
 			EEDecalHandler->GenerateDecal(hit, XMFLOAT3(hitLocation.x - start.x, hitLocation.y - start.y, hitLocation.z - start.z), hitLocation, XMFLOAT3(10.0f, 10.0f, 15.0f), DecalType(rand() % 8));
@@ -651,7 +664,7 @@ void Game::OnMouseDown(WPARAM buttonState, int x, int y)
 			if (hit->MeshHasChildren()) {
 				EESceneLoader->SplitMeshIntoChildEntities(hit, 0.5f);
 			}
-			*/
+			
 		}
 	}
 	
@@ -696,6 +709,9 @@ void Game::OnMouseWheel(float wheelDelta, int x, int y)
 	}
 }
 
+#pragma endregion
+*/
+
 void Game::FmodErrorCheck(FMOD_RESULT result)
 {
 	if (result != FMOD_OK)
@@ -703,4 +719,3 @@ void Game::FmodErrorCheck(FMOD_RESULT result)
 		printf("FMOD error! (%d) %s\n", result, FMOD_ErrorString(result));
 	}
 }
-#pragma endregion

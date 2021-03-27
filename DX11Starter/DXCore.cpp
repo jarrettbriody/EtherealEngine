@@ -7,7 +7,6 @@
 // Define the static instance variable so our OS-level 
 // message handling function below can talk to our object
 DXCore* DXCore::DXCoreInstance = 0;
-Keyboard DXCore::keyboard;
 float DXCore::deltaTimeScalar = 1.0f;
 
 // --------------------------------------------------------
@@ -541,44 +540,93 @@ LRESULT DXCore::ProcessMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 
 		return 0;
 
+	// Mouse Messages
+
 		// Mouse button being pressed (while the cursor is currently over our window)
 	case WM_LBUTTONDOWN:
-	case WM_MBUTTONDOWN:
-	case WM_RBUTTONDOWN:
-		OnMouseDown(wParam, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+	{
+		int x = LOWORD(lParam);
+		int y = HIWORD(lParam);
+		mouse->RegisterLMBPress(x, y);
 		return 0;
+	}
+	case WM_MBUTTONDOWN:
+	{
+		int x = LOWORD(lParam);
+		int y = HIWORD(lParam);
+		mouse->RegisterMMBPress(x, y);
+		return 0;
+	}
+	case WM_RBUTTONDOWN:
+	{
+		int x = LOWORD(lParam);
+		int y = HIWORD(lParam);
+		mouse->RegisterRMBPress(x, y);
+		return 0;
+	}
 
 		// Mouse button being released (while the cursor is currently over our window)
 	case WM_LBUTTONUP:
-	case WM_MBUTTONUP:
-	case WM_RBUTTONUP:
-		OnMouseUp(wParam, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+	{
+		int x = LOWORD(lParam);
+		int y = HIWORD(lParam);
+		mouse->RegisterLMBRelease(x, y);
 		return 0;
+	}
+	case WM_MBUTTONUP:
+	{
+		int x = LOWORD(lParam);
+		int y = HIWORD(lParam);
+		mouse->RegisterMMBRelease(x, y);
+		return 0;
+	}
+	case WM_RBUTTONUP:
+	{
+		int x = LOWORD(lParam);
+		int y = HIWORD(lParam);
+		mouse->RegisterRMBRelease(x, y);
+		return 0;
+	}
 
 		// Cursor moves over the window (or outside, while we're currently capturing it)
 	case WM_MOUSEMOVE:
-		OnMouseMove(wParam, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+	{
+		int x = LOWORD(lParam);
+		int y = HIWORD(lParam);
+		mouse->RegisterMouseMove(x, y);
 		return 0;
-
+	}
 		// Mouse wheel is scrolled
 	case WM_MOUSEWHEEL:
-		OnMouseWheel(GET_WHEEL_DELTA_WPARAM(wParam) / (float)WHEEL_DELTA, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+	{
+		int x = LOWORD(lParam);
+		int y = HIWORD(lParam);
+		if (GET_WHEEL_DELTA_WPARAM(wParam) > 0)
+		{
+			mouse->RegisterWheelUp(x, y);
+		}
+		else if(GET_WHEEL_DELTA_WPARAM(wParam) < 0)
+		{
+			mouse->RegisterWheelDown(x, y);
+		}
 		return 0;
+	}
 
-	// Input handling
+	// Keyboard messages 
+
 	case WM_KEYDOWN:
 	{
 		unsigned char keycode = static_cast<unsigned char>(wParam);
-		if (keyboard.IsKeysAutoRepeat())
+		if (keyboard->IsKeysAutoRepeat())
 		{
-			keyboard.RegisterKeyPress(keycode);
+			keyboard->RegisterKeyPress(keycode);
 		}
 		else
 		{
 			const bool wasPressed = lParam & 0x40000000;
 			if (!wasPressed)
 			{
-				keyboard.RegisterKeyPress(keycode);
+				keyboard->RegisterKeyPress(keycode);
 			}
 		}
 		return 0;
@@ -586,7 +634,7 @@ LRESULT DXCore::ProcessMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 	case WM_KEYUP:
 	{
 		unsigned char keycode = static_cast<unsigned char>(wParam);
-		keyboard.RegisterKeyRelease(keycode);
+		keyboard->RegisterKeyRelease(keycode);
 		return 0;
 	}
 	}
