@@ -58,11 +58,14 @@ void main(uint3 id : SV_DispatchThreadID)
 	float randomOffset = random - 0.5f;
 	float angle = emissionAngleRadians * randomOffset;
 	float pi = 3.14159265359f;
+	float xVal = cos(angle + pi / 2);
+	float yVal = sin(angle);
+	float zVal = atan2(yVal, xVal);
 
 	newParticle.remainingLife = particleMinLifetime + (particleMaxLifetime - particleMinLifetime) * random;
 	newParticle.position = float3(0, 0, 0);
 	newParticle.scale = particleInitMinScale + (particleInitMaxScale - particleInitMinScale) * random;
-	newParticle.velocity = float3(cos(angle), 0.0f, 1.0f) * speed;
+	newParticle.velocity = normalize(float3(xVal, yVal, zVal)) * speed;
 	newParticle.rotationRadians = 0.0f;
 	newParticle.angularVelocity = particleInitMinAngularVelocity + (particleInitMaxAngularVelocity - particleInitMinAngularVelocity) * random;
 
