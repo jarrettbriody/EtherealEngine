@@ -7,8 +7,8 @@ ID3D11SamplerState* Config::Sampler = nullptr;
 IDXGISwapChain* Config::SwapChain = nullptr;
 ID3D11RenderTargetView* Config::BackBufferRTV = nullptr;
 ID3D11DepthStencilView* Config::DepthStencilView = nullptr;
-unsigned int Config::ViewPortWidth = 1600;
-unsigned int Config::ViewPortHeight = 900;
+unsigned int Config::ViewPortWidth = 1280;
+unsigned int Config::ViewPortHeight = 720;
 bool Config::Fullscreen = false;
 bool Config::FPSControllerEnabled = false;
 

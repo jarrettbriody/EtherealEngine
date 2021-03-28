@@ -17,7 +17,9 @@ cbuffer ExternalData : register(b0)
 	float particleInitMinSpeed; //minimum initial speed of the particle
 	float particleInitMaxSpeed; //maximum initial speed of the particle
 
-	float2 padding;
+	float randomNum;
+
+	float padding;
 
 	ParticleColor colors[MAX_PARTICLE_COLORS];
 }
@@ -39,7 +41,7 @@ void main(uint3 id : SV_DispatchThreadID)
 	// Update it in the particle pool
 	Particle newParticle = ParticlePool.Load(newParticleIndex);
 
-	float random = sin(totalTime);
+	float random = randomNum;
 
 	newParticle.color = float4(1, 0, 0, 1);
 
@@ -53,13 +55,14 @@ void main(uint3 id : SV_DispatchThreadID)
 	}
 	
 	float speed = particleInitMinSpeed + (particleInitMaxSpeed - particleInitMinSpeed) * random;
-	float randomOffset = random * 2.0f - 1.0f;
-	float angle = (emissionAngleRadians / 2.0f) * randomOffset;
+	float randomOffset = random - 0.5f;
+	float angle = emissionAngleRadians * randomOffset;
+	float pi = 3.14159265359f;
 
 	newParticle.remainingLife = particleMinLifetime + (particleMaxLifetime - particleMinLifetime) * random;
 	newParticle.position = float3(0, 0, 0);
 	newParticle.scale = particleInitMinScale + (particleInitMaxScale - particleInitMinScale) * random;
-	newParticle.velocity = float3(cos(angle), sin(angle), 1.0f) * speed;
+	newParticle.velocity = float3(cos(angle), 0.0f, 1.0f) * speed;
 	newParticle.rotationRadians = 0.0f;
 	newParticle.angularVelocity = particleInitMinAngularVelocity + (particleInitMaxAngularVelocity - particleInitMinAngularVelocity) * random;
 

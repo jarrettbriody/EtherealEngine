@@ -8,7 +8,7 @@ ParticleEmitter::ParticleEmitter()
 	ParticleEmitterDescription d;
 
 	SetPosition(d.emitterPosition);
-	SetDirectionVector(d.emissionDirection);
+	SetRotationRadians(d.emissionRotation);
 	SetScale(d.emitterScale);
 	SetEmissionAngleDegrees(d.emissionAngleDegrees);
 	SetMaxParticles(d.maxParticles);
@@ -26,7 +26,7 @@ ParticleEmitter::ParticleEmitter()
 ParticleEmitter::ParticleEmitter(ParticleEmitterDescription d)
 {
 	SetPosition(d.emitterPosition);
-	SetDirectionVector(d.emissionDirection);
+	SetRotationRadians(d.emissionRotation);
 	SetScale(d.emitterScale);
 	SetEmissionAngleDegrees(d.emissionAngleDegrees);
 	SetMaxParticles(d.maxParticles);

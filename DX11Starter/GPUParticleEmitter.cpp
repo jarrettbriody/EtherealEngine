@@ -277,6 +277,8 @@ void GPUParticleEmitter::Update(float deltaTime, float totalTime)
 		emitCS->SetFloat("particleInitMinSpeed", particleInitMinSpeed);
 		emitCS->SetFloat("particleInitMaxSpeed", particleInitMaxSpeed);
 
+		emitCS->SetFloat("randomNum", static_cast <float> (rand()) / static_cast <float> (RAND_MAX));
+
 		emitCS->SetData("colors", &colors[0], sizeof(ParticleColor) * MAX_PARTICLE_COLORS);
 		emitCS->SetUnorderedAccessView("ParticlePool", particlePoolUAV);
 		emitCS->SetUnorderedAccessView("DeadParticles", particleDeadUAV);

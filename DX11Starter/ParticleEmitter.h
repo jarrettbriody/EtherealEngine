@@ -7,7 +7,7 @@ using namespace DirectX;
 
 struct ParticleEmitterDescription {
 	XMFLOAT3 emitterPosition = ZERO_VECTOR3; //position of particle emission point
-	XMFLOAT3 emissionDirection = Y_AXIS; //direction of the emission of particles
+	XMFLOAT3 emissionRotation = ZERO_VECTOR3; //direction of the emission of particles
 	XMFLOAT3 emitterScale = ONE_VECTOR3; //scale of the emitter, scales all newly emitted particles
 	unsigned int maxParticles = 1000; //set once when emitter is created, unchangeable thereafter
 	float emissionAngleDegrees = 60.0f; //angle of the cone the emitter will emit particles within [0.0f,360.0f]

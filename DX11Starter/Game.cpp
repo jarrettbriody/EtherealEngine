@@ -64,6 +64,8 @@ void Game::Init()
 	//_CrtSetBreakAlloc(327967);
 	//_CrtSetBreakAlloc(49892);
 
+	srand(static_cast <unsigned> (time(0)));
+
 	// Physics -----------------
 	collisionConfiguration = new btDefaultCollisionConfiguration();
 	dispatcher = new  btCollisionDispatcher(collisionConfiguration);
@@ -199,7 +201,8 @@ void Game::Init()
 	emitDesc.colors = partColors;
 	emitDesc.emissionAngleDegrees = 90.0f;
 	emitDesc.maxParticles = 1500;
-	emitDesc.emissionRate = 1000.0f;
+	emitDesc.emissionRate = 10.0f;
+	//emitDesc.emissionRotation = XMFLOAT3(XM_PIDIV2,0.0f,0.0f);
 
 	emitter = new GPUParticleEmitter(emitDesc);
 	emitter->SetBlendingEnabled(true);
@@ -252,7 +255,7 @@ void Game::Init()
 	fmodResult = fmodSystem->playSound(backgroundMusic, 0, false, &musicChannel); // Start playing the 3D sound
 	FmodErrorCheck(fmodResult);
 
-	FMOD_VECTOR pos = { 1.0f, 1.0f, 1.0f };
+	FMOD_VECTOR pos = { 1.0f, 50.0f, 1.0f };
 	FMOD_VECTOR vel = { 0, 0, 0 };
 
 	// Set the 3D values for the channel
