@@ -5,21 +5,26 @@ cbuffer ExternalData : register(b0)
 	float totalTime;
 	int emitCount;
 	int maxParticles;
-	float colorCount;
+	int colorCount;
 
-	float emissionAngleRadians; //angle of the cone the emitter will emit particles within [0.0f,360.0f]
+	float emissionStartRadius;
+	float emissionEndRadius;
 	float particleMinLifetime; //minimum lifetime of emitted particles in seconds
 	float particleMaxLifetime; //maximum lifetime of emitted particles in seconds
+
 	float particleInitMinScale; //minimum initial scale of the particle
 	float particleInitMaxScale; //maximum initial scale of the particle
 	float particleInitMinAngularVelocity; //minimum initial angular velocity of the particle
 	float particleInitMaxAngularVelocity; //maximum initial angular velocity of the particle
+
 	float particleInitMinSpeed; //minimum initial speed of the particle
 	float particleInitMaxSpeed; //maximum initial speed of the particle
-
 	float randomNum;
+	float randomNum2;
 
-	float padding;
+	float randomNum3;
+	float randomNum4;
+	float2 padding;
 
 	ParticleColor colors[MAX_PARTICLE_COLORS];
 }
@@ -41,33 +46,37 @@ void main(uint3 id : SV_DispatchThreadID)
 	// Update it in the particle pool
 	Particle newParticle = ParticlePool.Load(newParticleIndex);
 
-	float random = randomNum;
-
 	newParticle.color = float4(1, 0, 0, 1);
 
 	// Color and position depend on the grid position and size
 	for (int i = colorCount - 1; i >= 0; i--)
 	{
-		if (random <= colors[i].weight) {
+		if (randomNum3 <= colors[i].weight) {
 			newParticle.color = colors[i].color;
 			break;
 		}
 	}
 	
-	float speed = particleInitMinSpeed + (particleInitMaxSpeed - particleInitMinSpeed) * random;
-	float randomOffset = random - 0.5f;
+	float speed = particleInitMinSpeed + (particleInitMaxSpeed - particleInitMinSpeed) * randomNum;
+	float randomOffset = randomNum * 2.0f - 1.0f;
+	float randomOffset2 = randomNum2 * 2.0f - 1.0f;
+
+	float3 start = float3(randomOffset, randomOffset2, 0.0f) * emissionStartRadius;
+	float3 end = float3(float2(randomOffset, randomOffset2) * emissionEndRadius, 1.0f);
+	/*
 	float angle = emissionAngleRadians * randomOffset;
 	float pi = 3.14159265359f;
 	float xVal = cos(angle + pi / 2);
 	float yVal = sin(angle);
 	float zVal = atan2(yVal, xVal);
+	*/
 
-	newParticle.remainingLife = particleMinLifetime + (particleMaxLifetime - particleMinLifetime) * random;
+	newParticle.remainingLife = particleMinLifetime + (particleMaxLifetime - particleMinLifetime) * randomNum;
 	newParticle.position = float3(0, 0, 0);
-	newParticle.scale = particleInitMinScale + (particleInitMaxScale - particleInitMinScale) * random;
-	newParticle.velocity = normalize(float3(xVal, yVal, zVal)) * speed;
+	newParticle.scale = particleInitMinScale + (particleInitMaxScale - particleInitMinScale) * randomNum4;
+	newParticle.velocity = normalize(end - start) * speed;
 	newParticle.rotationRadians = 0.0f;
-	newParticle.angularVelocity = particleInitMinAngularVelocity + (particleInitMaxAngularVelocity - particleInitMinAngularVelocity) * random;
+	newParticle.angularVelocity = particleInitMinAngularVelocity + (particleInitMaxAngularVelocity - particleInitMinAngularVelocity) * randomNum;
 
 	// Put it back
 	ParticlePool[newParticleIndex] = newParticle;

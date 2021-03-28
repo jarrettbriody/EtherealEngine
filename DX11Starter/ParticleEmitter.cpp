@@ -10,7 +10,7 @@ ParticleEmitter::ParticleEmitter()
 	SetPosition(d.emitterPosition);
 	SetRotationRadians(d.emissionRotation);
 	SetScale(d.emitterScale);
-	SetEmissionAngleDegrees(d.emissionAngleDegrees);
+	SetEmissionRadii(d.emissionStartRadius, d.emissionEndRadius);
 	SetMaxParticles(d.maxParticles);
 	SetEmissionRate(d.emissionRate);
 	SetParticleLifetime(d.particleMinLifetime, d.particleMaxLifetime);
@@ -28,7 +28,7 @@ ParticleEmitter::ParticleEmitter(ParticleEmitterDescription d)
 	SetPosition(d.emitterPosition);
 	SetRotationRadians(d.emissionRotation);
 	SetScale(d.emitterScale);
-	SetEmissionAngleDegrees(d.emissionAngleDegrees);
+	SetEmissionRadii(d.emissionStartRadius, d.emissionEndRadius);
 	SetMaxParticles(d.maxParticles);
 	SetEmissionRate(d.emissionRate);
 	SetParticleLifetime(d.particleMinLifetime, d.particleMaxLifetime);
@@ -166,6 +166,12 @@ void ParticleEmitter::SetEmissionAngleRadians(float emissionAngleRadians)
 {
 	this->emissionAngleRadians = emissionAngleRadians;
 	this->emissionAngleDegrees = XMConvertToDegrees(emissionAngleRadians);
+}
+
+void ParticleEmitter::SetEmissionRadii(float start, float end)
+{
+	emissionStartRadius = start;
+	emissionEndRadius = end;
 }
 
 void ParticleEmitter::SetMaxParticles(unsigned int maxParticles)

@@ -10,7 +10,8 @@ struct ParticleEmitterDescription {
 	XMFLOAT3 emissionRotation = ZERO_VECTOR3; //direction of the emission of particles
 	XMFLOAT3 emitterScale = ONE_VECTOR3; //scale of the emitter, scales all newly emitted particles
 	unsigned int maxParticles = 1000; //set once when emitter is created, unchangeable thereafter
-	float emissionAngleDegrees = 60.0f; //angle of the cone the emitter will emit particles within [0.0f,360.0f]
+	float emissionStartRadius = 0.001f;
+	float emissionEndRadius = 1.0f;
 	float emissionRate = 10.0f; //particles per second
 
 	float particleMinLifetime = 15.0f; //minimum lifetime of emitted particles in seconds
@@ -46,6 +47,8 @@ public:
 	void SetEmissionAngleDegrees(float emissionAngleDegrees);
 	void SetEmissionAngleRadians(float emissionAngleRadians);
 
+	void SetEmissionRadii(float start, float end);
+
 	//Emission rate in particles per second
 	void SetEmissionRate(float emissionRate);
 	void SetParticleLifetime(float min, float max);
@@ -74,6 +77,8 @@ protected:
 	XMFLOAT3 direction = Y_AXIS;
 	XMFLOAT3 scale = ONE_VECTOR3;
 
+	float emissionStartRadius = 0.0f;
+	float emissionEndRadius = 0.0f;
 	float emissionAngleDegrees = 0.0f;
 	float emissionAngleRadians = 0.0f;
 	unsigned int maxParticles = 0;

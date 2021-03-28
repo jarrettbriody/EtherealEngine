@@ -265,9 +265,10 @@ void GPUParticleEmitter::Update(float deltaTime, float totalTime)
 		emitCS->SetFloat("totalTime", totalTime);
 		emitCS->SetInt("emitCount", emitCount);
 		emitCS->SetInt("maxParticles", (int)maxParticles);
-		emitCS->SetFloat("colorCount", colorCount);
+		emitCS->SetInt("colorCount", colorCount);
 
-		emitCS->SetFloat("emissionAngleRadians", emissionAngleRadians);
+		emitCS->SetFloat("emissionStartRadius", emissionStartRadius);
+		emitCS->SetFloat("emissionEndRadius", emissionEndRadius);
 		emitCS->SetFloat("particleMinLifetime", particleMinLifetime);
 		emitCS->SetFloat("particleMaxLifetime", particleMaxLifetime);
 		emitCS->SetFloat("particleInitMinScale", particleInitMinScale);
@@ -278,7 +279,13 @@ void GPUParticleEmitter::Update(float deltaTime, float totalTime)
 		emitCS->SetFloat("particleInitMaxSpeed", particleInitMaxSpeed);
 
 		float randNum = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+		float randNum2 = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+		float randNum3 = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+		float randNum4 = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
 		emitCS->SetFloat("randomNum", randNum);
+		emitCS->SetFloat("randomNum2", randNum2);
+		emitCS->SetFloat("randomNum3", randNum3);
+		emitCS->SetFloat("randomNum4", randNum4);
 
 		emitCS->SetData("colors", &colors[0], sizeof(ParticleColor) * MAX_PARTICLE_COLORS);
 		emitCS->SetUnorderedAccessView("ParticlePool", particlePoolUAV);

@@ -199,10 +199,9 @@ void Game::Init()
 		{XMFLOAT4(1,0,0,1),10},
 	};
 	emitDesc.colors = partColors;
-	emitDesc.emissionAngleDegrees = 90.0f;
 	emitDesc.maxParticles = 1500;
 	emitDesc.emissionRate = 10.0f;
-	//emitDesc.emissionRotation = XMFLOAT3(XM_PIDIV2,0.0f,0.0f);
+	emitDesc.emissionRotation = XMFLOAT3(XM_PIDIV2,0.0f,0.0f);
 
 	emitter = new GPUParticleEmitter(emitDesc);
 	emitter->SetBlendingEnabled(true);
