@@ -9,12 +9,13 @@ struct ParticleEmitterDescription {
 	XMFLOAT3 emitterPosition = ZERO_VECTOR3; //position of particle emission point
 	XMFLOAT3 emissionRotation = ZERO_VECTOR3; //direction of the emission of particles
 	XMFLOAT3 emitterScale = ONE_VECTOR3; //scale of the emitter, scales all newly emitted particles
+	XMFLOAT3 emitterDirection = ZERO_VECTOR3;
 	unsigned int maxParticles = 1000; //set once when emitter is created, unchangeable thereafter
 	float emissionStartRadius = 0.001f;
 	float emissionEndRadius = 1.0f;
 	float emissionRate = 10.0f; //particles per second
 
-	float particleMinLifetime = 15.0f; //minimum lifetime of emitted particles in seconds
+	float particleMinLifetime = 10.0f; //minimum lifetime of emitted particles in seconds
 	float particleMaxLifetime = 15.0f; //maximum lifetime of emitted particles in seconds
 	float particleInitMinScale = 0.25f; //minimum initial scale of the particle
 	float particleInitMaxScale = 0.5f; //maximum initial scale of the particle
@@ -22,6 +23,8 @@ struct ParticleEmitterDescription {
 	float particleInitMaxAngularVelocity = 0.0f; //maximum initial angular velocity of the particle
 	float particleInitMinSpeed = 0.5f; //minimum initial speed of the particle
 	float particleInitMaxSpeed = 0.5f; //maximum initial speed of the particle
+
+	XMFLOAT3 particleAcceleration = ZERO_VECTOR3;
 
 	unsigned int colorCount = 0; //number of possible colors
 	ParticleColor* colors = nullptr; //array of ParticleColor objects
@@ -56,6 +59,8 @@ public:
 	void SetParticleInitialAngularVelocity(float min, float max);
 	void SetParticleInitialSpeed(float min, float max);
 
+	void SetParticleAcceleration(XMFLOAT3 accel);
+
 	//Set colors of particles (number of colors, color array, array of color weights in range [0.0f,1.0f])
 	void SetParticleColors(unsigned int colorCount, ParticleColor* colors);
 
@@ -68,6 +73,8 @@ protected:
 
 	float lifetime = 0.0f;
 	float maxLifetime = 0.0f;
+
+	float emitTimeCounter = 0.0f;
 
 	XMFLOAT4X4 worldMatrix = MATRIX_IDENTITY;
 	XMFLOAT3 position = ZERO_VECTOR3;
@@ -91,6 +98,8 @@ protected:
 	float particleInitMaxAngularVelocity = 0.0f; //maximum initial angular velocity of the particle
 	float particleInitMinSpeed = 0.0f; //minimum initial speed of the particle
 	float particleInitMaxSpeed = 0.0f; //maximum initial speed of the particle
+
+	XMFLOAT3 particleAcceleration = ZERO_VECTOR3;
 
 	unsigned int colorCount = 0;
 	ParticleColor colors[MAX_PARTICLE_COLORS];

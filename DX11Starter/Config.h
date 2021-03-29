@@ -30,6 +30,7 @@ enum class MEMORY_POOL {
 	MESH_POOL = 1,
 	MATERIAL_POOL = 2,
 	DECAL_POOL = 3,
+	//PARTICLE_POOL = 4,
 };
 
 class Config
@@ -52,6 +53,7 @@ public:
 	static unsigned int MemoryAllocatorMeshPoolSize;
 	static unsigned int MemoryAllocatorMaterialPoolSize;
 	static unsigned int MemoryAllocatorDecalPoolSize;
+	//static unsigned int MemoryAllocatorParticlePoolSize;
 
 	static bool EtherealDebugLinesEnabled;
 	static bool BulletDebugLinesEnabled;

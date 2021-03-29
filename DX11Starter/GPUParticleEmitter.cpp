@@ -243,11 +243,9 @@ void GPUParticleEmitter::Update(float deltaTime, float totalTime)
 	SimpleComputeShader* updateCS = customShadersEnabled ? customShaders.particleUpdateCS : defaultShaders.particleUpdateCS;
 
 	// Reset UAVs (potential issue with setting the following ones)
-	ID3D11UnorderedAccessView* none[8] = {};
-	Config::Context->CSSetUnorderedAccessViews(0, 8, none, 0);
+	Config::Context->CSSetUnorderedAccessViews(0, 8, noneUAV, 0);
 
 	// Track time
-	emitTimeCounter += deltaTime;
 	while (emitTimeCounter >= emissionRate)
 	{
 		// How many to emit?
@@ -282,10 +280,14 @@ void GPUParticleEmitter::Update(float deltaTime, float totalTime)
 		float randNum2 = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
 		float randNum3 = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
 		float randNum4 = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+		float randNum5 = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
 		emitCS->SetFloat("randomNum", randNum);
 		emitCS->SetFloat("randomNum2", randNum2);
 		emitCS->SetFloat("randomNum3", randNum3);
 		emitCS->SetFloat("randomNum4", randNum4);
+		emitCS->SetFloat("randomNum5", randNum5);
+
+		emitCS->SetFloat3("particleAcceleration", particleAcceleration);
 
 		emitCS->SetData("colors", &colors[0], sizeof(ParticleColor) * MAX_PARTICLE_COLORS);
 		emitCS->SetUnorderedAccessView("ParticlePool", particlePoolUAV);
@@ -294,7 +296,7 @@ void GPUParticleEmitter::Update(float deltaTime, float totalTime)
 		emitCS->DispatchByThreads(emitCount, 1, 1);
 	}
 
-	Config::Context->CSSetUnorderedAccessViews(0, 8, none, 0);
+	Config::Context->CSSetUnorderedAccessViews(0, 8, noneUAV, 0);
 
 	// Update
 	updateCS->SetShader();
@@ -310,7 +312,7 @@ void GPUParticleEmitter::Update(float deltaTime, float totalTime)
 	updateCS->DispatchByThreads(maxParticles, 1, 1);
 
 	// Binding order issues with next stage, so just reset here
-	Config::Context->CSSetUnorderedAccessViews(0, 8, none, 0);
+	Config::Context->CSSetUnorderedAccessViews(0, 8, noneUAV, 0);
 
 	// Get draw data
 	defaultShaders.copyDrawCountCS->SetShader();
@@ -319,7 +321,7 @@ void GPUParticleEmitter::Update(float deltaTime, float totalTime)
 	defaultShaders.copyDrawCountCS->DispatchByThreads(1, 1, 1);
 
 	// Reset here too
-	Config::Context->CSSetUnorderedAccessViews(0, 8, none, 0);
+	Config::Context->CSSetUnorderedAccessViews(0, 8, noneUAV, 0);
 }
 
 void GPUParticleEmitter::Draw(XMFLOAT4X4 view, XMFLOAT4X4 proj)
@@ -349,7 +351,7 @@ void GPUParticleEmitter::Draw(XMFLOAT4X4 view, XMFLOAT4X4 proj)
 	// Draw using indirect args
 	Config::Context->DrawIndexedInstancedIndirect(drawArgsBuffer, 0);
 
-	Config::Context->VSSetShaderResources(0, 16, none);
+	Config::Context->VSSetShaderResources(0, 16, noneSRV);
 
 	if (blendingEnabled)
 	{

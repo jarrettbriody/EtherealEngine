@@ -90,6 +90,7 @@ void Game::Init()
 	EEMemoryAllocator->CreatePool((unsigned int)MEMORY_POOL::MESH_POOL, Config::MemoryAllocatorMeshPoolSize, sizeof(Mesh));
 	EEMemoryAllocator->CreatePool((unsigned int)MEMORY_POOL::MATERIAL_POOL, Config::MemoryAllocatorMaterialPoolSize, sizeof(Material));
 	EEMemoryAllocator->CreatePool((unsigned int)MEMORY_POOL::DECAL_POOL, Config::MemoryAllocatorDecalPoolSize, sizeof(DecalBucket));
+	//EEMemoryAllocator->CreatePool((unsigned int)MEMORY_POOL::PARTICLE_POOL, Config::MemoryAllocatorParticlePoolSize, sizeof(Particle));
 
 	EECamera = new Camera();
 	EECamera->UpdateProjectionMatrix();
@@ -199,12 +200,17 @@ void Game::Init()
 		{XMFLOAT4(1,0,0,1),10},
 	};
 	emitDesc.colors = partColors;
-	emitDesc.maxParticles = 1500;
-	emitDesc.emissionRate = 10.0f;
-	emitDesc.emissionRotation = XMFLOAT3(XM_PIDIV2,0.0f,0.0f);
+	emitDesc.maxParticles = 3000;
+	emitDesc.emissionRate = 100.0f;
+	//emitDesc.emissionRotation = XMFLOAT3(-XM_PIDIV2,0.0f,0.0f);
+	emitDesc.emitterDirection = Y_AXIS;
+	emitDesc.particleInitMinSpeed = 10.0f;
+	emitDesc.particleInitMaxSpeed = 15.0f;
+	emitDesc.particleMinLifetime = 10.0f;
+	emitDesc.particleMaxLifetime = 15.0f;
+	emitDesc.particleAcceleration = XMFLOAT3(0.0f, 0.0f, -10.0f);
 
 	emitter = new GPUParticleEmitter(emitDesc);
-	emitter->SetBlendingEnabled(true);
 
 	Entity* e;
 	for (size_t i = 0; i < EESceneLoader->sceneEntities.size(); i++)
@@ -565,7 +571,7 @@ void Game::OnMouseDown(WPARAM buttonState, int x, int y)
 	XMMATRIX world = XMMatrixTranspose(XMLoadFloat4x4(&wm));
 
 	// Get the unprojected vector of the mouse click position in world space
-	XMVECTOR unprojVec = XMVector3Unproject(XMVectorSet(x, y, 1.0f, 1.0f), 0, 0, 1600, 900, 0.0f, 1.0f, proj, view, world);
+	XMVECTOR unprojVec = XMVector3Unproject(XMVectorSet(x, y, 1.0f, 1.0f), 0, 0, Config::ViewPortWidth, Config::ViewPortHeight, 0.0f, 1.0f, proj, view, world);
 	XMFLOAT3 start = EECamera->position;
 	XMFLOAT3 end = XMFLOAT3(XMVectorGetX(unprojVec), XMVectorGetY(unprojVec), XMVectorGetZ(unprojVec));
 	//printf("Projected values|- X: %f, Y: %f, Z: %f\n", end.x, end.y, end.z);

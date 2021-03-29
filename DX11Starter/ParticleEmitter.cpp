@@ -17,6 +17,7 @@ ParticleEmitter::ParticleEmitter()
 	SetParticleInitialScale(d.particleInitMinScale, d.particleInitMaxScale);
 	SetParticleInitialAngularVelocity(d.particleInitMinAngularVelocity, d.particleInitMaxAngularVelocity);
 	SetParticleInitialSpeed(d.particleInitMinSpeed, d.particleInitMaxSpeed);
+	SetParticleAcceleration(d.particleAcceleration);
 	ParticleColor color[1] = { XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f), 1.0f };
 	SetParticleColors(1, color);
 
@@ -27,6 +28,9 @@ ParticleEmitter::ParticleEmitter(ParticleEmitterDescription d)
 {
 	SetPosition(d.emitterPosition);
 	SetRotationRadians(d.emissionRotation);
+	if (d.emitterDirection.x != 0.0f || d.emitterDirection.y != 0.0f || d.emitterDirection.z != 0.0f) {
+		SetDirectionVector(d.emitterDirection);
+	}
 	SetScale(d.emitterScale);
 	SetEmissionRadii(d.emissionStartRadius, d.emissionEndRadius);
 	SetMaxParticles(d.maxParticles);
@@ -35,6 +39,7 @@ ParticleEmitter::ParticleEmitter(ParticleEmitterDescription d)
 	SetParticleInitialScale(d.particleInitMinScale, d.particleInitMaxScale);
 	SetParticleInitialAngularVelocity(d.particleInitMinAngularVelocity, d.particleInitMaxAngularVelocity);
 	SetParticleInitialSpeed(d.particleInitMinSpeed, d.particleInitMaxSpeed);
+	SetParticleAcceleration(d.particleAcceleration);
 	SetParticleColors(d.colorCount, d.colors);
 
 	CalcWorldMatrix();
@@ -208,6 +213,11 @@ void ParticleEmitter::SetParticleInitialSpeed(float min, float max)
 	this->particleInitMaxSpeed = max;
 }
 
+void ParticleEmitter::SetParticleAcceleration(XMFLOAT3 accel)
+{
+	particleAcceleration = accel;
+}
+
 void ParticleEmitter::SetParticleColors(unsigned int colorCount, ParticleColor* colors)
 {
 	if (colorCount > MAX_PARTICLE_COLORS) return;
@@ -232,6 +242,7 @@ void ParticleEmitter::SetParticleColors(unsigned int colorCount, ParticleColor* 
 void ParticleEmitter::Update(float deltaTime, float totalTime)
 {
 	lifetime += deltaTime;
+	emitTimeCounter += deltaTime;
 	isAlive = (maxLifetime == 0.0f || lifetime < maxLifetime);
 }
 

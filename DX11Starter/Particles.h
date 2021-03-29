@@ -6,13 +6,18 @@ using namespace DirectX;
 struct Particle
 {
 	XMFLOAT4 color;
+
 	float remainingLife;
 	XMFLOAT3 position;
+
 	float scale;
 	XMFLOAT3 velocity;
+
+	XMFLOAT3 acceleration;
 	float rotationRadians;
+
 	float angularVelocity;
-	XMFLOAT2 padding;
+	XMFLOAT3 padding;
 };
 
 struct ParticleColor {
@@ -21,7 +26,7 @@ struct ParticleColor {
 	XMFLOAT3 padding;
 };
 
-struct ParticleSort
+struct ParticleDrawInfo
 {
 	unsigned int index;
 	float distanceSq;

@@ -22,8 +22,11 @@ cbuffer ExternalData : register(b0)
 	float randomNum;
 	float randomNum2;
 
+	float3 particleAcceleration;
 	float randomNum3;
+
 	float randomNum4;
+	float randomNum5;
 	float2 padding;
 
 	ParticleColor colors[MAX_PARTICLE_COLORS];
@@ -57,19 +60,12 @@ void main(uint3 id : SV_DispatchThreadID)
 		}
 	}
 	
-	float speed = particleInitMinSpeed + (particleInitMaxSpeed - particleInitMinSpeed) * randomNum;
+	float speed = particleInitMinSpeed + (particleInitMaxSpeed - particleInitMinSpeed) * randomNum5;
 	float randomOffset = randomNum * 2.0f - 1.0f;
 	float randomOffset2 = randomNum2 * 2.0f - 1.0f;
 
 	float3 start = float3(randomOffset, randomOffset2, 0.0f) * emissionStartRadius;
 	float3 end = float3(float2(randomOffset, randomOffset2) * emissionEndRadius, 1.0f);
-	/*
-	float angle = emissionAngleRadians * randomOffset;
-	float pi = 3.14159265359f;
-	float xVal = cos(angle + pi / 2);
-	float yVal = sin(angle);
-	float zVal = atan2(yVal, xVal);
-	*/
 
 	newParticle.remainingLife = particleMinLifetime + (particleMaxLifetime - particleMinLifetime) * randomNum;
 	newParticle.position = float3(0, 0, 0);
@@ -77,6 +73,7 @@ void main(uint3 id : SV_DispatchThreadID)
 	newParticle.velocity = normalize(end - start) * speed;
 	newParticle.rotationRadians = 0.0f;
 	newParticle.angularVelocity = particleInitMinAngularVelocity + (particleInitMaxAngularVelocity - particleInitMinAngularVelocity) * randomNum;
+	newParticle.acceleration = particleAcceleration;
 
 	// Put it back
 	ParticlePool[newParticleIndex] = newParticle;

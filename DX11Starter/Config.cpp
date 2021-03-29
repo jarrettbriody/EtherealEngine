@@ -14,10 +14,11 @@ bool Config::FPSControllerEnabled = false;
 
 unsigned int Config::MemoryAllocatorSize = MEGABYTE * 512;
 unsigned int Config::MemoryAllocatorAlignment = 16; //16 byte boundary
-unsigned int Config::MemoryAllocatorEntityPoolSize = MEGABYTE * 128; //250 MB
-unsigned int Config::MemoryAllocatorMeshPoolSize = MEGABYTE * 128; //250 MB
-unsigned int Config::MemoryAllocatorMaterialPoolSize = MEGABYTE * 64; //250 MB
-unsigned int Config::MemoryAllocatorDecalPoolSize = MEGABYTE * 64;
+unsigned int Config::MemoryAllocatorEntityPoolSize = MEGABYTE * 128; //128 MB
+unsigned int Config::MemoryAllocatorMeshPoolSize = MEGABYTE * 128; //256 MB
+unsigned int Config::MemoryAllocatorMaterialPoolSize = MEGABYTE * 64; //320 MB
+unsigned int Config::MemoryAllocatorDecalPoolSize = MEGABYTE * 64; //384 MB
+//unsigned int Config::MemoryAllocatorParticlePoolSize = MEGABYTE * 64; //448 MB
 
 bool Config::EtherealDebugLinesEnabled = false;
 bool Config::BulletDebugLinesEnabled = false;

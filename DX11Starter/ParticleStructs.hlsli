@@ -3,13 +3,18 @@
 struct Particle
 {
 	float4 color;
+
 	float remainingLife;
 	float3 position;
+
 	float scale;
 	float3 velocity;
+
+	float3 acceleration;
 	float rotationRadians;
+
 	float angularVelocity;
-	float2 padding;
+	float3 padding;
 };
 
 struct ParticleColor {

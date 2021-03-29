@@ -22,7 +22,7 @@ public:
 	static void SetDefaultShaders(DefaultGPUParticleShaders s);
 
 	GPUParticleEmitter();
-	GPUParticleEmitter(ParticleEmitterDescription d, bool blendingEnabled = false);
+	GPUParticleEmitter(ParticleEmitterDescription d, bool blendingEnabled = true);
 	~GPUParticleEmitter();
 
 	void SetCustomShaders(SimpleComputeShader* emitParticle, SimpleComputeShader* updateParticle);
@@ -36,7 +36,7 @@ private:
 	CustomGPUParticleShaders customShaders;
 	bool customShadersEnabled = false;
 
-	bool blendingEnabled = false;
+	bool blendingEnabled = true;
 
 	ID3D11Buffer* indexBuffer;
 	ID3D11BlendState* additiveBlend;
@@ -51,9 +51,8 @@ private:
 	ID3D11ShaderResourceView* particleDrawSRV;
 	ID3D11UnorderedAccessView* drawArgsUAV;
 
-	float emitTimeCounter = 0.0f;
-
-	ID3D11ShaderResourceView* none[16] = {};
+	ID3D11UnorderedAccessView* noneUAV[8] = {};
+	ID3D11ShaderResourceView* noneSRV[16] = {};
 
 	void InitBuffers();
 };
