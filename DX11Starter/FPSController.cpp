@@ -264,9 +264,29 @@ void FPSController::Move()
 	}
 	if (keyboard->KeyIsPressed(0x41)) { // a
 		controllerVelocity += btVector3(right.x, 0, right.z) * spd;
+
+		// start rolling towards max roll angle, otherwise don't allow more rolling
+		if (cam->zRotation < CAM_ROLL_MAX)
+		{
+			camRollAngle += camRollSpeed * deltaTime;
+		}
+		else
+		{
+			camRollAngle = 0;
+		}
 	}
 	if (keyboard->KeyIsPressed(0x44)) { // d
 		controllerVelocity += btVector3(right.x, 0, right.z) * -spd;
+
+		// start rolling towards min roll angle, otherwise don't allow more rolling
+		if (cam->zRotation > CAM_ROLL_MIN)
+		{
+			camRollAngle -= camRollSpeed * deltaTime;
+		}
+		else
+		{
+			camRollAngle = 0;
+		}
 	}
 
 	// jump/double jump
@@ -434,7 +454,7 @@ void FPSController::DampForces()
 		impulseSumVec -= impulseSumVec * dampingScalar;
 	}
 
-	if (!keyboard->CheckKeysPressed(baseMovementKeys, 4) && !midAir) // Only damp overall movement if none of the base movement keys are pressed while on the ground
+	if (!keyboard->CheckKeysPressed(baseMovementKeys, 4) && !midAir) // Only damp overall movement if none of the base movement keys are pressed while on the ground. Also return roll to normal
 	{
 		controllerVelocity -= controllerVelocity * dampingScalar;
 	}
@@ -442,10 +462,20 @@ void FPSController::DampForces()
 
 void FPSController::MouseLook()
 {
-	cam->RotateCamera(mouse->GetPosX() - (int)prevMousePos.x, mouse->GetPosY() - (int)prevMousePos.y);
+	cam->RotateCamera(mouse->GetPosX() - (int)prevMousePos.x, mouse->GetPosY() - (int)prevMousePos.y, camRollAngle);
 	
 	prevMousePos.x = mouse->GetPosX();
 	prevMousePos.y = mouse->GetPosY();
+
+	if (!keyboard->CheckKeysPressed(sideMovementKeys, 2))
+	{
+		if (cam->zRotation > 0)
+			camRollAngle -= camRollSpeed * deltaTime;
+		else if (cam->zRotation < 0)
+			camRollAngle += camRollSpeed * deltaTime;
+		else
+			camRollAngle = 0;
+	}
 }
 
 void FPSController::OnCollision(btCollisionObject* other)

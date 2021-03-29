@@ -9,6 +9,9 @@ class FPSController : public ScriptManager
 	Camera* cam;
 	POINT prevMousePos = POINT();
 	float camRollAngle = 0.0f;
+	float camRollSpeed = 2.0f;
+	const float CAM_ROLL_MIN = -0.2f;
+	const float CAM_ROLL_MAX = 0.2f;
 	float headbobOffset = 0.0f;
 	const float HEADBOB_OFFSET_INTERVAL = 3.5f;
 	const float HEADBOB_OFFSET_MIN = 0.0f;
@@ -34,6 +37,7 @@ class FPSController : public ScriptManager
 	float dampingScalar = 0.09f;
 
 	const unsigned char baseMovementKeys[4] = { 0x57, 0x53, 0x41, 0x44 }; // WASD
+	const unsigned char sideMovementKeys[2] = { 0x41, 0x44 }; // WASD
 
 	bool midAir = true; // true if starting character in the air
 	int jumpCount = 0;
