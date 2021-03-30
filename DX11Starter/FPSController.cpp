@@ -106,12 +106,13 @@ void FPSController::CheckBloodIcicle()
 
 		ScriptManager::CreateEntity(icicleParams);
 
-		Entity* bloodIcicle = (*eMap)["Floor (8)"]; 
+		Entity* bloodIcicle = (*eMap)["Blood Icicle"]; 
 
 		btVector3 shotImpulse = btVector3(direction.x, direction.y, direction.z);
 
 		bloodIcicle->GetRBody()->activate();
-		bloodIcicle->GetRBody()->applyCentralImpulse(shotImpulse.normalized() * 10000.0f);
+		bloodIcicle->GetRBody()->setGravity(btVector3(0,0,0));
+		bloodIcicle->GetRBody()->applyCentralImpulse(shotImpulse.normalized() * 50.0f);
 	}
 }
 
@@ -279,7 +280,7 @@ void FPSController::Move()
 		controllerVelocity += btVector3(right.x, 0, right.z) * -spd;
 
 		// start rolling towards min roll angle, otherwise don't allow more rolling
-		if (cam->zRotation > CAM_ROLL_MIN)
+		if (cam->zRotation > CAM_ROLL_MIN) // TODO: If you are holding the other side and then switch instantly this condition will be false, cause for back and forth roll? 
 		{
 			camRollAngle -= camRollSpeed * deltaTime;
 		}
