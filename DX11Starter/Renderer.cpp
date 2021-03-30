@@ -503,6 +503,8 @@ void Renderer::RenderFrame()
 					0);											// Offset to add to each index when looking up vertices
 			}
 		}
+		shaders.decalPS->SetShaderResourceView("ShadowMap", NULL);
+		shaders.decalPS->SetShaderResourceView("DepthBuffer", NULL);
 		Config::Context->OMSetDepthStencilState(NULL, 0);
 		//Config::Context->OMSetBlendState(NULL, 0, 0xFFFFFFFF);
 	}

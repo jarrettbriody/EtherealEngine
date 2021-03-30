@@ -93,6 +93,7 @@ void Camera::Update()
 	float scalar = 10;
 
 	/*
+	* Can now use the new input system instead!
 	if (GetAsyncKeyState('W') & 0x8000) {
 		pos = XMVectorAdd(pos, XMVectorScale(dir, 0.05f * scalar));
 		XMStoreFloat3(&position, pos);

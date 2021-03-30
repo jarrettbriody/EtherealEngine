@@ -265,30 +265,22 @@ void FPSController::Move()
 	}
 	if (keyboard->KeyIsPressed(0x41)) { // a
 		controllerVelocity += btVector3(right.x, 0, right.z) * spd;
-
-		// start rolling towards max roll angle, otherwise don't allow more rolling
-		if (cam->zRotation < CAM_ROLL_MAX)
-		{
-			camRollAngle += camRollSpeed * deltaTime;
-		}
-		else
-		{
-			camRollAngle = 0;
-		}
+		rollRight = true;
+	}
+	else
+	{
+		rollRight = false;
 	}
 	if (keyboard->KeyIsPressed(0x44)) { // d
 		controllerVelocity += btVector3(right.x, 0, right.z) * -spd;
-
-		// start rolling towards min roll angle, otherwise don't allow more rolling
-		if (cam->zRotation > CAM_ROLL_MIN) // TODO: If you are holding the other side and then switch instantly this condition will be false, cause for back and forth roll? 
-		{
-			camRollAngle -= camRollSpeed * deltaTime;
-		}
-		else
-		{
-			camRollAngle = 0;
-		}
+		rollLeft = true;
 	}
+	else
+	{
+		rollLeft = false;
+	}
+
+	cout << cam->zRotation << endl;
 
 	// jump/double jump
 	btVector3 jumpForce = JumpForceFromInput();
@@ -463,12 +455,7 @@ void FPSController::DampForces()
 
 void FPSController::MouseLook()
 {
-	cam->RotateCamera(mouse->GetPosX() - (int)prevMousePos.x, mouse->GetPosY() - (int)prevMousePos.y, camRollAngle);
-	
-	prevMousePos.x = mouse->GetPosX();
-	prevMousePos.y = mouse->GetPosY();
-
-	if (!keyboard->CheckKeysPressed(sideMovementKeys, 2))
+	if (!keyboard->CheckKeysPressed(sideMovementKeys, 2) || (rollLeft && rollRight)) // if side movement keys are not being pressed return to normal camera zRotation depending on what the current rotation is or if both bools are true at the same time straighten cam to avoid jittering
 	{
 		if (cam->zRotation > 0)
 			camRollAngle -= camRollSpeed * deltaTime;
@@ -477,6 +464,28 @@ void FPSController::MouseLook()
 		else
 			camRollAngle = 0;
 	}
+	else // otherwise role to the respective min and max positions according to boolean assigned from input in Move()
+	{
+		if (cam->zRotation < CAM_ROLL_MAX && rollRight)
+		{
+			camRollAngle += camRollSpeed * deltaTime;
+		}
+		else if (cam->zRotation > CAM_ROLL_MIN && rollLeft)
+		{
+			camRollAngle -= camRollSpeed * deltaTime;
+		}
+		else
+		{
+			camRollAngle = 0;
+			rollLeft = false;
+			rollRight = false;
+		}
+	}
+
+	cam->RotateCamera(mouse->GetPosX() - (int)prevMousePos.x, mouse->GetPosY() - (int)prevMousePos.y, camRollAngle);
+
+	prevMousePos.x = mouse->GetPosX();
+	prevMousePos.y = mouse->GetPosY();
 }
 
 void FPSController::OnCollision(btCollisionObject* other)
