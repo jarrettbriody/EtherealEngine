@@ -55,6 +55,9 @@ class FPSController : public ScriptManager
 	const float DASH_DAMP_TIMER_MAX = 0.3f;
 	float dashImpulseScalar = 80.0f;
 
+	EntityCreationParameters icicleParams;
+	float bloodIcicleScalar = 50.0f;
+	
 	btVector3 hookshotPoint;
 	float hookshotRangeScalar = 100.0f;
 

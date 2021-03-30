@@ -34,6 +34,6 @@ protected:
 	virtual void Init() = 0;
 	virtual void Update() = 0;
 	virtual void OnCollision(btCollisionObject* other) {};
-	void CreateEntity(EntityCreationParameters& para);
+	Entity* CreateEntity(EntityCreationParameters& para);
 };
 

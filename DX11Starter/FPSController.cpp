@@ -11,6 +11,16 @@ void FPSController::Init()
 	direction = cam->direction; 
 	cam->SetFOV(fov);
 
+	icicleParams = {
+			"Blood Icicle",
+			"Cone",
+			"White",
+			XMFLOAT3(entity->GetPosition().x + direction.x, entity->GetPosition().y - entity->GetScale().y, entity->GetPosition().z + direction.z), 
+			XMFLOAT3(-90.0f, 0.0f, 0.0f),
+			XMFLOAT3(1.0f, 1.0f, 2.0f),
+			1.0f
+	};
+
 	// TODO: Easier setting of physics characteristics via Bullet (coll shape, mass, restitution, other properties)
 	
 	playerRBody = entity->GetRBody(); // Get the bullet rigidbody
@@ -92,28 +102,15 @@ void FPSController::CheckBloodIcicle()
 {
 	if (mouse->OnRMBDown()) 
 	{
-		// blood icicle
-		cout << "Blood Icicle" << endl;
-
-		EntityCreationParameters icicleParams = {
-			"Blood Icicle",
-			"Cone",
-			"White",
-			XMFLOAT3(entity->GetPosition().x + direction.x, entity->GetPosition().y, entity->GetPosition().z + direction.z),
-			XMFLOAT3(-90.0f, 0.0f, 0.0f),
-			XMFLOAT3(1.0f, 1.0f, 2.0f),
-			1.0f
-		};
-
-		ScriptManager::CreateEntity(icicleParams);
-
-		Entity* bloodIcicle = (*eMap)["Blood Icicle"]; 
+		icicleParams.position = XMFLOAT3(entity->GetPosition().x + direction.x, entity->GetPosition().y - entity->GetScale().y, entity->GetPosition().z + direction.z); // TODO: Change to camera pos?
+		
+		Entity* bloodIcicle = ScriptManager::CreateEntity(icicleParams);
 
 		btVector3 shotImpulse = btVector3(direction.x, direction.y, direction.z);
 
-		bloodIcicle->GetRBody()->activate();
 		bloodIcicle->GetRBody()->setGravity(btVector3(0,0,0));
-		bloodIcicle->GetRBody()->applyCentralImpulse(shotImpulse.normalized() * 50.0f);
+		bloodIcicle->GetRBody()->activate();
+		bloodIcicle->GetRBody()->applyCentralImpulse(shotImpulse.normalized() * bloodIcicleScalar);
 	}
 }
 
@@ -258,13 +255,16 @@ void FPSController::Move()
 	GroundCheck();
 	UpdateHeadbob();
 	// base movement
-	if (keyboard->KeyIsPressed(0x57)) { // w
+	if (keyboard->KeyIsPressed(0x57)) // w
+	{ 
 		controllerVelocity += btVector3(direction.x, 0, direction.z) * spd;
 	}
-	if (keyboard->KeyIsPressed(0x53)) { // s
+	if (keyboard->KeyIsPressed(0x53)) // s
+	{ 
 		controllerVelocity += btVector3(direction.x, 0, direction.z) * -spd;
 	}
-	if (keyboard->KeyIsPressed(0x41)) { // a
+	if (keyboard->KeyIsPressed(0x41)) // a
+	{ 
 		controllerVelocity += btVector3(right.x, 0, right.z) * spd;
 		rollRight = true;
 	}
@@ -272,7 +272,8 @@ void FPSController::Move()
 	{
 		rollRight = false;
 	}
-	if (keyboard->KeyIsPressed(0x44)) { // d
+	if (keyboard->KeyIsPressed(0x44)) // d
+	{ 
 		controllerVelocity += btVector3(right.x, 0, right.z) * -spd;
 		rollLeft = true;
 	}
@@ -411,6 +412,7 @@ btVector3 FPSController::DashImpulseFromInput()
 	{
 		dashDampTimer -= deltaTime;
 
+		// before the timer runs out to begin damping interpolate fov to dash fov
 		if (fov < DASH_FOV)
 		{
 			fov += fovNormalToDashSpeed * deltaTime;
@@ -451,9 +453,10 @@ void FPSController::DampForces()
 	{
 		impulseSumVec -= impulseSumVec * dampingScalar;
 
+		// return fov to normal when damping dash impulse
 		if (fov > NORMAL_FOV)
 		{
-			cout << fov << endl;
+			// cout << fov << endl;
 			fov -= fovDashToNormalSpeed * deltaTime;
 			cam->SetFOV(fov);
 		}
@@ -470,11 +473,17 @@ void FPSController::MouseLook()
 	if (!keyboard->CheckKeysPressed(sideMovementKeys, 2) || (rollLeft && rollRight)) // if side movement keys are not being pressed return to normal camera zRotation depending on what the current rotation is or if both bools are true at the same time straighten cam to avoid jittering
 	{
 		if (cam->zRotation > 0)
+		{
 			camRollAngle -= camRollSpeed * deltaTime;
+		}
 		else if (cam->zRotation < 0)
+		{
 			camRollAngle += camRollSpeed * deltaTime;
+		}
 		else
+		{
 			camRollAngle = 0;
+		}
 	}
 	else // otherwise role to the respective min and max positions according to boolean assigned from input in Move()
 	{

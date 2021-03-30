@@ -56,7 +56,7 @@ ScriptManager::~ScriptManager()
 {
 }
 
-void ScriptManager::CreateEntity(EntityCreationParameters& para)
+Entity* ScriptManager::CreateEntity(EntityCreationParameters& para)
 {
-	EESceneLoader->CreateEntity(para);
+	return EESceneLoader->CreateEntity(para);
 }
