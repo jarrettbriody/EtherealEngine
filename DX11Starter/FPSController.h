@@ -9,11 +9,11 @@ class FPSController : public ScriptManager
 	Camera* cam;
 	POINT prevMousePos = POINT();
 	float camRollAngle = 0.0f;
-	float camRollSpeed = 4.5f;
+	float camRollSpeed = 5.0f;
 	bool rollLeft = false;
 	bool rollRight = false;
-	const float CAM_ROLL_MIN = -0.12f;
-	const float CAM_ROLL_MAX = 0.12f;
+	const float CAM_ROLL_MIN = -0.05f;
+	const float CAM_ROLL_MAX = 0.05f;
 	float headbobOffset = 0.0f;
 	const float HEADBOB_OFFSET_INTERVAL = 3.5f;
 	const float HEADBOB_OFFSET_MIN = 0.0f;
