@@ -19,6 +19,11 @@ class FPSController : public ScriptManager
 	const float HEADBOB_OFFSET_MIN = 0.0f;
 	const float HEADBOB_OFFSET_MAX = 0.5f;
 	bool resetHeadbob = false;
+	const float NORMAL_FOV = 90.0f;
+	const float DASH_FOV = 110.0f;
+	float fov = NORMAL_FOV;
+	float fovNormalToDashSpeed = 180.0f;
+	float fovDashToNormalSpeed = 120.0f;
 
 	XMFLOAT3 position;
 	XMFLOAT3 direction;
@@ -47,7 +52,8 @@ class FPSController : public ScriptManager
 
 	int dashCount = 5;
 	float dashDampTimer = 0.0f;
-	float dashImpulseScalar = 125.0f;
+	const float DASH_DAMP_TIMER_MAX = 0.3f;
+	float dashImpulseScalar = 80.0f;
 
 	btVector3 hookshotPoint;
 	float hookshotRangeScalar = 100.0f;

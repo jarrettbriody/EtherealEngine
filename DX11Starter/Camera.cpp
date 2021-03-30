@@ -66,6 +66,12 @@ void Camera::SetPosition(XMFLOAT3 pos)
 	position = pos;
 }
 
+void Camera::SetFOV(float degrees)
+{
+	fov = (3.1415926535f / 180.0f) * degrees;
+	UpdateProjectionMatrix();
+}
+
 void Camera::UpdateProjectionMatrix()
 {
 	// Create the Projection matrix

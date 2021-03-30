@@ -9,6 +9,7 @@ void FPSController::Init()
 	prevMousePos.x = 0;
 	prevMousePos.y = 0;
 	direction = cam->direction; 
+	cam->SetFOV(fov);
 
 	// TODO: Easier setting of physics characteristics via Bullet (coll shape, mass, restitution, other properties)
 	
@@ -280,8 +281,6 @@ void FPSController::Move()
 		rollLeft = false;
 	}
 
-	cout << cam->zRotation << endl;
-
 	// jump/double jump
 	btVector3 jumpForce = JumpForceFromInput();
 	
@@ -411,6 +410,12 @@ btVector3 FPSController::DashImpulseFromInput()
 	if (dashDampTimer > 0)
 	{
 		dashDampTimer -= deltaTime;
+
+		if (fov < DASH_FOV)
+		{
+			fov += fovNormalToDashSpeed * deltaTime;
+			cam->SetFOV(fov);
+		}
 	}
 
 	btVector3 dashImpulse = btVector3(0, 0, 0);
@@ -434,7 +439,7 @@ btVector3 FPSController::DashImpulseFromInput()
 			dashImpulse = btVector3(direction.x, 0, direction.z) * -dashImpulseScalar;
 		}
 
-		dashDampTimer = 0.25f;
+		dashDampTimer = DASH_DAMP_TIMER_MAX;
 	}
 
 	return dashImpulse;
@@ -445,6 +450,13 @@ void FPSController::DampForces()
 	if (dashDampTimer <= 0) // always damp the impulse vec unless player is the player just initiated a dash
 	{
 		impulseSumVec -= impulseSumVec * dampingScalar;
+
+		if (fov > NORMAL_FOV)
+		{
+			cout << fov << endl;
+			fov -= fovDashToNormalSpeed * deltaTime;
+			cam->SetFOV(fov);
+		}
 	}
 
 	if (!keyboard->CheckKeysPressed(baseMovementKeys, 4) && !midAir) // Only damp overall movement if none of the base movement keys are pressed while on the ground. Also return roll to normal
