@@ -93,5 +93,5 @@ private:
 	FMOD_VECTOR listener_forward = FMOD_VECTOR();
 	FMOD_VECTOR listener_up = FMOD_VECTOR();
 
-	GPUParticleEmitter* emitter;
+	CPUParticleEmitter* emitter;
 };

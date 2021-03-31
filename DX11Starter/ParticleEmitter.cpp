@@ -239,7 +239,7 @@ void ParticleEmitter::SetParticleColors(unsigned int colorCount, ParticleColor* 
 	memcpy(this->colors, colors, sizeof(ParticleColor) * (size_t)colorCount);
 }
 
-void ParticleEmitter::Update(float deltaTime, float totalTime)
+void ParticleEmitter::Update(float deltaTime, float totalTime, XMFLOAT4X4 view)
 {
 	lifetime += deltaTime;
 	emitTimeCounter += deltaTime;

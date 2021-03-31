@@ -176,7 +176,9 @@ void Game::Init()
 	decals[5] = EESceneLoader->defaultTexturesMap["BLOOD6"];
 	decals[6] = EESceneLoader->defaultTexturesMap["BLOOD7"];
 	decals[7] = EESceneLoader->defaultTexturesMap["BLOOD8"];
-	EERenderer->SetDecals(EESceneLoader->defaultMeshesMap["Cube"], decals);
+	EERenderer->SetDecals(decals);
+
+	EERenderer->SetMeshes(EESceneLoader->defaultMeshesMap["Cube"], EESceneLoader->defaultMeshesMap["InverseCube"]);
 
 	DefaultGPUParticleShaders gpuParticleShaders;
 	gpuParticleShaders.copyDrawCountCS = EESceneLoader->computeShadersMap["ParticleDrawArgs"];
@@ -186,6 +188,11 @@ void Game::Init()
 	gpuParticleShaders.particleVS = EESceneLoader->vertexShadersMap["Particle"];
 	gpuParticleShaders.particlePS = EESceneLoader->pixelShadersMap["Particle"];
 	GPUParticleEmitter::SetDefaultShaders(gpuParticleShaders);
+
+	DefaultCPUParticleShaders cpuParticleShaders;
+	cpuParticleShaders.particleVS = EESceneLoader->vertexShadersMap["CPUParticle"];
+	cpuParticleShaders.particlePS = EESceneLoader->pixelShadersMap["CPUParticle"];
+	CPUParticleEmitter::SetDefaultShaders(cpuParticleShaders);
 
 	ParticleEmitterDescription emitDesc;
 	emitDesc.colorCount = 8;
@@ -200,8 +207,8 @@ void Game::Init()
 		{XMFLOAT4(1,0,0,1),10},
 	};
 	emitDesc.colors = partColors;
-	emitDesc.maxParticles = 3000;
-	emitDesc.emissionRate = 100.0f;
+	emitDesc.maxParticles = 100;
+	emitDesc.emissionRate = 20.0f;
 	//emitDesc.emissionRotation = XMFLOAT3(-XM_PIDIV2,0.0f,0.0f);
 	emitDesc.emitterDirection = Y_AXIS;
 	emitDesc.particleInitMinSpeed = 10.0f;
@@ -210,7 +217,7 @@ void Game::Init()
 	emitDesc.particleMaxLifetime = 15.0f;
 	emitDesc.particleAcceleration = XMFLOAT3(0.0f, 0.0f, -10.0f);
 
-	emitter = new GPUParticleEmitter(emitDesc);
+	emitter = new CPUParticleEmitter(emitDesc);
 
 	Entity* e;
 	for (size_t i = 0; i < EESceneLoader->sceneEntities.size(); i++)
@@ -367,7 +374,7 @@ void Game::Update(float deltaTime, float totalTime)
 		testLight->Direction = camera->direction;
 	}*/
 
-	emitter->Update(deltaTime,totalTime);
+	emitter->Update(deltaTime,totalTime, EERenderer->GetCamera("main")->GetViewMatrix());
 }
 
 void Game::PhysicsStep(float deltaTime)

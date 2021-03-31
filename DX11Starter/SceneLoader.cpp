@@ -152,6 +152,7 @@ void SceneLoader::LoadShaders()
 	LoadVertexShader("DebugLine", L"DebugLineVS.cso");
 	LoadVertexShader("Decal", L"DecalVS.cso");
 	LoadVertexShader("Particle", L"ParticleVS.cso");
+	LoadVertexShader("CPUParticle", L"CPUParticleVS.cso");
 
 	//pixel shaders
 	LoadPixelShader("DEFAULT", L"DefaultPS.cso");
@@ -162,6 +163,7 @@ void SceneLoader::LoadShaders()
 	LoadPixelShader("Decal", L"DecalPS.cso");
 	LoadPixelShader("DepthStencil", L"DepthStencilPS.cso");
 	LoadPixelShader("Particle", L"ParticlePS.cso");
+	LoadPixelShader("CPUParticle", L"CPUParticlePS.cso");
 
 	//compute shaders
 	LoadComputeShader("InitDeadList", L"InitDeadListCS.cso");
@@ -178,6 +180,11 @@ void SceneLoader::LoadDefaultMeshes()
 	Mesh cube = Mesh("Cube", "../../Assets/Models/Default/cube.obj", Config::Device);
 	*cubeMesh = cube;
 	defaultMeshesMap.insert({ "Cube", cubeMesh });
+
+	Mesh* invCubeMesh = (Mesh*)EEMemoryAllocator->AllocateToPool((unsigned int)MEMORY_POOL::MESH_POOL, sizeof(Mesh), success);
+	Mesh invCube = Mesh("InverseCube", "../../Assets/Models/Default/inverse_cube.obj", Config::Device);
+	*invCubeMesh = invCube;
+	defaultMeshesMap.insert({ "InverseCube", invCubeMesh });
 
 	Mesh* cylinderMesh = (Mesh*)EEMemoryAllocator->AllocateToPool((unsigned int)MEMORY_POOL::MESH_POOL, sizeof(Mesh), success);
 	Mesh cylinder = Mesh("Cylinder", "../../Assets/Models/Default/cylinder.obj", Config::Device);

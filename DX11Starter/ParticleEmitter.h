@@ -64,7 +64,7 @@ public:
 	//Set colors of particles (number of colors, color array, array of color weights in range [0.0f,1.0f])
 	void SetParticleColors(unsigned int colorCount, ParticleColor* colors);
 
-	virtual void Update(float deltaTime, float totalTime);
+	virtual void Update(float deltaTime, float totalTime, XMFLOAT4X4 view = XMFLOAT4X4());
 	virtual void Draw(XMFLOAT4X4 view, XMFLOAT4X4 proj) = 0;
 
 protected:

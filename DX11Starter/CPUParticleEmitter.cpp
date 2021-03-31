@@ -1,6 +1,13 @@
 #include "pch.h"
 #include "CPUParticleEmitter.h"
 
+DefaultCPUParticleShaders CPUParticleEmitter::defaultShaders;
+
+void CPUParticleEmitter::SetDefaultShaders(DefaultCPUParticleShaders s)
+{
+	defaultShaders = s;
+}
+
 CPUParticleEmitter::CPUParticleEmitter() : ParticleEmitter()
 {
 	InitBuffers();
@@ -15,52 +22,69 @@ CPUParticleEmitter::CPUParticleEmitter(ParticleEmitterDescription d, bool blendi
 CPUParticleEmitter::~CPUParticleEmitter()
 {
 	indexBuffer->Release();
+	vertexBuffer->Release();
 	additiveBlend->Release();
 	depthWriteOff->Release();
+	delete[] particlePool;
+	delete[] particleVertices;
+	delete[] deadList;
 }
 
 void CPUParticleEmitter::InitBuffers()
 {
-	// Particle index buffer =================
+	// DYNAMIC vertex buffer (no initial data necessary)
+	D3D11_BUFFER_DESC vbDesc = {};
+	vbDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	vbDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	vbDesc.Usage = D3D11_USAGE_DYNAMIC;
+	vbDesc.ByteWidth = sizeof(ParticleVertex) * 4 * maxParticles;
+	Config::Device->CreateBuffer(&vbDesc, 0, &vertexBuffer);
+
+	// Index buffer data
+	unsigned int* indices = new unsigned int[maxParticles * 6];
+	int indexCount = 0;
+	for (int i = 0; i < maxParticles * 4; i += 4)
 	{
-		// Buffer
-		D3D11_BUFFER_DESC ibDesc = {};
-		ibDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
-		ibDesc.ByteWidth = sizeof(unsigned long) * maxParticles * 6;
-		ibDesc.CPUAccessFlags = 0;
-		ibDesc.MiscFlags = 0;
-		ibDesc.StructureByteStride = 0;
-		ibDesc.Usage = D3D11_USAGE_DEFAULT;
-
-		// Fill it with data
-		unsigned long* indices = new unsigned long[maxParticles * 6];
-		for (unsigned long i = 0; i < maxParticles; i++)
-		{
-			unsigned long indexCounter = i * 6;
-			indices[indexCounter + 0] = 0 + i * 4;
-			indices[indexCounter + 1] = 1 + i * 4;
-			indices[indexCounter + 2] = 2 + i * 4;
-			indices[indexCounter + 3] = 0 + i * 4;
-			indices[indexCounter + 4] = 2 + i * 4;
-			indices[indexCounter + 5] = 3 + i * 4;
-		}
-
-		D3D11_SUBRESOURCE_DATA data = {};
-		data.pSysMem = indices;
-		Config::Device->CreateBuffer(&ibDesc, &data, &indexBuffer);
-
-		delete[] indices;
+		indices[indexCount++] = i;
+		indices[indexCount++] = i + 1;
+		indices[indexCount++] = i + 2;
+		indices[indexCount++] = i;
+		indices[indexCount++] = i + 2;
+		indices[indexCount++] = i + 3;
 	}
+	D3D11_SUBRESOURCE_DATA indexData = {};
+	indexData.pSysMem = indices;
+
+	// Regular (static) index buffer
+	D3D11_BUFFER_DESC ibDesc = {};
+	ibDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+	ibDesc.CPUAccessFlags = 0;
+	ibDesc.Usage = D3D11_USAGE_DEFAULT;
+	ibDesc.ByteWidth = sizeof(unsigned int) * maxParticles * 6;
+	Config::Device->CreateBuffer(&ibDesc, &indexData, &indexBuffer);
+
+	delete[] indices;
 
 	particlePool = new Particle[maxParticles];
-	drawList = new unsigned int[maxParticles];
+	ZeroMemory(particlePool, sizeof(Particle) * maxParticles);
 	deadList = new unsigned int[maxParticles];
-	drawListCount = 0;
+	particleVertices = new ParticleVertex[4 * maxParticles];
+	particleVertCount = 0;
+	drawCount = 0;
 	deadListCount = maxParticles;
 
 	for (size_t i = 0; i < maxParticles; i++)
 	{
 		deadList[i] = i;
+		particleVertices[i + 0].UV = XMFLOAT2(0, 0);
+		particleVertices[i + 1].UV = XMFLOAT2(1, 0);
+		particleVertices[i + 2].UV = XMFLOAT2(1, 1);
+		particleVertices[i + 3].UV = XMFLOAT2(0, 1);
+
+		particleVertices[i + 0].ID = 0;
+		particleVertices[i + 1].ID = 1;
+		particleVertices[i + 2].ID = 2;
+		particleVertices[i + 3].ID = 3;
 	}
 
 	// Additive blend state
@@ -84,16 +108,40 @@ void CPUParticleEmitter::InitBuffers()
 	Config::Device->CreateDepthStencilState(&depth, &depthWriteOff);
 }
 
+void CPUParticleEmitter::CalcVertex(Particle p, XMFLOAT4X4 view)
+{
+	particleVertices[particleVertCount].Position = p.position;
+	particleVertices[particleVertCount].Color = p.color;
+	particleVertices[particleVertCount].Scale = p.scale;
+	particleVertCount++;
+
+	particleVertices[particleVertCount].Position = p.position;
+	particleVertices[particleVertCount].Color = p.color;
+	particleVertices[particleVertCount].Scale = p.scale;
+	particleVertCount++;
+
+	particleVertices[particleVertCount].Position = p.position;
+	particleVertices[particleVertCount].Color = p.color;
+	particleVertices[particleVertCount].Scale = p.scale;
+	particleVertCount++;
+
+	particleVertices[particleVertCount].Position = p.position;
+	particleVertices[particleVertCount].Color = p.color;
+	particleVertices[particleVertCount].Scale = p.scale;
+	particleVertCount++;
+}
+
 void CPUParticleEmitter::SetBlendingEnabled(bool toggle)
 {
 	this->blendingEnabled = toggle;
 }
 
-void CPUParticleEmitter::Update(float deltaTime, float totalTime)
+void CPUParticleEmitter::Update(float deltaTime, float totalTime, XMFLOAT4X4 view)
 {
 	ParticleEmitter::Update(deltaTime, totalTime);
 
-	drawListCount = 0;
+	particleVertCount = 0;
+	drawCount = 0;
 
 	// Track time
 	while (emitTimeCounter >= emissionRate)
@@ -128,6 +176,7 @@ void CPUParticleEmitter::Update(float deltaTime, float totalTime)
 			randNum5 = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
 
 			// Grab a single index from the dead list
+			if (deadListCount == 0) break;
 			newParticleIndex = deadList[deadListCount - 1];
 			deadListCount--;
 
@@ -188,19 +237,54 @@ void CPUParticleEmitter::Update(float deltaTime, float totalTime)
 		if (particle.remainingLife <= 0.0f)
 		{
 			// Add to dead list
-			deadList[deadListCount];
+			deadList[deadListCount] = i;
 			deadListCount++;
 		}
 		else
 		{
-			drawList[drawListCount] = i;
-			drawListCount++;
+			CalcVertex(particle, view);
+			drawCount++;
 		}
 	}
 }
 
 void CPUParticleEmitter::Draw(XMFLOAT4X4 view, XMFLOAT4X4 proj)
 {
+	if (blendingEnabled)
+	{
+		Config::Context->OMSetBlendState(additiveBlend, 0, 0xFFFFFFFF);
+		Config::Context->OMSetDepthStencilState(depthWriteOff, 0);
+	}
 
+	// Copy to dynamic buffer
+	// All particles copied locally - send whole buffer to GPU
+	D3D11_MAPPED_SUBRESOURCE mapped = {};
+	Config::Context->Map(vertexBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
+	memcpy(mapped.pData, particleVertices, sizeof(ParticleVertex) * 4 * maxParticles);
+	Config::Context->Unmap(vertexBuffer, 0);
+
+	// Set up buffers
+	UINT stride = sizeof(ParticleVertex);
+	UINT offset = 0;
+	Config::Context->IASetVertexBuffers(0, 1, &vertexBuffer, &stride, &offset);
+	Config::Context->IASetIndexBuffer(indexBuffer, DXGI_FORMAT_R32_UINT, 0);
+
+	defaultShaders.particleVS->SetMatrix4x4("world", worldMatrix);
+	defaultShaders.particleVS->SetMatrix4x4("view", view);
+	defaultShaders.particleVS->SetMatrix4x4("projection", proj);
+	defaultShaders.particleVS->SetShader();
+	defaultShaders.particleVS->CopyAllBufferData();
+
+	//defaultShaders.particlePS->SetShaderResourceView("particle", texture);
+	defaultShaders.particlePS->SetShader();
+
+	// Draw the correct parts of the buffer
+	Config::Context->DrawIndexed(drawCount * 6, 0, 0);
+
+	if (blendingEnabled)
+	{
+		Config::Context->OMSetBlendState(0, 0, 0xFFFFFFFF);
+		Config::Context->OMSetDepthStencilState(0, 0);
+	}
 }
 

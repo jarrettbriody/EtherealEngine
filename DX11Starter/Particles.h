@@ -26,6 +26,14 @@ struct ParticleColor {
 	XMFLOAT3 padding;
 };
 
+struct ParticleVertex {
+	XMFLOAT3 Position;
+	XMFLOAT2 UV;
+	XMFLOAT4 Color;
+	float Scale;
+	int ID;
+};
+
 struct ParticleDrawInfo
 {
 	unsigned int index;

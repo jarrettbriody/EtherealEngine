@@ -78,6 +78,7 @@ private:
 	RendererShaders shaders;
 
 	Mesh* cube = nullptr;
+	Mesh* invCube = nullptr;
 
 	Camera* camera = nullptr;
 	map<string, Camera*> cameras;
@@ -103,7 +104,8 @@ public:
 
 	void SetEntities(vector<Entity*>* entities);
 	void SetRendererShaders(RendererShaders rShaders);
-	void SetDecals(Mesh* cube, ID3D11ShaderResourceView* decals[8]);
+	void SetDecals(ID3D11ShaderResourceView* decals[8]);
+	void SetMeshes(Mesh* cube, Mesh* invCube);
 
 	void InitDepthStencil();
 	void InitHBAOPlus();

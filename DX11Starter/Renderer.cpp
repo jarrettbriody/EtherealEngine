@@ -95,13 +95,18 @@ void Renderer::SetRendererShaders(RendererShaders rShaders)
 	shaders = rShaders;
 }
 
-void Renderer::SetDecals(Mesh* cube, ID3D11ShaderResourceView* decals[8])
+void Renderer::SetDecals(ID3D11ShaderResourceView* decals[8])
 {
-	this->cube = cube;
 	for (size_t i = 0; i < 8; i++)
 	{
 		this->decals[i] = decals[i];
 	}
+}
+
+void Renderer::SetMeshes(Mesh* cube, Mesh* invCube)
+{
+	this->cube = cube;
+	this->invCube = invCube;
 }
 
 void Renderer::InitDepthStencil()
@@ -455,8 +460,8 @@ void Renderer::RenderFrame()
 		//Config::Context->OMGetBlendState(&originalBlend);
 		Config::Context->OMSetDepthStencilState(depthStencilComponents.depthStencilState, 0);
 		//Config::Context->OMSetBlendState(depthStencilComponents.decalBlendState, 0, 0xFFFFFFFF);
-		ID3D11Buffer* vbo = cube->GetVertexBuffer();
-		ID3D11Buffer* ind = cube->GetIndexBuffer();
+		ID3D11Buffer* vbo = invCube->GetVertexBuffer();
+		ID3D11Buffer* ind = invCube->GetIndexBuffer();
 		Config::Context->IASetVertexBuffers(0, 1, &vbo, &stride, &offset);
 		Config::Context->IASetIndexBuffer(ind, DXGI_FORMAT_R32_UINT, 0);
 
@@ -500,7 +505,7 @@ void Renderer::RenderFrame()
 				shaders.decalPS->CopyAllBufferData();
 
 				Config::Context->DrawIndexed(
-					cube->GetIndexCount(),						// The number of indices to use (we could draw a subset if we wanted)
+					invCube->GetIndexCount(),						// The number of indices to use (we could draw a subset if we wanted)
 					0,											// Offset to the first index we want to use
 					0);											// Offset to add to each index when looking up vertices
 			}

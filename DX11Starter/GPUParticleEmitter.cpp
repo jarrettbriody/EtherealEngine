@@ -139,10 +139,10 @@ void GPUParticleEmitter::InitBuffers()
 		ID3D11Buffer* drawListBuffer;
 		D3D11_BUFFER_DESC drawDesc = {};
 		drawDesc.BindFlags = D3D11_BIND_UNORDERED_ACCESS | D3D11_BIND_SHADER_RESOURCE;
-		drawDesc.ByteWidth = sizeof(ParticleSort) * maxParticles;
+		drawDesc.ByteWidth = sizeof(ParticleDrawInfo) * maxParticles;
 		drawDesc.CPUAccessFlags = 0;
 		drawDesc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
-		drawDesc.StructureByteStride = sizeof(ParticleSort);
+		drawDesc.StructureByteStride = sizeof(ParticleDrawInfo);
 		drawDesc.Usage = D3D11_USAGE_DEFAULT;
 		Config::Device->CreateBuffer(&drawDesc, 0, &drawListBuffer);
 
@@ -235,7 +235,7 @@ void GPUParticleEmitter::SetBlendingEnabled(bool toggle)
 	this->blendingEnabled = toggle;
 }
 
-void GPUParticleEmitter::Update(float deltaTime, float totalTime)
+void GPUParticleEmitter::Update(float deltaTime, float totalTime, XMFLOAT4X4 view)
 {
 	ParticleEmitter::Update(deltaTime, totalTime);
 

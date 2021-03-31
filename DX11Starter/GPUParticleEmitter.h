@@ -28,7 +28,7 @@ public:
 	void SetCustomShaders(SimpleComputeShader* emitParticle, SimpleComputeShader* updateParticle);
 	void SetBlendingEnabled(bool toggle);
 
-	void Update(float deltaTime, float totalTime);
+	void Update(float deltaTime, float totalTime, XMFLOAT4X4 view = XMFLOAT4X4());
 	void Draw(XMFLOAT4X4 view, XMFLOAT4X4 proj);
 
 private:
