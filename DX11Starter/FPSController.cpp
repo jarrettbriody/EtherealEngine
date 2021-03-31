@@ -12,13 +12,18 @@ void FPSController::Init()
 	cam->SetFOV(fov);
 
 	icicleParams = {
-			"Blood Icicle",
-			"Cone",
-			"Red",
-			XMFLOAT3(entity->GetPosition().x + direction.x, entity->GetPosition().y - entity->GetScale().y, entity->GetPosition().z + direction.z), 
-			XMFLOAT3(0.0f, 0.0f, 0.0f),
-			XMFLOAT3(0.5f, 2.0f, 0.5f),
-			1.0f
+			"Blood Icicle",					// name
+			"Blood Icicle",					// tag
+			"Blood Icicle",					// layer
+			"Cone",							// mesh
+			"Red",							// material
+			{"BloodIcicle"},				// script names
+			1,								// script count
+			XMFLOAT3(0.0f, 0.0f, 0.0f),		// position
+			XMFLOAT3(0.0f, 0.0f, 0.0f),		// rotation
+			XMFLOAT3(0.5f, 2.0f, 0.5f),		// scale
+			1.0f							// mass
+			// defaults work for the rest
 	};
 
 	// TODO: Easier setting of physics characteristics via Bullet (coll shape, mass, restitution, other properties)

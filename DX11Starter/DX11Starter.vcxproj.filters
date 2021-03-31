@@ -120,6 +120,9 @@
     <ClCompile Include="MouseEvent.cpp">
       <Filter>EECore\Source Files\Mouse</Filter>
     </ClCompile>
+    <ClCompile Include="BloodIcicle.cpp">
+      <Filter>EEScripts\Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h">
@@ -205,6 +208,9 @@
     </ClInclude>
     <ClInclude Include="MouseEvent.h">
       <Filter>EECore\Header Files\Mouse</Filter>
+    </ClInclude>
+    <ClInclude Include="BloodIcicle.h">
+      <Filter>EEScripts\Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
