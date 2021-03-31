@@ -102,8 +102,8 @@ void FPSController::CheckBloodIcicle()
 {
 	if (mouse->OnRMBDown()) 
 	{
-		icicleParams.position = XMFLOAT3(entity->GetPosition().x + direction.x, entity->GetPosition().y - entity->GetScale().y, entity->GetPosition().z + direction.z); // TODO: Change to camera pos?
-		
+		icicleParams.position = XMFLOAT3(cam->position.x + direction.x, cam->position.y, cam->position.z + direction.z); // TODO: Rotate entity correctly accodring to camera direction?
+
 		Entity* bloodIcicle = ScriptManager::CreateEntity(icicleParams);
 
 		btVector3 shotImpulse = btVector3(direction.x, direction.y, direction.z);
@@ -470,7 +470,8 @@ void FPSController::DampForces()
 
 void FPSController::MouseLook()
 {
-	if (!keyboard->CheckKeysPressed(sideMovementKeys, 2) || (rollLeft && rollRight)) // if side movement keys are not being pressed return to normal camera zRotation depending on what the current rotation is or if both bools are true at the same time straighten cam to avoid jittering
+	// update camera roll
+	if ((!rollLeft && !rollRight) || (rollLeft && rollRight)) // if side movement keys are not being pressed return to normal camera zRotation depending on what the current rotation is or if both bools are true at the same time straighten cam to avoid jittering
 	{
 		if (cam->zRotation > 0)
 		{
