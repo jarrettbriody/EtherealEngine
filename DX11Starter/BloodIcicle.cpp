@@ -6,6 +6,11 @@ void BloodIcicle::Init()
 	eMap = ScriptManager::sceneEntitiesMap;
 }
 
+void BloodIcicle::Update()
+{
+	
+}
+
 void BloodIcicle::OnCollision(btCollisionObject* other)
 {
 	Entity* otherE = (Entity*)other->getUserPointer();

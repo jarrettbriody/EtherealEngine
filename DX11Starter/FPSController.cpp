@@ -17,7 +17,7 @@ void FPSController::Init()
 			"Blood Icicle",					// layer
 			"Cone",							// mesh
 			"Red",							// material
-			{"BloodIcicle"},				// script names
+			{"BLOODICICLE"},				// script names
 			1,								// script count
 			XMFLOAT3(0.0f, 0.0f, 0.0f),		// position
 			XMFLOAT3(0.0f, 0.0f, 0.0f),		// rotation
