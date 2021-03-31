@@ -2,10 +2,16 @@
 #include "ScriptManager.h"
 #include <WinUser.h>
 
+enum PlayerState
+{
+	Intro, Normal, HookshotFlight, HookshotLeash, Paused, Death, Victory
+};
+
 class FPSController : public ScriptManager
 {
 	map<string, Entity*>* eMap;
 
+	// Camera related attributes
 	Camera* cam;
 	POINT prevMousePos = POINT();
 	float camRollAngle = 0.0f;
@@ -25,6 +31,7 @@ class FPSController : public ScriptManager
 	float fovNormalToDashSpeed = 180.0f;
 	float fovDashToNormalSpeed = 120.0f;
 
+	// Calculation fields
 	XMFLOAT3 position;
 	XMFLOAT3 direction;
 	XMFLOAT3 right;
@@ -44,35 +51,40 @@ class FPSController : public ScriptManager
 	float dampingScalar = 0.09f;
 
 	const unsigned char baseMovementKeys[4] = { 0x57, 0x53, 0x41, 0x44 }; // WASD
-	const unsigned char sideMovementKeys[2] = { 0x41, 0x44 }; // WASD
 
+	// Jumping
 	bool midAir = true; // true if starting character in the air
 	int jumpCount = 0;
 	float jumpForceScalar = 3.0f;
 
+	// Dashing
 	int dashCount = 5;
 	float dashDampTimer = 0.0f;
 	const float DASH_DAMP_TIMER_MAX = 0.3f;
 	float dashImpulseScalar = 80.0f;
 
+	// Blood Icicle
 	EntityCreationParameters icicleParams;
 	float bloodIcicleScalar = 50.0f;
+	float bloodIcicleRecoilScalar = 30.0f;
+	float bloodIcicleCooldownTimer = 0.0f;
+	const float BLOOD_ICICLE_MAX_COOLDOWN_TIME = 1.0f;
 	
+	// Hookshot
 	btVector3 hookshotPoint;
 	float hookshotRangeScalar = 100.0f;
+	const float EXIT_RANGE = 5.0f;
 
+	// Leash
 	Entity* leashedEnemy;
 	float leashSize = 0.0f; 
 	float leashedScalar = 10.0f;
 
+	// Bullet Time
 	const float BULLET_TIME_SCALAR = 0.5f;
 	const float NORMAL_TIME_SCALAR = 1.0f;
 	float bulletTimeRampDown = 0.25f;
 
-	enum class PlayerState
-	{
-		Intro, Normal, HookshotFlight, HookshotLeash, Paused, Death, Victory
-	};
 	PlayerState ps;
 
 	void Init();

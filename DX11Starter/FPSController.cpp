@@ -14,10 +14,10 @@ void FPSController::Init()
 	icicleParams = {
 			"Blood Icicle",
 			"Cone",
-			"White",
+			"Red",
 			XMFLOAT3(entity->GetPosition().x + direction.x, entity->GetPosition().y - entity->GetScale().y, entity->GetPosition().z + direction.z), 
-			XMFLOAT3(-90.0f, 0.0f, 0.0f),
-			XMFLOAT3(1.0f, 1.0f, 2.0f),
+			XMFLOAT3(0.0f, 0.0f, 0.0f),
+			XMFLOAT3(0.5f, 2.0f, 0.5f),
 			1.0f
 	};
 
@@ -100,9 +100,11 @@ void FPSController::CheckAllAbilities()
 
 void FPSController::CheckBloodIcicle()
 {
-	if (mouse->OnRMBDown()) 
+	if (mouse->OnRMBDown() && bloodIcicleCooldownTimer <= 0) 
 	{
-		icicleParams.position = XMFLOAT3(cam->position.x + direction.x, cam->position.y, cam->position.z + direction.z); // TODO: Rotate entity correctly accodring to camera direction?
+		// update position and rotation of the EntityCreationParams
+		icicleParams.position = XMFLOAT3(cam->position.x + direction.x, cam->position.y, cam->position.z + direction.z); 
+		icicleParams.rotationRadians = XMFLOAT3(cam->xRotation + 1.5708f /* 90 degress in radians */ , cam->yRotation, cam->zRotation);
 
 		Entity* bloodIcicle = ScriptManager::CreateEntity(icicleParams);
 
@@ -111,6 +113,15 @@ void FPSController::CheckBloodIcicle()
 		bloodIcicle->GetRBody()->setGravity(btVector3(0,0,0));
 		bloodIcicle->GetRBody()->activate();
 		bloodIcicle->GetRBody()->applyCentralImpulse(shotImpulse.normalized() * bloodIcicleScalar);
+
+		// backwards recoil impulse on player
+		impulseSumVec += btVector3(-direction.x, 0, -direction.z).normalized() * bloodIcicleRecoilScalar;
+
+		bloodIcicleCooldownTimer = BLOOD_ICICLE_MAX_COOLDOWN_TIME;
+	}
+	else if(bloodIcicleCooldownTimer > 0)
+	{
+		bloodIcicleCooldownTimer -= deltaTime;
 	}
 }
 
@@ -212,7 +223,7 @@ void FPSController::HookshotFlight()
 		playerRBody->activate();
 		playerRBody->applyCentralForce((hookshotPoint - playerRBody->getCenterOfMassPosition()).normalized() * distanceToHitPoint * 2.0f); // adjust speed according to distance away with an added small scalar
 
-		if (distanceToHitPoint < 5.0f)
+		if (distanceToHitPoint < EXIT_RANGE)
 		{
 			ps = PlayerState::Normal;
 		}
@@ -412,7 +423,7 @@ btVector3 FPSController::DashImpulseFromInput()
 	{
 		dashDampTimer -= deltaTime;
 
-		// before the timer runs out to begin damping interpolate fov to dash fov
+		// before the timer runs out to begin damping, interpolate fov up to dash fov
 		if (fov < DASH_FOV)
 		{
 			fov += fovNormalToDashSpeed * deltaTime;
