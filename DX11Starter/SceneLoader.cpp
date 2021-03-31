@@ -982,6 +982,14 @@ Entity* SceneLoader::CreateEntity(EntityCreationParameters& para)
 		}
 	}
 
+	for (size_t i = 0; i < para.scriptCount; i++)
+	{
+		scriptCallback(allocatedEntity, para.scriptNames[i]);
+	}
+
+	*allocatedEntity->tag = para.tagName;
+	*allocatedEntity->layer = para.layerName;
+
 	return allocatedEntity;
 }
 

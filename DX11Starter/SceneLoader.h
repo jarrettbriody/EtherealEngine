@@ -14,8 +14,12 @@ using namespace Utility;
 
 struct EntityCreationParameters {
 	string entityName = "";
+	string tagName = "";
+	string layerName = "";
 	string meshName = "";
 	string materialName = "";
+	string scriptNames[8];
+	unsigned int scriptCount = 0;
 	XMFLOAT3 position = ZERO_VECTOR3;
 	XMFLOAT3 rotationRadians = ZERO_VECTOR3;
 	XMFLOAT3 scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
