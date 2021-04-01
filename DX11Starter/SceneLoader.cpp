@@ -887,8 +887,11 @@ Entity* SceneLoader::CreateEntity(EntityCreationParameters& para)
 		}
 	}
 
-	if (para.collisionsEnabled)
+	if (para.collisionsEnabled) {
+		allocatedEntity->collisionsEnabled = true;
 		allocatedEntity->AddAutoBoxCollider();
+	}
+		
 
 	allocatedEntity->SetPosition(para.position);
 	allocatedEntity->SetRotation(para.rotationRadians);
@@ -901,8 +904,12 @@ Entity* SceneLoader::CreateEntity(EntityCreationParameters& para)
 	
 	if (EERenderer != nullptr && para.drawEntity)
 		EERenderer->AddRenderObject(allocatedEntity, mesh, mat);
-	if (para.initRigidBody)
+
+	if (para.initRigidBody) {
+		float mass = para.entityMass;
+		allocatedEntity->isCollisionStatic = (mass == 0.0f);
 		allocatedEntity->InitRigidBody(para.bulletColliderShape, para.entityMass);
+	}
 
 	if (Config::EtherealDebugLinesEnabled && allocatedEntity->colliderDebugLinesEnabled) {
 		vector<Collider*> colliders = allocatedEntity->GetColliders();

@@ -4,6 +4,7 @@
 void BloodIcicle::Init()
 {
 	eMap = ScriptManager::sceneEntitiesMap;
+	cout << "init blood icicle" << endl;
 }
 
 void BloodIcicle::Update()

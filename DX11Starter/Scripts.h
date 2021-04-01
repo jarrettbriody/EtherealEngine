@@ -7,7 +7,7 @@ namespace Scripts {
 	enum class SCRIPT_NAMES {
 		BARREL,
 		FPSCONTROLLER,
-		BLOODICICLE
+		BLOODICICLE,
 	};
 
 	static map<string, SCRIPT_NAMES> scriptNameMap = {

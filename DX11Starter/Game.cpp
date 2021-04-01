@@ -320,12 +320,21 @@ void Game::Update(float deltaTime, float totalTime)
 		btCollisionObject* obB = (btCollisionObject*)(contactManifold->getBody1());
 
 		Entity* a = (Entity*)obA->getUserPointer();
+		Entity* b = (Entity*)obB->getUserPointer();
 
 		if (ScriptManager::scriptFunctionsMap.count(a->GetName())) {
 			vector<ScriptManager*> scripts = ScriptManager::scriptFunctionsMap[a->GetName()];
 			for (size_t j = 0; j < scripts.size(); j++)
 			{
 				scripts[j]->CallOnCollision(obB);
+			}
+		}
+
+		if (ScriptManager::scriptFunctionsMap.count(b->GetName())) {
+			vector<ScriptManager*> scripts = ScriptManager::scriptFunctionsMap[b->GetName()];
+			for (size_t j = 0; j < scripts.size(); j++)
+			{
+				scripts[j]->CallOnCollision(obA);
 			}
 		}
 	}
