@@ -26,6 +26,24 @@ void FPSController::Init()
 			// defaults work for the rest
 	};
 
+	swordParams = {
+			"Blood Sword",					// name
+			"Blood Sword",					// tag
+			"Blood Sword",					// layer
+			"Cone",							// mesh
+			"Red",							// material
+			{""},				// script names
+			0,								// script count
+			XMFLOAT3(0.0f, 0.0f, 0.0f),		// position
+			XMFLOAT3(0.0f, 0.0f, 0.0f),		// rotation
+			XMFLOAT3(1.0f, 5.0f, 1.0f),		// scale
+			0.0f							// mass
+			// defaults work for the rest
+	};
+
+	/*sword = ScriptManager::CreateEntity(swordParams);
+	entity->AddChildEntity(sword);*/
+
 	// TODO: Easier setting of physics characteristics via Bullet (coll shape, mass, restitution, other properties)
 	
 	playerRBody = entity->GetRBody(); // Get the bullet rigidbody
@@ -98,9 +116,18 @@ void FPSController::Update()
 
 void FPSController::CheckAllAbilities()
 {
+	// CheckBloodSword();
 	CheckBloodIcicle();
 	CheckHookshot();
 	CheckBulletTime();
+}
+
+void FPSController::CheckBloodSword()
+{
+	if (mouse->OnLMBDown())
+	{
+	
+	}
 }
 
 void FPSController::CheckBloodIcicle()
@@ -108,7 +135,7 @@ void FPSController::CheckBloodIcicle()
 	if (mouse->OnRMBDown() && bloodIcicleCooldownTimer <= 0) 
 	{
 		// update position and rotation of the EntityCreationParams
-		icicleParams.position = XMFLOAT3(cam->position.x + direction.x, cam->position.y, cam->position.z + direction.z); 
+		icicleParams.position = XMFLOAT3(cam->position.x + direction.x * 2, cam->position.y, cam->position.z + direction.z * 2); 
 		icicleParams.rotationRadians = XMFLOAT3(cam->xRotation + 1.5708f /* 90 degress in radians */ , cam->yRotation, cam->zRotation);
 
 		Entity* bloodIcicle = ScriptManager::CreateEntity(icicleParams);
@@ -531,3 +558,4 @@ void FPSController::OnCollision(btCollisionObject* other)
 	Entity* otherE = (Entity*)other->getUserPointer();
 	
 }
+

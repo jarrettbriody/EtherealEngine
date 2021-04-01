@@ -69,5 +69,5 @@ void TestScript::Update()
 void TestScript::OnCollision(btCollisionObject* other)
 {
 	Entity* otherE = (Entity*)other->getUserPointer();
-	cout << otherE->GetName() << endl;
+	// cout << otherE->GetName() << endl;
 }

@@ -25,8 +25,8 @@ class FPSController : public ScriptManager
 	const float HEADBOB_OFFSET_MIN = 0.0f;
 	const float HEADBOB_OFFSET_MAX = 0.5f;
 	bool resetHeadbob = false;
-	const float NORMAL_FOV = 90.0f;
-	const float DASH_FOV = 110.0f;
+	const float NORMAL_FOV = 100.0f;
+	const float DASH_FOV = NORMAL_FOV + 20.0f;
 	float fov = NORMAL_FOV;
 	float fovNormalToDashSpeed = 180.0f;
 	float fovDashToNormalSpeed = 120.0f;
@@ -63,6 +63,10 @@ class FPSController : public ScriptManager
 	const float DASH_DAMP_TIMER_MAX = 0.3f;
 	float dashImpulseScalar = 80.0f;
 
+	// Sword
+	EntityCreationParameters swordParams;
+	Entity* sword; 
+
 	// Blood Icicle
 	EntityCreationParameters icicleParams;
 	float bloodIcicleScalar = 50.0f;
@@ -92,6 +96,8 @@ class FPSController : public ScriptManager
 	void Update();
 	
 	void CheckAllAbilities();
+
+	void CheckBloodSword();
 
 	void CheckBloodIcicle();
 	
