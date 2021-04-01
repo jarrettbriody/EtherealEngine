@@ -249,12 +249,6 @@ void Game::Init()
 	musicChannel->set3DAttributes(&pos, &vel);
 	musicChannel->set3DMinMaxDistance(0, 15.0f);
 
-	for (size_t i = 0; i < ScriptManager::scriptFunctions.size(); i++)
-	{
-		ScriptManager* sf = ScriptManager::scriptFunctions[i];
-		sf->CallInit();
-	}
-
 
 	if(Config::Fullscreen)
 		Config::SwapChain->SetFullscreenState(true, NULL);
@@ -284,6 +278,13 @@ void Game::Update(float deltaTime, float totalTime)
 	if (GetAsyncKeyState(VK_ESCAPE)) {
 		Config::SwapChain->SetFullscreenState(false, NULL);
 		Quit();
+	}
+
+	for (size_t i = 0; i < ScriptManager::scriptFunctions.size(); i++)
+	{
+		ScriptManager* sf = ScriptManager::scriptFunctions[i];
+		if(!sf->GetIsInitialized())
+			sf->CallInit();
 	}
 
 	GarbageCollect();

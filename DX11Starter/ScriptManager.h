@@ -19,6 +19,8 @@ public:
 
 	bool inputEnabled = false;
 
+	bool GetIsInitialized() { return initialized; }
+
 	void CallInit();
 	void CallUpdate(float deltaTime);
 	void CallOnCollision(btCollisionObject* other);
@@ -28,6 +30,7 @@ public:
 	virtual ~ScriptManager();
 protected:
 	bool initialized = false;
+	bool setup = false;
 	string name;
 	Entity* entity;
 	ScriptManager();

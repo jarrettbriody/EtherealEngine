@@ -11,20 +11,22 @@ float ScriptManager::deltaTime;
 
 void ScriptManager::CallInit()
 {
-	if (initialized)
+	if (setup) {
 		Init();
+		initialized = true;
+	}
 }
 
 void ScriptManager::CallUpdate(float deltaTime)
 {
 	this->deltaTime = deltaTime;
-	if (initialized)
+	if (setup)
 		Update();
 }
 
 void ScriptManager::CallOnCollision(btCollisionObject* other)
 {
-	if (initialized)
+	if (setup)
 		OnCollision(other);
 }
 
@@ -45,7 +47,7 @@ void ScriptManager::Setup(Entity* e)
 	}
 	ScriptManager::scriptFunctionsMap[this->name].push_back(this);
 
-	initialized = true;
+	setup = true;
 }
 
 ScriptManager::ScriptManager()
