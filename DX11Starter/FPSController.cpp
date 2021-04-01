@@ -12,17 +12,17 @@ void FPSController::Init()
 	cam->SetFOV(fov);
 
 	icicleParams = {
-			"Blood Icicle",                    // name
-			"Blood Icicle",                    // tag
-			"Blood Icicle",                    // layer
-			"Cone",                            // mesh
-			"Red",                            // material
-			{"BLOODICICLE"},                // script names
-			1,                                // script count
-			XMFLOAT3(0.0f, 0.0f, 0.0f),        // position
-			XMFLOAT3(0.0f, 0.0f, 0.0f),        // rotation
-			XMFLOAT3(0.5f, 2.0f, 0.5f),        // scale
-			1.0f                            // mass
+			"Blood Icicle",					// name
+			"Blood Icicle",					// tag
+			"Blood Icicle",					// layer
+			"Cone",							// mesh
+			"Red",							// material
+			{"BLOODICICLE"},				// script names
+			1,								// script count
+			XMFLOAT3(0.0f, 0.0f, 0.0f),		// position
+			XMFLOAT3(0.0f, 0.0f, 0.0f),		// rotation
+			XMFLOAT3(0.5f, 2.0f, 0.5f),		// scale
+			1.0f							// mass
 			// defaults work for the rest
 	};
 
