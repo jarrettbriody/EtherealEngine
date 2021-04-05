@@ -16,13 +16,13 @@ Mesh::Mesh(Vertex * vertexObjects, int vertexCnt, unsigned int * indices, int in
 	mtlPath = new string();
 	materialNameList = new vector<string>();
 	meshName = new string();
-	for (size_t i = 0; i < vertexCount; i++)
+	for (size_t i = 0; i < vertexCnt; i++)
 	{
 		vertices->push_back(vertexObjects[i].Position);
 	}
 	*meshName = meshN;
 	materialNameList->push_back(matName);
-	CreateBuffers(vertexObjects, vertexCount, indices, indexCnt, device);
+	CreateBuffers(vertexObjects, vertexCnt, indices, indexCnt, device);
 	childCount = 0;
 	indexArray = new unsigned int[indexCnt];
 	vertexArray = new Vertex[vertexCnt];
@@ -361,7 +361,7 @@ int Mesh::GetIndexCount()
 void Mesh::CreateBuffers(Vertex* vertexObjects, int vertexCnt, unsigned int* indices, int indexCnt, ID3D11Device* device)
 {
 	// Calculate the tangents before copying to buffer
-	CalculateTangents(vertexObjects, vertexCount, indices, indexCnt);
+	CalculateTangents(vertexObjects, vertexCnt, indices, indexCnt);
 
 	vertexCount = vertexCnt;
 	indexCount = indexCnt;
@@ -578,4 +578,9 @@ void Mesh::AllocateChildren()
 string Mesh::GetName()
 {
 	return *meshName;
+}
+
+void Mesh::SetName(string name)
+{
+	*meshName = name;
 }

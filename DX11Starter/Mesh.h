@@ -52,5 +52,6 @@ public:
 	void ReleaseBuffers();
 	void AllocateChildren();
 	string GetName();
+	void SetName(string name);
 };
 

@@ -16,7 +16,7 @@ Game::Game(HINSTANCE hInstance)
 	if (Config::FPSControllerEnabled) ShowCursor(false);
 	printf("Console window created successfully.  Feel free to printf() here.\n");
 #endif
-	
+
 }
 
 Game::~Game()
@@ -188,7 +188,7 @@ void Game::Init()
 	for (size_t i = 0; i < EESceneLoader->sceneEntities.size(); i++)
 	{
 		e = EESceneLoader->sceneEntities[i];
-		if(!e->isEmptyObj)
+		if (!e->isEmptyObj)
 			EERenderer->AddRenderObject(e, e->GetMesh(), e->GetMaterial(e->GetMeshMaterialName()));
 	}
 
@@ -226,7 +226,7 @@ void Game::Init()
 	FmodErrorCheck(fmodResult);
 
 	// Add the SFX group as a child of the master group as an example. Technically doesn't need to be done because the master group already controls everything
-	fmodResult = masterGroup->addGroup(sfxGroup); 
+	fmodResult = masterGroup->addGroup(sfxGroup);
 	FmodErrorCheck(fmodResult);
 
 	fmodResult = fmodSystem->playSound(backgroundMusic, 0, false, &musicChannel); // Start playing the 3D sound
@@ -246,7 +246,7 @@ void Game::Init()
 	}
 
 
-	if(Config::Fullscreen)
+	if (Config::Fullscreen)
 		Config::SwapChain->SetFullscreenState(true, NULL);
 
 	//cout << sizeof(Entity);
@@ -294,7 +294,7 @@ void Game::Update(float deltaTime, float totalTime)
 		masterGroup->getMute(&mute);
 		masterGroup->setMute(!mute);
 	}
-	
+
 	for (size_t i = 0; i < ScriptManager::scriptFunctions.size(); i++)
 	{
 		ScriptManager* sf = ScriptManager::scriptFunctions[i];
@@ -348,7 +348,7 @@ void Game::PhysicsStep(float deltaTime)
 	Entity* entity = nullptr;
 
 	Config::DynamicsWorld->applyGravity();
-	Config::DynamicsWorld->stepSimulation(deltaTime , 1, btScalar(1.0) / btScalar(60.0));
+	Config::DynamicsWorld->stepSimulation(deltaTime, 1, btScalar(1.0) / btScalar(60.0));
 
 	for (int i = 0; i < Config::DynamicsWorld->getNumCollisionObjects(); i++)
 	{
@@ -560,7 +560,7 @@ void Game::OnMouseDown(WPARAM buttonState, int x, int y)
 	// Create the world matrix for the debug line
 	XMFLOAT4X4 wm;
 	XMStoreFloat4x4(&wm, XMMatrixTranspose(DirectX::XMMatrixIdentity()));
-	
+
 	// Create the transformation matrices for our raycast
 	XMMATRIX proj = XMMatrixTranspose(XMLoadFloat4x4(&(EECamera->GetProjMatrix())));
 	XMMATRIX view = XMMatrixTranspose(XMLoadFloat4x4(&(EECamera->GetViewMatrix())));
@@ -618,23 +618,11 @@ void Game::OnMouseDown(WPARAM buttonState, int x, int y)
 
 			if (hit->GetName() == "CuttingBox")
 			{
-				// Define a plane that goes through the center of the entity
-					// plane = (entity.x, entity.y, entity.z)
-					// meshAVerts = entity.verticies that are to the left of plane
-					// meshBVerts = entity.verticies that are to the right of plane
-
-				std::vector<Vertex> meshAVerts;
-				std::vector<Vertex> meshBVerts;
-				std::vector<unsigned int> meshAIndicies;
-				std::vector<unsigned int> meshBIndicies;
-				std::map<Vertex, unsigned int> meshAVertexToIndexMap;
-				std::map<Vertex, unsigned int> meshBVertexToIndexMap;
-
 				/*
-				Make get function on mesh for index array
-				Loop through original mesh index array using original mesh index count
-				Use the unsigned int value at that index (indexArray[5]) as the index into the original mesh vertex vector
-				Now you have a vertex, so do your calculation to see what new mesh it belongs to
+				> Make get function on mesh for index array
+				> Loop through original mesh index array using original mesh index count
+				> Use the unsigned int value at that index (indexArray[5]) as the index into the original mesh vertex vector
+				> Now you have a vertex, so do your calculation to see what new mesh it belongs to
 				You dont want to repeat the vertex in the new buffers if it already exists
 				whateverMap.count(someVertex), function returns true if it exists, false if it doesnt
 				if it returns true, then the value that it returns is the index in the new whatever vector you made, add that index to the whatever vector
@@ -643,22 +631,65 @@ void Game::OnMouseDown(WPARAM buttonState, int x, int y)
 				create new meshes, do not destroy old mesh
 				*/
 
+				std::vector<Vertex> meshAVerts;
+				std::vector<Vertex> meshBVerts;
+				std::vector<unsigned int> meshAIndices;
+				std::vector<unsigned int> meshBIndices;
+				std::map<Vertex, unsigned int> meshAVertexToIndexMap;
+				std::map<Vertex, unsigned int> meshBVertexToIndexMap;
+
 				Vertex* originalVerticies = hit->GetMesh()->GetVertexArray();
 				unsigned int* originalIndices = hit->GetMesh()->GetIndexArray();
 				int originalIndexCount = hit->GetMesh()->GetIndexCount();
 				int originalVertexCount = hit->GetMesh()->GetVertexCount();
 
+				btVector3 h = closestResult.m_hitPointWorld;
+				XMFLOAT3 hitLocation(h.getX(), h.getY(), h.getZ());
+				XMVECTOR point = XMLoadFloat3(&hitLocation);
+				point.m128_f32[3] = 1.0f;
+				XMStoreFloat3(&hitLocation, XMVector3Transform(point, XMMatrixTranspose(XMLoadFloat4x4(&hit->GetInverseWorldMatrix()))));
+
+				// index buffer and index buffer + 
 				for (int i = 0; i < originalIndexCount; i++)
 				{
-					if(originalVerticies[i].Position.x < hit->GetPosition().x)
+					Vertex currentVertex = originalVerticies[originalIndices[i]];
+					//Vertex nextVertex = originalVerticies[originalIndices[i + 1]];
+
+					if (currentVertex.Position.x < hitLocation.x)
 					{
-						meshAVerts.push_back(originalVerticies[i]);
-						
+						meshAVerts.push_back(currentVertex);
+						meshAIndices.push_back(originalIndices[i]);
+						//meshAVertexToIndexMap.insert(std::pair<Vertex, unsigned int>(currentVertex, originalIndices[i]));
 					}
 					else
 					{
-						meshBVerts.push_back(originalVerticies[i]);
+						meshBVerts.push_back(currentVertex);
+						meshBIndices.push_back(originalIndices[i]);
+						//meshBVertexToIndexMap.insert(std::pair<Vertex, unsigned int>(currentVertex, originalIndices[i]));
 					}
+				}
+
+				// Load up the vertex and index arrays based on our vectors
+				Vertex* meshAVertsArray = new Vertex[meshAVerts.size()];
+				Vertex* meshBVertsArray = new Vertex[meshBVerts.size()];
+				unsigned int* meshAIndexArray = new unsigned int[meshAIndices.size()];
+				unsigned int* meshBIndexArray = new unsigned int[meshBIndices.size()];
+
+				for (int i = 0; i < meshAVerts.size(); i++)
+				{
+					meshAVertsArray[i] = meshAVerts[i];
+				}
+				for (int i = 0; i < meshBVerts.size(); i++)
+				{
+					meshBVertsArray[i] = meshBVerts[i];
+				}
+				for (int i = 0; i < meshAIndices.size(); i++)
+				{
+					meshAIndexArray[i] = meshAIndices[i];
+				}
+				for (int i = 0; i < meshBIndices.size(); i++)
+				{
+					meshBIndexArray[i] = meshBIndices[i];
 				}
 
 				std::cout << "Original Mesh Vertex Count: " << originalVertexCount << endl;
@@ -666,13 +697,68 @@ void Game::OnMouseDown(WPARAM buttonState, int x, int y)
 				std::cout << "MeshA Vertex Count: " << meshAVerts.size() << endl;
 				std::cout << "MeshB Vertex Count: " << meshBVerts.size() << endl;
 
-				// Generate two meshes for each side of the cut
-				//Mesh meshA = new Mesh()
+				// Generate two meshes for each side of the cut and add them to generatedMeshesMap
+				Mesh* meshA = new Mesh(meshAVertsArray, meshAVerts.size(), meshAIndexArray, meshAIndices.size(), Config::Device, hit->GetMesh()->GetName() + " (1)");
+				Mesh* meshB = new Mesh(meshBVertsArray, meshBVerts.size(), meshBIndexArray, meshBIndices.size(), Config::Device, hit->GetMesh()->GetName() + " (2)");
+				
+				string meshName = meshA->GetName();
+				int sameNameEntityCnt = 1;
+				while (EESceneLoader->generatedMeshesMap.count(meshName)) {
+					meshName = meshA->GetName() + " (" + to_string(sameNameEntityCnt) + ")";
+					sameNameEntityCnt++;
+				}
+				meshA->SetName(meshName);
+				EESceneLoader->generatedMeshesMap.insert({ meshName, meshA });
 
+				meshName = meshB->GetName();
+				sameNameEntityCnt = 1;
+				while (EESceneLoader->generatedMeshesMap.count(meshName)) {
+					meshName = meshB->GetName() + " (" + to_string(sameNameEntityCnt) + ")";
+					sameNameEntityCnt++;
+				}
+				meshB->SetName(meshName);
+				EESceneLoader->generatedMeshesMap.insert({ meshName, meshB });
 
 				// Create new entities for each of the pieces, and enable physics
+				EntityCreationParameters entityAParameters = {
+					meshA->GetName(),
+					meshA->GetName(),
+					"DEFAULT",
+					XMFLOAT3(hit->GetPosition().x, hit->GetPosition().y, hit->GetPosition().z),
+					ZERO_VECTOR3,
+					XMFLOAT3(5.0f, 5.0f, 5.0f),
+					0.0f,
+					true,
+					BulletColliderShape::BOX,
+					true,
+					true,
+					true
+				};
 
-				// Get rid of original entity
+				EntityCreationParameters entityBParameters = {
+					meshB->GetName(),
+					meshB->GetName(),
+					"DEFAULT",
+					XMFLOAT3(hit->GetPosition().x, hit->GetPosition().y, hit->GetPosition().z),
+					ZERO_VECTOR3,
+					XMFLOAT3(5.0f, 5.0f, 5.0f),
+					0.0f,
+					true,
+					BulletColliderShape::BOX,
+					true,
+					true,
+					true
+				};
+
+				EESceneLoader->CreateEntity(entityAParameters);
+				EESceneLoader->CreateEntity(entityBParameters);
+
+				std::cout << "\nOriginal Entity Position: X: " << hit->GetPosition().x << " Y: " << hit->GetPosition().y << " Z: " << hit->GetPosition().z << endl;
+				std::cout << "EntityA Position: X: " << EESceneLoader->sceneEntitiesMap[entityAParameters.entityName]->GetPosition().x << " Y: " << EESceneLoader->sceneEntitiesMap[entityAParameters.entityName]->GetPosition().y << " Z: " << EESceneLoader->sceneEntitiesMap[entityAParameters.entityName]->GetPosition().z << endl;
+				std::cout << "EntityB Position: X: " << EESceneLoader->sceneEntitiesMap[entityBParameters.entityName]->GetPosition().x << " Y: " << EESceneLoader->sceneEntitiesMap[entityBParameters.entityName]->GetPosition().y << " Z: " << EESceneLoader->sceneEntitiesMap[entityBParameters.entityName]->GetPosition().z << endl;
+				
+				// Get rid of original entity (do not delete meshes)
+				hit->Destroy();
 
 			}
 			else {
@@ -715,7 +801,7 @@ void Game::OnMouseDown(WPARAM buttonState, int x, int y)
 			}
 		}
 	}
-	
+
 	SetCapture(hWnd);
 }
 
