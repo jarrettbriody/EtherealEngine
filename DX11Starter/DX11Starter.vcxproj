@@ -164,6 +164,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Barrel.h" />
+    <ClInclude Include="BehaviorTree.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Collider.h" />
     <ClInclude Include="Config.h" />
@@ -188,6 +189,7 @@
     <ClInclude Include="Scripts.h" />
     <ClInclude Include="Shadows.h" />
     <ClInclude Include="SimpleShader.h" />
+    <ClInclude Include="TestBehavior.h" />
     <ClInclude Include="Utility.h" />
     <ClInclude Include="Vertex.h" />
   </ItemGroup>

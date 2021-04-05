@@ -19,6 +19,7 @@
 #include "Scripts.h"
 #include "DebugLines.h"
 #include "DecalHandler.h"
+#include "TestBehavior.h"
 
 using namespace std;
 
@@ -94,4 +95,7 @@ private:
 	//FMOD_VECTOR listener_vel; // If we want a doppler effect
 	FMOD_VECTOR listener_forward = FMOD_VECTOR();
 	FMOD_VECTOR listener_up = FMOD_VECTOR();
+
+	// AI
+	
 };
