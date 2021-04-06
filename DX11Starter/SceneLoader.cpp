@@ -935,14 +935,19 @@ Entity* SceneLoader::CreateEntity(EntityCreationParameters& para)
 	return allocatedEntity;
 }
 
-void SceneLoader::SplitMeshIntoChildEntities(Entity* e, float componentMass)
+std::vector<Entity*> SceneLoader::SplitMeshIntoChildEntities(Entity* e, float componentMass)
 {
+	std::vector<Entity*> childEntities;
+
 	int meshChildCnt = e->GetMeshChildCount();
-	if (meshChildCnt == 0) return;
+	if (meshChildCnt == 0) return childEntities;
 	bool success;
 	Mesh** children = e->GetMesh()->GetChildren();
+	
 	for (size_t i = 0; i < meshChildCnt; i++)
 	{
+		// TODO: Ask Jarrett about the comopund shape that is created in InitRigidbody() possible that has to be dismantled for proper rotation origins
+
 		Entity newE(children[i]->GetName(), children[i], e->GetMaterial(e->GetMeshMaterialName(i)));
 		Entity* allocatedEntity = (Entity*)EEMemoryAllocator->AllocateToPool((unsigned int)MEMORY_POOL::ENTITY_POOL, sizeof(Entity), success);
 		*allocatedEntity = newE;
@@ -960,7 +965,11 @@ void SceneLoader::SplitMeshIntoChildEntities(Entity* e, float componentMass)
 		sceneEntitiesMap.insert({ children[i]->GetName(), allocatedEntity });
 		sceneEntities.push_back(allocatedEntity);
 		EERenderer->AddRenderObject(allocatedEntity, children[i], e->GetMaterial(e->GetMeshMaterialName(i)));
+
+		childEntities.push_back(allocatedEntity);
 	}
 	//e->EmptyEntity();
 	e->Destroy();
+
+	return childEntities;
 }

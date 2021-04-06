@@ -122,6 +122,6 @@ public:
 	void SetScriptLoader(void (*callback)(Entity* e, string script));
 
 	Entity* CreateEntity(EntityCreationParameters& para);
-	void SplitMeshIntoChildEntities(Entity* e, float componentMass);
+	std::vector<Entity*> SplitMeshIntoChildEntities(Entity* e, float componentMass);
 };
 

@@ -83,4 +83,22 @@ namespace Utility {
 			DirectX::XMStoreFloat4(&currentSample, calculableVector);
 		}
 	}
+
+	/*static void DeleteBulletPhysicsObject(btRigidBody* rigidBody) {
+		delete rigidBody->getMotionState();
+		delete rigidBody->getCollisionShape();
+		Config::DynamicsWorld->removeRigidBody(rigidBody);
+		delete rigidBody;
+	}*/
+
+	/*static XMFLOAT3 BulletVectorToFloat3(btVector3 vec)
+	{
+		return XMFLOAT3(vec.getX(), vec.getY(), vec.getZ());
+	}*/
+
+	/*
+	static btVector3 Float3ToBulletVector(XMFLOAT3 vec)
+	{
+		return btVector3(vec.x, vec.y, vec.z);
+	}*/
 }
