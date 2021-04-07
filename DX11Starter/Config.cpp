@@ -26,7 +26,9 @@ bool Config::BulletDebugLinesEnabled = false;
 bool Config::ShadowsEnabled = true;
 bool Config::SSAOEnabled = false;
 bool Config::HBAOPlusEnabled = true;
+
 bool Config::DecalsEnabled = true;
+unsigned int Config::InitialDecalVectorSize = 3000;
 
 btDiscreteDynamicsWorld* Config::DynamicsWorld = nullptr;
 

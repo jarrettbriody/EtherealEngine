@@ -4,9 +4,11 @@
 DecalHandler* DecalHandler::instance = nullptr;
 map<string, DecalBucket*> DecalHandler::decalsMap;
 vector<DecalBucket*> DecalHandler::decalsVec;
+//vector<DecalDrawInfo> DecalHandler::decalDrawList;
 
 DecalHandler::DecalHandler()
 {
+	//decalDrawList.reserve(Config::InitialDecalVectorSize);
 }
 
 DecalHandler::~DecalHandler()
@@ -128,3 +130,29 @@ bool DecalHandler::DestroyDecals(string owner)
 	MemoryAllocator::GetInstance()->DeallocateFromPool((unsigned int)MEMORY_POOL::DECAL_POOL, db, sizeof(DecalBucket));
 	return true;
 }
+
+/*
+void DecalHandler::UpdateDecals()
+{
+	decalDrawList.empty();
+
+	for (size_t i = 0; i < decalsVec.size(); i++)
+	{
+		DecalBucket* db = decalsVec[i];
+		XMFLOAT4X4 world;
+		XMFLOAT4X4 invWorld;
+		XMMATRIX ownerWorld = XMMatrixTranspose(XMLoadFloat4x4(&db->owner->GetWorldMatrix()));
+		XMMATRIX localWorld;
+		XMMATRIX cWorld;
+		for (size_t j = 0; j < db->count; j++)
+		{
+			localWorld = XMMatrixTranspose(XMLoadFloat4x4(&db->decals[j].localTransform));
+			cWorld = XMMatrixMultiply(localWorld, ownerWorld);
+			XMStoreFloat4x4(&world, XMMatrixTranspose(cWorld));
+			XMStoreFloat4x4(&invWorld, XMMatrixTranspose(XMMatrixInverse(nullptr, cWorld)));
+
+			decalDrawList.push_back({ world, invWorld, db->decals[j].type });
+		}
+	}
+}
+*/

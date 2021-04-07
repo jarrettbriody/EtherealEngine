@@ -185,6 +185,7 @@
     <ClInclude Include="ParticleEmitter.h" />
     <ClInclude Include="Particles.h" />
     <ClInclude Include="pch.h" />
+    <ClInclude Include="PhysicsWrapper.h" />
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="SceneLoader.h" />
     <ClInclude Include="ScriptManager.h" />

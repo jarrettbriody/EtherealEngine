@@ -72,6 +72,11 @@ void ParticleEmitter::CalcWorldMatrix(XMFLOAT4X4 parentWorld)
 	DirectX::XMStoreFloat4x4(&worldMatrix, DirectX::XMMatrixTranspose(world));
 }
 
+XMFLOAT4X4 ParticleEmitter::GetWorldMatrix()
+{
+	return worldMatrix;
+}
+
 void ParticleEmitter::SetPosition(XMFLOAT3 position)
 {
 	this->position = position;

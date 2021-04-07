@@ -23,6 +23,9 @@ Game::~Game()
 {
 	SceneLoader::DestroyInstance();
 
+	delete cpuEmitter;
+	delete gpuEmitter;
+
 	Config::Sampler->Release();
 
 	// FMOD
@@ -53,15 +56,13 @@ Game::~Game()
 	MemoryAllocator::DestroyInstance();
 
 	DecalHandler::DestroyInstance();
-
-	delete emitter;
 }
 
 void Game::Init()
 {
 	//dont delete this, its for finding mem leaks
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-	//_CrtSetBreakAlloc(327967);
+	//_CrtSetBreakAlloc(193404);
 	//_CrtSetBreakAlloc(49892);
 
 	srand(static_cast <unsigned> (time(0)));
@@ -195,29 +196,79 @@ void Game::Init()
 	CPUParticleEmitter::SetDefaultShaders(cpuParticleShaders);
 
 	ParticleEmitterDescription emitDesc;
-	emitDesc.colorCount = 8;
-	ParticleColor partColors[8] = {
-		{XMFLOAT4(1,0,0,1),10},
-		{XMFLOAT4(0,1,0,1),10},
-		{XMFLOAT4(0,0,1,1),10},
-		{XMFLOAT4(1,1,0,1),10},
-		{XMFLOAT4(1,1,1,1),10},
-		{XMFLOAT4(0,1,1,1),10},
-		{XMFLOAT4(1,0,1,1),10},
-		{XMFLOAT4(1,0,0,1),10},
+	emitDesc.emitterPosition = XMFLOAT3(-410.543f, 12.0f, -90.21f);
+	emitDesc.colorCount = 1;
+	ParticleColor partColors[1] = {
+		{XMFLOAT4(0.5f,0,0,1.0f),10},
+		//{XMFLOAT4(0,1,0,1),10},
+		//{XMFLOAT4(0,0,1,1),10},
+		//{XMFLOAT4(1,1,0,1),10},
+		//{XMFLOAT4(1,1,1,1),10},
+		//{XMFLOAT4(0,1,1,1),10},
+		//{XMFLOAT4(1,0,1,1),10},
+		//{XMFLOAT4(1,0,0,1),10},
 	};
 	emitDesc.colors = partColors;
 	emitDesc.maxParticles = 100;
-	emitDesc.emissionRate = 20.0f;
+	emitDesc.emissionRate = 10.0f;
 	//emitDesc.emissionRotation = XMFLOAT3(-XM_PIDIV2,0.0f,0.0f);
 	emitDesc.emitterDirection = Y_AXIS;
 	emitDesc.particleInitMinSpeed = 10.0f;
 	emitDesc.particleInitMaxSpeed = 15.0f;
 	emitDesc.particleMinLifetime = 10.0f;
 	emitDesc.particleMaxLifetime = 15.0f;
-	emitDesc.particleAcceleration = XMFLOAT3(0.0f, 0.0f, -10.0f);
+	emitDesc.particleInitMinScale = 0.1f;
+	emitDesc.particleInitMaxScale = 0.2f;
+	emitDesc.particleAcceleration = XMFLOAT3(0.0f, 0.0f, -20.0f);
 
-	emitter = new CPUParticleEmitter(emitDesc);
+	cpuEmitter = new CPUParticleEmitter(emitDesc);
+
+	cpuEmitter->SetCollisionsEnabled([](void* collision) {
+		btPersistentManifold* manifold = (btPersistentManifold*)collision;
+		btCollisionObject* obA = (btCollisionObject*)(manifold->getBody0());
+		btCollisionObject* obB = (btCollisionObject*)(manifold->getBody1());
+	
+		PhysicsWrapper* wrapperA = (PhysicsWrapper*)obA->getUserPointer();
+		PhysicsWrapper* wrapperB = (PhysicsWrapper*)obB->getUserPointer();
+	
+		if (wrapperA->type == PHYSICS_WRAPPER_TYPE::PARTICLE && wrapperB->type == PHYSICS_WRAPPER_TYPE::ENTITY || 
+			wrapperB->type == PHYSICS_WRAPPER_TYPE::PARTICLE && wrapperA->type == PHYSICS_WRAPPER_TYPE::ENTITY) {
+			ParticlePhysicsWrapper* particleWrapper = (wrapperA->type == PHYSICS_WRAPPER_TYPE::PARTICLE) ? (ParticlePhysicsWrapper*)wrapperA->objectPointer : (ParticlePhysicsWrapper*)wrapperB->objectPointer;
+			Entity* entity = (wrapperA->type == PHYSICS_WRAPPER_TYPE::ENTITY) ? (Entity*)wrapperA->objectPointer : (Entity*)wrapperB->objectPointer;
+	
+			if (*entity->layer == "decal") {
+				Particle* particle = (Particle*)particleWrapper->particle;
+				CPUParticleEmitter* emitter = (CPUParticleEmitter*)particleWrapper->emitter;
+				ParticleEmitter* emitterBase = (ParticleEmitter*)emitter;
+
+				//if (manifold->getNumContacts() <= 0) return;
+
+				//btVector3 point = manifold->getContactPoint(0).getPositionWorldOnA();
+				//XMFLOAT3 hitLocation = XMFLOAT3(point.getX(), point.getY(), point.getZ());
+
+				XMFLOAT3 particleWorld;
+				XMVECTOR particlePos = XMLoadFloat3(&particle->position);
+				XMMATRIX emitterWorld = XMMatrixTranspose(XMLoadFloat4x4(&emitterBase->GetWorldMatrix()));
+				particlePos.m128_f32[3] = 1.0f;
+				XMStoreFloat3(&particleWorld, XMVector4Transform(particlePos, emitterWorld));
+
+				XMFLOAT3 normalizedVel;
+				XMVECTOR particleVel = XMLoadFloat3(&particle->velocity);
+				particleVel.m128_f32[3] = 0.0f;
+				XMStoreFloat3(&normalizedVel, XMVector3Normalize(XMVector4Transform(particleVel, emitterWorld)));
+
+				DecalHandler::GetInstance()->GenerateDecal(entity, normalizedVel, particleWorld, XMFLOAT3(10.0f, 10.0f, 15.0f), DecalType(rand() % 8));
+
+				//cout << particleWrapper->particleIndex << endl;
+
+				emitter->KillParticle(particleWrapper->particleIndex);
+			}
+		}
+	});
+
+	emitDesc.maxParticles = 2000;
+	emitDesc.emissionRate = 100.0f;
+	gpuEmitter = new GPUParticleEmitter(emitDesc);
 
 	Entity* e;
 	for (size_t i = 0; i < EESceneLoader->sceneEntities.size(); i++)
@@ -302,6 +353,8 @@ void Game::OnResize()
 {
 	DXCore::OnResize();
 	EECamera->UpdateProjectionMatrix();
+	EERenderer->InitDepthStencil();
+	EERenderer->InitHBAOPlus();
 }
 
 void Game::Update(float deltaTime, float totalTime)
@@ -336,6 +389,9 @@ void Game::Update(float deltaTime, float totalTime)
 		sf->CallUpdate(deltaTime);
 	}
 
+	cpuEmitter->Update(deltaTime, totalTime, EERenderer->GetCamera("main")->GetViewMatrix());
+	gpuEmitter->Update(deltaTime, totalTime);
+
 	int numManifolds = Config::DynamicsWorld->getDispatcher()->getNumManifolds();
 	for (int i = 0; i < numManifolds; i++)
 	{
@@ -343,14 +399,36 @@ void Game::Update(float deltaTime, float totalTime)
 		btCollisionObject* obA = (btCollisionObject*)(contactManifold->getBody0());
 		btCollisionObject* obB = (btCollisionObject*)(contactManifold->getBody1());
 
-		Entity* a = (Entity*)obA->getUserPointer();
+		PhysicsWrapper* wrapperA = (PhysicsWrapper*)obA->getUserPointer();
+		PhysicsWrapper* wrapperB = (PhysicsWrapper*)obB->getUserPointer();
 
-		if (ScriptManager::scriptFunctionsMap.count(a->GetName())) {
-			vector<ScriptManager*> scripts = ScriptManager::scriptFunctionsMap[a->GetName()];
-			for (size_t j = 0; j < scripts.size(); j++)
-			{
-				scripts[j]->CallOnCollision(obB);
+		if(wrapperA->type == PHYSICS_WRAPPER_TYPE::ENTITY && wrapperB->type == PHYSICS_WRAPPER_TYPE::ENTITY) {
+			Entity* a = (Entity*)wrapperA->objectPointer;
+			Entity* b = (Entity*)wrapperB->objectPointer;
+
+			if (ScriptManager::scriptFunctionsMap.count(a->GetName())) {
+				vector<ScriptManager*> scripts = ScriptManager::scriptFunctionsMap[a->GetName()];
+				for (size_t j = 0; j < scripts.size(); j++)
+				{
+					scripts[j]->CallOnCollision(obB);
+				}
 			}
+
+			if (ScriptManager::scriptFunctionsMap.count(b->GetName())) {
+				vector<ScriptManager*> scripts = ScriptManager::scriptFunctionsMap[b->GetName()];
+				for (size_t j = 0; j < scripts.size(); j++)
+				{
+					scripts[j]->CallOnCollision(obB);
+				}
+			}
+		}
+
+		if (wrapperA->type == PHYSICS_WRAPPER_TYPE::PARTICLE && wrapperB->type == PHYSICS_WRAPPER_TYPE::ENTITY) {
+			wrapperA->callback(contactManifold);
+		}
+
+		if (wrapperB->type == PHYSICS_WRAPPER_TYPE::PARTICLE && wrapperA->type == PHYSICS_WRAPPER_TYPE::ENTITY) {
+			wrapperB->callback(contactManifold);
 		}
 	}
 
@@ -366,6 +444,8 @@ void Game::Update(float deltaTime, float totalTime)
 
 	EECamera->Update();
 
+	//EEDecalHandler->UpdateDecals();
+
 	AudioStep();
 
 	/*if (!GetAsyncKeyState(VK_CONTROL))
@@ -374,7 +454,6 @@ void Game::Update(float deltaTime, float totalTime)
 		testLight->Direction = camera->direction;
 	}*/
 
-	emitter->Update(deltaTime,totalTime, EERenderer->GetCamera("main")->GetViewMatrix());
 }
 
 void Game::PhysicsStep(float deltaTime)
@@ -390,23 +469,29 @@ void Game::PhysicsStep(float deltaTime)
 	for (int i = 0; i < Config::DynamicsWorld->getNumCollisionObjects(); i++)
 	{
 		obj = Config::DynamicsWorld->getCollisionObjectArray()[i];
-		body = btRigidBody::upcast(obj);
 
-		//transform = body->getWorldTransform();
-		entity = (Entity*)body->getUserPointer();
+		if (obj->getInternalType() == btCollisionObject::CO_RIGID_BODY) {
+			body = btRigidBody::upcast(obj);
 
-		transform = body->getCenterOfMassTransform();
-		btVector3 p = transform.getOrigin();
-		//XMFLOAT3 centerLocal = entity->GetCollider()->GetCenterLocal();
-		//XMFLOAT3 scale = entity->GetScale();
-		//centerLocal = XMFLOAT3(centerLocal.x * scale.x, centerLocal.y * scale.y, centerLocal.z * scale.z);
-		//XMFLOAT3 pos = XMFLOAT3(p.getX() - centerLocal.x, p.getY() - centerLocal.y, p.getZ() - centerLocal.z);
-		XMFLOAT3 pos = XMFLOAT3(p.getX(), p.getY(), p.getZ());
+			//transform = body->getWorldTransform();
+			PhysicsWrapper* wrapper = (PhysicsWrapper*)body->getUserPointer();
+			if (wrapper->type != PHYSICS_WRAPPER_TYPE::ENTITY) continue;
 
-		btQuaternion q = transform.getRotation();
-		entity->SetPosition(pos);
-		entity->SetRotation(XMFLOAT4(q.getX(), q.getY(), q.getZ(), q.getW()));
-		entity->CalcWorldMatrix();
+			entity = (Entity*)wrapper->objectPointer;
+
+			transform = body->getCenterOfMassTransform();
+			btVector3 p = transform.getOrigin();
+			//XMFLOAT3 centerLocal = entity->GetCollider()->GetCenterLocal();
+			//XMFLOAT3 scale = entity->GetScale();
+			//centerLocal = XMFLOAT3(centerLocal.x * scale.x, centerLocal.y * scale.y, centerLocal.z * scale.z);
+			//XMFLOAT3 pos = XMFLOAT3(p.getX() - centerLocal.x, p.getY() - centerLocal.y, p.getZ() - centerLocal.z);
+			XMFLOAT3 pos = XMFLOAT3(p.getX(), p.getY(), p.getZ());
+
+			btQuaternion q = transform.getRotation();
+			entity->SetPosition(pos);
+			entity->SetRotation(XMFLOAT4(q.getX(), q.getY(), q.getZ(), q.getW()));
+			entity->CalcWorldMatrix();
+		}
 	}
 
 	//EESceneLoader->sceneEntities[0]->GetRBody()->setLinearVelocity(btVector3(0.0f, EESceneLoader->sceneEntities[0]->GetRBody()->getLinearVelocity().getY(), 0.0f));
@@ -416,40 +501,65 @@ void Game::EnforcePhysics()
 {
 	btCollisionObject* obj = nullptr;
 	btRigidBody* body = nullptr;
+	btGhostObject* ghost = nullptr;
 	btTransform transform;
 	Entity* entity = nullptr;
 
 	for (int i = 0; i < Config::DynamicsWorld->getNumCollisionObjects(); i++)
 	{
 		obj = Config::DynamicsWorld->getCollisionObjectArray()[i];
-		body = btRigidBody::upcast(obj);
 
-		transform = body->getCenterOfMassTransform();
-		entity = (Entity*)body->getUserPointer();
-		entity->CalcWorldMatrix();
+		if (obj->getInternalType() == btCollisionObject::CO_RIGID_BODY) {
+			body = btRigidBody::upcast(obj);
 
-		XMFLOAT3 pos = entity->GetPosition();
-		//XMFLOAT3 centerLocal = entity->GetCollider()->GetCenterLocal();
-		//XMFLOAT3 scale = entity->GetScale();
-		//centerLocal = XMFLOAT3(centerLocal.x * scale.x, centerLocal.y * scale.y, centerLocal.z * scale.z);
-		//pos = XMFLOAT3(pos.x + centerLocal.x, pos.y + centerLocal.y, pos.z + centerLocal.z);
-		pos = XMFLOAT3(pos.x, pos.y, pos.z);
+			transform = body->getCenterOfMassTransform();
 
-		XMFLOAT4 rot = entity->GetRotationQuaternion();
+			PhysicsWrapper* wrapper = (PhysicsWrapper*)body->getUserPointer();
 
-		btVector3 transformPos = btVector3(pos.x, pos.y, pos.z);
-		transform.setOrigin(transformPos);
+			if (wrapper->type == PHYSICS_WRAPPER_TYPE::ENTITY) {
+				entity = (Entity*)wrapper->objectPointer;
+				entity->CalcWorldMatrix();
 
-		btQuaternion res = btQuaternion(rot.x, rot.y, rot.z, rot.w);
-		transform.setRotation(res);
+				XMFLOAT3 pos = entity->GetPosition();
+				//XMFLOAT3 centerLocal = entity->GetCollider()->GetCenterLocal();
+				//XMFLOAT3 scale = entity->GetScale();
+				//centerLocal = XMFLOAT3(centerLocal.x * scale.x, centerLocal.y * scale.y, centerLocal.z * scale.z);
+				//pos = XMFLOAT3(pos.x + centerLocal.x, pos.y + centerLocal.y, pos.z + centerLocal.z);
+				pos = XMFLOAT3(pos.x, pos.y, pos.z);
 
-		//TODO: ENFORCE LOCAL SCALING OF COLLIDER
+				XMFLOAT4 rot = entity->GetRotationQuaternion();
 
-		body->setCenterOfMassTransform(transform);
+				btVector3 transformPos = btVector3(pos.x, pos.y, pos.z);
+				transform.setOrigin(transformPos);
 
-		// body->getMotionState()->setWorldTransform(transform);
+				btQuaternion res = btQuaternion(rot.x, rot.y, rot.z, rot.w);
+				transform.setRotation(res);
 
-		// body->getMotionState()->getWorldTransform(transform);
+				//TODO: ENFORCE LOCAL SCALING OF COLLIDER
+
+				body->setCenterOfMassTransform(transform);
+
+				// body->getMotionState()->setWorldTransform(transform);
+
+				// body->getMotionState()->getWorldTransform(transform);
+			}
+		}
+
+		else if (obj->getInternalType() == btCollisionObject::CO_GHOST_OBJECT) {
+			ghost = btGhostObject::upcast(obj);
+
+			transform = ghost->getWorldTransform();
+
+			PhysicsWrapper* wrapper = (PhysicsWrapper*)ghost->getUserPointer();
+
+			//if (wrapper->type == PHYSICS_WRAPPER_TYPE::PARTICLE) {
+			//	ParticlePhysicsWrapper* particleWrap = (ParticlePhysicsWrapper*)wrapper->objectPointer;
+			//	if (particleWrap->particleIndex == 4) {
+			//		btVector3 p = transform.getOrigin();
+			//		std::cout << p.getX() << " | " << p.getY() << " | " << p.getZ() << std::endl;
+			//	}
+			//}
+		}
 	}
 }
 
@@ -495,7 +605,8 @@ void Game::Draw(float deltaTime, float totalTime)
 
 	EERenderer->RenderSkybox();
 
-	emitter->Draw(EERenderer->GetCamera("main")->GetViewMatrix(), EERenderer->GetCamera("main")->GetProjMatrix());
+	cpuEmitter->Draw(EERenderer->GetCamera("main")->GetViewMatrix(), EERenderer->GetCamera("main")->GetProjMatrix());
+	gpuEmitter->Draw(EERenderer->GetCamera("main")->GetViewMatrix(), EERenderer->GetCamera("main")->GetProjMatrix());
 
 	EERenderer->PresentFrame();
 }
@@ -623,46 +734,50 @@ void Game::OnMouseDown(WPARAM buttonState, int x, int y)
 		if (closestResult.hasHit())
 		{
 			// Get the entity associated with the rigid body we hit
-			Entity* hit = (Entity*)(closestResult.m_collisionObject->getUserPointer());
-			printf("Hit: %s\n", hit->GetName().c_str());
-			btRigidBody* rigidBody = hit->GetRBody();
+			PhysicsWrapper* wrapper = (PhysicsWrapper*)closestResult.m_collisionObject->getUserPointer();
+			if (wrapper->type == PHYSICS_WRAPPER_TYPE::ENTITY) {
+				Entity* hit = (Entity*)(wrapper->objectPointer);
+				printf("Hit: %s\n", hit->GetName().c_str());
+				btRigidBody* rigidBody = hit->GetRBody();
 
-			/*
-			// In order to update the values associated with the rigid body we need to remove it from the dynamics world first
-			Config::DynamicsWorld->removeRigidBody(rigidBody);
-			btVector3 inertia(0, 0, 0);
-			float mass = 1.0f;
-			rigidBody->getCollisionShape()->calculateLocalInertia(mass, inertia);
-			rigidBody->setActivationState(DISABLE_DEACTIVATION);
-			rigidBody->setMassProps(mass, inertia);
+				/*
+				// In order to update the values associated with the rigid body we need to remove it from the dynamics world first
+				Config::DynamicsWorld->removeRigidBody(rigidBody);
+				btVector3 inertia(0, 0, 0);
+				float mass = 1.0f;
+				rigidBody->getCollisionShape()->calculateLocalInertia(mass, inertia);
+				rigidBody->setActivationState(DISABLE_DEACTIVATION);
+				rigidBody->setMassProps(mass, inertia);
+				*/
 
-			// Useful functions for updating an object in motion, but not really needed here
-			/*
-			rigidBody->setLinearFactor(btVector3(1, 1, 1));
-			rigidBody->setAngularFactor(btVector3(1, 1, 1));
-			rigidBody->updateInertiaTensor();
-			rigidBody->clearForces();
-			btTransform transform;
-			transform.setIdentity();
-			rigidBody->getMotionState()->getWorldTransform(transform);
-			float x = transform.getOrigin().getX();
-			float y = transform.getOrigin().getY();
-			float z = transform.getOrigin().getZ();
-			transform.setOrigin(btVector3(x, y, z));
-			rigidBody->getCollisionShape()->setLocalScaling(btVector3(1, 1, 1));
-			rigidBody->setWorldTransform(transform); */
-			//*/
-			btVector3 h = closestResult.m_hitPointWorld;
-			XMFLOAT3 hitLocation(h.getX(), h.getY(), h.getZ());
-			EEDecalHandler->GenerateDecal(hit, XMFLOAT3(hitLocation.x - start.x, hitLocation.y - start.y, hitLocation.z - start.z), hitLocation, XMFLOAT3(10.0f, 10.0f, 15.0f), DecalType(rand() % 8));
+				// Useful functions for updating an object in motion, but not really needed here
+				/*
+				rigidBody->setLinearFactor(btVector3(1, 1, 1));
+				rigidBody->setAngularFactor(btVector3(1, 1, 1));
+				rigidBody->updateInertiaTensor();
+				rigidBody->clearForces();
+				btTransform transform;
+				transform.setIdentity();
+				rigidBody->getMotionState()->getWorldTransform(transform);
+				float x = transform.getOrigin().getX();
+				float y = transform.getOrigin().getY();
+				float z = transform.getOrigin().getZ();
+				transform.setOrigin(btVector3(x, y, z));
+				rigidBody->getCollisionShape()->setLocalScaling(btVector3(1, 1, 1));
+				rigidBody->setWorldTransform(transform); */
+				
+				btVector3 h = closestResult.m_hitPointWorld;
+				XMFLOAT3 hitLocation(h.getX(), h.getY(), h.getZ());
+				EEDecalHandler->GenerateDecal(hit, XMFLOAT3(hitLocation.x - start.x, hitLocation.y - start.y, hitLocation.z - start.z), hitLocation, XMFLOAT3(10.0f, 10.0f, 15.0f), DecalType(rand() % 8));
 
-			/*
-			Config::DynamicsWorld->addRigidBody(rigidBody); // Add the rigid body back into bullet		
+				//Config::DynamicsWorld->addRigidBody(rigidBody); // Add the rigid body back into bullet
 
-			if (hit->MeshHasChildren()) {
-				EESceneLoader->SplitMeshIntoChildEntities(hit, 0.5f);
+				/*
+				if (hit->MeshHasChildren()) {
+					EESceneLoader->SplitMeshIntoChildEntities(hit, 0.5f);
+				}
+				*/
 			}
-			*/
 		}
 	}
 	

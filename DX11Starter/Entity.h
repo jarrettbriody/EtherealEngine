@@ -3,6 +3,7 @@
 #include "Mesh.h"
 #include "Material.h"
 #include "Collider.h"
+#include "PhysicsWrapper.h"
 
 struct ShadowData {
 	DirectX::XMFLOAT4X4 shadowViewMatrix;
@@ -55,6 +56,8 @@ private:
 	btRigidBody* rBody = nullptr;
 
 	int colliderCnt = 0;
+
+	PhysicsWrapper pWrap;
 public:
 	bool destroyed = false;
 	bool isCollisionStatic = true;

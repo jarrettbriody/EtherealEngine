@@ -61,7 +61,9 @@ public:
 	static bool ShadowsEnabled;
 	static bool SSAOEnabled;
 	static bool HBAOPlusEnabled;
+
 	static bool DecalsEnabled;
+	static unsigned int InitialDecalVectorSize;
 
 	static btDiscreteDynamicsWorld* DynamicsWorld;
 

@@ -2,17 +2,16 @@
 
 #include "pch.h"
 #include "DXCore.h"
+
 #include "Config.h"
+#include "Utility.h"
+#include "PhysicsWrapper.h"
+#include "Lights.h"
+
 #include "Mesh.h"
 #include "Entity.h"
 #include "Camera.h"
-#include "Lights.h"
 #include "Renderer.h"
-#include "Utility.h"
-//#include "Terrain.h"
-//#include "TerrainMaterial.h"
-//#include "Water.h"
-//#include "WaterMaterial.h"
 #include "SceneLoader.h"
 #include "DebugLines.h"
 #include "ScriptManager.h"
@@ -93,5 +92,6 @@ private:
 	FMOD_VECTOR listener_forward = FMOD_VECTOR();
 	FMOD_VECTOR listener_up = FMOD_VECTOR();
 
-	CPUParticleEmitter* emitter;
+	CPUParticleEmitter* cpuEmitter;
+	GPUParticleEmitter* gpuEmitter;
 };

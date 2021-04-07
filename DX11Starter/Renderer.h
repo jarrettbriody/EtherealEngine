@@ -54,7 +54,7 @@ struct DepthStencilComponents {
 struct HBAOPlusComponents {
 	GFSDK_SSAO_CustomHeap CustomHeap;
 	GFSDK_SSAO_Status status;
-	GFSDK_SSAO_Context_D3D11* pAOContext;
+	GFSDK_SSAO_Context_D3D11* pAOContext = nullptr;
 	GFSDK_SSAO_InputData_D3D11 Input;
 	GFSDK_SSAO_Parameters_D3D11 Params;
 };

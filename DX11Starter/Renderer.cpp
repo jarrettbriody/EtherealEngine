@@ -111,6 +111,14 @@ void Renderer::SetMeshes(Mesh* cube, Mesh* invCube)
 
 void Renderer::InitDepthStencil()
 {
+	if (depthStencilComponents.depthStencilDSV) depthStencilComponents.depthStencilDSV->Release();
+	if (depthStencilComponents.depthStencilSRV) depthStencilComponents.depthStencilSRV->Release();
+	if (depthStencilComponents.depthStencilRTV) depthStencilComponents.depthStencilRTV->Release();
+	if (depthStencilComponents.depthStencilRasterizer) depthStencilComponents.depthStencilRasterizer->Release();
+	if (depthStencilComponents.depthStencilSampler) depthStencilComponents.depthStencilSampler->Release();
+	if (depthStencilComponents.depthStencilState) depthStencilComponents.depthStencilState->Release();
+	if (depthStencilComponents.decalBlendState) depthStencilComponents.decalBlendState->Release();
+
 	// Set up the texture itself
 	D3D11_TEXTURE2D_DESC texDesc = {};
 	texDesc.ArraySize = 1;
@@ -253,6 +261,9 @@ void Renderer::InitDepthStencil()
 
 void Renderer::InitHBAOPlus()
 {
+	if (hbaoPlusComponents.pAOContext)
+		hbaoPlusComponents.pAOContext->Release();
+
 	//(1.) INITIALIZE THE LIBRARY
 
 	hbaoPlusComponents.CustomHeap.new_ = ::operator new;
@@ -478,16 +489,19 @@ void Renderer::RenderFrame()
 		shaders.decalPS->SetSamplerState("ShadowSampler", shadowComponents.shadowSampler);
 		shaders.decalPS->SetFloat3("cameraPos", camera->position);
 
+		XMFLOAT4X4 world;
+		XMFLOAT4X4 invWorld;
+		XMMATRIX ownerWorld;
+		XMMATRIX localWorld;
+		XMMATRIX cWorld;
 		for (size_t i = 0; i < DecalHandler::decalsVec.size(); i++)
 		{
 			DecalBucket* db = DecalHandler::decalsVec[i];
+			ownerWorld = XMMatrixTranspose(XMLoadFloat4x4(&db->owner->GetWorldMatrix()));
 			for (size_t j = 0; j < db->count; j++)
 			{
-				XMFLOAT4X4 world;
-				XMFLOAT4X4 invWorld;
-				XMMATRIX ownerWorld = XMMatrixTranspose(XMLoadFloat4x4(&db->owner->GetWorldMatrix()));
-				XMMATRIX localWorld = XMMatrixTranspose(XMLoadFloat4x4(&db->decals[j].localTransform));
-				XMMATRIX cWorld = XMMatrixMultiply(localWorld, ownerWorld);
+				localWorld = XMMatrixTranspose(XMLoadFloat4x4(&db->decals[j].localTransform));
+				cWorld = XMMatrixMultiply(localWorld, ownerWorld);
 				XMStoreFloat4x4(&world, XMMatrixTranspose(cWorld));
 				XMStoreFloat4x4(&invWorld, XMMatrixTranspose(XMMatrixInverse(nullptr, cWorld)));
 

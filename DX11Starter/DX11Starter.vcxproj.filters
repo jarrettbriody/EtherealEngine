@@ -227,6 +227,9 @@
     <ClInclude Include="CPUParticleEmitter.h">
       <Filter>EECore\Header Files\Particle System</Filter>
     </ClInclude>
+    <ClInclude Include="PhysicsWrapper.h">
+      <Filter>EECore\Utility\Structs</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config">

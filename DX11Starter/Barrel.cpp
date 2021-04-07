@@ -34,11 +34,13 @@ void TestScript::Update()
 		entity->Move(0, 0, -0.05f);
 		entity->CalcWorldMatrix();
 	}
+	*/
+
+	/*
 	if (entity->CheckSATCollisionAndCorrect((*eMap)["Rock (1)"]))
 	{
 		cout << test << endl;
 	}
-
 	//ruin
 	if (GetAsyncKeyState('B') & 0x8000) {
 		(*eMap)["Ruin"]->RotateAroundAxis(Y_AXIS, -0.05f);
@@ -68,6 +70,6 @@ void TestScript::Update()
 
 void TestScript::OnCollision(btCollisionObject* other)
 {
-	Entity* otherE = (Entity*)other->getUserPointer();
-	cout << otherE->GetName() << endl;
+	//Entity* otherE = (Entity*)((PhysicsWrapper*)other->getUserPointer())->objectPointer;
+	//cout << otherE->GetName() << endl;
 }

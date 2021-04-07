@@ -39,6 +39,7 @@ public:
 
 	void CalcWorldMatrix();
 	void CalcWorldMatrix(XMFLOAT4X4 parentWorld);
+	XMFLOAT4X4 GetWorldMatrix();
 	void SetPosition(XMFLOAT3 position);
 	void SetRotationDegrees(XMFLOAT3 rotation);
 	void SetRotationRadians(XMFLOAT3 rotation);
