@@ -11,6 +11,7 @@ void FPSController::Init()
 	direction = cam->direction; 
 	cam->SetFOV(fov);
 
+
 	icicleParams = {
 			"Blood Icicle",					// name
 			"Blood Icicle",					// tag
@@ -32,20 +33,17 @@ void FPSController::Init()
 			"Blood Sword",					// layer
 			"Cone",							// mesh
 			"Red",							// material
-			{""},				// script names
-			0,								// script count
+			{"BLOODSWORD"},				// script names
+			1,								// script count
 			XMFLOAT3(0.0f, 0.0f, 0.0f),		// position
 			XMFLOAT3(0.0f, 0.0f, 0.0f),		// rotation
-			XMFLOAT3(1.0f, 5.0f, 1.0f),		// scale
+			XMFLOAT3(1.0f, 3.0f, 1.0f),		// scale
 			0.0f							// mass
 			// defaults work for the rest
 	};
 
-	/*sword = ScriptManager::CreateEntity(swordParams);
-	entity->AddChildEntity(sword);*/
+	sword = ScriptManager::CreateEntity(swordParams);
 
-	// TODO: Easier setting of physics characteristics via Bullet (coll shape, mass, restitution, other properties)
-	
 	playerRBody = entity->GetRBody(); // Get the bullet rigidbody
 	playerRBody->setAngularFactor(btVector3(0, 1, 0)); // constrain rotations on x and z axes
 	// playerRBody->setRestitution(0.1f);
@@ -65,6 +63,8 @@ void FPSController::Init()
 
 void FPSController::Update()
 {
+	UpdateSwordPosition();
+
 	// player state machine
 	switch (ps)
 	{
@@ -129,6 +129,18 @@ void FPSController::CheckBloodSword()
 	{
 	
 	}
+}
+
+void FPSController::UpdateSwordPosition()
+{
+	// Pseudo childing sword to camera
+	// position sword entity relative to camera
+	// multiply above into camera lookat matrix
+	// ^ will have to do this every frame 
+
+	sword->SetPosition(XMFLOAT3(cam->position.x + 2, cam->position.y, cam->position.z + direction.z - 1));
+
+	
 }
 
 void FPSController::CheckBloodIcicle()
@@ -549,9 +561,14 @@ void FPSController::MouseLook()
 	}
 
 	cam->RotateCamera(mouse->GetPosX() - (int)prevMousePos.x, mouse->GetPosY() - (int)prevMousePos.y, camRollAngle);
+	
+	// TODO: Ask Jarrett about having the camera being an entity
+	// camEntity->SetPosition(cam->position);
+	// camEntity->SetRotation(mouse->GetPosX() - (int)prevMousePos.x, mouse->GetPosY() - (int)prevMousePos.y, camRollAngle);
 
 	prevMousePos.x = mouse->GetPosX();
 	prevMousePos.y = mouse->GetPosY();
+
 }
 
 void FPSController::OnCollision(btCollisionObject* other)

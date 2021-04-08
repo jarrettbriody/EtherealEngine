@@ -69,6 +69,7 @@ public:
 	~Entity();
 	void operator= (const Entity& e);
 	void InitRigidBody(BulletColliderShape shape, float entityMass, bool zeroObjects = false);
+	void SetWorldMatrix(XMFLOAT4X4 matrix);
 	DirectX::XMFLOAT4X4 GetWorldMatrix();
 	DirectX::XMFLOAT4X4 GetInverseWorldMatrix();
 	DirectX::XMFLOAT3 GetPosition();

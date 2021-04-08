@@ -123,6 +123,9 @@
     <ClCompile Include="BloodIcicle.cpp">
       <Filter>EEScripts\Source</Filter>
     </ClCompile>
+    <ClCompile Include="BloodSword.cpp">
+      <Filter>EEScripts\Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h">
@@ -210,6 +213,9 @@
       <Filter>EECore\Header Files\Mouse</Filter>
     </ClInclude>
     <ClInclude Include="BloodIcicle.h">
+      <Filter>EEScripts\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="BloodSword.h">
       <Filter>EEScripts\Headers</Filter>
     </ClInclude>
   </ItemGroup>

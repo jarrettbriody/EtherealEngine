@@ -274,6 +274,11 @@ void Entity::InitRigidBody(BulletColliderShape shape, float entityMass, bool zer
 	Config::DynamicsWorld->addRigidBody(rBody);
 }
 
+void Entity::SetWorldMatrix(XMFLOAT4X4 matrix)
+{
+	worldMatrix = matrix;
+}
+
 DirectX::XMFLOAT4X4 Entity::GetWorldMatrix()
 {
 	return worldMatrix;
@@ -600,6 +605,21 @@ void Entity::AddChildEntity(Entity* child)
 {
 	children->push_back(child);
 	child->parent = this;
+
+	// Scaling
+	// Inverse world matrix of parent built into the child
+	// current world matrix of head multiplied inverse world matrix
+	// Build into function
+	// if not setworld matrix function set in entity class
+	// may have to play around with ordering with multiplication
+
+	XMMATRIX parentInvWorld = XMLoadFloat4x4(&invWorldMatrix);
+	XMMATRIX childWorldMatrix = XMLoadFloat4x4(&child->GetWorldMatrix());
+	XMMATRIX scale = XMMatrixMultiply(childWorldMatrix, parentInvWorld);
+	XMFLOAT4X4 scalingMatrix; 
+	
+	XMStoreFloat4x4(&scalingMatrix, scale);
+	child->SetWorldMatrix(scalingMatrix);
 }
 
 void Entity::AddAutoBoxCollider()
@@ -715,9 +735,9 @@ float Entity::GetMass()
 void Entity::RemoveFromPhysicsSimulation()
 {
 	if (Config::DynamicsWorld != nullptr) {
-		delete rBody->getMotionState();
+		delete rBody->getMotionState(); 
+		rBody->setMotionState(nullptr); // set motion state to nullptr
 		Config::DynamicsWorld->removeRigidBody(rBody);
-		rBody = nullptr; // TODO: Memory leak? Need this to avoid exception at program exit
 	}
 }
 

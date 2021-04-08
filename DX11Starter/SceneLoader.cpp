@@ -946,14 +946,12 @@ std::vector<Entity*> SceneLoader::SplitMeshIntoChildEntities(Entity* e, float co
 	
 	for (size_t i = 0; i < meshChildCnt; i++)
 	{
-		// TODO: Ask Jarrett about the comopund shape that is created in InitRigidbody() possible that has to be dismantled for proper rotation origins
-
 		Entity newE(children[i]->GetName(), children[i], e->GetMaterial(e->GetMeshMaterialName(i)));
 		Entity* allocatedEntity = (Entity*)EEMemoryAllocator->AllocateToPool((unsigned int)MEMORY_POOL::ENTITY_POOL, sizeof(Entity), success);
 		*allocatedEntity = newE;
 		//e->AddChildEntity(allocatedEntity);
 		//e->CalcWorldMatrix();
-		allocatedEntity->SetPosition(e->GetPosition()); // TODO: this informs the rigidbody creation, so is the cause of not having centered rotations? 
+		allocatedEntity->SetPosition(e->GetPosition()); // TODO: this informs the rigidbody creation, so is the cause of not having centered rotations? Could create offset in the Mesh class by creating a new mesh but this effects everything. 
 		XMFLOAT3 r = e->GetEulerAngles();
 		r.y += DirectX::XM_PI;
 		allocatedEntity->SetRotation(r);

@@ -52,15 +52,10 @@ void BloodIcicle::OnCollision(btCollisionObject* other)
 			closestChild->RemoveFromPhysicsSimulation();
 
 			entity->AddChildEntity(closestChild); // TODO: Figure out how to maintain scale, continue force and correctly position
-			closestChild->SetPosition(XMFLOAT3(0, 0, 0)); // 
+			closestChild->SetPosition(XMFLOAT3(0, 0, 0));  
 
 			// icicleRb->applyCentralImpulse(initialImpulse);
-			
-			// for now just to make sure the part we hit is generally correct
-			// closestChild->EmptyEntity();
 
-			// TODO: Removing rigidbody but not visual mesh to reposition the pinned part on the blood icicle and follow it as it continues flying
-			// Figure out usefulness and proper way to the the Utilty methods
 			// Potential useful methods/features: GetBTCompoundShape(), EmptyEntity(), rigidbody motion states 
 
 		}

@@ -137,6 +137,7 @@
   <ItemGroup>
     <ClCompile Include="Barrel.cpp" />
     <ClCompile Include="BloodIcicle.cpp" />
+    <ClCompile Include="BloodSword.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Collider.cpp" />
     <ClCompile Include="Config.cpp" />
@@ -167,6 +168,7 @@
   <ItemGroup>
     <ClInclude Include="Barrel.h" />
     <ClInclude Include="BloodIcicle.h" />
+    <ClInclude Include="BloodSword.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Collider.h" />
     <ClInclude Include="Config.h" />
