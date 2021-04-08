@@ -84,21 +84,13 @@ namespace Utility {
 		}
 	}
 
-	/*static void DeleteBulletPhysicsObject(btRigidBody* rigidBody) {
-		delete rigidBody->getMotionState();
-		delete rigidBody->getCollisionShape();
-		Config::DynamicsWorld->removeRigidBody(rigidBody);
-		delete rigidBody;
-	}*/
-
-	/*static XMFLOAT3 BulletVectorToFloat3(btVector3 vec)
+	static DirectX::XMFLOAT3 BulletVectorToFloat3(btVector3 vec)
 	{
-		return XMFLOAT3(vec.getX(), vec.getY(), vec.getZ());
-	}*/
+		return DirectX::XMFLOAT3(vec.getX(), vec.getY(), vec.getZ());
+	}
 
-	/*
-	static btVector3 Float3ToBulletVector(XMFLOAT3 vec)
+	static btVector3 Float3ToBulletVector(DirectX::XMFLOAT3 vec)
 	{
 		return btVector3(vec.x, vec.y, vec.z);
-	}*/
+	}
 }

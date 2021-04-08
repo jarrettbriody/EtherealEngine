@@ -4,6 +4,9 @@
 void BloodIcicle::Init()
 {
 	eMap = ScriptManager::sceneEntitiesMap;
+	initialImpulse = entity->GetRBody()->getLinearVelocity();
+	/*entity->GetRBody()->setAngularFactor(btVector3(0, 0, 0));
+	entity->GetRBody()->setLinearFactor(btVector3(0, 0, 1));*/
 }
 
 void BloodIcicle::Update()
@@ -23,9 +26,10 @@ void BloodIcicle::OnCollision(btCollisionObject* other)
 		icicleRb->setActivationState(0); // pin icicle to environment
 	}
 
-	// cout << "Blood Icicle Hit: " << otherE->GetName().c_str() << endl;
 	if (otherE->tag->c_str() == std::string("Enemy"))
 	{
+		// icicleRb->clearForces();
+
 		std::vector<Entity*> childEntities = EESceneLoader->SplitMeshIntoChildEntities(otherE, 1.0f);
 
 		if (!childEntities.empty())
@@ -44,13 +48,19 @@ void BloodIcicle::OnCollision(btCollisionObject* other)
 
 			// will probably need these
 			// btRigidBody* closestChildRb = closestChild->GetRBody();
-			// entity->AddChildEntity(closestChild);
+			
+			closestChild->RemoveFromPhysicsSimulation();
+
+			entity->AddChildEntity(closestChild); // TODO: Figure out how to maintain scale, continue force and correctly position
+			closestChild->SetPosition(XMFLOAT3(0, 0, 0)); // 
+
+			// icicleRb->applyCentralImpulse(initialImpulse);
 			
 			// for now just to make sure the part we hit is generally correct
-			closestChild->EmptyEntity();
+			// closestChild->EmptyEntity();
 
 			// TODO: Removing rigidbody but not visual mesh to reposition the pinned part on the blood icicle and follow it as it continues flying
-			// Figure out usefulness an dproper way to the the Utilty methods
+			// Figure out usefulness and proper way to the the Utilty methods
 			// Potential useful methods/features: GetBTCompoundShape(), EmptyEntity(), rigidbody motion states 
 
 		}

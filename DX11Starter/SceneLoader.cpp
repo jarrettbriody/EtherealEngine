@@ -953,7 +953,7 @@ std::vector<Entity*> SceneLoader::SplitMeshIntoChildEntities(Entity* e, float co
 		*allocatedEntity = newE;
 		//e->AddChildEntity(allocatedEntity);
 		//e->CalcWorldMatrix();
-		allocatedEntity->SetPosition(e->GetPosition());
+		allocatedEntity->SetPosition(e->GetPosition()); // TODO: this informs the rigidbody creation, so is the cause of not having centered rotations? 
 		XMFLOAT3 r = e->GetEulerAngles();
 		r.y += DirectX::XM_PI;
 		allocatedEntity->SetRotation(r);
@@ -962,6 +962,7 @@ std::vector<Entity*> SceneLoader::SplitMeshIntoChildEntities(Entity* e, float co
 		allocatedEntity->CalcWorldMatrix();
 		allocatedEntity->AddAutoBoxCollider();
 		allocatedEntity->InitRigidBody(BulletColliderShape::BOX, componentMass, true);
+		// allocatedEntity->GetRBody()->getWorldTransform().setOrigin(allocatedEntity->GetRBody()->getCenterOfMassPosition());
 		sceneEntitiesMap.insert({ children[i]->GetName(), allocatedEntity });
 		sceneEntities.push_back(allocatedEntity);
 		EERenderer->AddRenderObject(allocatedEntity, children[i], e->GetMaterial(e->GetMeshMaterialName(i)));

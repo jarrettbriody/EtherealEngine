@@ -116,6 +116,7 @@ public:
 	btCollisionShape* GetBTCollisionShape(int index);
 	btCompoundShape* GetBTCompoundShape(int index);
 	float GetMass();
+	void RemoveFromPhysicsSimulation();
 	void EmptyEntity();
 	void Destroy();
 	void FreeMemory();

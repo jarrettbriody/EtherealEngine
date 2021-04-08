@@ -712,6 +712,15 @@ float Entity::GetMass()
 	return mass;
 }
 
+void Entity::RemoveFromPhysicsSimulation()
+{
+	if (Config::DynamicsWorld != nullptr) {
+		delete rBody->getMotionState();
+		Config::DynamicsWorld->removeRigidBody(rBody);
+		rBody = nullptr; // TODO: Memory leak? Need this to avoid exception at program exit
+	}
+}
+
 void Entity::EmptyEntity()
 {
 	if (Config::DynamicsWorld != nullptr) {

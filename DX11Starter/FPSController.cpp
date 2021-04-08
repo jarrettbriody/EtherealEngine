@@ -100,6 +100,7 @@ void FPSController::Update()
 			// ragdoll the player
 			playerRBody->setAngularFactor(btVector3(1, 1, 1)); // free rotations on x and z axes
 			playerRBody->setGravity(btVector3(0.0f, -25.0f, 0.0f));
+
 			cam->SetPosition(XMFLOAT3(entity->GetPosition().x, entity->GetPosition().y + entity->GetScale().y + headbobOffset, entity->GetPosition().z)); // after all updates make sure camera is following the affected entity
 			break;
 
@@ -140,7 +141,7 @@ void FPSController::CheckBloodIcicle()
 
 		Entity* bloodIcicle = ScriptManager::CreateEntity(icicleParams);
 
-		btVector3 shotImpulse = btVector3(direction.x, direction.y, direction.z);
+		btVector3 shotImpulse = Utility::Float3ToBulletVector(direction);
 
 		bloodIcicle->GetRBody()->setGravity(btVector3(0,0,0));
 		bloodIcicle->GetRBody()->activate();
@@ -188,8 +189,8 @@ void FPSController::CheckHookshot()
 		Config::DynamicsWorld->computeOverlappingPairs();
 
 		// Redefine our vectors using bullet's silly types
-		btVector3 from(entity->GetPosition().x, entity->GetPosition().y, entity->GetPosition().z);
-		btVector3 to(entity->GetPosition().x + direction.x * hookshotRangeScalar, entity->GetPosition().y + direction.y * hookshotRangeScalar, entity->GetPosition().z + direction.z * hookshotRangeScalar); // raycast direction the camera is looking
+		btVector3 from(Utility::Float3ToBulletVector(entity->GetPosition()));
+		btVector3 to(from.getX() + direction.x * hookshotRangeScalar, from.getY() + direction.y * hookshotRangeScalar, from.getZ() + direction.z * hookshotRangeScalar); // raycast direction the camera is looking
 
 		// debug line
 		DebugLines* hookshotDebugLines = new DebugLines("hookshotDebugLines", 0, false); // cannot turn on the willUpdate paramater currently because not sure how to figure out which lines to update via the input Bullet gives 
@@ -198,8 +199,8 @@ void FPSController::CheckHookshot()
 		hookshotDebugLines->worldMatrix = wm;
 		hookshotDebugLines->color = XMFLOAT3(0.0f, 0.0f, 1.0f);
 
-		XMFLOAT3 fromVec = XMFLOAT3(from.getX(), from.getY(), from.getZ());
-		XMFLOAT3 toVec = XMFLOAT3(to.getX(), to.getY(), to.getZ());
+		XMFLOAT3 fromVec = Utility::BulletVectorToFloat3(from);
+		XMFLOAT3 toVec = Utility::BulletVectorToFloat3(to);
 		XMFLOAT3* linePoints = new XMFLOAT3[8];
 		linePoints[0] = fromVec;
 		linePoints[1] = fromVec;
@@ -231,7 +232,7 @@ void FPSController::CheckHookshot()
 				ps = PlayerState::HookshotLeash;
 				leashedEnemy = (Entity*)hit->GetRBody()->getUserPointer();
 				leashSize = playerRBody->getCenterOfMassPosition().distance(leashedEnemy->GetRBody()->getCenterOfMassPosition());
-				cout << leashSize << endl;
+				// cout << leashSize << endl;
 			}
 			else
 			{
