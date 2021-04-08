@@ -5,8 +5,9 @@ void BloodIcicle::Init()
 {
 	eMap = ScriptManager::sceneEntitiesMap;
 	initialImpulse = entity->GetRBody()->getLinearVelocity();
-	/*entity->GetRBody()->setAngularFactor(btVector3(0, 0, 0));
-	entity->GetRBody()->setLinearFactor(btVector3(0, 0, 1));*/
+	
+	// Do not allow the icicle to receive reaction forces
+	entity->GetRBody()->setCollisionFlags(entity->GetRBody()->getCollisionFlags() | btRigidBody::CF_NO_CONTACT_RESPONSE); 
 }
 
 void BloodIcicle::Update()
@@ -28,7 +29,7 @@ void BloodIcicle::OnCollision(btCollisionObject* other)
 
 	if (otherE->tag->c_str() == std::string("Enemy"))
 	{
-		// icicleRb->clearForces();
+		// TODO: Can I set the tag of the children and get a collision call back from them
 
 		std::vector<Entity*> childEntities = EESceneLoader->SplitMeshIntoChildEntities(otherE, 1.0f);
 
@@ -51,13 +52,14 @@ void BloodIcicle::OnCollision(btCollisionObject* other)
 			
 			closestChild->RemoveFromPhysicsSimulation();
 
-			entity->AddChildEntity(closestChild); // TODO: Figure out how to maintain scale, continue force and correctly position
+			// pull out scale from icicle, and get inverse scale and multiply that into the child; 
+			XMFLOAT4X4 icicleScaleMatrix;
+			XMFLOAT4X4 adjustedChildMatrix;
+			XMStoreFloat4x4(&icicleScaleMatrix, XMMatrixTranspose(XMMatrixInverse(nullptr, XMLoadFloat4x4(&entity->GetWorldMatrix())))); // TODO: How to put the icicle scale into a matrix
+			XMStoreFloat4x4(&adjustedChildMatrix, XMMatrixMultiply(XMLoadFloat4x4(&icicleScaleMatrix), XMLoadFloat4x4(&closestChild->GetWorldMatrix())));
+
+			entity->AddChildEntity(closestChild, adjustedChildMatrix); // TODO: Figure out how to maintain scale, correctly position
 			closestChild->SetPosition(XMFLOAT3(0, 0, 0));  
-
-			// icicleRb->applyCentralImpulse(initialImpulse);
-
-			// Potential useful methods/features: GetBTCompoundShape(), EmptyEntity(), rigidbody motion states 
-
 		}
 	}
 }

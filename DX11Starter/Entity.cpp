@@ -163,18 +163,6 @@ void Entity::InitRigidBody(BulletColliderShape shape, float entityMass, bool zer
 		XMStoreFloat3(&res, centerLocalCalc);
 		float mag = res.x;
 
-		/*
-		if (*name == "FPSController") { // give the FPS controller a capsule collider shape
-			// btVector3(btScalar(span.x * scale.x), btScalar(span.y * scale.y), btScalar(span.z * scale.z)
-			this->collShape = new btCapsuleShape(btScalar(span.x), btScalar(span.y));
-		}
-
-		else {
-			//this->collShape = new btBoxShape(btVector3(btScalar(span.x * scale.x), btScalar(span.y * scale.y), btScalar(span.z * scale.z)));
-			this->collShape = new btBoxShape(btVector3(btScalar(span.x), btScalar(span.y), btScalar(span.z)));
-		}
-		*/
-
 		switch (shape)
 		{
 		case BulletColliderShape::BOX:
@@ -324,6 +312,18 @@ void Entity::SetPosition(float x, float y, float z)
 void Entity::SetPosition(XMFLOAT3 p)
 {
 	position = p;
+}
+
+// TODO: Make sure this method works properly
+void Entity::SetRigidbodyPosition(btVector3 position, btVector3 orientation)
+{
+		btTransform initialTransform;
+
+		initialTransform.setOrigin(position);
+		initialTransform.setRotation(btQuaternion(orientation.getX(), orientation.getY(), orientation.getY()));
+
+		rBody->setWorldTransform(initialTransform);
+		rBody->getMotionState()->setWorldTransform(initialTransform);
 }
 
 void Entity::SetScale(float x, float y, float z)
@@ -601,24 +601,23 @@ string Entity::GetName()
 	return *name;
 }
 
-void Entity::AddChildEntity(Entity* child)
+void Entity::AddChildEntity(Entity* child, XMFLOAT4X4 childWorldMatrix)
 {
 	children->push_back(child);
 	child->parent = this;
 
-	// Scaling
-	// Inverse world matrix of parent built into the child
-	// current world matrix of head multiplied inverse world matrix
-	// Build into function
-	// if not setworld matrix function set in entity class
-	// may have to play around with ordering with multiplication
+	// add boolean to only copy the translation
 
-	XMMATRIX parentInvWorld = XMLoadFloat4x4(&invWorldMatrix);
-	XMMATRIX childWorldMatrix = XMLoadFloat4x4(&child->GetWorldMatrix());
-	XMMATRIX scale = XMMatrixMultiply(childWorldMatrix, parentInvWorld);
-	XMFLOAT4X4 scalingMatrix; 
 	
-	XMStoreFloat4x4(&scalingMatrix, scale);
+
+	// Scaling
+	// child world matrix of body part multiplied by inverse world matrix of parent 
+	// may have to play around with ordering with multiplication
+	CalcWorldMatrix();
+	XMMATRIX parentInvWorldMatrixTranspose = XMMatrixTranspose(XMLoadFloat4x4(&invWorldMatrix));
+	XMMATRIX childWorldMatrixTranspose = XMMatrixTranspose(XMLoadFloat4x4(&childWorldMatrix)); // multiply this by the inverse scale matrix of the icicle
+	XMFLOAT4X4 scalingMatrix; 
+	XMStoreFloat4x4(&scalingMatrix, XMMatrixTranspose(XMMatrixMultiply(parentInvWorldMatrixTranspose, childWorldMatrixTranspose)));
 	child->SetWorldMatrix(scalingMatrix);
 }
 

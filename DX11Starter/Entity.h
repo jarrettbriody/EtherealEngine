@@ -79,6 +79,7 @@ public:
 	DirectX::XMFLOAT4 GetRotationQuaternion();
 	void SetPosition(float x, float y, float z);
 	void SetPosition(XMFLOAT3 p);
+	void SetRigidbodyPosition(btVector3 position, btVector3 orientation);
 	void SetScale(float x, float y, float z);
 	void SetScale(XMFLOAT3 s);
 	void SetRotation(float x, float y, float z);
@@ -107,7 +108,7 @@ public:
 	vector<string> GetMaterialNameList();
 	void AddMaterial(Material* mat, bool addToMesh = false);
 	string GetName();
-	void AddChildEntity(Entity* child);
+	void AddChildEntity(Entity* child, XMFLOAT4X4 childWorldMatrix);
 	void AddAutoBoxCollider();
 	bool CheckSATCollision(Entity* other);
 	bool CheckSATCollisionAndCorrect(Entity* other);

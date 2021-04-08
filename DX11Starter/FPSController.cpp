@@ -137,10 +137,15 @@ void FPSController::UpdateSwordPosition()
 	// position sword entity relative to camera
 	// multiply above into camera lookat matrix
 	// ^ will have to do this every frame 
-
-	sword->SetPosition(XMFLOAT3(cam->position.x + 2, cam->position.y, cam->position.z + direction.z - 1));
-
 	
+	sword->SetPosition(XMFLOAT3(cam->position.x - 2, cam->position.y, cam->position.z + 1));
+
+	XMMATRIX swordMatrix = XMLoadFloat4x4(&sword->GetWorldMatrix());
+	XMMATRIX camLookAtMatrix = XMLoadFloat4x4(&cam->GetViewMatrix());
+	XMFLOAT4X4 updatedSwordMatrix;
+	XMStoreFloat4x4(&updatedSwordMatrix, XMMatrixMultiply(swordMatrix, camLookAtMatrix));
+
+	sword->SetWorldMatrix(updatedSwordMatrix);
 }
 
 void FPSController::CheckBloodIcicle()
