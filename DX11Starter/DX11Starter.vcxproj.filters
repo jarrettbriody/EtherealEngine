@@ -117,6 +117,9 @@
     <ClCompile Include="ParticleEmitter.cpp">
       <Filter>EECore\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="MeshSlicer.cpp">
+      <Filter>EECore\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h">
@@ -198,6 +201,9 @@
       <Filter>EECore\Header Files\Keyboard</Filter>
     </ClInclude>
     <ClInclude Include="ParticleEmitter.h">
+      <Filter>EECore\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MeshSlicer.h">
       <Filter>EECore\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
