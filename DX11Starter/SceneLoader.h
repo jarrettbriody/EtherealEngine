@@ -38,9 +38,16 @@ static map<string, BulletColliderShape> bulletColliders =
 										 };
 
 static map<string, int> sceneLineTypes = { 
-											{ "ENTITY", 0 }, 
-											{ "SKYBOX", 1 }, 
-											{ "DIRLIGHT", 2 },
+											{ "ENTITY", 0 },
+											{ "MESH", 1 },
+											{ "MATERIAL", 2 },
+											{ "VSHADER", 3 },
+											{ "PSHADER", 4 },
+											{ "CSHADER", 5 },
+											{ "SKYBOX", 6 }, 
+											{ "DIRLIGHT", 7 },
+											{ "CPUPARTICLE", 8 },
+											{ "GPUPARTICLE", 9 },
 										 };
 
 class SceneLoader
@@ -55,15 +62,24 @@ private:
 	SimplePixelShader* LoadPixelShader(string shaderName, LPCWSTR shaderFileName);
 	SimpleComputeShader* LoadComputeShader(string shaderName, LPCWSTR shaderFileName);
 
+	Material* CreateMaterial(string name, MaterialData matData, string vertShaderName, string pixelShaderName, ShaderType shaderType = ShaderType::DEFAULT);
+
 	//Scene loading regular expressions
 	regex commentedLineRegex = regex("//.*"); //checking if line is commented
 
 	regex typeRegex = regex("TYPE=\"(\\w+)\""); //getting line type
+
 	regex skyboxRegex = regex("dds=\"(\\w+)\""); //get dds name
+
 	regex lightPosRegex = regex("P\\(.*\\)");
 	regex lightDirRegex = regex("D\\(.*\\)");
 	regex lightColorRegex = regex("C\\(.*\\)");
 	regex lightIntensityRegex = regex("intensity=\"(\\d*\\.\\d*|\\d+)\"");
+
+	regex shaderFileRegex = regex("cso=\"(\\w+)\""); //get cso file name
+	regex shaderTypeRegex = regex("shaderType=\"(\\d+)\""); //get shader type
+
+
 
 	regex entityNameRegex = regex("name=\"([\\w|\\s]+)\""); //getting entity name
 	regex objNameRegex = regex("obj=\"(\\w+)\""); //getting obj model name

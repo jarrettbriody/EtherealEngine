@@ -64,6 +64,9 @@
     <FxCompile Include="CPUParticlePS.hlsl">
       <Filter>EEShaders\Pixel Shaders</Filter>
     </FxCompile>
+    <FxCompile Include="FluidVS.hlsl">
+      <Filter>EEShaders\Vertex Shaders</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Camera.cpp">

@@ -103,6 +103,16 @@ SimpleComputeShader* SceneLoader::LoadComputeShader(string shaderName, LPCWSTR s
 	return cs;
 }
 
+Material* SceneLoader::CreateMaterial(string name, MaterialData matData, string vertShaderName, string pixelShaderName, ShaderType shaderType)
+{
+	bool success;
+	Material mat = Material(name, matData, shaderType, vertexShadersMap[vertShaderName], pixelShadersMap[pixelShaderName], Config::Sampler);
+	Material* allocatedMaterial = (Material*)EEMemoryAllocator->AllocateToPool((unsigned int)MEMORY_POOL::MATERIAL_POOL, sizeof(Material), success);
+	*allocatedMaterial = mat;
+	defaultMaterialsMap.insert({ name, allocatedMaterial });
+	return allocatedMaterial;
+}
+
 XMFLOAT3 SceneLoader::Float3FromString(string str)
 {
 	smatch match;
@@ -153,6 +163,7 @@ void SceneLoader::LoadShaders()
 	LoadVertexShader("Decal", L"DecalVS.cso");
 	LoadVertexShader("Particle", L"ParticleVS.cso");
 	LoadVertexShader("CPUParticle", L"CPUParticleVS.cso");
+	LoadVertexShader("Fluid", L"FluidVS.cso");
 
 	//pixel shaders
 	LoadPixelShader("DEFAULT", L"DefaultPS.cso");
@@ -249,66 +260,46 @@ void SceneLoader::LoadDefaultMaterials()
 	Material* allocatedMaterial;
 	bool success;
 
-	Material defaultMaterial = Material("DEFAULT", materialData, ShaderType::DEFAULT, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler);
-	allocatedMaterial = (Material*)EEMemoryAllocator->AllocateToPool((unsigned int)MEMORY_POOL::MATERIAL_POOL, sizeof(Material), success);
-	*allocatedMaterial = defaultMaterial;
-	defaultMaterialsMap.insert({ "DEFAULT", allocatedMaterial});
+	CreateMaterial("DEFAULT", materialData, "DEFAULT", "DEFAULT");
 
 	materialData = {};
 	materialData.DiffuseTextureMapSRV = defaultTexturesMap["GrassDiffuse"];
 	materialData.NormalTextureMapSRV = defaultTexturesMap["GrassNormal"];
-	Material grassMaterial = Material("Grass", materialData, ShaderType::NORMAL, vertexShadersMap["Normal"], pixelShadersMap["Normal"], Config::Sampler);
-	allocatedMaterial = (Material*)EEMemoryAllocator->AllocateToPool((unsigned int)MEMORY_POOL::MATERIAL_POOL, sizeof(Material), success);
-	*allocatedMaterial = grassMaterial;
-	defaultMaterialsMap.insert({ "Grass", allocatedMaterial });
+	CreateMaterial("Grass", materialData, "Normal", "Normal", ShaderType::NORMAL);
 
 	materialData = {};
 	materialData.DiffuseTextureMapSRV = defaultTexturesMap["Red"];
-	Material redMaterial = Material("Red", materialData, ShaderType::DEFAULT, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler);
-	allocatedMaterial = (Material*)EEMemoryAllocator->AllocateToPool((unsigned int)MEMORY_POOL::MATERIAL_POOL, sizeof(Material), success);
-	*allocatedMaterial = redMaterial;
-	defaultMaterialsMap.insert({ "Red", allocatedMaterial });
+	CreateMaterial("Red", materialData, "DEFAULT", "DEFAULT");
 
 	materialData = {};
 	materialData.DiffuseTextureMapSRV = defaultTexturesMap["Marble"];
-	Material marbleMaterial = Material("Marble", materialData, ShaderType::DEFAULT, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler);
-	allocatedMaterial = (Material*)EEMemoryAllocator->AllocateToPool((unsigned int)MEMORY_POOL::MATERIAL_POOL, sizeof(Material), success);
-	*allocatedMaterial = marbleMaterial;
-	defaultMaterialsMap.insert({ "Marble", allocatedMaterial });
+	CreateMaterial("Marble", materialData, "DEFAULT", "DEFAULT");
 
 	materialData = {};
 	materialData.DiffuseTextureMapSRV = defaultTexturesMap["Hedge"];
-	Material hedgeMaterial = Material("Hedge", materialData, ShaderType::DEFAULT, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler);
-	allocatedMaterial = (Material*)EEMemoryAllocator->AllocateToPool((unsigned int)MEMORY_POOL::MATERIAL_POOL, sizeof(Material), success);
-	*allocatedMaterial = hedgeMaterial;
-	defaultMaterialsMap.insert({ "Hedge", allocatedMaterial });
+	CreateMaterial("Hedge", materialData, "DEFAULT", "DEFAULT");
 
 	materialData = {};
 	materialData.DiffuseTextureMapSRV = defaultTexturesMap["Grey"];
 	materialData.SpecularExponent = 500;
 	materialData.SSAO = true;
-	Material greyMaterial = Material("Grey", materialData, ShaderType::DEFAULT, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler);
-	allocatedMaterial = (Material*)EEMemoryAllocator->AllocateToPool((unsigned int)MEMORY_POOL::MATERIAL_POOL, sizeof(Material), success);
-	*allocatedMaterial = greyMaterial;
-	defaultMaterialsMap.insert({ "Grey", allocatedMaterial });
+	CreateMaterial("Grey", materialData, "DEFAULT", "DEFAULT");
 
 	materialData = {};
 	materialData.DiffuseTextureMapSRV = defaultTexturesMap["Grey4"];
 	materialData.SpecularExponent = 900;
 	materialData.SSAO = true;
-	Material grey4Material = Material("Grey4", materialData, ShaderType::DEFAULT, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler);
-	allocatedMaterial = (Material*)EEMemoryAllocator->AllocateToPool((unsigned int)MEMORY_POOL::MATERIAL_POOL, sizeof(Material), success);
-	*allocatedMaterial = grey4Material;
-	defaultMaterialsMap.insert({ "Grey4", allocatedMaterial });
+	CreateMaterial("Grey4", materialData, "DEFAULT", "DEFAULT");
 
 	materialData = {};
 	materialData.DiffuseTextureMapSRV = defaultTexturesMap["White"];
 	materialData.SpecularExponent = 100;
 	materialData.SSAO = true;
-	Material whiteMaterial = Material("White", materialData, ShaderType::DEFAULT, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler);
-	allocatedMaterial = (Material*)EEMemoryAllocator->AllocateToPool((unsigned int)MEMORY_POOL::MATERIAL_POOL, sizeof(Material), success);
-	*allocatedMaterial = whiteMaterial;
-	defaultMaterialsMap.insert({ "White", allocatedMaterial });
+	CreateMaterial("White", materialData, "DEFAULT", "DEFAULT");
+
+	materialData = {};
+	materialData.DiffuseTextureMapSRV = defaultTexturesMap["Red"];
+	CreateMaterial("RedFluid", materialData, "Fluid", "DEFAULT");
 }
 
 MESH_TYPE SceneLoader::AutoLoadOBJMTL(string name)
@@ -602,11 +593,24 @@ void SceneLoader::LoadScene(string sceneName)
 
 					int num = sceneLineTypes[type];
 
+					/*
+					{ "ENTITY", 0 },
+					{ "MESH", 1 },
+					{ "MATERIAL", 2 },
+					{ "VSHADER", 3 },
+					{ "PSHADER", 4 },
+					{ "CSHADER", 5 },
+					{ "SKYBOX", 6 }, 
+					{ "DIRLIGHT", 7 },
+					{ "CPUPARTICLE", 8 },
+					{ "GPUPARTICLE", 9 },
+					*/
+
 					switch (num)
 					{
 					case 0: break; //entity
 
-					case 1:
+					case 6:
 						{
 							//skybox
 							if (regex_search(line, match, skyboxRegex)) {
@@ -620,7 +624,7 @@ void SceneLoader::LoadScene(string sceneName)
 							}
 							continue;
 						}
-					case 2:
+					case 7:
 						{
 							//directional light
 							string lightName;

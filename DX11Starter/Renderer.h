@@ -48,6 +48,10 @@ struct DepthStencilComponents {
 	ID3D11SamplerState* depthStencilSampler = nullptr;
 	ID3D11RasterizerState* depthStencilRasterizer = nullptr;
 	ID3D11DepthStencilState* depthStencilState = nullptr;
+
+	ID3D11RenderTargetView* entityInfoRTV = nullptr;
+	ID3D11ShaderResourceView* entityInfoSRV = nullptr;
+
 	ID3D11BlendState* decalBlendState = nullptr;
 };
 

@@ -12,7 +12,6 @@ void TestScript::Init()
 
 void TestScript::Update()
 {
-	/*
 	//collision barrels
 	if (GetAsyncKeyState(VK_LEFT))
 	{
@@ -34,8 +33,16 @@ void TestScript::Update()
 		entity->Move(0, 0, -0.05f);
 		entity->CalcWorldMatrix();
 	}
-	*/
 
+	Material* mat = entity->GetMaterial(entity->GetMaterialNameList()[0]);
+	SimpleVertexShader* vertShader = mat->GetVertexShader();
+	vertShader->SetFloat("fillLineY", 0.25f);
+	vertShader->SetFloat("totalTime", totalTime);
+	vertShader->SetFloat("deltaTime", deltaTime);
+	vertShader->SetFloat("waveHeight", 0.05f);
+	vertShader->SetInt("counter", waveCounter);
+	waveCounter++;
+	totalTime += deltaTime;
 	/*
 	if (entity->CheckSATCollisionAndCorrect((*eMap)["Rock (1)"]))
 	{

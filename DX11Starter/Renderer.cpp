@@ -19,6 +19,10 @@ Renderer::~Renderer()
 	if(depthStencilComponents.depthStencilRTV) depthStencilComponents.depthStencilRTV->Release();
 	if(depthStencilComponents.depthStencilRasterizer) depthStencilComponents.depthStencilRasterizer->Release();
 	if(depthStencilComponents.depthStencilSampler) depthStencilComponents.depthStencilSampler->Release();
+
+	if (depthStencilComponents.entityInfoSRV) depthStencilComponents.entityInfoSRV->Release();
+	if (depthStencilComponents.entityInfoRTV) depthStencilComponents.entityInfoRTV->Release();
+
 	if(depthStencilComponents.depthStencilState) depthStencilComponents.depthStencilState->Release();
 	if(depthStencilComponents.decalBlendState) depthStencilComponents.decalBlendState->Release();
 
@@ -116,6 +120,8 @@ void Renderer::InitDepthStencil()
 	if (depthStencilComponents.depthStencilRTV) depthStencilComponents.depthStencilRTV->Release();
 	if (depthStencilComponents.depthStencilRasterizer) depthStencilComponents.depthStencilRasterizer->Release();
 	if (depthStencilComponents.depthStencilSampler) depthStencilComponents.depthStencilSampler->Release();
+	if (depthStencilComponents.entityInfoSRV) depthStencilComponents.entityInfoSRV->Release();
+	if (depthStencilComponents.entityInfoRTV) depthStencilComponents.entityInfoRTV->Release();
 	if (depthStencilComponents.depthStencilState) depthStencilComponents.depthStencilState->Release();
 	if (depthStencilComponents.decalBlendState) depthStencilComponents.decalBlendState->Release();
 
@@ -150,6 +156,39 @@ void Renderer::InitDepthStencil()
 
 	// Clean up extra texture ref
 	texture->Release();
+
+	// Set up the texture itself
+	D3D11_TEXTURE2D_DESC entityTexDesc = {};
+	entityTexDesc.ArraySize = 1;
+	entityTexDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
+	entityTexDesc.Format = DXGI_FORMAT_R32_UINT;
+	entityTexDesc.MipLevels = 1;
+	entityTexDesc.Height = Config::ViewPortHeight;
+	entityTexDesc.Width = Config::ViewPortWidth;
+	entityTexDesc.SampleDesc.Count = 1;
+
+	// Actually create the texture
+	ID3D11Texture2D* entityTexture;
+	Config::Device->CreateTexture2D(&entityTexDesc, 0, &entityTexture);
+
+	// Create the shader resource view for this texture
+	D3D11_SHADER_RESOURCE_VIEW_DESC entitySRVDesc = {};
+	entitySRVDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+	entitySRVDesc.Format = DXGI_FORMAT_R32_UINT;
+	entitySRVDesc.Texture2D.MipLevels = 1;
+	entitySRVDesc.Texture2D.MostDetailedMip = 0;
+	Config::Device->CreateShaderResourceView(entityTexture, &entitySRVDesc, &depthStencilComponents.entityInfoSRV);
+
+	// Make a render target view desc and RTV
+	D3D11_RENDER_TARGET_VIEW_DESC entityRTVDesc = {};
+	entityRTVDesc.Format = DXGI_FORMAT_R32_UINT;
+	entityRTVDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+	entityRTVDesc.Texture2D.MipSlice = 0;
+	Config::Device->CreateRenderTargetView(entityTexture, &entityRTVDesc, &depthStencilComponents.entityInfoRTV);
+
+	// Clean up extra texture ref
+	entityTexture->Release();
+
 	/*
 	// Create the actual texture that will be the depth stencil map
 	D3D11_TEXTURE2D_DESC depthStencilDesc = {};
@@ -214,7 +253,7 @@ void Renderer::InitDepthStencil()
 
 	dsDesc.DepthEnable = false;
 	dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
-	dsDesc.DepthFunc = D3D11_COMPARISON_ALWAYS;
+	dsDesc.DepthFunc = D3D11_COMPARISON_NEVER;
 
 	// Stencil test parameters
 	dsDesc.StencilEnable = false;
@@ -222,7 +261,7 @@ void Renderer::InitDepthStencil()
 	dsDesc.StencilWriteMask = 0xFF;
 
 	// Stencil operations if pixel is front-facing
-	dsDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+	dsDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_REPLACE;
 	dsDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_INCR;
 	dsDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_INCR;
 	dsDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
@@ -246,8 +285,8 @@ void Renderer::InitDepthStencil()
 	BlendState.AlphaToCoverageEnable = false;
 	BlendState.IndependentBlendEnable = false;
 	BlendState.RenderTarget[0].BlendEnable = true;
-	BlendState.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
-	BlendState.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+	BlendState.RenderTarget[0].SrcBlend = D3D11_BLEND_ONE;
+	BlendState.RenderTarget[0].DestBlend = D3D11_BLEND_ZERO;
 	BlendState.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
 	BlendState.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
 	BlendState.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ONE;
@@ -470,7 +509,7 @@ void Renderer::RenderFrame()
 		//ID3D11BlendState* originalBlend;
 		//Config::Context->OMGetBlendState(&originalBlend);
 		Config::Context->OMSetDepthStencilState(depthStencilComponents.depthStencilState, 0);
-		//Config::Context->OMSetBlendState(depthStencilComponents.decalBlendState, 0, 0xFFFFFFFF);
+		Config::Context->OMSetBlendState(depthStencilComponents.decalBlendState, 0, 0xFFFFFFFF);
 		ID3D11Buffer* vbo = invCube->GetVertexBuffer();
 		ID3D11Buffer* ind = invCube->GetIndexBuffer();
 		Config::Context->IASetVertexBuffers(0, 1, &vbo, &stride, &offset);
@@ -485,6 +524,7 @@ void Renderer::RenderFrame()
 		shaders.decalPS->SetMatrix4x4("shadowView", shadowComponents.shadowViewMatrix);
 		shaders.decalPS->SetMatrix4x4("shadowProj", shadowComponents.shadowProjectionMatrix);
 		shaders.decalPS->SetShaderResourceView("DepthBuffer", depthStencilComponents.depthStencilSRV);
+		shaders.decalPS->SetShaderResourceView("EntityInfoBuffer", depthStencilComponents.entityInfoSRV);
 		shaders.decalPS->SetShaderResourceView("ShadowMap", shadowComponents.shadowSRV);
 		shaders.decalPS->SetSamplerState("ShadowSampler", shadowComponents.shadowSampler);
 		shaders.decalPS->SetFloat3("cameraPos", camera->position);
@@ -526,8 +566,9 @@ void Renderer::RenderFrame()
 		}
 		shaders.decalPS->SetShaderResourceView("ShadowMap", NULL);
 		shaders.decalPS->SetShaderResourceView("DepthBuffer", NULL);
+		shaders.decalPS->SetShaderResourceView("EntityInfoBuffer", NULL);
 		Config::Context->OMSetDepthStencilState(NULL, 0);
-		//Config::Context->OMSetBlendState(NULL, 0, 0xFFFFFFFF);
+		Config::Context->OMSetBlendState(NULL, 0, 0xFFFFFFFF);
 	}
 
 	if (Config::HBAOPlusEnabled) {
@@ -660,10 +701,20 @@ void Renderer::RenderDepthStencil()
 
 	// Initial setup - No RTV necessary - Clear depthStencil map
 	//Config::Context->OMSetRenderTargets(0, 0, depthStencilComponents.depthStencilDSV);
-	Config::Context->OMSetRenderTargets(1, &depthStencilComponents.depthStencilRTV, Config::DepthStencilView);
+
+	ID3D11RenderTargetView* targets[2] = {
+		depthStencilComponents.depthStencilRTV,
+		depthStencilComponents.entityInfoRTV,
+	};
+	Config::Context->OMSetRenderTargets(2, targets, Config::DepthStencilView);
+
+	//Config::Context->OMSetRenderTargets(1, &depthStencilComponents.depthStencilRTV, Config::DepthStencilView);
 	//Config::Context->ClearDepthStencilView(depthStencilComponents.depthStencilDSV, D3D11_CLEAR_DEPTH, 1.0f, 0);
+
 	const float color[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
 	Config::Context->ClearRenderTargetView(depthStencilComponents.depthStencilRTV, color);
+	Config::Context->ClearRenderTargetView(depthStencilComponents.entityInfoRTV, color);
+
 	//Config::Context->RSSetState(depthStencilComponents.depthStencilRasterizer);
 
 	// Set up the shaders
@@ -672,7 +723,6 @@ void Renderer::RenderDepthStencil()
 	shaders.depthStencilVS->SetMatrix4x4("view", camera->GetViewMatrix());
 	shaders.depthStencilVS->SetMatrix4x4("projection", camera->GetProjMatrix());
 	shaders.depthStencilPS->SetFloat3("cameraPosition", camera->position);
-	shaders.depthStencilPS->CopyAllBufferData();
 
 	//Config::Context->PSSetShader(0, 0, 0); // Turns OFF the pixel shader
 
@@ -680,13 +730,15 @@ void Renderer::RenderDepthStencil()
 	UINT stride = sizeof(Vertex);
 	UINT offset = 0;
 
+	unsigned int entityInfo;
+
 	for (int i = renderObjectCount - 1; i >= 0; i--)
 	{
 		RenderObject renderObject = renderObjects[i];
 		Entity* e = renderObject.entity;
 		Mesh* mesh = renderObject.mesh;
 
-		if (e->isEmptyObj) continue;
+		if (e->isEmptyObj || !renderObject.material->GetMaterialData().hbaoPlusEnabled) continue;
 
 		ID3D11Buffer* vb = mesh->GetVertexBuffer();
 		ID3D11Buffer* ib = mesh->GetIndexBuffer();
@@ -698,6 +750,11 @@ void Renderer::RenderDepthStencil()
 
 		shaders.depthStencilVS->SetMatrix4x4("world", e->GetWorldMatrix());
 		shaders.depthStencilVS->CopyAllBufferData();
+
+		entityInfo = 0;
+		entityInfo = Config::EntityLayers[*e->layer];
+		shaders.depthStencilPS->SetInt("entityInfo", entityInfo);
+		shaders.depthStencilPS->CopyAllBufferData();
 
 		// Finally do the actual drawing
 		Config::Context->DrawIndexed(mesh->GetIndexCount(), 0, 0);

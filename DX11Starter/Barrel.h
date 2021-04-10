@@ -9,6 +9,9 @@ class TestScript : public ScriptManager
 
 	string test = "Scope";
 
+	float totalTime = 0.0f;
+	int waveCounter = 0;
+
 	void Init();
 
 	void Update();

@@ -31,6 +31,7 @@ struct MaterialData {
 	ID3D11ShaderResourceView* AlphaTextureMapSRV = nullptr; //map_d
 	ID3D11ShaderResourceView* NormalTextureMapSRV = nullptr; //map_Bump
 	bool SSAO = false;
+	bool hbaoPlusEnabled = true;
 };
 
 enum class ShaderType {

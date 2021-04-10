@@ -210,7 +210,7 @@ void Game::Init()
 	};
 	emitDesc.colors = partColors;
 	emitDesc.maxParticles = 100;
-	emitDesc.emissionRate = 10.0f;
+	emitDesc.emissionRate = 3.0f;
 	//emitDesc.emissionRotation = XMFLOAT3(-XM_PIDIV2,0.0f,0.0f);
 	emitDesc.emitterDirection = Y_AXIS;
 	emitDesc.particleInitMinSpeed = 10.0f;
@@ -233,6 +233,7 @@ void Game::Init()
 	
 		if (wrapperA->type == PHYSICS_WRAPPER_TYPE::PARTICLE && wrapperB->type == PHYSICS_WRAPPER_TYPE::ENTITY || 
 			wrapperB->type == PHYSICS_WRAPPER_TYPE::PARTICLE && wrapperA->type == PHYSICS_WRAPPER_TYPE::ENTITY) {
+
 			ParticlePhysicsWrapper* particleWrapper = (wrapperA->type == PHYSICS_WRAPPER_TYPE::PARTICLE) ? (ParticlePhysicsWrapper*)wrapperA->objectPointer : (ParticlePhysicsWrapper*)wrapperB->objectPointer;
 			Entity* entity = (wrapperA->type == PHYSICS_WRAPPER_TYPE::ENTITY) ? (Entity*)wrapperA->objectPointer : (Entity*)wrapperB->objectPointer;
 	
@@ -267,6 +268,8 @@ void Game::Init()
 	});
 
 	emitDesc.maxParticles = 2000;
+	emitDesc.particleInitMinScale = 0.25f;
+	emitDesc.particleInitMaxScale = 0.3f;
 	emitDesc.emissionRate = 100.0f;
 	gpuEmitter = new GPUParticleEmitter(emitDesc);
 

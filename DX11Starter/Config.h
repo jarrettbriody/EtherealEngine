@@ -70,5 +70,9 @@ public:
 	static unsigned int SSAOSampleCount;
 	static float SSAOKernelRadius;
 	static DirectX::XMFLOAT4 SSAOKernel[32];
+
+	static std::map<std::string, unsigned int> EntityTags;
+
+	static std::map<std::string, unsigned int> EntityLayers;
 };
 

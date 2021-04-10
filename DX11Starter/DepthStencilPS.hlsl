@@ -1,5 +1,6 @@
 cbuffer externalData : register(b0) {
 	float3 cameraPosition;
+	uint entityInfo;
 }
 
 // Out of the vertex shader (and eventually input to the PS)
@@ -9,7 +10,16 @@ struct VertexToPixel
 	float3 worldPosition : POSITION;
 };
 
-float main(VertexToPixel input) : SV_TARGET
+struct GBuffer
 {
-	return length(input.worldPosition - cameraPosition);
+	float  depth				: SV_TARGET0;
+	uint entityInfo				: SV_TARGET1;
+};
+
+GBuffer main(VertexToPixel input)
+{
+	GBuffer output;
+	output.depth = length(input.worldPosition - cameraPosition);
+	output.entityInfo = entityInfo;
+	return output;
 }

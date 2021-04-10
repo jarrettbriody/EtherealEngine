@@ -266,7 +266,7 @@ void Entity::InitRigidBody(BulletColliderShape shape, float entityMass, bool zer
 	rBody->setAnisotropicFriction(btVector3(2.0f, 0.0f, 0.0f));
 
 	if(mass == 0.0f)
-		rBody->setCollisionFlags(btCollisionObject::CF_NO_CONTACT_RESPONSE);
+		rBody->setCollisionFlags(rBody->getCollisionFlags() & btCollisionObject::CF_NO_CONTACT_RESPONSE);
 
 	// Have the rigid body register a pointer to the entity it belongs to so we can access it
 	// TODO: Change this to a struct with everything included (name, entity pointer, tag)
