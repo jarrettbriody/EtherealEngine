@@ -10,6 +10,8 @@
 #include <vector>
 #include <string>
 
+#include "Config.h"
+
 // --------------------------------------------------------
 // Used by simple shaders to store information about
 // specific variables in constant buffers
@@ -55,13 +57,19 @@ struct SimpleSampler
 	unsigned int BindIndex; // The register of the Sampler
 };
 
+enum class ShaderType {
+	DEFAULT,
+	NORMAL,
+	MODIFY_VERTS,
+};
+
 // --------------------------------------------------------
 // Base abstract class for simplifying shader handling
 // --------------------------------------------------------
 class ISimpleShader
 {
 public:
-	ISimpleShader(ID3D11Device* device, ID3D11DeviceContext* context);
+	ISimpleShader();
 	virtual ~ISimpleShader();
 
 	// Initialization method (since we can't invoke derived class
@@ -115,12 +123,17 @@ public:
 	// Misc getters
 	ID3DBlob* GetShaderBlob() { return shaderBlob; }
 
+	void SetShaderType(ShaderType type) { shaderType = type; };
+	ShaderType GetShaderType() { return shaderType; };
+
 protected:
 	
 	bool shaderValid;
 	ID3DBlob* shaderBlob;
 	ID3D11Device* device;
 	ID3D11DeviceContext* deviceContext;
+
+	ShaderType shaderType;
 
 	// Resource counts
 	unsigned int constantBufferCount;
@@ -151,8 +164,8 @@ protected:
 class SimpleVertexShader : public ISimpleShader
 {
 public:
-	SimpleVertexShader(ID3D11Device* device, ID3D11DeviceContext* context);
-	SimpleVertexShader(ID3D11Device* device, ID3D11DeviceContext* context, ID3D11InputLayout* inputLayout, bool perInstanceCompatible);
+	SimpleVertexShader();
+	SimpleVertexShader(ID3D11InputLayout* inputLayout, bool perInstanceCompatible);
 	~SimpleVertexShader();
 	ID3D11VertexShader* GetDirectXShader() { return shader; }
 	ID3D11InputLayout* GetInputLayout() { return inputLayout; }
@@ -177,7 +190,7 @@ protected:
 class SimplePixelShader : public ISimpleShader
 {
 public:
-	SimplePixelShader(ID3D11Device* device, ID3D11DeviceContext* context);
+	SimplePixelShader();
 	~SimplePixelShader();
 	ID3D11PixelShader* GetDirectXShader() { return shader; }
 
@@ -197,7 +210,7 @@ protected:
 class SimpleDomainShader : public ISimpleShader
 {
 public:
-	SimpleDomainShader(ID3D11Device* device, ID3D11DeviceContext* context);
+	SimpleDomainShader();
 	~SimpleDomainShader();
 	ID3D11DomainShader* GetDirectXShader() { return shader; }
 
@@ -217,7 +230,7 @@ protected:
 class SimpleHullShader : public ISimpleShader
 {
 public:
-	SimpleHullShader(ID3D11Device* device, ID3D11DeviceContext* context);
+	SimpleHullShader();
 	~SimpleHullShader();
 	ID3D11HullShader* GetDirectXShader() { return shader; }
 
@@ -237,7 +250,7 @@ protected:
 class SimpleGeometryShader : public ISimpleShader
 {
 public:
-	SimpleGeometryShader(ID3D11Device* device, ID3D11DeviceContext* context, bool useStreamOut = 0, bool allowStreamOutRasterization = 0);
+	SimpleGeometryShader(bool useStreamOut = 0, bool allowStreamOutRasterization = 0);
 	~SimpleGeometryShader();
 	ID3D11GeometryShader* GetDirectXShader() { return shader; }
 
@@ -273,7 +286,7 @@ protected:
 class SimpleComputeShader : public ISimpleShader
 {
 public:
-	SimpleComputeShader(ID3D11Device* device, ID3D11DeviceContext* context);
+	SimpleComputeShader();
 	~SimpleComputeShader();
 	ID3D11ComputeShader* GetDirectXShader() { return shader; }
 

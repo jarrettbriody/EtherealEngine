@@ -8,6 +8,14 @@ void TestScript::Init()
 	(*eMap)["barrel_1"]->isCollisionStatic = false;
 	(*eMap)["barrel_1 (2)"]->isCollisionStatic = false;
 	*/
+
+	fluidCallback.vShader = EESceneLoader->vertexShadersMap["Fluid"];
+	fluidCallback.prepassVShader = EESceneLoader->vertexShadersMap["FluidPrepass"];
+	fluidCallback.fillLineY = 0.25f;
+	fluidCallback.waveHeight = 0.05f;
+
+	EERenderer->SetRenderObjectCallback(entity, &fluidCallback);
+	fluidCallback.active = true;
 }
 
 void TestScript::Update()
@@ -34,13 +42,10 @@ void TestScript::Update()
 		entity->CalcWorldMatrix();
 	}
 
-	Material* mat = entity->GetMaterial(entity->GetMaterialNameList()[0]);
-	SimpleVertexShader* vertShader = mat->GetVertexShader();
-	vertShader->SetFloat("fillLineY", 0.25f);
-	vertShader->SetFloat("totalTime", totalTime);
-	vertShader->SetFloat("deltaTime", deltaTime);
-	vertShader->SetFloat("waveHeight", 0.05f);
-	vertShader->SetInt("counter", waveCounter);
+	fluidCallback.totalTime = totalTime;
+	fluidCallback.deltaTime = deltaTime;
+	fluidCallback.waveCounter = waveCounter;
+
 	waveCounter++;
 	totalTime += deltaTime;
 	/*

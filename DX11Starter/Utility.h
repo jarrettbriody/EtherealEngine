@@ -40,6 +40,7 @@ namespace Utility {
 		}
 	}
 
+	/*
 	static std::wstring MultiByteToWideChar(std::string& as)
 	{
 		wchar_t* buf = new wchar_t[as.size() * 2 + 2];
@@ -48,6 +49,7 @@ namespace Utility {
 		delete[] buf;
 		return rval;
 	}
+	*/
 
 	static ID3D11ShaderResourceView* LoadSRV(std::string texture){
 		ID3D11ShaderResourceView* srv;
@@ -65,6 +67,12 @@ namespace Utility {
 		::MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, &texture.c_str()[0], -1, &fileName[0], 50);
 		DirectX::CreateDDSTextureFromFile(Config::Device, wcsncat(path, fileName, 100), 0, &srv);
 		return srv;
+	}
+
+	static LPCWSTR StringToWideString(std::string str) {
+		wchar_t* wideBuf = new wchar_t[100];
+		::MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, str.c_str(), -1, wideBuf, 100);
+		return wideBuf;
 	}
 
 	static float DegToRad(float deg) {

@@ -4,6 +4,7 @@
 #include "Material.h"
 #include "Collider.h"
 #include "PhysicsWrapper.h"
+#include "EEString.h"
 
 struct ShadowData {
 	DirectX::XMFLOAT4X4 shadowViewMatrix;
@@ -39,7 +40,7 @@ private:
 	DirectX::XMFLOAT2 repeatTex;
 	map<string, Material*>* materialMap = nullptr;
 	unsigned int meshMaterialIndex = 0;
-	string* name;
+	EEString<64> name;
 	vector<Entity*>* children = nullptr;
 	Entity* parent = nullptr;
 	vector<Collider*>* colliders = nullptr;
@@ -64,8 +65,8 @@ public:
 	bool collisionsEnabled = false;
 	bool colliderDebugLinesEnabled = false;
 	bool isEmptyObj = false;
-	string* tag;
-	string* layer;
+	EEString<64> tag;
+	EEString<64> layer;
 	Entity();
 	Entity(string entityName);
 	Entity(string entityName, Mesh* entityMesh, Material* mat = nullptr);

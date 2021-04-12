@@ -471,6 +471,7 @@ void Renderer::RenderFrame()
 		Entity* e = renderObject.entity;
 		Mesh* mesh = renderObject.mesh;
 		Material* mat = renderObject.material;
+		RendererCallback* callback = renderObject.callback;
 
 		if (e->isEmptyObj) continue;
 		e->ToggleShadows(Config::ShadowsEnabled);
@@ -495,6 +496,11 @@ void Renderer::RenderFrame()
 		Config::Context->IASetVertexBuffers(0, 1, &vbo, &stride, &offset);
 		Config::Context->IASetIndexBuffer(ind, DXGI_FORMAT_R32_UINT, 0);
 
+		if (callback != nullptr) {
+			if (callback->active && callback->vShader) {
+				callback->PreVertexShaderCallback();
+			}
+		}
 		e->PrepareMaterialForDraw(mat->GetName(), camera->GetViewMatrix(), camera->GetProjMatrix());
 
 		Config::Context->DrawIndexed(
@@ -640,7 +646,6 @@ void Renderer::RenderShadowMap()
 
 	// Set up the shaders
 	shaders.depthStencilVS->SetShader();
-	//shaders.depthStencilPS->SetShader();
 	shaders.depthStencilVS->SetMatrix4x4("view", shadowComponents.shadowViewMatrix);
 	shaders.depthStencilVS->SetMatrix4x4("projection", shadowComponents.shadowProjectionMatrix);
 	//shaders.depthStencilPS->SetFloat3("cameraPosition", lights["Sun"]->Position);
@@ -654,22 +659,26 @@ void Renderer::RenderShadowMap()
 
 	for (int i = renderObjectCount - 1; i >= 0; i--)
 	{
+		shaders.depthStencilVS->SetShader();
+
 		RenderObject renderObject = renderObjects[i];
 		Entity* e = renderObject.entity;
 		Mesh* mesh = renderObject.mesh;
+		Material* mat = renderObject.material; 
+		RendererCallback* callback = renderObject.callback;
 
 		if (e->destroyed || e->isEmptyObj) {
-			if (i == renderObjectCount - 1) {
-				renderObjectCount--;
-			}
-			else {
+			if (i != renderObjectCount - 1) {
 				renderObjects[i] = renderObjects[renderObjectCount - 1];
-				renderObjectCount--;
 			}
+			renderObjectsMap.erase(e);
+			renderObjectCount--;
 			continue;
 		}
 
 		if (e->isEmptyObj) continue;
+
+		//if (mat->GetVertexShader()->GetShaderType() == ShaderType::MODIFY_VERTS) {}
 
 		ID3D11Buffer* vb = mesh->GetVertexBuffer();
 		ID3D11Buffer* ib = mesh->GetIndexBuffer();
@@ -678,9 +687,24 @@ void Renderer::RenderShadowMap()
 		Config::Context->IASetVertexBuffers(0, 1, &vb, &stride, &offset);
 		Config::Context->IASetIndexBuffer(ib, DXGI_FORMAT_R32_UINT, 0);
 
-
-		shaders.depthStencilVS->SetMatrix4x4("world", e->GetWorldMatrix());
-		shaders.depthStencilVS->CopyAllBufferData();
+		if (callback != nullptr) {
+			if (callback->active && callback->prepassVShader) {
+				callback->prepassVShader->SetShader();
+				callback->prepassVShader->SetMatrix4x4("world", e->GetWorldMatrix());
+				callback->prepassVShader->SetMatrix4x4("view", shadowComponents.shadowViewMatrix);
+				callback->prepassVShader->SetMatrix4x4("projection", shadowComponents.shadowProjectionMatrix);
+				callback->PrePrepassVertexShaderCallback();
+				callback->prepassVShader->CopyAllBufferData();
+			}
+			else {
+				shaders.depthStencilVS->SetMatrix4x4("world", e->GetWorldMatrix());
+				shaders.depthStencilVS->CopyAllBufferData();
+			}
+		}
+		else {
+			shaders.depthStencilVS->SetMatrix4x4("world", e->GetWorldMatrix());
+			shaders.depthStencilVS->CopyAllBufferData();
+		}
 
 		// Finally do the actual drawing
 		Config::Context->DrawIndexed(mesh->GetIndexCount(), 0, 0);
@@ -734,11 +758,17 @@ void Renderer::RenderDepthStencil()
 
 	for (int i = renderObjectCount - 1; i >= 0; i--)
 	{
+		shaders.depthStencilVS->SetShader();
+
 		RenderObject renderObject = renderObjects[i];
 		Entity* e = renderObject.entity;
 		Mesh* mesh = renderObject.mesh;
+		Material* mat = renderObject.material;
+		RendererCallback* callback = renderObject.callback;
 
 		if (e->isEmptyObj || !renderObject.material->GetMaterialData().hbaoPlusEnabled) continue;
+
+		//if (mat->GetVertexShader()->GetShaderType() == ShaderType::MODIFY_VERTS) {}
 
 		ID3D11Buffer* vb = mesh->GetVertexBuffer();
 		ID3D11Buffer* ib = mesh->GetIndexBuffer();
@@ -747,12 +777,27 @@ void Renderer::RenderDepthStencil()
 		Config::Context->IASetVertexBuffers(0, 1, &vb, &stride, &offset);
 		Config::Context->IASetIndexBuffer(ib, DXGI_FORMAT_R32_UINT, 0);
 
-
-		shaders.depthStencilVS->SetMatrix4x4("world", e->GetWorldMatrix());
-		shaders.depthStencilVS->CopyAllBufferData();
+		if (callback != nullptr) {
+			if (callback->active && callback->prepassVShader) {
+				callback->prepassVShader->SetShader();
+				callback->prepassVShader->SetMatrix4x4("world", e->GetWorldMatrix());
+				callback->prepassVShader->SetMatrix4x4("view", camera->GetViewMatrix());
+				callback->prepassVShader->SetMatrix4x4("projection", camera->GetProjMatrix());
+				callback->PrePrepassVertexShaderCallback();
+				callback->prepassVShader->CopyAllBufferData();
+			}
+			else {
+				shaders.depthStencilVS->SetMatrix4x4("world", e->GetWorldMatrix());
+				shaders.depthStencilVS->CopyAllBufferData();
+			}
+		}
+		else {
+			shaders.depthStencilVS->SetMatrix4x4("world", e->GetWorldMatrix());
+			shaders.depthStencilVS->CopyAllBufferData();
+		}
 
 		entityInfo = 0;
-		entityInfo = Config::EntityLayers[*e->layer];
+		entityInfo = Config::EntityLayers[e->layer.STDStr()];
 		shaders.depthStencilPS->SetInt("entityInfo", entityInfo);
 		shaders.depthStencilPS->CopyAllBufferData();
 
@@ -908,6 +953,8 @@ void Renderer::AddRenderObject(Entity* e, Mesh* mesh, Material* mat)
 	if (!mesh->HasChildren()) {
 		r = { e, mesh, mat };
 		renderObjects[renderObjectCount] = r;
+		if (!renderObjectsMap.count(e)) renderObjectsMap.insert({ e, vector<RenderObject*>() });
+		renderObjectsMap[e].push_back(&renderObjects[renderObjectCount]);
 		renderObjectCount++;
 		if (renderObjectCount >= maxRenderObjects) {
 			RenderObject* old = renderObjects;
@@ -923,6 +970,8 @@ void Renderer::AddRenderObject(Entity* e, Mesh* mesh, Material* mat)
 		{
 			r = { e, children[i], e->GetMaterial(e->GetMeshMaterialName(i)) };
 			renderObjects[renderObjectCount] = r;
+			if (!renderObjectsMap.count(e)) renderObjectsMap.insert({ e, vector<RenderObject*>() });
+			renderObjectsMap[e].push_back(&renderObjects[renderObjectCount]);
 			renderObjectCount++;
 			if (renderObjectCount >= maxRenderObjects) {
 				RenderObject* old = renderObjects;
@@ -932,5 +981,14 @@ void Renderer::AddRenderObject(Entity* e, Mesh* mesh, Material* mat)
 				delete[] old;
 			}
 		}
+	}
+}
+
+void Renderer::SetRenderObjectCallback(Entity* e, RendererCallback* callback)
+{
+	int num = renderObjectsMap[e].size();
+	for (int i = 0; i < num; i++)
+	{
+		renderObjectsMap[e][i]->callback = callback;
 	}
 }

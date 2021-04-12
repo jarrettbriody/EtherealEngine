@@ -23,10 +23,27 @@ struct RendererShaders {
 	SimplePixelShader* skyPS = nullptr;
 };
 
+struct RendererCallback {
+	void* data = nullptr;
+	bool active = false;
+
+	SimpleVertexShader* vShader = nullptr;
+	SimplePixelShader* pShader = nullptr;
+
+	SimpleVertexShader* prepassVShader = nullptr;
+	SimplePixelShader* prepassPShader = nullptr;
+
+	virtual void PreVertexShaderCallback() {};
+	virtual void PrePixelShaderCallback() {};
+	virtual void PrePrepassVertexShaderCallback() {};
+	virtual void PrePrepassPixelShaderCallback() {};
+};
+
 struct RenderObject{
 	Entity* entity;
 	Mesh* mesh;
 	Material* material;
+	RendererCallback* callback;
 };
 
 struct ShadowComponents {
@@ -78,6 +95,7 @@ private:
 	RenderObject* renderObjects;
 	int renderObjectCount = 0;
 	int maxRenderObjects = 0;
+	map<Entity*, vector<RenderObject*>> renderObjectsMap;
 
 	RendererShaders shaders;
 
@@ -139,4 +157,6 @@ public:
 	void SendSSAOKernelToShader(SimplePixelShader* pixelShader);
 
 	void AddRenderObject(Entity* e, Mesh* mesh, Material* mat = nullptr);
+
+	void SetRenderObjectCallback(Entity* e, RendererCallback* callback);
 };

@@ -67,6 +67,9 @@
     <FxCompile Include="FluidVS.hlsl">
       <Filter>EEShaders\Vertex Shaders</Filter>
     </FxCompile>
+    <FxCompile Include="FluidPrepassVS.hlsl">
+      <Filter>EEShaders\Vertex Shaders</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Camera.cpp">
@@ -233,6 +236,9 @@
     <ClInclude Include="PhysicsWrapper.h">
       <Filter>EECore\Utility\Structs</Filter>
     </ClInclude>
+    <ClInclude Include="EEString.h">
+      <Filter>EECore\Utility</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config">
@@ -318,6 +324,9 @@
       <Filter>EEScenes</Filter>
     </Text>
     <Text Include="..\Assets\Scenes\City.txt">
+      <Filter>EEScenes</Filter>
+    </Text>
+    <Text Include="..\Assets\EEAssetPreload.txt">
       <Filter>EEScenes</Filter>
     </Text>
   </ItemGroup>

@@ -4,8 +4,9 @@ cbuffer externalData : register(b0)
 	matrix world;
 	matrix view;
 	matrix projection;
-	matrix shadowView;
-	matrix shadowProj;
+};
+
+cbuffer fluidData : register(b1) {
 	float fillLineY;
 	float totalTime;
 	float deltaTime;
@@ -26,19 +27,12 @@ struct VertexShaderInput
 struct VertexToPixel
 {
 	float4 position		: SV_POSITION;	// XYZW position (System Value Position)
-	float3 normal       : NORMAL;
-	float2 uv           : TEXCOORD;
-	float3 worldPos		: POSITION;
-	float3 tangent		: TANGENT;
-	float4 posForShadow : SHADOW;
+	float3 worldPosition		: POSITION;
 };
 
 VertexToPixel main(VertexShaderInput input)
 {
-	// Set up output struct
 	VertexToPixel output;
-
-	//matrix worldViewProj = mul(mul(world, view), projection);
 
 	float3x3 worldNoTranslation = (float3x3)world;
 
@@ -48,21 +42,9 @@ VertexToPixel main(VertexShaderInput input)
 
 	if (newPos.y > fillLineY) newPos.y = fillLineY + flux;
 
-	output.worldPos = float3(newPos.x + world._41, newPos.y + world._42, newPos.z + world._43);
+	output.worldPosition = float3(newPos.x + world._41, newPos.y + world._42, newPos.z + world._43);
 
-	output.position = mul(float4(mul(float4(output.worldPos, 1.0f), view).xyz,1.0f), projection);
+	output.position = mul(float4(mul(float4(output.worldPosition, 1.0f), view).xyz, 1.0f), projection);
 
-	output.normal = normalize(mul(input.normal, worldNoTranslation));
-
-	output.uv = input.uv;
-
-
-	// Calculate shadow map position
-	//matrix shadowWVP = mul(mul(world, shadowView), shadowProj);
-
-	output.posForShadow = mul(float4(mul(float4(output.worldPos, 1.0f), shadowView).xyz, 1.0f), shadowProj);
-
-	// Whatever we return will make its way through the pipeline to the
-	// next programmable stage we're using (the pixel shader for now)
 	return output;
 }

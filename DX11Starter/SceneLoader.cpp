@@ -79,37 +79,45 @@ SceneLoader::~SceneLoader()
 	}
 }
 
-SimpleVertexShader* SceneLoader::LoadVertexShader(string shaderName, LPCWSTR shaderFileName)
+template<class SHADER>
+inline SHADER* SceneLoader::LoadShader(string shaderName, string shaderFileName, map<string, SHADER*>& shaderMap, ShaderType shaderType)
 {
-	SimpleVertexShader* vs = new SimpleVertexShader(Config::Device, Config::Context);
-	vs->LoadShaderFile(shaderFileName);
-	vertexShadersMap.insert({ shaderName, vs });
-	return vs;
+	SHADER* shader = new SHADER();
+	shaderFileName += ".cso";
+	LPCWSTR wStr = Utility::StringToWideString(shaderFileName);
+	shader->LoadShaderFile(wStr);
+	shader->SetShaderType(shaderType);
+	shaderMap.insert({ shaderName, shader });
+	delete[] wStr;
+	return shader;
 }
 
-SimplePixelShader* SceneLoader::LoadPixelShader(string shaderName, LPCWSTR shaderFileName)
-{
-	SimplePixelShader* ps = new SimplePixelShader(Config::Device, Config::Context);
-	ps->LoadShaderFile(shaderFileName);
-	pixelShadersMap.insert({ shaderName, ps });
-	return ps;
-}
-
-SimpleComputeShader* SceneLoader::LoadComputeShader(string shaderName, LPCWSTR shaderFileName)
-{
-	SimpleComputeShader* cs = new SimpleComputeShader(Config::Device, Config::Context);
-	cs->LoadShaderFile(shaderFileName);
-	computeShadersMap.insert({ shaderName, cs });
-	return cs;
-}
-
-Material* SceneLoader::CreateMaterial(string name, MaterialData matData, string vertShaderName, string pixelShaderName, ShaderType shaderType)
+Mesh* SceneLoader::LoadMesh(string meshName, string meshPath, map<string, Mesh*>& meshMap)
 {
 	bool success;
-	Material mat = Material(name, matData, shaderType, vertexShadersMap[vertShaderName], pixelShadersMap[pixelShaderName], Config::Sampler);
+
+	Mesh* allocMesh = (Mesh*)EEMemoryAllocator->AllocateToPool((unsigned int)MEMORY_POOL::MESH_POOL, sizeof(Mesh), success);
+	Mesh mesh = Mesh(meshName, (char*)(("../../Assets/Models/" + meshPath).c_str()));
+	*allocMesh = mesh;
+	meshMap.insert({ meshName, allocMesh });
+
+	return allocMesh;
+}
+
+ID3D11ShaderResourceView* SceneLoader::LoadTexture(string texName, string texPath, map<string, ID3D11ShaderResourceView*>& texMap)
+{
+	ID3D11ShaderResourceView* tex = Utility::LoadSRV(texPath);
+	texMap.insert({ texName, tex });
+	return tex;
+}
+
+Material* SceneLoader::CreateMaterial(string name, MaterialData matData, string vertShaderName, string pixelShaderName, map<string, Material*>& matMap)
+{
+	bool success;
+	Material mat = Material(name, matData, vertexShadersMap[vertShaderName], pixelShadersMap[pixelShaderName], Config::Sampler);
 	Material* allocatedMaterial = (Material*)EEMemoryAllocator->AllocateToPool((unsigned int)MEMORY_POOL::MATERIAL_POOL, sizeof(Material), success);
 	*allocatedMaterial = mat;
-	defaultMaterialsMap.insert({ name, allocatedMaterial });
+	matMap.insert({ name, allocatedMaterial });
 	return allocatedMaterial;
 }
 
@@ -122,7 +130,14 @@ XMFLOAT3 SceneLoader::Float3FromString(string str)
 	for (; iter != std::sregex_iterator(); ++iter) {
 		if (counter < 3) {
 			match = *iter;
-			parsedNumbers[counter] = std::stof(match.str());
+			try
+			{
+				parsedNumbers[counter] = std::stof(match.str());
+			}
+			catch (const std::exception&)
+			{
+				cout << "Invalid format: " << str << endl;
+			}
 		}
 		counter++;
 	}
@@ -152,154 +167,215 @@ bool SceneLoader::DestroyInstance()
 	return false;
 }
 
-void SceneLoader::LoadShaders()
+void SceneLoader::LoadAssetPreloadFile()
 {
-	//vertex shaders
-	LoadVertexShader("DEFAULT", L"DefaultVS.cso");
-	LoadVertexShader("DepthStencil", L"DepthStencilVS.cso");
-	LoadVertexShader("Sky", L"SkyVS.cso");
-	LoadVertexShader("Normal", L"NormalVS.cso");
-	LoadVertexShader("DebugLine", L"DebugLineVS.cso");
-	LoadVertexShader("Decal", L"DecalVS.cso");
-	LoadVertexShader("Particle", L"ParticleVS.cso");
-	LoadVertexShader("CPUParticle", L"CPUParticleVS.cso");
-	LoadVertexShader("Fluid", L"FluidVS.cso");
+	ifstream infile("../../Assets/EEAssetPreload.txt");
+	string line;
+	smatch match;
 
-	//pixel shaders
-	LoadPixelShader("DEFAULT", L"DefaultPS.cso");
-	LoadPixelShader("Sky", L"SkyPS.cso");
-	LoadPixelShader("Normal", L"NormalPS.cso");
-	LoadPixelShader("DebugLine", L"DebugLinePS.cso");
-	LoadPixelShader("DEFAULT_SSAO", L"DefaultPS_SSAO.cso");
-	LoadPixelShader("Decal", L"DecalPS.cso");
-	LoadPixelShader("DepthStencil", L"DepthStencilPS.cso");
-	LoadPixelShader("Particle", L"ParticlePS.cso");
-	LoadPixelShader("CPUParticle", L"CPUParticlePS.cso");
+	float parsedNumbers[9];
+	string name;
+	string type;
 
-	//compute shaders
-	LoadComputeShader("InitDeadList", L"InitDeadListCS.cso");
-	LoadComputeShader("ParticleDrawArgs", L"ParticleDrawArgsCS.cso");
-	LoadComputeShader("EmitParticle", L"EmitParticleCS.cso");
-	LoadComputeShader("UpdateParticle", L"UpdateParticleCS.cso");
-}
+	while (getline(infile, line))
+	{
+		//cout << line << endl;
+		if (line != "") {
+			//if the line does not start with "//"
+			if (!regex_match(line, commentedLineRegex)) {
 
-void SceneLoader::LoadDefaultMeshes()
-{
-	bool success;
+				if (regex_search(line, match, typeRegex)) {
+					type = match[1];
 
-	Mesh* cubeMesh = (Mesh*)EEMemoryAllocator->AllocateToPool((unsigned int)MEMORY_POOL::MESH_POOL, sizeof(Mesh), success);
-	Mesh cube = Mesh("Cube", "../../Assets/Models/Default/cube.obj", Config::Device);
-	*cubeMesh = cube;
-	defaultMeshesMap.insert({ "Cube", cubeMesh });
+					if (!sceneLineTypes.count(type)) continue;
 
-	Mesh* invCubeMesh = (Mesh*)EEMemoryAllocator->AllocateToPool((unsigned int)MEMORY_POOL::MESH_POOL, sizeof(Mesh), success);
-	Mesh invCube = Mesh("InverseCube", "../../Assets/Models/Default/inverse_cube.obj", Config::Device);
-	*invCubeMesh = invCube;
-	defaultMeshesMap.insert({ "InverseCube", invCubeMesh });
+					int num = sceneLineTypes[type];
 
-	Mesh* cylinderMesh = (Mesh*)EEMemoryAllocator->AllocateToPool((unsigned int)MEMORY_POOL::MESH_POOL, sizeof(Mesh), success);
-	Mesh cylinder = Mesh("Cylinder", "../../Assets/Models/Default/cylinder.obj", Config::Device);
-	*cylinderMesh = cylinder;
-	defaultMeshesMap.insert({ "Cylinder", cylinderMesh });
+					if (regex_search(line, match, entityNameRegex)) {
+						name = match[1];
+					}
+					else continue;
 
-	Mesh* coneMesh = (Mesh*)EEMemoryAllocator->AllocateToPool((unsigned int)MEMORY_POOL::MESH_POOL, sizeof(Mesh), success);
-	Mesh cone = Mesh("Cone", "../../Assets/Models/Default/cone.obj", Config::Device);
-	*coneMesh = cone;
-	defaultMeshesMap.insert({ "Cone", coneMesh });
+					/*
+					{ "ENTITY", 0 },
+					{ "MESH", 1 },
+					{ "MATERIAL", 2 },
+					{ "TEXTURE", 3 },
+					{ "VSHADER", 4 },
+					{ "PSHADER", 5 },
+					{ "CSHADER", 6 },
+					{ "SKYBOX", 7 },
+					{ "DIRLIGHT", 8 },
+					{ "CPUPARTICLE", 9 },
+					{ "GPUPARTICLE", 10 },
+					*/
 
-	Mesh* sphereMesh = (Mesh*)EEMemoryAllocator->AllocateToPool((unsigned int)MEMORY_POOL::MESH_POOL, sizeof(Mesh), success);
-	Mesh sphere = Mesh("Sphere", "../../Assets/Models/Default/sphere.obj", Config::Device);
-	*sphereMesh = sphere;
-	defaultMeshesMap.insert({ "Sphere", sphereMesh });
+					switch (num)
+					{
+					case 4: 
+					{
+						//vshader
+						if (regex_search(line, match, shaderFileRegex)) {
+							string cso = match[1];
 
-	Mesh* helixMesh = (Mesh*)EEMemoryAllocator->AllocateToPool((unsigned int)MEMORY_POOL::MESH_POOL, sizeof(Mesh), success);
-	Mesh helix = Mesh("Helix", "../../Assets/Models/Default/helix.obj", Config::Device);
-	*helixMesh = helix;
-	defaultMeshesMap.insert({ "Helix", helixMesh });
+							ShaderType shaderType = ShaderType::DEFAULT;
+							if (regex_search(line, match, shaderTypeRegex)) {
+								if (shaderTypes.count(match[1])) {
+									shaderType = shaderTypes[match[1]];
+								}
+							}
 
-	Mesh* torusMesh = (Mesh*)EEMemoryAllocator->AllocateToPool((unsigned int)MEMORY_POOL::MESH_POOL, sizeof(Mesh), success);
-	Mesh torus = Mesh("Torus", "../../Assets/Models/Default/torus.obj", Config::Device);
-	*torusMesh = torus;
-	defaultMeshesMap.insert({ "Torus", torusMesh });
-}
+							LoadShader<SimpleVertexShader>(name, cso, vertexShadersMap, shaderType);
+						}
+						else continue;
+						break;
+					}
+					case 5:
+					{
+						//pshader
+						if (regex_search(line, match, shaderFileRegex)) {
+							string cso = match[1];
 
-void SceneLoader::LoadDefaultTextures()
-{
-	defaultTexturesMap.insert({ "GrassDiffuse", Utility::LoadSRV("Default/Grass/DefaultGrassDiffuse.jpg") });
-	defaultTexturesMap.insert({ "GrassNormal", Utility::LoadSRV("Default/Grass/DefaultGrassNormal.jpg") });
-	defaultTexturesMap.insert({ "Red", Utility::LoadSRV("Default/red.png") });
-	defaultTexturesMap.insert({ "Marble", Utility::LoadSRV("Default/marble.png") });
-	defaultTexturesMap.insert({ "Hedge", Utility::LoadSRV("Default/hedge.jpg") });
-	defaultTexturesMap.insert({ "terrain2", Utility::LoadSRV("grass.png") });
-	defaultTexturesMap.insert({ "terrain3", Utility::LoadSRV("rocky.png") });
-	defaultTexturesMap.insert({ "terrain1", Utility::LoadSRV("snow.jpg") });
-	defaultTexturesMap.insert({ "terrainNormal2", Utility::LoadSRV("grass_normal.png") });
-	defaultTexturesMap.insert({ "terrainNormal3", Utility::LoadSRV("rocky_normal.png") });
-	defaultTexturesMap.insert({ "terrainNormal1", Utility::LoadSRV("snow_normal.jpg") });
-	defaultTexturesMap.insert({ "terrainBlendMap", Utility::LoadSRV("blendMap.png") });
-	defaultTexturesMap.insert({ "waterBase", Utility::LoadSRV("water_base.png") });
-	defaultTexturesMap.insert({ "waterFoam", Utility::LoadSRV("water_foam.jpg") });
-	defaultTexturesMap.insert({ "waterNormal1", Utility::LoadSRV("water_normal1.jpeg") });
-	defaultTexturesMap.insert({ "waterNormal2", Utility::LoadSRV("water_normal2.png") });
-	defaultTexturesMap.insert({ "Grey", Utility::LoadSRV("Default/grey.png") });
-	defaultTexturesMap.insert({ "Grey4", Utility::LoadSRV("Default/grey4.png") });
-	defaultTexturesMap.insert({ "White", Utility::LoadSRV("Default/white.png") });
-	defaultTexturesMap.insert({ "BLOOD1", Utility::LoadSRV("Default/BLOOD/BLOOD1.png") });
-	defaultTexturesMap.insert({ "BLOOD2", Utility::LoadSRV("Default/BLOOD/BLOOD2.png") });
-	defaultTexturesMap.insert({ "BLOOD3", Utility::LoadSRV("Default/BLOOD/BLOOD3.png") });
-	defaultTexturesMap.insert({ "BLOOD4", Utility::LoadSRV("Default/BLOOD/BLOOD4.png") });
-	defaultTexturesMap.insert({ "BLOOD5", Utility::LoadSRV("Default/BLOOD/BLOOD5.png") });
-	defaultTexturesMap.insert({ "BLOOD6", Utility::LoadSRV("Default/BLOOD/BLOOD6.png") });
-	defaultTexturesMap.insert({ "BLOOD7", Utility::LoadSRV("Default/BLOOD/BLOOD7.png") });
-	defaultTexturesMap.insert({ "BLOOD8", Utility::LoadSRV("Default/BLOOD/BLOOD8.png") });
-}
+							ShaderType shaderType = ShaderType::DEFAULT;
+							if (regex_search(line, match, shaderTypeRegex)) {
+								if (shaderTypes.count(match[1])) {
+									shaderType = shaderTypes[match[1]];
+								}
+							}
 
-void SceneLoader::LoadDefaultMaterials()
-{
-	MaterialData materialData = {};
-	Material* allocatedMaterial;
-	bool success;
+							LoadShader<SimplePixelShader>(name, cso, pixelShadersMap, shaderType);
+						}
+						else continue;
+						break;
+					}
+					case 6:
+					{
+						//cshader
+						if (regex_search(line, match, shaderFileRegex)) {
+							string cso = match[1];
 
-	CreateMaterial("DEFAULT", materialData, "DEFAULT", "DEFAULT");
+							ShaderType shaderType = ShaderType::DEFAULT;
+							if (regex_search(line, match, shaderTypeRegex)) {
+								if (shaderTypes.count(match[1])) {
+									shaderType = shaderTypes[match[1]];
+								}
+							}
 
-	materialData = {};
-	materialData.DiffuseTextureMapSRV = defaultTexturesMap["GrassDiffuse"];
-	materialData.NormalTextureMapSRV = defaultTexturesMap["GrassNormal"];
-	CreateMaterial("Grass", materialData, "Normal", "Normal", ShaderType::NORMAL);
+							LoadShader<SimpleComputeShader>(name, cso, computeShadersMap, shaderType);
+						}
+						else continue;
+						break;
+					}
+					case 1:
+					{
+						//mesh
+						if (regex_search(line, match, pathRegex)) {
+							string path = match[1];
 
-	materialData = {};
-	materialData.DiffuseTextureMapSRV = defaultTexturesMap["Red"];
-	CreateMaterial("Red", materialData, "DEFAULT", "DEFAULT");
+							LoadMesh(name, path, defaultMeshesMap);
+						}
+						else continue;
+						break;
+					}
+					case 3:
+					{
+						//texture
+						if (regex_search(line, match, pathRegex)) {
+							string path = match[1];
 
-	materialData = {};
-	materialData.DiffuseTextureMapSRV = defaultTexturesMap["Marble"];
-	CreateMaterial("Marble", materialData, "DEFAULT", "DEFAULT");
+							LoadTexture(name, path, defaultTexturesMap);
+						}
+						else continue;
+						break;
+					}
+					case 2:
+					{
+						//material
 
-	materialData = {};
-	materialData.DiffuseTextureMapSRV = defaultTexturesMap["Hedge"];
-	CreateMaterial("Hedge", materialData, "DEFAULT", "DEFAULT");
+						MaterialData matData;
 
-	materialData = {};
-	materialData.DiffuseTextureMapSRV = defaultTexturesMap["Grey"];
-	materialData.SpecularExponent = 500;
-	materialData.SSAO = true;
-	CreateMaterial("Grey", materialData, "DEFAULT", "DEFAULT");
+						string vShader;
+						string pShader;
+						
+						if (regex_search(line, match, vShaderRegex)) {
+							if (vertexShadersMap.count(match[1])) vShader = match[1];
+							else vShader = "DEFAULT";
+						}
 
-	materialData = {};
-	materialData.DiffuseTextureMapSRV = defaultTexturesMap["Grey4"];
-	materialData.SpecularExponent = 900;
-	materialData.SSAO = true;
-	CreateMaterial("Grey4", materialData, "DEFAULT", "DEFAULT");
+						if (regex_search(line, match, pShaderRegex)) {
+							if (pixelShadersMap.count(match[1])) pShader = match[1];
+							else pShader = "DEFAULT";
+						}
 
-	materialData = {};
-	materialData.DiffuseTextureMapSRV = defaultTexturesMap["White"];
-	materialData.SpecularExponent = 100;
-	materialData.SSAO = true;
-	CreateMaterial("White", materialData, "DEFAULT", "DEFAULT");
+						if (regex_search(line, match, ambientTexRegex)) {
+							if (defaultTexturesMap.count(match[1])) matData.AmbientTextureMapSRV = defaultTexturesMap[match[1]];
+						}
 
-	materialData = {};
-	materialData.DiffuseTextureMapSRV = defaultTexturesMap["Red"];
-	CreateMaterial("RedFluid", materialData, "Fluid", "DEFAULT");
+						if (regex_search(line, match, diffuseTexRegex)) {
+							if (defaultTexturesMap.count(match[1])) matData.DiffuseTextureMapSRV = defaultTexturesMap[match[1]];
+						}
+
+						if (regex_search(line, match, specColorTexRegex)) {
+							if (defaultTexturesMap.count(match[1])) matData.SpecularColorTextureMapSRV = defaultTexturesMap[match[1]];
+						}
+
+						if (regex_search(line, match, specHighlightTexRegex)) {
+							if (defaultTexturesMap.count(match[1])) matData.SpecularHighlightTextureMapSRV = defaultTexturesMap[match[1]];
+						}
+
+						if (regex_search(line, match, alphaTexRegex)) {
+							if (defaultTexturesMap.count(match[1])) matData.AlphaTextureMapSRV = defaultTexturesMap[match[1]];
+						}
+
+						if (regex_search(line, match, normalTexRegex)) {
+							if (defaultTexturesMap.count(match[1])) matData.NormalTextureMapSRV = defaultTexturesMap[match[1]];
+						}
+
+						if (regex_search(line, match, ambientColorRegex)) {
+							matData.AmbientColor = Float3FromString(match[1]);
+						}
+
+						if (regex_search(line, match, diffuseColorRegex)) {
+							matData.DiffuseColor = Float3FromString(match[1]);
+						}
+
+						if (regex_search(line, match, specularColorRegex)) {
+							matData.SpecularColor = Float3FromString(match[1]);
+						}
+
+						if (regex_search(line, match, specularExponentRegex)) {
+							matData.SpecularExponent = std::stof(match[1].str());
+						}
+
+						if (regex_search(line, match, transparencyRegex)) {
+							matData.Transparency = std::stof(match[1].str());
+						}
+
+						if (regex_search(line, match, illuminationRegex)) {
+							matData.Illumination = std::stoi(match[1].str());
+						}
+
+						if (regex_search(line, match, ssaoRegex)) {
+							if (match[1] == "true" || match[1] == "TRUE") matData.SSAO = true;
+							if (match[1] == "false" || match[1] == "FALSE") matData.SSAO = false;
+						}
+
+						if (regex_search(line, match, hbaoPlusRegex)) {
+							if (match[1] == "true" || match[1] == "TRUE") matData.hbaoPlusEnabled = true;
+							if (match[1] == "false" || match[1] == "FALSE") matData.hbaoPlusEnabled = false;
+						}
+
+						CreateMaterial(name, matData, vShader, pShader, defaultMaterialsMap);
+
+						break;
+					}
+					default:
+						break;
+					}
+				}
+			}
+		}
+	}
 }
 
 MESH_TYPE SceneLoader::AutoLoadOBJMTL(string name)
@@ -345,7 +421,7 @@ MESH_TYPE SceneLoader::AutoLoadOBJMTL(string name)
 		return MESH_TYPE::LOAD_FAILURE;
 	}
 
-	Mesh someMesh = Mesh(name, (char*)objPath.c_str(), Config::Device, &success);
+	Mesh someMesh = Mesh(name, (char*)objPath.c_str(), &success);
 	*newMesh = someMesh;
 	if(newMesh->GetChildCount() > 0)
 		newMesh->AllocateChildren();
@@ -393,10 +469,10 @@ MESH_TYPE SceneLoader::AutoLoadOBJMTL(string name)
 
 					//Different shaders based on matData values
 					if (matData.NormalTextureMapSRV) {
-						someMaterial = Material(ongoingMatName, matData, ShaderType::NORMAL, vertexShadersMap["Normal"], pixelShadersMap["Normal"], Config::Sampler);
+						someMaterial = Material(ongoingMatName, matData, vertexShadersMap["Normal"], pixelShadersMap["Normal"], Config::Sampler);
 					}
 					else {
-						someMaterial = Material(ongoingMatName, matData, ShaderType::DEFAULT, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler);
+						someMaterial = Material(ongoingMatName, matData, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler);
 					}
 
 					matData = {};
@@ -535,10 +611,10 @@ MESH_TYPE SceneLoader::AutoLoadOBJMTL(string name)
 
 		//Different shaders based on matData values
 		if (matData.NormalTextureMapSRV) {
-			someMaterial = Material(ongoingMatName, matData, ShaderType::NORMAL, vertexShadersMap["Normal"], pixelShadersMap["Normal"], Config::Sampler);
+			someMaterial = Material(ongoingMatName, matData, vertexShadersMap["Normal"], pixelShadersMap["Normal"], Config::Sampler);
 		}
 		else {
-			someMaterial = Material(ongoingMatName, matData, ShaderType::DEFAULT, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler);
+			someMaterial = Material(ongoingMatName, matData, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler);
 		}
 
 		matData = {};
@@ -597,20 +673,21 @@ void SceneLoader::LoadScene(string sceneName)
 					{ "ENTITY", 0 },
 					{ "MESH", 1 },
 					{ "MATERIAL", 2 },
-					{ "VSHADER", 3 },
-					{ "PSHADER", 4 },
-					{ "CSHADER", 5 },
-					{ "SKYBOX", 6 }, 
-					{ "DIRLIGHT", 7 },
-					{ "CPUPARTICLE", 8 },
-					{ "GPUPARTICLE", 9 },
+					{ "TEXTURE", 3 },
+					{ "VSHADER", 4 },
+					{ "PSHADER", 5 },
+					{ "CSHADER", 6 },
+					{ "SKYBOX", 7 }, 
+					{ "DIRLIGHT", 8 },
+					{ "CPUPARTICLE", 9 },
+					{ "GPUPARTICLE", 10 },
 					*/
 
 					switch (num)
 					{
 					case 0: break; //entity
 
-					case 6:
+					case 7:
 						{
 							//skybox
 							if (regex_search(line, match, skyboxRegex)) {
@@ -624,7 +701,7 @@ void SceneLoader::LoadScene(string sceneName)
 							}
 							continue;
 						}
-					case 7:
+					case 8:
 						{
 							//directional light
 							string lightName;
@@ -744,11 +821,11 @@ void SceneLoader::LoadScene(string sceneName)
 
 				//check for entity tag
 				if (regex_search(line, match, tagNameRegex))
-					*allocatedEntity->tag = match[1];
+					allocatedEntity->tag = match[1];
 
 				//check for entity layer
 				if (regex_search(line, match, layerNameRegex))
-					*allocatedEntity->layer = match[1];
+					allocatedEntity->layer = match[1];
 
 				//check for scripts
 				if (regex_search(line, match, scriptNamesRegex)) {
@@ -991,8 +1068,8 @@ Entity* SceneLoader::CreateEntity(EntityCreationParameters& para)
 		scriptCallback(allocatedEntity, para.scriptNames[i]);
 	}
 
-	*allocatedEntity->tag = para.tagName;
-	*allocatedEntity->layer = para.layerName;
+	allocatedEntity->tag = para.tagName;
+	allocatedEntity->layer = para.layerName;
 
 	return allocatedEntity;
 }

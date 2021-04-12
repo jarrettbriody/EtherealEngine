@@ -99,11 +99,13 @@ void Game::Init()
 	SceneLoader::SetupInstance();
 	EESceneLoader = SceneLoader::GetInstance();
 
-	EESceneLoader->LoadShaders();
+	EESceneLoader->LoadAssetPreloadFile();
 
-	EESceneLoader->LoadDefaultMeshes();
-	EESceneLoader->LoadDefaultTextures();
-	EESceneLoader->LoadDefaultMaterials();
+	//EESceneLoader->LoadShaders();
+
+	//EESceneLoader->LoadDefaultMeshes();
+	//EESceneLoader->LoadDefaultTextures();
+	//EESceneLoader->LoadDefaultMaterials();
 
 	EESceneLoader->SetScriptLoader([](Entity* e, string script) {Scripts::CreateScript(e, script); });
 
@@ -237,7 +239,7 @@ void Game::Init()
 			ParticlePhysicsWrapper* particleWrapper = (wrapperA->type == PHYSICS_WRAPPER_TYPE::PARTICLE) ? (ParticlePhysicsWrapper*)wrapperA->objectPointer : (ParticlePhysicsWrapper*)wrapperB->objectPointer;
 			Entity* entity = (wrapperA->type == PHYSICS_WRAPPER_TYPE::ENTITY) ? (Entity*)wrapperA->objectPointer : (Entity*)wrapperB->objectPointer;
 	
-			if (*entity->layer == "decal") {
+			if (entity->layer == "decal") {
 				Particle* particle = (Particle*)particleWrapper->particle;
 				CPUParticleEmitter* emitter = (CPUParticleEmitter*)particleWrapper->emitter;
 				ParticleEmitter* emitterBase = (ParticleEmitter*)emitter;

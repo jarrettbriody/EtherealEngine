@@ -7,6 +7,7 @@
 #include "Utility.h"
 #include "PhysicsWrapper.h"
 #include "Lights.h"
+#include "EEString.h"
 
 #include "Mesh.h"
 #include "Entity.h"

@@ -1,6 +1,7 @@
 #pragma once
 #include "pch.h"
 #include "Config.h"
+#include "EEString.h"
 
 using namespace std;
 using namespace DirectX;
@@ -34,23 +35,17 @@ struct MaterialData {
 	bool hbaoPlusEnabled = true;
 };
 
-enum class ShaderType {
-	DEFAULT,
-	NORMAL,
-};
-
 class Material
 {
 protected:
-	ShaderType shaderType;
 	SimpleVertexShader* vertexShader;
 	SimplePixelShader* pixelShader;
 	MaterialData materialData;
 	ID3D11SamplerState* samplerState;
-	string* name = nullptr;
+	EEString<64> name;
 public:
 	Material();
-	Material(string n, MaterialData matData, ShaderType shaderType, SimpleVertexShader* vShader, SimplePixelShader* pShader, ID3D11SamplerState* sampler);
+	Material(string n, MaterialData matData, SimpleVertexShader* vShader, SimplePixelShader* pShader, ID3D11SamplerState* sampler);
 	~Material();
 	void operator= (const Material& m);
 	void FreeMemory();
