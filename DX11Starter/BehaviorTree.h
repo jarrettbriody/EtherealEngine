@@ -73,6 +73,11 @@ protected:
 
 public:
     Decorator(Behavior* childBehavior) : child(childBehavior) {}
+
+    void SetChild(Behavior* behavior)
+    {
+        child = behavior;
+    }
 };
 
 //-------------------------------------------------------
@@ -294,6 +299,16 @@ protected:
 
         return result;
     }
+};
+
+//-------------------------------------------------------
+class BehaviorTree
+{
+private:
+    Behavior* root;
+public:
+    BehaviorTree(Behavior* rootBehavior) : root(rootBehavior) {}
+    ~BehaviorTree() {}
 };
 
 //-------------------------------------------------------

@@ -165,6 +165,7 @@
   <ItemGroup>
     <ClInclude Include="Barrel.h" />
     <ClInclude Include="BehaviorTree.h" />
+    <ClInclude Include="BehaviorTreeBuilder.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Collider.h" />
     <ClInclude Include="Config.h" />

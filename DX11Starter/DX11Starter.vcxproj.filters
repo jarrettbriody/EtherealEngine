@@ -206,6 +206,9 @@
     <ClInclude Include="TestBehavior.h">
       <Filter>EECore\Header Files\BehaviorTree</Filter>
     </ClInclude>
+    <ClInclude Include="BehaviorTreeBuilder.h">
+      <Filter>EECore\Header Files\BehaviorTree</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Lighting.hlsli">
