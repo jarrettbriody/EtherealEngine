@@ -1,6 +1,7 @@
 #pragma once
 #include "ScriptManager.h"
 #include <WinUser.h>
+#include "DXCore.h"
 
 enum PlayerState
 {

@@ -14,7 +14,7 @@ void BloodIcicle::Update()
 
 void BloodIcicle::OnCollision(btCollisionObject* other)
 {
-	Entity* otherE = (Entity*)other->getUserPointer();
+	Entity* otherE = (Entity*)((PhysicsWrapper*)other->getUserPointer())->objectPointer;
 
-	cout << "Blood Icicle Hit: " << otherE->GetName().c_str() << endl;
+	cout << "Blood Icicle Hit: " << otherE->GetName() << endl;
 }
