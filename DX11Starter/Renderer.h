@@ -109,7 +109,7 @@ private:
 	map<string, Light*> lights;
 	//map<string, Shadow> shadows;
 	unsigned int lightCount = 0;
-
+	ID3D11BlendState* blendState;
 	ShadowComponents shadowComponents;
 	DepthStencilComponents depthStencilComponents;
 	HBAOPlusComponents hbaoPlusComponents;
@@ -135,6 +135,9 @@ public:
 	void InitSkybox();
 	void SetSkybox(ID3D11ShaderResourceView* srv);
 	void SetShadowMapResolution(unsigned int res);
+
+	void InitBlendState();
+	void ToggleBlendState(bool toggle);
 
 	void ClearFrame();
 	void RenderFrame();

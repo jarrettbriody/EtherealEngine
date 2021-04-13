@@ -162,6 +162,7 @@ void Game::Init()
 	EERenderer->SetRendererShaders(rShaders);
 	EERenderer->InitDepthStencil();
 	EERenderer->InitHBAOPlus();
+	EERenderer->InitBlendState();
 	EESceneLoader->EERenderer = EERenderer;
 
 	//EESceneLoader->LoadScene("ArenaV2");
