@@ -19,6 +19,7 @@
 #include "Scripts.h"
 #include "DebugLines.h"
 #include "DecalHandler.h"
+#include "TestBehavior.h"
 #include "ParticleEmitter.h"
 #include "GPUParticleEmitter.h"
 #include "CPUParticleEmitter.h"
@@ -88,4 +89,7 @@ private:
 
 	CPUParticleEmitter* cpuEmitter;
 	GPUParticleEmitter* gpuEmitter;
+
+	// AI
+	
 };

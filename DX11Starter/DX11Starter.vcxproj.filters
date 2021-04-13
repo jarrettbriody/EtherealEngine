@@ -257,6 +257,15 @@
     <ClInclude Include="BloodIcicle.h">
       <Filter>EEScripts\Headers</Filter>
     </ClInclude>
+    <ClInclude Include="BehaviorTree.h">
+      <Filter>EECore\Header Files\BehaviorTree</Filter>
+    </ClInclude>
+    <ClInclude Include="TestBehavior.h">
+      <Filter>EECore\Header Files\BehaviorTree</Filter>
+    </ClInclude>
+    <ClInclude Include="BehaviorTreeBuilder.h">
+      <Filter>EECore\Header Files\BehaviorTree</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config">
@@ -335,6 +344,9 @@
     </Filter>
     <Filter Include="EECore\Source Files\Mouse">
       <UniqueIdentifier>{7b53909b-60ff-49bf-a1c8-616f0f49bd1d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="EECore\Header Files\BehaviorTree">
+      <UniqueIdentifier>{7b3ba34d-b5cb-4d23-8da0-1e3cae118d2c}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
