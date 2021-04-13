@@ -3,14 +3,20 @@
 
 //define macros
 #define ZERO_VECTOR3 XMFLOAT3(0.0f,0.0f,0.0f)
+#define ONE_VECTOR3 XMFLOAT3(1.0f,1.0f,1.0f)
 #define X_AXIS XMFLOAT3(1.0f,0.0f,0.0f)
 #define Y_AXIS XMFLOAT3(0.0f,1.0f,0.0f)
 #define Z_AXIS XMFLOAT3(0.0f,0.0f,1.0f)
+#define NEG_X_AXIS XMFLOAT3(-1.0f,0.0f,0.0f)
+#define NEG_Y_AXIS XMFLOAT3(0.0f,-1.0f,0.0f)
+#define NEG_Z_AXIS XMFLOAT3(0.0f,0.0f,-1.0f)
+#define MATRIX_IDENTITY XMFLOAT4X4(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)
 #define KILOBYTE 1024
 #define MEGABYTE 1048576
 #define GIGABYTE 1073741824
 #define MAX_KERNEL_SAMPLES 32
 #define MAX_DECALS_PER_ENTITY 128
+#define MAX_PARTICLE_COLORS 16
 
 enum class MESH_TYPE {
 	LOAD_FAILURE = -1,
@@ -24,6 +30,7 @@ enum class MEMORY_POOL {
 	MESH_POOL = 1,
 	MATERIAL_POOL = 2,
 	DECAL_POOL = 3,
+	//PARTICLE_POOL = 4,
 };
 
 class Config
@@ -46,6 +53,7 @@ public:
 	static unsigned int MemoryAllocatorMeshPoolSize;
 	static unsigned int MemoryAllocatorMaterialPoolSize;
 	static unsigned int MemoryAllocatorDecalPoolSize;
+	//static unsigned int MemoryAllocatorParticlePoolSize;
 
 	static bool EtherealDebugLinesEnabled;
 	static bool BulletDebugLinesEnabled;
@@ -53,12 +61,18 @@ public:
 	static bool ShadowsEnabled;
 	static bool SSAOEnabled;
 	static bool HBAOPlusEnabled;
+
 	static bool DecalsEnabled;
+	static unsigned int InitialDecalVectorSize;
 
 	static btDiscreteDynamicsWorld* DynamicsWorld;
 
 	static unsigned int SSAOSampleCount;
 	static float SSAOKernelRadius;
 	static DirectX::XMFLOAT4 SSAOKernel[32];
+
+	static std::map<std::string, unsigned int> EntityTags;
+
+	static std::map<std::string, unsigned int> EntityLayers;
 };
 

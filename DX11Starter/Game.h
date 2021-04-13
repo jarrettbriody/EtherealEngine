@@ -2,23 +2,26 @@
 
 #include "pch.h"
 #include "DXCore.h"
+
 #include "Config.h"
+#include "Utility.h"
+#include "PhysicsWrapper.h"
+#include "Lights.h"
+#include "EEString.h"
+
 #include "Mesh.h"
 #include "Entity.h"
 #include "Camera.h"
-#include "Lights.h"
 #include "Renderer.h"
-#include "Utility.h"
-//#include "Terrain.h"
-//#include "TerrainMaterial.h"
-//#include "Water.h"
-//#include "WaterMaterial.h"
 #include "SceneLoader.h"
 #include "DebugLines.h"
 #include "ScriptManager.h"
 #include "Scripts.h"
 #include "DebugLines.h"
 #include "DecalHandler.h"
+#include "ParticleEmitter.h"
+#include "GPUParticleEmitter.h"
+#include "CPUParticleEmitter.h"
 
 using namespace std;
 
@@ -40,7 +43,6 @@ public:
 	void PhysicsStep(float deltaTime);
 	void EnforcePhysics();
 	void AudioStep();
-	void DrawSky();
 
 	void FmodErrorCheck(FMOD_RESULT result); // Define it here because current file structure wont let me put it in utility
 	void GarbageCollect();
@@ -54,10 +56,6 @@ private:
 	// Keeps track of the old mouse position for determining how far the mouse moved in a single frame
 	POINT prevMousePos = POINT();
 
-	ID3D11ShaderResourceView* skySRV = nullptr;
-	ID3D11RasterizerState* skyRasterState = nullptr;
-	ID3D11DepthStencilState* skyDepthState = nullptr;
-
 	Camera* EECamera = nullptr;
 	Renderer* EERenderer = nullptr;
 	SceneLoader* EESceneLoader = nullptr;
@@ -65,7 +63,7 @@ private:
 	DecalHandler* EEDecalHandler = nullptr;
 	
 	//testing
-	Light* testLight = nullptr;
+	//Light* testLight = nullptr;
 
 
 	// Physics
@@ -94,4 +92,7 @@ private:
 	//FMOD_VECTOR listener_vel; // If we want a doppler effect
 	FMOD_VECTOR listener_forward = FMOD_VECTOR();
 	FMOD_VECTOR listener_up = FMOD_VECTOR();
+
+	CPUParticleEmitter* cpuEmitter;
+	GPUParticleEmitter* gpuEmitter;
 };

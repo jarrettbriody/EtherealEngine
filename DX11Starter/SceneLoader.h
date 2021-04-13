@@ -5,10 +5,6 @@
 #include "Utility.h"
 #include "Mesh.h"
 #include "Material.h"
-#include "Terrain.h"
-#include "TerrainMaterial.h"
-#include "Water.h"
-#include "WaterMaterial.h"
 #include "Entity.h"
 #include "Config.h"
 #include "MemoryAllocator.h"
@@ -18,8 +14,12 @@ using namespace Utility;
 
 struct EntityCreationParameters {
 	string entityName = "";
+	string tagName = "";
+	string layerName = "";
 	string meshName = "";
 	string materialName = "";
+	string scriptNames[8];
+	unsigned int scriptCount = 0;
 	XMFLOAT3 position = ZERO_VECTOR3;
 	XMFLOAT3 rotationRadians = ZERO_VECTOR3;
 	XMFLOAT3 scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
@@ -31,19 +31,73 @@ struct EntityCreationParameters {
 	bool drawShadow = true;
 };
 
-static map<string, BulletColliderShape> bulletColliders = { { "BOX", BulletColliderShape::BOX }, {"CAPSULE", BulletColliderShape::CAPSULE} };
-
 class SceneLoader
 {
 private:
 	static SceneLoader* instance;
 
-	SceneLoader();
-	~SceneLoader();
+	map<string, BulletColliderShape> bulletColliders =
+	{
+	   { "BOX", BulletColliderShape::BOX },
+	   { "CAPSULE", BulletColliderShape::CAPSULE},
+	};
 
+	map<string, int> sceneLineTypes = {
+		{ "ENTITY", 0 },
+		{ "MESH", 1 },
+		{ "MATERIAL", 2 },
+		{ "TEXTURE", 3 },
+		{ "VSHADER", 4 },
+		{ "PSHADER", 5 },
+		{ "CSHADER", 6 },
+		{ "SKYBOX", 7 },
+		{ "DIRLIGHT", 8 },
+		{ "CPUPARTICLE", 9 },
+		{ "GPUPARTICLE", 10 },
+	};
+
+	map<string, ShaderType> shaderTypes = {
+		{ "DEFAULT", ShaderType::DEFAULT },
+		{ "NORMAL", ShaderType::NORMAL },
+		{ "MODIFY_VERTS", ShaderType::MODIFY_VERTS },
+	};
+
+	string modelPath = "../../Assets/Models/";
 
 	//Scene loading regular expressions
 	regex commentedLineRegex = regex("//.*"); //checking if line is commented
+
+	regex typeRegex = regex("TYPE=\"(\\w+)\""); //getting line type
+
+	regex skyboxRegex = regex("dds=\"(\\w+)\""); //get dds name
+
+	regex lightPosRegex = regex("P\\(.*\\)");
+	regex lightDirRegex = regex("D\\(.*\\)");
+	regex lightColorRegex = regex("C\\(.*\\)");
+	regex lightIntensityRegex = regex("intensity=\"(\\d*\\.\\d*|\\d+)\"");
+
+	regex shaderFileRegex = regex("cso=\"(\\w+)\""); //get cso file name
+	regex shaderTypeRegex = regex("shaderType=\"(\\w+)\""); //get shader type
+
+	regex pathRegex = regex("path=\"(.+)\""); //get path to thing
+
+	regex vShaderRegex = regex("vShader=\"(\\w+)\"");
+	regex pShaderRegex = regex("pShader=\"(\\w+)\"");
+	regex ambientTexRegex = regex("ambientTexture=\"(\\w+)\"");
+	regex diffuseTexRegex = regex("diffuseTexture=\"(\\w+)\"");
+	regex specColorTexRegex = regex("specularColorTexture=\"(\\w+)\"");
+	regex specHighlightTexRegex = regex("specularHighlightTexture=\"(\\w+)\"");
+	regex alphaTexRegex = regex("alphaTexture=\"(\\w+)\"");
+	regex normalTexRegex = regex("normalTexture=\"(\\w+)\"");
+	regex ambientColorRegex = regex("ambientColor\\(.*\\)");
+	regex diffuseColorRegex = regex("diffuseColor\\(.*\\)");
+	regex specularColorRegex = regex("specularColor\\(.*\\)");
+	regex specularExponentRegex = regex("specularExponent=\"(\\d*\\.\\d*|\\d+)\"");
+	regex transparencyRegex = regex("transparency=\"(\\d*\\.\\d*|\\d+)\"");
+	regex illuminationRegex = regex("illumination=\"(\\d+)\"");
+	regex ssaoRegex = regex("ssao=\"(\\w+)\"");
+	regex hbaoPlusRegex = regex("hbaoPlus=\"(\\w+)\"");
+
 	regex entityNameRegex = regex("name=\"([\\w|\\s]+)\""); //getting entity name
 	regex objNameRegex = regex("obj=\"(\\w+)\""); //getting obj model name
 	regex materialNameRegex = regex("material=\"(\\w+)\"");
@@ -76,12 +130,27 @@ private:
 	regex normalTextureRgx = regex("^(map_Bump\\s+)");
 
 	void (*scriptCallback)(Entity* e, string script);
+
+	SceneLoader();
+	~SceneLoader();
+
+	XMFLOAT3 Float3FromString(string str);
+
+	template <class SHADER>
+	SHADER* LoadShader(string shaderName, string shaderFileName, map<string,SHADER*>& shaderMap, ShaderType shaderType = ShaderType::DEFAULT);
+
+	Mesh* LoadMesh(string meshName, string meshPath, map<string,Mesh*>& meshMap);
+
+	ID3D11ShaderResourceView* LoadTexture(string texName, string texPath, map<string, ID3D11ShaderResourceView*>& texMap);
+
+	Material* CreateMaterial(string name, MaterialData matData, string vertShaderName, string pixelShaderName, map<string, Material*>& matMap);
 public:
 	MemoryAllocator* EEMemoryAllocator = nullptr;
 	Renderer* EERenderer = nullptr;
 
 	map<string, SimpleVertexShader*> vertexShadersMap;
 	map<string, SimplePixelShader*> pixelShadersMap;
+	map<string, SimpleComputeShader*> computeShadersMap;
 
 	map<string, bool> utilizedMeshesMap;
 	map<string, bool> utilizedMaterialsMap;
@@ -101,16 +170,11 @@ public:
 	map<string, Entity*> sceneEntitiesMap;
 	vector<Entity*> sceneEntities;
 
-	string modelPath = "../../Assets/Models/";
-
 	static bool SetupInstance();
 	static SceneLoader* GetInstance();
 	static bool DestroyInstance();
 
-	void LoadShaders();
-	void LoadDefaultMeshes();
-	void LoadDefaultTextures();
-	void LoadDefaultMaterials();
+	void LoadAssetPreloadFile();
 
 	MESH_TYPE AutoLoadOBJMTL(string name);
 	void LoadScene(string sceneName = "scene");
@@ -120,4 +184,3 @@ public:
 	Entity* CreateEntity(EntityCreationParameters& para);
 	void SplitMeshIntoChildEntities(Entity* e, float componentMass);
 };
-

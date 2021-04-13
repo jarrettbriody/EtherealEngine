@@ -19,20 +19,39 @@ struct RendererShaders {
 	SimplePixelShader* debugLinePS = nullptr;
 	SimpleVertexShader* decalVS = nullptr;
 	SimplePixelShader* decalPS = nullptr;
+	SimpleVertexShader* skyVS = nullptr;
+	SimplePixelShader* skyPS = nullptr;
+};
+
+struct RendererCallback {
+	void* data = nullptr;
+	bool active = false;
+
+	SimpleVertexShader* vShader = nullptr;
+	SimplePixelShader* pShader = nullptr;
+
+	SimpleVertexShader* prepassVShader = nullptr;
+	SimplePixelShader* prepassPShader = nullptr;
+
+	virtual void PreVertexShaderCallback() {};
+	virtual void PrePixelShaderCallback() {};
+	virtual void PrePrepassVertexShaderCallback() {};
+	virtual void PrePrepassPixelShaderCallback() {};
 };
 
 struct RenderObject{
 	Entity* entity;
 	Mesh* mesh;
 	Material* material;
+	RendererCallback* callback;
 };
 
 struct ShadowComponents {
 	unsigned int shadowMapResolution = 2048;
-	ID3D11DepthStencilView* shadowDSV;
-	ID3D11ShaderResourceView* shadowSRV;
-	ID3D11SamplerState* shadowSampler;
-	ID3D11RasterizerState* shadowRasterizer;
+	ID3D11DepthStencilView* shadowDSV = nullptr;
+	ID3D11ShaderResourceView* shadowSRV = nullptr;
+	ID3D11SamplerState* shadowSampler = nullptr;
+	ID3D11RasterizerState* shadowRasterizer = nullptr;
 
 	DirectX::XMFLOAT4X4 shadowViewMatrix;
 	DirectX::XMFLOAT4X4 shadowProjectionMatrix;
@@ -40,21 +59,31 @@ struct ShadowComponents {
 };
 
 struct DepthStencilComponents {
-	ID3D11DepthStencilView* depthStencilDSV;
-	ID3D11RenderTargetView* depthStencilRTV;
-	ID3D11ShaderResourceView* depthStencilSRV;
-	ID3D11SamplerState* depthStencilSampler;
-	ID3D11RasterizerState* depthStencilRasterizer;
-	ID3D11DepthStencilState* depthStencilState;
-	ID3D11BlendState* decalBlendState;
+	ID3D11DepthStencilView* depthStencilDSV = nullptr;
+	ID3D11RenderTargetView* depthStencilRTV = nullptr;
+	ID3D11ShaderResourceView* depthStencilSRV = nullptr;
+	ID3D11SamplerState* depthStencilSampler = nullptr;
+	ID3D11RasterizerState* depthStencilRasterizer = nullptr;
+	ID3D11DepthStencilState* depthStencilState = nullptr;
+
+	ID3D11RenderTargetView* entityInfoRTV = nullptr;
+	ID3D11ShaderResourceView* entityInfoSRV = nullptr;
+
+	ID3D11BlendState* decalBlendState = nullptr;
 };
 
 struct HBAOPlusComponents {
 	GFSDK_SSAO_CustomHeap CustomHeap;
 	GFSDK_SSAO_Status status;
-	GFSDK_SSAO_Context_D3D11* pAOContext;
+	GFSDK_SSAO_Context_D3D11* pAOContext = nullptr;
 	GFSDK_SSAO_InputData_D3D11 Input;
 	GFSDK_SSAO_Parameters_D3D11 Params;
+};
+
+struct SkyboxComponents {
+	ID3D11ShaderResourceView* skySRV = nullptr;
+	ID3D11RasterizerState* skyRasterizer = nullptr;
+	ID3D11DepthStencilState* skyDepthStencilState = nullptr;
 };
 
 class Renderer
@@ -66,10 +95,12 @@ private:
 	RenderObject* renderObjects;
 	int renderObjectCount = 0;
 	int maxRenderObjects = 0;
+	map<Entity*, vector<RenderObject*>> renderObjectsMap;
 
 	RendererShaders shaders;
 
 	Mesh* cube = nullptr;
+	Mesh* invCube = nullptr;
 
 	Camera* camera = nullptr;
 	map<string, Camera*> cameras;
@@ -82,6 +113,7 @@ private:
 	ShadowComponents shadowComponents;
 	DepthStencilComponents depthStencilComponents;
 	HBAOPlusComponents hbaoPlusComponents;
+	SkyboxComponents skyboxComponents;
 
 	ID3D11ShaderResourceView* decals[8];
 
@@ -94,13 +126,14 @@ public:
 
 	void SetEntities(vector<Entity*>* entities);
 	void SetRendererShaders(RendererShaders rShaders);
-	void SetDecals(Mesh* cube, ID3D11ShaderResourceView* decals[8]);
+	void SetDecals(ID3D11ShaderResourceView* decals[8]);
+	void SetMeshes(Mesh* cube, Mesh* invCube);
 
 	void InitDepthStencil();
-
 	void InitHBAOPlus();
-	
 	void InitShadows();
+	void InitSkybox();
+	void SetSkybox(ID3D11ShaderResourceView* srv);
 	void SetShadowMapResolution(unsigned int res);
 
 	void ClearFrame();
@@ -109,6 +142,7 @@ public:
 	void RenderDebugLines();
 	void RenderShadowMap();
 	void RenderDepthStencil();
+	void RenderSkybox();
 
 	bool AddCamera(string name, Camera* newCamera);
 	bool RemoveCamera(string name);
@@ -123,4 +157,6 @@ public:
 	void SendSSAOKernelToShader(SimplePixelShader* pixelShader);
 
 	void AddRenderObject(Entity* e, Mesh* mesh, Material* mat = nullptr);
+
+	void SetRenderObjectCallback(Entity* e, RendererCallback* callback);
 };

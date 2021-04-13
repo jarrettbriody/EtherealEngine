@@ -9,18 +9,25 @@ Renderer::Renderer()
 
 Renderer::~Renderer()
 {
-	shadowComponents.shadowDSV->Release();
-	shadowComponents.shadowSRV->Release();
-	shadowComponents.shadowRasterizer->Release();
-	shadowComponents.shadowSampler->Release();
+	if(shadowComponents.shadowDSV) shadowComponents.shadowDSV->Release();
+	if(shadowComponents.shadowSRV) shadowComponents.shadowSRV->Release();
+	if(shadowComponents.shadowRasterizer) shadowComponents.shadowRasterizer->Release();
+	if(shadowComponents.shadowSampler) shadowComponents.shadowSampler->Release();
 
-	//depthStencilComponents.depthStencilDSV->Release();
-	depthStencilComponents.depthStencilSRV->Release();
-	depthStencilComponents.depthStencilRTV->Release();
-	//depthStencilComponents.depthStencilRasterizer->Release();
-	//depthStencilComponents.depthStencilSampler->Release();
-	depthStencilComponents.depthStencilState->Release();
-	depthStencilComponents.decalBlendState->Release();
+	if(depthStencilComponents.depthStencilDSV) depthStencilComponents.depthStencilDSV->Release();
+	if(depthStencilComponents.depthStencilSRV) depthStencilComponents.depthStencilSRV->Release();
+	if(depthStencilComponents.depthStencilRTV) depthStencilComponents.depthStencilRTV->Release();
+	if(depthStencilComponents.depthStencilRasterizer) depthStencilComponents.depthStencilRasterizer->Release();
+	if(depthStencilComponents.depthStencilSampler) depthStencilComponents.depthStencilSampler->Release();
+
+	if (depthStencilComponents.entityInfoSRV) depthStencilComponents.entityInfoSRV->Release();
+	if (depthStencilComponents.entityInfoRTV) depthStencilComponents.entityInfoRTV->Release();
+
+	if(depthStencilComponents.depthStencilState) depthStencilComponents.depthStencilState->Release();
+	if(depthStencilComponents.decalBlendState) depthStencilComponents.decalBlendState->Release();
+
+	if(skyboxComponents.skyDepthStencilState) skyboxComponents.skyDepthStencilState->Release();
+	if(skyboxComponents.skyRasterizer) skyboxComponents.skyRasterizer->Release();
 
 	map<string, Light*>::iterator lightMapIterator;
 	for (int i = 0; i < lightCount; i++)
@@ -92,17 +99,32 @@ void Renderer::SetRendererShaders(RendererShaders rShaders)
 	shaders = rShaders;
 }
 
-void Renderer::SetDecals(Mesh* cube, ID3D11ShaderResourceView* decals[8])
+void Renderer::SetDecals(ID3D11ShaderResourceView* decals[8])
 {
-	this->cube = cube;
 	for (size_t i = 0; i < 8; i++)
 	{
 		this->decals[i] = decals[i];
 	}
 }
 
+void Renderer::SetMeshes(Mesh* cube, Mesh* invCube)
+{
+	this->cube = cube;
+	this->invCube = invCube;
+}
+
 void Renderer::InitDepthStencil()
 {
+	if (depthStencilComponents.depthStencilDSV) depthStencilComponents.depthStencilDSV->Release();
+	if (depthStencilComponents.depthStencilSRV) depthStencilComponents.depthStencilSRV->Release();
+	if (depthStencilComponents.depthStencilRTV) depthStencilComponents.depthStencilRTV->Release();
+	if (depthStencilComponents.depthStencilRasterizer) depthStencilComponents.depthStencilRasterizer->Release();
+	if (depthStencilComponents.depthStencilSampler) depthStencilComponents.depthStencilSampler->Release();
+	if (depthStencilComponents.entityInfoSRV) depthStencilComponents.entityInfoSRV->Release();
+	if (depthStencilComponents.entityInfoRTV) depthStencilComponents.entityInfoRTV->Release();
+	if (depthStencilComponents.depthStencilState) depthStencilComponents.depthStencilState->Release();
+	if (depthStencilComponents.decalBlendState) depthStencilComponents.decalBlendState->Release();
+
 	// Set up the texture itself
 	D3D11_TEXTURE2D_DESC texDesc = {};
 	texDesc.ArraySize = 1;
@@ -134,6 +156,39 @@ void Renderer::InitDepthStencil()
 
 	// Clean up extra texture ref
 	texture->Release();
+
+	// Set up the texture itself
+	D3D11_TEXTURE2D_DESC entityTexDesc = {};
+	entityTexDesc.ArraySize = 1;
+	entityTexDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
+	entityTexDesc.Format = DXGI_FORMAT_R32_UINT;
+	entityTexDesc.MipLevels = 1;
+	entityTexDesc.Height = Config::ViewPortHeight;
+	entityTexDesc.Width = Config::ViewPortWidth;
+	entityTexDesc.SampleDesc.Count = 1;
+
+	// Actually create the texture
+	ID3D11Texture2D* entityTexture;
+	Config::Device->CreateTexture2D(&entityTexDesc, 0, &entityTexture);
+
+	// Create the shader resource view for this texture
+	D3D11_SHADER_RESOURCE_VIEW_DESC entitySRVDesc = {};
+	entitySRVDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+	entitySRVDesc.Format = DXGI_FORMAT_R32_UINT;
+	entitySRVDesc.Texture2D.MipLevels = 1;
+	entitySRVDesc.Texture2D.MostDetailedMip = 0;
+	Config::Device->CreateShaderResourceView(entityTexture, &entitySRVDesc, &depthStencilComponents.entityInfoSRV);
+
+	// Make a render target view desc and RTV
+	D3D11_RENDER_TARGET_VIEW_DESC entityRTVDesc = {};
+	entityRTVDesc.Format = DXGI_FORMAT_R32_UINT;
+	entityRTVDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+	entityRTVDesc.Texture2D.MipSlice = 0;
+	Config::Device->CreateRenderTargetView(entityTexture, &entityRTVDesc, &depthStencilComponents.entityInfoRTV);
+
+	// Clean up extra texture ref
+	entityTexture->Release();
+
 	/*
 	// Create the actual texture that will be the depth stencil map
 	D3D11_TEXTURE2D_DESC depthStencilDesc = {};
@@ -198,7 +253,7 @@ void Renderer::InitDepthStencil()
 
 	dsDesc.DepthEnable = false;
 	dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
-	dsDesc.DepthFunc = D3D11_COMPARISON_ALWAYS;
+	dsDesc.DepthFunc = D3D11_COMPARISON_NEVER;
 
 	// Stencil test parameters
 	dsDesc.StencilEnable = false;
@@ -206,7 +261,7 @@ void Renderer::InitDepthStencil()
 	dsDesc.StencilWriteMask = 0xFF;
 
 	// Stencil operations if pixel is front-facing
-	dsDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+	dsDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_REPLACE;
 	dsDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_INCR;
 	dsDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_INCR;
 	dsDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
@@ -230,8 +285,8 @@ void Renderer::InitDepthStencil()
 	BlendState.AlphaToCoverageEnable = false;
 	BlendState.IndependentBlendEnable = false;
 	BlendState.RenderTarget[0].BlendEnable = true;
-	BlendState.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
-	BlendState.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+	BlendState.RenderTarget[0].SrcBlend = D3D11_BLEND_ONE;
+	BlendState.RenderTarget[0].DestBlend = D3D11_BLEND_ZERO;
 	BlendState.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
 	BlendState.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
 	BlendState.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ONE;
@@ -245,6 +300,9 @@ void Renderer::InitDepthStencil()
 
 void Renderer::InitHBAOPlus()
 {
+	if (hbaoPlusComponents.pAOContext)
+		hbaoPlusComponents.pAOContext->Release();
+
 	//(1.) INITIALIZE THE LIBRARY
 
 	hbaoPlusComponents.CustomHeap.new_ = ::operator new;
@@ -315,8 +373,8 @@ void Renderer::InitShadows()
 
 	// Create the special "comparison" sampler state for shadows
 	D3D11_SAMPLER_DESC shadowSampDesc = {};
-	//shadowSampDesc.Filter = D3D11_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR; // Could be anisotropic
-	shadowSampDesc.Filter = D3D11_FILTER_COMPARISON_ANISOTROPIC;
+	shadowSampDesc.Filter = D3D11_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR; // Could be anisotropic
+	//shadowSampDesc.Filter = D3D11_FILTER_COMPARISON_ANISOTROPIC;
 	shadowSampDesc.MaxAnisotropy = 16;
 	shadowSampDesc.ComparisonFunc = D3D11_COMPARISON_LESS;
 	shadowSampDesc.AddressU = D3D11_TEXTURE_ADDRESS_BORDER;
@@ -348,13 +406,33 @@ void Renderer::InitShadows()
 	XMStoreFloat4x4(&shadowComponents.shadowViewMatrix, shadowView);
 
 	XMMATRIX shadowProj = XMMatrixTranspose(XMMatrixOrthographicLH(
-		750.0f,
-		750.0f,
+		500.0f,
+		500.0f,
 		0.1f,
 		1000.0f));
 	XMStoreFloat4x4(&shadowComponents.shadowProjectionMatrix, shadowProj);
 
 	XMStoreFloat4x4(&shadowComponents.shadowViewProj, XMMatrixTranspose(XMMatrixMultiply(shadowView, shadowProj)));
+}
+
+void Renderer::InitSkybox()
+{
+	D3D11_RASTERIZER_DESC skyRD = {};
+	skyRD.CullMode = D3D11_CULL_FRONT;
+	skyRD.FillMode = D3D11_FILL_SOLID;
+	skyRD.DepthClipEnable = true;
+	Config::Device->CreateRasterizerState(&skyRD, &skyboxComponents.skyRasterizer);
+
+	D3D11_DEPTH_STENCIL_DESC skyDS = {};
+	skyDS.DepthEnable = true;
+	skyDS.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+	skyDS.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
+	Config::Device->CreateDepthStencilState(&skyDS, &skyboxComponents.skyDepthStencilState);
+}
+
+void Renderer::SetSkybox(ID3D11ShaderResourceView* srv)
+{
+	skyboxComponents.skySRV = srv;
 }
 
 void Renderer::SetShadowMapResolution(unsigned int res)
@@ -393,6 +471,7 @@ void Renderer::RenderFrame()
 		Entity* e = renderObject.entity;
 		Mesh* mesh = renderObject.mesh;
 		Material* mat = renderObject.material;
+		RendererCallback* callback = renderObject.callback;
 
 		if (e->isEmptyObj) continue;
 		e->ToggleShadows(Config::ShadowsEnabled);
@@ -411,33 +490,17 @@ void Renderer::RenderFrame()
 			d.depthStencilSampler = depthStencilComponents.depthStencilSampler;
 			e->SetDepthStencilData(d);
 		}
-		
-		/*
-		if (*e->layer == "decal") {
-			SimplePixelShader* pixelShader = mat->GetPixelShader();
-			if (DecalHandler::decalsMap.count(e->GetName())) {
-				DecalBucket& bucket = DecalHandler::decalsMap[e->GetName()];
-				pixelShader->SetData(
-					"decals",
-					&bucket.decals,
-					sizeof(Decal) * MAX_DECALS_PER_ENTITY
-				);
-				pixelShader->SetData(
-					"decalCount",
-					&bucket.count,
-					sizeof(bucket.count)
-				);
-				pixelShader->SetMatrix4x4("worldMatrix", e->GetWorldMatrix());
-				pixelShader->SetShaderResourceView("Decals", decals[0]);
-			}
-		}
-		*/
 
 		ID3D11Buffer* vbo = mesh->GetVertexBuffer();
 		ID3D11Buffer* ind = mesh->GetIndexBuffer();
 		Config::Context->IASetVertexBuffers(0, 1, &vbo, &stride, &offset);
 		Config::Context->IASetIndexBuffer(ind, DXGI_FORMAT_R32_UINT, 0);
 
+		if (callback != nullptr) {
+			if (callback->active && callback->vShader) {
+				callback->PreVertexShaderCallback();
+			}
+		}
 		e->PrepareMaterialForDraw(mat->GetName(), camera->GetViewMatrix(), camera->GetProjMatrix());
 
 		Config::Context->DrawIndexed(
@@ -452,9 +515,9 @@ void Renderer::RenderFrame()
 		//ID3D11BlendState* originalBlend;
 		//Config::Context->OMGetBlendState(&originalBlend);
 		Config::Context->OMSetDepthStencilState(depthStencilComponents.depthStencilState, 0);
-		//Config::Context->OMSetBlendState(depthStencilComponents.decalBlendState, 0, 0xFFFFFFFF);
-		ID3D11Buffer* vbo = cube->GetVertexBuffer();
-		ID3D11Buffer* ind = cube->GetIndexBuffer();
+		Config::Context->OMSetBlendState(depthStencilComponents.decalBlendState, 0, 0xFFFFFFFF);
+		ID3D11Buffer* vbo = invCube->GetVertexBuffer();
+		ID3D11Buffer* ind = invCube->GetIndexBuffer();
 		Config::Context->IASetVertexBuffers(0, 1, &vbo, &stride, &offset);
 		Config::Context->IASetIndexBuffer(ind, DXGI_FORMAT_R32_UINT, 0);
 
@@ -467,20 +530,24 @@ void Renderer::RenderFrame()
 		shaders.decalPS->SetMatrix4x4("shadowView", shadowComponents.shadowViewMatrix);
 		shaders.decalPS->SetMatrix4x4("shadowProj", shadowComponents.shadowProjectionMatrix);
 		shaders.decalPS->SetShaderResourceView("DepthBuffer", depthStencilComponents.depthStencilSRV);
+		shaders.decalPS->SetShaderResourceView("EntityInfoBuffer", depthStencilComponents.entityInfoSRV);
 		shaders.decalPS->SetShaderResourceView("ShadowMap", shadowComponents.shadowSRV);
 		shaders.decalPS->SetSamplerState("ShadowSampler", shadowComponents.shadowSampler);
 		shaders.decalPS->SetFloat3("cameraPos", camera->position);
 
+		XMFLOAT4X4 world;
+		XMFLOAT4X4 invWorld;
+		XMMATRIX ownerWorld;
+		XMMATRIX localWorld;
+		XMMATRIX cWorld;
 		for (size_t i = 0; i < DecalHandler::decalsVec.size(); i++)
 		{
 			DecalBucket* db = DecalHandler::decalsVec[i];
+			ownerWorld = XMMatrixTranspose(XMLoadFloat4x4(&db->owner->GetWorldMatrix()));
 			for (size_t j = 0; j < db->count; j++)
 			{
-				XMFLOAT4X4 world;
-				XMFLOAT4X4 invWorld;
-				XMMATRIX ownerWorld = XMMatrixTranspose(XMLoadFloat4x4(&db->owner->GetWorldMatrix()));
-				XMMATRIX localWorld = XMMatrixTranspose(XMLoadFloat4x4(&db->decals[j].localTransform));
-				XMMATRIX cWorld = XMMatrixMultiply(localWorld, ownerWorld);
+				localWorld = XMMatrixTranspose(XMLoadFloat4x4(&db->decals[j].localTransform));
+				cWorld = XMMatrixMultiply(localWorld, ownerWorld);
 				XMStoreFloat4x4(&world, XMMatrixTranspose(cWorld));
 				XMStoreFloat4x4(&invWorld, XMMatrixTranspose(XMMatrixInverse(nullptr, cWorld)));
 
@@ -498,13 +565,16 @@ void Renderer::RenderFrame()
 				shaders.decalPS->CopyAllBufferData();
 
 				Config::Context->DrawIndexed(
-					cube->GetIndexCount(),						// The number of indices to use (we could draw a subset if we wanted)
+					invCube->GetIndexCount(),						// The number of indices to use (we could draw a subset if we wanted)
 					0,											// Offset to the first index we want to use
 					0);											// Offset to add to each index when looking up vertices
 			}
 		}
+		shaders.decalPS->SetShaderResourceView("ShadowMap", NULL);
+		shaders.decalPS->SetShaderResourceView("DepthBuffer", NULL);
+		shaders.decalPS->SetShaderResourceView("EntityInfoBuffer", NULL);
 		Config::Context->OMSetDepthStencilState(NULL, 0);
-		//Config::Context->OMSetBlendState(NULL, 0, 0xFFFFFFFF);
+		Config::Context->OMSetBlendState(NULL, 0, 0xFFFFFFFF);
 	}
 
 	if (Config::HBAOPlusEnabled) {
@@ -576,7 +646,6 @@ void Renderer::RenderShadowMap()
 
 	// Set up the shaders
 	shaders.depthStencilVS->SetShader();
-	//shaders.depthStencilPS->SetShader();
 	shaders.depthStencilVS->SetMatrix4x4("view", shadowComponents.shadowViewMatrix);
 	shaders.depthStencilVS->SetMatrix4x4("projection", shadowComponents.shadowProjectionMatrix);
 	//shaders.depthStencilPS->SetFloat3("cameraPosition", lights["Sun"]->Position);
@@ -590,22 +659,26 @@ void Renderer::RenderShadowMap()
 
 	for (int i = renderObjectCount - 1; i >= 0; i--)
 	{
+		shaders.depthStencilVS->SetShader();
+
 		RenderObject renderObject = renderObjects[i];
 		Entity* e = renderObject.entity;
 		Mesh* mesh = renderObject.mesh;
+		Material* mat = renderObject.material; 
+		RendererCallback* callback = renderObject.callback;
 
 		if (e->destroyed || e->isEmptyObj) {
-			if (i == renderObjectCount - 1) {
-				renderObjectCount--;
-			}
-			else {
+			if (i != renderObjectCount - 1) {
 				renderObjects[i] = renderObjects[renderObjectCount - 1];
-				renderObjectCount--;
 			}
+			renderObjectsMap.erase(e);
+			renderObjectCount--;
 			continue;
 		}
 
 		if (e->isEmptyObj) continue;
+
+		//if (mat->GetVertexShader()->GetShaderType() == ShaderType::MODIFY_VERTS) {}
 
 		ID3D11Buffer* vb = mesh->GetVertexBuffer();
 		ID3D11Buffer* ib = mesh->GetIndexBuffer();
@@ -614,9 +687,24 @@ void Renderer::RenderShadowMap()
 		Config::Context->IASetVertexBuffers(0, 1, &vb, &stride, &offset);
 		Config::Context->IASetIndexBuffer(ib, DXGI_FORMAT_R32_UINT, 0);
 
-
-		shaders.depthStencilVS->SetMatrix4x4("world", e->GetWorldMatrix());
-		shaders.depthStencilVS->CopyAllBufferData();
+		if (callback != nullptr) {
+			if (callback->active && callback->prepassVShader) {
+				callback->prepassVShader->SetShader();
+				callback->prepassVShader->SetMatrix4x4("world", e->GetWorldMatrix());
+				callback->prepassVShader->SetMatrix4x4("view", shadowComponents.shadowViewMatrix);
+				callback->prepassVShader->SetMatrix4x4("projection", shadowComponents.shadowProjectionMatrix);
+				callback->PrePrepassVertexShaderCallback();
+				callback->prepassVShader->CopyAllBufferData();
+			}
+			else {
+				shaders.depthStencilVS->SetMatrix4x4("world", e->GetWorldMatrix());
+				shaders.depthStencilVS->CopyAllBufferData();
+			}
+		}
+		else {
+			shaders.depthStencilVS->SetMatrix4x4("world", e->GetWorldMatrix());
+			shaders.depthStencilVS->CopyAllBufferData();
+		}
 
 		// Finally do the actual drawing
 		Config::Context->DrawIndexed(mesh->GetIndexCount(), 0, 0);
@@ -637,10 +725,20 @@ void Renderer::RenderDepthStencil()
 
 	// Initial setup - No RTV necessary - Clear depthStencil map
 	//Config::Context->OMSetRenderTargets(0, 0, depthStencilComponents.depthStencilDSV);
-	Config::Context->OMSetRenderTargets(1, &depthStencilComponents.depthStencilRTV, Config::DepthStencilView);
+
+	ID3D11RenderTargetView* targets[2] = {
+		depthStencilComponents.depthStencilRTV,
+		depthStencilComponents.entityInfoRTV,
+	};
+	Config::Context->OMSetRenderTargets(2, targets, Config::DepthStencilView);
+
+	//Config::Context->OMSetRenderTargets(1, &depthStencilComponents.depthStencilRTV, Config::DepthStencilView);
 	//Config::Context->ClearDepthStencilView(depthStencilComponents.depthStencilDSV, D3D11_CLEAR_DEPTH, 1.0f, 0);
+
 	const float color[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
 	Config::Context->ClearRenderTargetView(depthStencilComponents.depthStencilRTV, color);
+	Config::Context->ClearRenderTargetView(depthStencilComponents.entityInfoRTV, color);
+
 	//Config::Context->RSSetState(depthStencilComponents.depthStencilRasterizer);
 
 	// Set up the shaders
@@ -649,7 +747,6 @@ void Renderer::RenderDepthStencil()
 	shaders.depthStencilVS->SetMatrix4x4("view", camera->GetViewMatrix());
 	shaders.depthStencilVS->SetMatrix4x4("projection", camera->GetProjMatrix());
 	shaders.depthStencilPS->SetFloat3("cameraPosition", camera->position);
-	shaders.depthStencilPS->CopyAllBufferData();
 
 	//Config::Context->PSSetShader(0, 0, 0); // Turns OFF the pixel shader
 
@@ -657,13 +754,21 @@ void Renderer::RenderDepthStencil()
 	UINT stride = sizeof(Vertex);
 	UINT offset = 0;
 
+	unsigned int entityInfo;
+
 	for (int i = renderObjectCount - 1; i >= 0; i--)
 	{
+		shaders.depthStencilVS->SetShader();
+
 		RenderObject renderObject = renderObjects[i];
 		Entity* e = renderObject.entity;
 		Mesh* mesh = renderObject.mesh;
+		Material* mat = renderObject.material;
+		RendererCallback* callback = renderObject.callback;
 
-		if (e->isEmptyObj) continue;
+		if (e->isEmptyObj || !renderObject.material->GetMaterialData().hbaoPlusEnabled) continue;
+
+		//if (mat->GetVertexShader()->GetShaderType() == ShaderType::MODIFY_VERTS) {}
 
 		ID3D11Buffer* vb = mesh->GetVertexBuffer();
 		ID3D11Buffer* ib = mesh->GetIndexBuffer();
@@ -672,9 +777,29 @@ void Renderer::RenderDepthStencil()
 		Config::Context->IASetVertexBuffers(0, 1, &vb, &stride, &offset);
 		Config::Context->IASetIndexBuffer(ib, DXGI_FORMAT_R32_UINT, 0);
 
+		if (callback != nullptr) {
+			if (callback->active && callback->prepassVShader) {
+				callback->prepassVShader->SetShader();
+				callback->prepassVShader->SetMatrix4x4("world", e->GetWorldMatrix());
+				callback->prepassVShader->SetMatrix4x4("view", camera->GetViewMatrix());
+				callback->prepassVShader->SetMatrix4x4("projection", camera->GetProjMatrix());
+				callback->PrePrepassVertexShaderCallback();
+				callback->prepassVShader->CopyAllBufferData();
+			}
+			else {
+				shaders.depthStencilVS->SetMatrix4x4("world", e->GetWorldMatrix());
+				shaders.depthStencilVS->CopyAllBufferData();
+			}
+		}
+		else {
+			shaders.depthStencilVS->SetMatrix4x4("world", e->GetWorldMatrix());
+			shaders.depthStencilVS->CopyAllBufferData();
+		}
 
-		shaders.depthStencilVS->SetMatrix4x4("world", e->GetWorldMatrix());
-		shaders.depthStencilVS->CopyAllBufferData();
+		entityInfo = 0;
+		entityInfo = Config::EntityLayers[e->layer.STDStr()];
+		shaders.depthStencilPS->SetInt("entityInfo", entityInfo);
+		shaders.depthStencilPS->CopyAllBufferData();
 
 		// Finally do the actual drawing
 		Config::Context->DrawIndexed(mesh->GetIndexCount(), 0, 0);
@@ -685,6 +810,34 @@ void Renderer::RenderDepthStencil()
 	Config::Context->ClearDepthStencilView(Config::DepthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 	Config::Context->OMSetRenderTargets(1, &Config::BackBufferRTV, Config::DepthStencilView);
 	//Config::Context->RSSetState(0);
+}
+
+void Renderer::RenderSkybox()
+{
+		ID3D11Buffer* vb = cube->GetVertexBuffer();
+		ID3D11Buffer* ib = cube->GetIndexBuffer();
+
+		UINT stride = sizeof(Vertex);
+		UINT offset = 0;
+		Config::Context->IASetVertexBuffers(0, 1, &vb, &stride, &offset);
+		Config::Context->IASetIndexBuffer(ib, DXGI_FORMAT_R32_UINT, 0);
+
+		shaders.skyVS->SetMatrix4x4("view", camera->GetViewMatrix());
+		shaders.skyVS->SetMatrix4x4("projection", camera->GetProjMatrix());
+		shaders.skyVS->CopyAllBufferData();
+		shaders.skyVS->SetShader();
+
+		shaders.skyPS->SetShaderResourceView("Sky", skyboxComponents.skySRV);
+		shaders.skyPS->SetSamplerState("BasicSampler", Config::Sampler);
+		shaders.skyPS->SetShader();
+
+		Config::Context->RSSetState(skyboxComponents.skyRasterizer);
+		Config::Context->OMSetDepthStencilState(skyboxComponents.skyDepthStencilState, 0);
+
+		Config::Context->DrawIndexed(cube->GetIndexCount(), 0, 0);
+
+		Config::Context->RSSetState(0);
+		Config::Context->OMSetDepthStencilState(0, 0);
 }
 
 bool Renderer::AddCamera(string name, Camera* newCamera)
@@ -800,6 +953,8 @@ void Renderer::AddRenderObject(Entity* e, Mesh* mesh, Material* mat)
 	if (!mesh->HasChildren()) {
 		r = { e, mesh, mat };
 		renderObjects[renderObjectCount] = r;
+		if (!renderObjectsMap.count(e)) renderObjectsMap.insert({ e, vector<RenderObject*>() });
+		renderObjectsMap[e].push_back(&renderObjects[renderObjectCount]);
 		renderObjectCount++;
 		if (renderObjectCount >= maxRenderObjects) {
 			RenderObject* old = renderObjects;
@@ -815,6 +970,8 @@ void Renderer::AddRenderObject(Entity* e, Mesh* mesh, Material* mat)
 		{
 			r = { e, children[i], e->GetMaterial(e->GetMeshMaterialName(i)) };
 			renderObjects[renderObjectCount] = r;
+			if (!renderObjectsMap.count(e)) renderObjectsMap.insert({ e, vector<RenderObject*>() });
+			renderObjectsMap[e].push_back(&renderObjects[renderObjectCount]);
 			renderObjectCount++;
 			if (renderObjectCount >= maxRenderObjects) {
 				RenderObject* old = renderObjects;
@@ -824,5 +981,14 @@ void Renderer::AddRenderObject(Entity* e, Mesh* mesh, Material* mat)
 				delete[] old;
 			}
 		}
+	}
+}
+
+void Renderer::SetRenderObjectCallback(Entity* e, RendererCallback* callback)
+{
+	int num = renderObjectsMap[e].size();
+	for (int i = 0; i < num; i++)
+	{
+		renderObjectsMap[e][i]->callback = callback;
 	}
 }

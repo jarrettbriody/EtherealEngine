@@ -4,33 +4,34 @@
 #include "Vertex.h"
 #include "MemoryAllocator.h"
 #include "Utility.h"
+#include "EEString.h"
 
 using namespace std;
 
 class Mesh
 {
 protected:
-	static vector<string> mtlPaths;
+	static vector<EEString<64>> mtlPaths;
 	vector<DirectX::XMFLOAT3>* vertices = nullptr;
 	ID3D11Buffer* vertexBuffer = nullptr;
 	ID3D11Buffer* indexBuffer = nullptr;
 	int indexCount = 0;
 	vector<Mesh*>* childrenVec = nullptr;
 	Mesh** children = nullptr;
-	string* mtlPath = nullptr;
 	vector<string>* materialNameList = nullptr;
-	string* meshName = nullptr;
+	EEString<64> meshName;
+	EEString<64> mtlPath;
 	int childCount = 0;
 public:
 	Mesh();
-	Mesh(Vertex* vertexObjects, int vertexCount, unsigned int* indices, int indexCnt, ID3D11Device* device, string meshN, string matName = "DEFAULT_MATERIAL");
-	Mesh(string meshN, char* objFile, ID3D11Device* device, bool* success = nullptr);
+	Mesh(Vertex* vertexObjects, int vertexCount, unsigned int* indices, int indexCnt, string meshN, string matName = "DEFAULT_MATERIAL");
+	Mesh(string meshN, char* objFile, bool* success = nullptr);
 	~Mesh();
 	void operator= (const Mesh& m);
 	ID3D11Buffer* GetVertexBuffer();
 	ID3D11Buffer* GetIndexBuffer();
 	int GetIndexCount();
-	void CreateBuffers(Vertex* vertexObjects, int vertexCount, unsigned int* indices, int indexCnt, ID3D11Device* device);
+	void CreateBuffers(Vertex* vertexObjects, int vertexCount, unsigned int* indices, int indexCnt);
 	void CalculateTangents(Vertex* verts, int numVerts, unsigned int* indices, int numIndices);
 	vector<string> GetMaterialNameList();
 	string GetMaterialName(unsigned int index = 0);
@@ -39,7 +40,7 @@ public:
 	Mesh** GetChildren();
 	int GetChildCount();
 	string GetMTLPath();
-	static vector<string> GetMTLPaths();
+	static vector<EEString<64>> GetMTLPaths();
 	void SetVertices(vector<DirectX::XMFLOAT3> verts);
 	vector<DirectX::XMFLOAT3> GetVertices();
 	void FreeMemory();
