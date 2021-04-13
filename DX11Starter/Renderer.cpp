@@ -59,6 +59,7 @@ Renderer::~Renderer()
 	}
 
 	delete[] renderObjects;
+	delete[] transparentObjects;
 
 	if(hbaoPlusComponents.pAOContext)
 		hbaoPlusComponents.pAOContext->Release();
@@ -91,7 +92,9 @@ void Renderer::SetEntities(vector<Entity*>* entities)
 {
 	this->entities = entities;
 	maxRenderObjects = entities->size() + 100;
+	maxTransparentObjects = maxRenderObjects;
 	renderObjects = new RenderObject[maxRenderObjects];
+	transparentObjects = new RenderObject[maxTransparentObjects];
 }
 
 void Renderer::SetRendererShaders(RendererShaders rShaders)
@@ -493,6 +496,8 @@ void Renderer::RenderFrame()
 	UINT stride = sizeof(Vertex);
 	UINT offset = 0;
 
+	ToggleBlendState(false);
+
 	for (int i = renderObjectCount - 1; i >= 0; i--)
 	{
 		RenderObject renderObject = renderObjects[i];
@@ -603,6 +608,40 @@ void Renderer::RenderFrame()
 		shaders.decalPS->SetShaderResourceView("EntityInfoBuffer", NULL);
 		Config::Context->OMSetDepthStencilState(NULL, 0);
 		Config::Context->OMSetBlendState(NULL, 0, 0xFFFFFFFF);
+	}
+
+	ToggleBlendState(true);
+
+	stride = sizeof(Vertex);
+	offset = 0;
+
+	for (int i = transparentObjectCount - 1; i >= 0; i--)
+	{
+		RenderObject renderObject = transparentObjects[i];
+		Entity* e = renderObject.entity;
+		Mesh* mesh = renderObject.mesh;
+		Material* mat = renderObject.material;
+
+		if (e->isEmptyObj) continue;
+
+		if (Config::SSAOEnabled) {
+			DepthStencilData d;
+			d.depthStencilSRV = depthStencilComponents.depthStencilSRV;
+			d.depthStencilSampler = depthStencilComponents.depthStencilSampler;
+			e->SetDepthStencilData(d);
+		}
+
+		ID3D11Buffer* vbo = mesh->GetVertexBuffer();
+		ID3D11Buffer* ind = mesh->GetIndexBuffer();
+		Config::Context->IASetVertexBuffers(0, 1, &vbo, &stride, &offset);
+		Config::Context->IASetIndexBuffer(ind, DXGI_FORMAT_R32_UINT, 0);
+
+		e->PrepareMaterialForDraw(mat->GetName(), camera->GetViewMatrix(), camera->GetProjMatrix());
+
+		Config::Context->DrawIndexed(
+			mesh->GetIndexCount(),		// The number of indices to use (we could draw a subset if we wanted)
+			0,											// Offset to the first index we want to use
+			0);											// Offset to add to each index when looking up vertices
 	}
 
 	if (Config::HBAOPlusEnabled) {
@@ -978,17 +1017,23 @@ void Renderer::SendSSAOKernelToShader(SimplePixelShader* pixelShader)
 void Renderer::AddRenderObject(Entity* e, Mesh* mesh, Material* mat)
 {
 	RenderObject r;
+
+	float transparency = mat->GetMaterialData().Transparency;
+	RenderObject* objects = (transparency != 1.0f) ? transparentObjects : renderObjects;
+	int& count = (transparency != 1.0f) ? transparentObjectCount : renderObjectCount;
+	int& maxObjects = (transparency != 1.0f) ? maxTransparentObjects : maxRenderObjects;
+
 	if (!mesh->HasChildren()) {
 		r = { e, mesh, mat };
-		renderObjects[renderObjectCount] = r;
+		objects[count] = r;
 		if (!renderObjectsMap.count(e)) renderObjectsMap.insert({ e, vector<RenderObject*>() });
-		renderObjectsMap[e].push_back(&renderObjects[renderObjectCount]);
-		renderObjectCount++;
-		if (renderObjectCount >= maxRenderObjects) {
-			RenderObject* old = renderObjects;
-			renderObjects = new RenderObject[(size_t)maxRenderObjects * 2];
-			memcpy(renderObjects, old, sizeof(RenderObject) * maxRenderObjects);
-			maxRenderObjects *= 2;
+		renderObjectsMap[e].push_back(&objects[count]);
+		count++;
+		if (count >= maxObjects) {
+			RenderObject* old = objects;
+			objects = new RenderObject[(size_t)maxObjects * 2];
+			memcpy(objects, old, sizeof(RenderObject) * maxObjects);
+			maxObjects *= 2;
 			delete[] old;
 		}
 	}
@@ -997,15 +1042,15 @@ void Renderer::AddRenderObject(Entity* e, Mesh* mesh, Material* mat)
 		for (size_t i = 0; i < mesh->GetChildCount(); i++)
 		{
 			r = { e, children[i], e->GetMaterial(e->GetMeshMaterialName(i)) };
-			renderObjects[renderObjectCount] = r;
+			objects[count] = r;
 			if (!renderObjectsMap.count(e)) renderObjectsMap.insert({ e, vector<RenderObject*>() });
-			renderObjectsMap[e].push_back(&renderObjects[renderObjectCount]);
-			renderObjectCount++;
-			if (renderObjectCount >= maxRenderObjects) {
-				RenderObject* old = renderObjects;
-				renderObjects = new RenderObject[(size_t)maxRenderObjects * 2];
-				memcpy(renderObjects, old, sizeof(RenderObject) * maxRenderObjects);
-				maxRenderObjects *= 2;
+			renderObjectsMap[e].push_back(&objects[count]);
+			count++;
+			if (count >= maxObjects) {
+				RenderObject* old = objects;
+				objects = new RenderObject[(size_t)maxObjects * 2];
+				memcpy(objects, old, sizeof(RenderObject) * maxObjects);
+				maxObjects *= 2;
 				delete[] old;
 			}
 		}

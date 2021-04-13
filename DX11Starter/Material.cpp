@@ -92,6 +92,8 @@ void Material::Prepare()
 	if (pixelShader->GetShaderType() == ShaderType::DEFAULT)
 		pixelShader->SetFloat3("manualColor", materialData.DiffuseColor);
 
+	pixelShader->SetFloat("transparency", materialData.Transparency);
+
 	/*
 	if (materialData.SSAO) {
 		pixelShader->SetData(
