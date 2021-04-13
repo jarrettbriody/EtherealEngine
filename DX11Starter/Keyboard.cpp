@@ -1,12 +1,50 @@
 #include "pch.h"
 #include "Keyboard.h"
 
+Keyboard* Keyboard::instance = nullptr;
+
+bool Keyboard::SetupInstance()
+{
+	if (instance == nullptr)
+	{
+		instance = new Keyboard();
+		return true;
+	}
+	return false;
+}
+
+Keyboard* Keyboard::GetInstance()
+{
+	return instance;
+}
+
+bool Keyboard::DestroyInstance()
+{
+	if (instance != nullptr) {
+		delete instance;
+		return true;
+	}
+	return false;
+}
+
 Keyboard::Keyboard()
 {
 	for (int i = 0; i < 256; i++)
 	{
 		this->keyStates[i] = false;
 	}
+}
+
+void Keyboard::RegisterKeyPress(const unsigned char key)
+{
+	this->keyStates[key] = true;
+	this->keyBuffer.insert({key, KeyboardEvent(KeyboardEvent::EventType::Press, key)});
+}
+
+void Keyboard::RegisterKeyRelease(const unsigned char key)
+{
+	this->keyStates[key] = false;
+	this->keyBuffer.insert({key, KeyboardEvent(KeyboardEvent::EventType::Release, key)});
 }
 
 bool Keyboard::KeyIsPressed(const unsigned char keycode)
@@ -50,6 +88,25 @@ bool Keyboard::OnKeyUp(const unsigned char keycode)
 	}
 }
 
+bool Keyboard::CheckKeysPressed(const unsigned char keycode[], int arrLength)
+{
+	// return true if any of the passed in keys are pressed
+
+	bool keysDown = false;
+
+	for (int i = 0; i < arrLength; i++)
+	{
+		keysDown = KeyIsPressed(keycode[i]);
+
+		if (keysDown)
+		{
+			break;
+		}
+	}
+
+	return keysDown;
+}
+
 bool Keyboard::NoKeyDown()
 {
 	for each(bool key in keyStates)
@@ -68,17 +125,6 @@ bool Keyboard::KeyBufferIsEmpty()
 	return this->keyBuffer.empty();
 }
 
-void Keyboard::RegisterKeyPress(const unsigned char key)
-{
-	this->keyStates[key] = true;
-	this->keyBuffer.insert({key, KeyboardEvent(KeyboardEvent::EventType::Press, key)});
-}
-
-void Keyboard::RegisterKeyRelease(const unsigned char key)
-{
-	this->keyStates[key] = false;
-	this->keyBuffer.insert({key, KeyboardEvent(KeyboardEvent::EventType::Release, key)});
-}
 
 void Keyboard::EnableAutoRepeatKeys()
 {

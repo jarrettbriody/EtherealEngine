@@ -11,44 +11,22 @@ float ScriptManager::deltaTime;
 
 void ScriptManager::CallInit()
 {
-	if (initialized)
+	if (setup) {
 		Init();
+		initialized = true;
+	}
 }
 
 void ScriptManager::CallUpdate(float deltaTime)
 {
 	this->deltaTime = deltaTime;
-	if (initialized)
+	if (setup)
 		Update();
-}
-
-void ScriptManager::CallOnMouseDown(WPARAM buttonState, int x, int y)
-{
-	if (initialized)
-		OnMouseDown(buttonState, x, y);
-}
-
-void ScriptManager::CallOnMouseUp(WPARAM buttonState, int x, int y)
-{
-	if (initialized)
-		OnMouseUp(buttonState, x, y);
-}
-
-void ScriptManager::CallOnMouseMove(WPARAM buttonState, int x, int y)
-{
-	if (initialized)
-		OnMouseMove(buttonState, x, y);
-}
-
-void ScriptManager::CallOnMouseWheel(float wheelDelta, int x, int y)
-{
-	if (initialized)
-		OnMouseWheel(wheelDelta, x, y);
 }
 
 void ScriptManager::CallOnCollision(btCollisionObject* other)
 {
-	if (initialized)
+	if (setup)
 		OnCollision(other);
 }
 
@@ -69,7 +47,7 @@ void ScriptManager::Setup(Entity* e)
 	}
 	ScriptManager::scriptFunctionsMap[this->name].push_back(this);
 
-	initialized = true;
+	setup = true;
 }
 
 ScriptManager::ScriptManager()
@@ -80,7 +58,7 @@ ScriptManager::~ScriptManager()
 {
 }
 
-void ScriptManager::CreateEntity(EntityCreationParameters& para)
+Entity* ScriptManager::CreateEntity(EntityCreationParameters& para)
 {
-	EESceneLoader->CreateEntity(para);
+	return EESceneLoader->CreateEntity(para);
 }

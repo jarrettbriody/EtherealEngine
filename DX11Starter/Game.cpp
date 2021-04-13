@@ -13,7 +13,7 @@ Game::Game(HINSTANCE hInstance)
 
 #if defined(DEBUG) || defined(_DEBUG)
 	CreateConsoleWindow(500, 120, 32, 120);
-	if (Config::FPSControllerEnabled) ShowCursor(false);
+	if (!Config::ShowCursor) ShowCursor(false);
 	printf("Console window created successfully.  Feel free to printf() here.\n");
 #endif
 	
@@ -44,6 +44,8 @@ Game::~Game()
 	delete Config::DynamicsWorld;
 	// delete physicsDraw;
 
+	Keyboard::DestroyInstance();
+	Mouse::DestroyInstance();
 
 	//delete EECamera;
 	Renderer::DestroyInstance();
@@ -66,6 +68,16 @@ void Game::Init()
 	//_CrtSetBreakAlloc(49892);
 
 	srand(static_cast <unsigned> (time(0)));
+	// Input 
+	if (Keyboard::SetupInstance())
+	{
+		keyboard = Keyboard::GetInstance();
+	}
+	
+	if (Mouse::SetupInstance())
+	{
+		mouse = Mouse::GetInstance();
+	}
 
 	// Physics -----------------
 	collisionConfiguration = new btDefaultCollisionConfiguration();
@@ -108,9 +120,6 @@ void Game::Init()
 	//EESceneLoader->LoadDefaultMaterials();
 
 	EESceneLoader->SetScriptLoader([](Entity* e, string script) {Scripts::CreateScript(e, script); });
-
-	prevMousePos.x = 0;
-	prevMousePos.y = 0;
 
 	/*
 	Light* dLight = new Light;
@@ -330,12 +339,6 @@ void Game::Init()
 	musicChannel->set3DAttributes(&pos, &vel);
 	musicChannel->set3DMinMaxDistance(0, 15.0f);
 
-	for (size_t i = 0; i < ScriptManager::scriptFunctions.size(); i++)
-	{
-		ScriptManager* sf = ScriptManager::scriptFunctions[i];
-		sf->CallInit();
-	}
-
 
 	if(Config::Fullscreen)
 		Config::SwapChain->SetFullscreenState(true, NULL);
@@ -367,6 +370,13 @@ void Game::Update(float deltaTime, float totalTime)
 	if (GetAsyncKeyState(VK_ESCAPE)) {
 		Config::SwapChain->SetFullscreenState(false, NULL);
 		Quit();
+	}
+
+	for (size_t i = 0; i < ScriptManager::scriptFunctions.size(); i++)
+	{
+		ScriptManager* sf = ScriptManager::scriptFunctions[i];
+		if(!sf->GetIsInitialized())
+			sf->CallInit();
 	}
 
 	GarbageCollect();
@@ -469,7 +479,7 @@ void Game::PhysicsStep(float deltaTime)
 	Entity* entity = nullptr;
 
 	Config::DynamicsWorld->applyGravity();
-	Config::DynamicsWorld->stepSimulation(deltaTime , 1, btScalar(1.0) / btScalar(60.0));
+	Config::DynamicsWorld->stepSimulation(deltaTime * deltaTimeScalar, 10, 1.f / 60.f); // Config::DynamicsWorld->stepSimulation(deltaTime, 1, btScalar(1.0) / btScalar(60.0)); --> don't believe this framerate independent, needed to add max steps variable
 
 	for (int i = 0; i < Config::DynamicsWorld->getNumCollisionObjects(); i++)
 	{
@@ -668,7 +678,9 @@ void Game::GarbageCollect()
 	}
 }
 
+/*
 #pragma region Mouse Input
+
 void Game::OnMouseDown(WPARAM buttonState, int x, int y)
 {
 	prevMousePos.x = x;
@@ -718,7 +730,7 @@ void Game::OnMouseDown(WPARAM buttonState, int x, int y)
 	rayPoints[7] = end;
 	dl->GenerateCuboidVertexBuffer(rayPoints, 8);
 	delete[] rayPoints;
-	*/
+	
 
 	if (Config::DynamicsWorld)
 	{
@@ -769,7 +781,7 @@ void Game::OnMouseDown(WPARAM buttonState, int x, int y)
 				float z = transform.getOrigin().getZ();
 				transform.setOrigin(btVector3(x, y, z));
 				rigidBody->getCollisionShape()->setLocalScaling(btVector3(1, 1, 1));
-				rigidBody->setWorldTransform(transform); */
+				rigidBody->setWorldTransform(transform); 
 				
 				btVector3 h = closestResult.m_hitPointWorld;
 				XMFLOAT3 hitLocation(h.getX(), h.getY(), h.getZ());
@@ -777,15 +789,12 @@ void Game::OnMouseDown(WPARAM buttonState, int x, int y)
 
 				//Config::DynamicsWorld->addRigidBody(rigidBody); // Add the rigid body back into bullet
 
-				/*
 				if (hit->MeshHasChildren()) {
 					EESceneLoader->SplitMeshIntoChildEntities(hit, 0.5f);
 				}
-				*/
 			}
 		}
 	}
-	
 	SetCapture(hWnd);
 }
 
@@ -809,7 +818,7 @@ void Game::OnMouseMove(WPARAM buttonState, int x, int y)
 		if (!sf->inputEnabled) continue;
 		sf->CallOnMouseMove(buttonState, x, y);
 	}
-	if (Config::FPSControllerEnabled || (!Config::FPSControllerEnabled && buttonState & 0x0001)) {
+	if (buttonState & 0x0001 || !Config::ShowCursor) {
 		EECamera->RotateCamera(x - (int)prevMousePos.x, y - (int)prevMousePos.y);
 
 		prevMousePos.x = x;
@@ -827,6 +836,9 @@ void Game::OnMouseWheel(float wheelDelta, int x, int y)
 	}
 }
 
+#pragma endregion
+*/
+
 void Game::FmodErrorCheck(FMOD_RESULT result)
 {
 	if (result != FMOD_OK)
@@ -834,4 +846,3 @@ void Game::FmodErrorCheck(FMOD_RESULT result)
 		printf("FMOD error! (%d) %s\n", result, FMOD_ErrorString(result));
 	}
 }
-#pragma endregion

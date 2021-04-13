@@ -135,6 +135,15 @@
     <ClCompile Include="DecalHandler.cpp">
       <Filter>EECore\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Mouse.cpp">
+      <Filter>EECore\Source Files\Mouse</Filter>
+    </ClCompile>
+    <ClCompile Include="MouseEvent.cpp">
+      <Filter>EECore\Source Files\Mouse</Filter>
+    </ClCompile>
+    <ClCompile Include="BloodIcicle.cpp">
+      <Filter>EEScripts\Source</Filter>
+    </ClCompile>
     <ClCompile Include="ParticleEmitter.cpp">
       <Filter>EECore\Source Files\Particle System</Filter>
     </ClCompile>
@@ -239,6 +248,15 @@
     <ClInclude Include="EEString.h">
       <Filter>EECore\Utility</Filter>
     </ClInclude>
+    <ClInclude Include="Mouse.h">
+      <Filter>EECore\Header Files\Mouse</Filter>
+    </ClInclude>
+    <ClInclude Include="MouseEvent.h">
+      <Filter>EECore\Header Files\Mouse</Filter>
+    </ClInclude>
+    <ClInclude Include="BloodIcicle.h">
+      <Filter>EEScripts\Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config">
@@ -311,6 +329,12 @@
     </Filter>
     <Filter Include="EECore\Source Files\Particle System">
       <UniqueIdentifier>{3bc807bf-bb34-40c9-9b5b-e4b0e16b8ecb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="EECore\Header Files\Mouse">
+      <UniqueIdentifier>{3bdc881b-405f-4590-884a-1e7d742290cf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="EECore\Source Files\Mouse">
+      <UniqueIdentifier>{7b53909b-60ff-49bf-a1c8-616f0f49bd1d}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

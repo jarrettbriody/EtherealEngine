@@ -31,6 +31,7 @@ public:
 	void SetViewMatrix(XMFLOAT4X4 vm);
 	void RotateCamera(int x, int y, int z = 0);
 	void SetPosition(XMFLOAT3 pos);
+	void SetFOV(float degrees);
 	void UpdateProjectionMatrix();
 	void Update();
 };

@@ -136,6 +136,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Barrel.cpp" />
+    <ClCompile Include="BloodIcicle.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Collider.cpp" />
     <ClCompile Include="Config.cpp" />
@@ -153,6 +154,8 @@
     <ClCompile Include="Material.cpp" />
     <ClCompile Include="MemoryAllocator.cpp" />
     <ClCompile Include="Mesh.cpp" />
+    <ClCompile Include="Mouse.cpp" />
+    <ClCompile Include="MouseEvent.cpp" />
     <ClCompile Include="ParticleEmitter.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -165,6 +168,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Barrel.h" />
+    <ClInclude Include="BloodIcicle.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Collider.h" />
     <ClInclude Include="Config.h" />
@@ -183,6 +187,8 @@
     <ClInclude Include="Material.h" />
     <ClInclude Include="MemoryAllocator.h" />
     <ClInclude Include="Mesh.h" />
+    <ClInclude Include="Mouse.h" />
+    <ClInclude Include="MouseEvent.h" />
     <ClInclude Include="ParticleEmitter.h" />
     <ClInclude Include="Particles.h" />
     <ClInclude Include="pch.h" />

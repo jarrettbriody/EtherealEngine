@@ -1,6 +1,8 @@
 #pragma once
 #include "Renderer.h"
 #include "SceneLoader.h"
+#include "Keyboard.h"
+#include "Mouse.h"
 
 class ScriptManager
 {
@@ -17,12 +19,10 @@ public:
 
 	bool inputEnabled = false;
 
+	bool GetIsInitialized() { return initialized; }
+
 	void CallInit();
 	void CallUpdate(float deltaTime);
-	void CallOnMouseDown(WPARAM buttonState, int x, int y);
-	void CallOnMouseUp(WPARAM buttonState, int x, int y);
-	void CallOnMouseMove(WPARAM buttonState, int x, int y);
-	void CallOnMouseWheel(float wheelDelta, int x, int y);
 	void CallOnCollision(btCollisionObject* other);
 
 	void Setup(Entity* e);
@@ -30,16 +30,13 @@ public:
 	virtual ~ScriptManager();
 protected:
 	bool initialized = false;
+	bool setup = false;
 	string name;
 	Entity* entity;
 	ScriptManager();
 	virtual void Init() = 0;
 	virtual void Update() = 0;
-	virtual void OnMouseDown(WPARAM buttonState, int x, int y) {};
-	virtual void OnMouseUp(WPARAM buttonState, int x, int y) {};
-	virtual void OnMouseMove(WPARAM buttonState, int x, int y) {};
-	virtual void OnMouseWheel(float wheelDelta, int x, int y) {};
 	virtual void OnCollision(btCollisionObject* other) {};
-	void CreateEntity(EntityCreationParameters& para);
+	Entity* CreateEntity(EntityCreationParameters& para);
 };
 

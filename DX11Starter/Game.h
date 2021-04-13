@@ -47,14 +47,8 @@ public:
 	void FmodErrorCheck(FMOD_RESULT result); // Define it here because current file structure wont let me put it in utility
 	void GarbageCollect();
 
-	// Overridden mouse input helper methods
-	void OnMouseDown (WPARAM buttonState, int x, int y);
-	void OnMouseUp	 (WPARAM buttonState, int x, int y);
-	void OnMouseMove (WPARAM buttonState, int x, int y);
-	void OnMouseWheel(float wheelDelta,   int x, int y);
 private:
 	// Keeps track of the old mouse position for determining how far the mouse moved in a single frame
-	POINT prevMousePos = POINT();
 
 	Camera* EECamera = nullptr;
 	Renderer* EERenderer = nullptr;
@@ -64,7 +58,6 @@ private:
 	
 	//testing
 	//Light* testLight = nullptr;
-
 
 	// Physics
 	btDefaultCollisionConfiguration* collisionConfiguration = nullptr;
