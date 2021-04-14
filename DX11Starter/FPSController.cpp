@@ -31,13 +31,13 @@ void FPSController::Init()
 			"Blood Sword",					// name
 			"Blood Sword",					// tag
 			"Blood Sword",					// layer
-			"Cone",							// mesh
+			"bloodsword",							// mesh
 			"Red",							// material
 			{"BLOODSWORD"},				// script names
 			1,								// script count
 			XMFLOAT3(0.0f, 0.0f, 0.0f),		// position
 			XMFLOAT3(0.0f, 0.0f, 0.0f),		// rotation
-			XMFLOAT3(1.0f, 3.0f, 1.0f),		// scale
+			XMFLOAT3(1.0f, 1.0f, 1.0f),		// scale
 			0.0f							// mass
 			// defaults work for the rest
 	};
@@ -125,8 +125,10 @@ void FPSController::CheckAllAbilities()
 
 void FPSController::CheckBloodSword()
 {
-	if (mouse->OnLMBDown())
+	if (mouse->OnLMBDown()) 
 	{
+		cout << "LMB" << endl;
+
 		BloodSword* swordScript = (BloodSword*)scriptFunctionsMap[sword->GetName()]["BLOODSWORD"];
 		swordScript->StartSlash();
 	}
@@ -153,6 +155,8 @@ void FPSController::CheckBloodIcicle()
 {
 	if (mouse->OnRMBDown() /*&& bloodIcicleCooldownTimer <= 0*/) 
 	{
+		cout << "RMB" << endl;
+
 		// update position and rotation of the EntityCreationParams
 		icicleParams.position = XMFLOAT3(cam->position.x + direction.x * 2, cam->position.y, cam->position.z + direction.z * 2); 
 		icicleParams.rotationRadians = XMFLOAT3(cam->xRotation + 1.5708f /* 90 degress in radians */ , cam->yRotation, cam->zRotation);
@@ -537,6 +541,7 @@ void FPSController::DampForces()
 
 void FPSController::MouseLook()
 {
+	// TODO: Roll does not work right in release
 	// update camera roll
 	if ((!rollLeft && !rollRight) || (rollLeft && rollRight)) // if side movement keys are not being pressed return to normal camera zRotation depending on what the current rotation is or if both bools are true at the same time straighten cam to avoid jittering
 	{

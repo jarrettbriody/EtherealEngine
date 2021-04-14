@@ -33,6 +33,7 @@ TYPE="MESH" name="Sphere" path="Default/sphere.obj"
 TYPE="MESH" name="Helix" path="Default/helix.obj"
 TYPE="MESH" name="Torus" path="Default/torus.obj"
 TYPE="MESH" name="bloodorb" path="City/bloodorb.obj"
+TYPE="MESH" name="bloodsword" path="City/sword.obj"
 
 TYPE="TEXTURE" name="GrassDiffuse" path="Default/Grass/DefaultGrassDiffuse.jpg"
 TYPE="TEXTURE" name="GrassNormal" path="Default/Grass/DefaultGrassNormal.jpg"
@@ -61,7 +62,6 @@ TYPE="MATERIAL" name="Grey" vShader="DEFAULT" pShader="DEFAULT" diffuseTexture="
 TYPE="MATERIAL" name="Grey4" vShader="DEFAULT" pShader="DEFAULT" diffuseTexture="Grey4" specularExponent="900"
 TYPE="MATERIAL" name="White" vShader="DEFAULT" pShader="DEFAULT" diffuseTexture="White" specularExponent="100"
 TYPE="MATERIAL" name="RedFluid" vShader="Fluid" pShader="DEFAULT" diffuseTexture="Red"
-
 
 
 

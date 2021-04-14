@@ -145,6 +145,8 @@ MousePoint Mouse::GetPos()
 	return { this->x, this->y };
 }
 
+// TODO: Not handling all events given from windows or wierd issue with dequeing event as they are read instead of the end of frame
+
 MouseEvent Mouse::ReadEvent()
 {
 	if (this->eventBuffer.empty())
