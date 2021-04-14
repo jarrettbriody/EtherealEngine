@@ -8,11 +8,18 @@ void TestScript::Init()
 	(*eMap)["barrel_1"]->isCollisionStatic = false;
 	(*eMap)["barrel_1 (2)"]->isCollisionStatic = false;
 	*/
+
+	fluidCallback.vShader = EESceneLoader->vertexShadersMap["Fluid"];
+	fluidCallback.prepassVShader = EESceneLoader->vertexShadersMap["FluidPrepass"];
+	fluidCallback.fillLineY = 0.25f;
+	fluidCallback.waveHeight = 0.05f;
+
+	EERenderer->SetRenderObjectCallback(entity, &fluidCallback);
+	fluidCallback.active = true;
 }
 
 void TestScript::Update()
 {
-	/*
 	//collision barrels
 	if (GetAsyncKeyState(VK_LEFT))
 	{
@@ -34,11 +41,18 @@ void TestScript::Update()
 		entity->Move(0, 0, -0.05f);
 		entity->CalcWorldMatrix();
 	}
+
+	fluidCallback.totalTime = totalTime;
+	fluidCallback.deltaTime = deltaTime;
+	fluidCallback.waveCounter = waveCounter;
+
+	waveCounter++;
+	totalTime += deltaTime;
+	/*
 	if (entity->CheckSATCollisionAndCorrect((*eMap)["Rock (1)"]))
 	{
 		cout << test << endl;
 	}
-
 	//ruin
 	if (GetAsyncKeyState('B') & 0x8000) {
 		(*eMap)["Ruin"]->RotateAroundAxis(Y_AXIS, -0.05f);
@@ -68,6 +82,6 @@ void TestScript::Update()
 
 void TestScript::OnCollision(btCollisionObject* other)
 {
-	Entity* otherE = (Entity*)other->getUserPointer();
-	// cout << otherE->GetName() << endl;
+	//Entity* otherE = (Entity*)((PhysicsWrapper*)other->getUserPointer())->objectPointer;
+	//cout << otherE->GetName() << endl;
 }

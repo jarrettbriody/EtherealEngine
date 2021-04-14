@@ -17,6 +17,14 @@ enum class DecalType {
 	BLOOD8,
 };
 
+/*
+struct DecalDrawInfo {
+	XMFLOAT4X4 world;
+	XMFLOAT4X4 invWorld;
+	int type;
+};
+*/
+
 struct Decal {
 	XMFLOAT4X4 localTransform;
 	XMFLOAT4X4 invLocalTransform;
@@ -36,11 +44,13 @@ class DecalHandler
 {
 private:
 	static DecalHandler* instance;
+
 	DecalHandler();
 	~DecalHandler();
 public:
 	static map<string, DecalBucket*> decalsMap;
 	static vector<DecalBucket*> decalsVec;
+	//static vector<DecalDrawInfo> decalDrawList;
 
 	static bool SetupInstance();
 	static DecalHandler* GetInstance();
@@ -49,5 +59,7 @@ public:
 	void GenerateDecal(Entity* owner, XMFLOAT3 rayDirection, XMFLOAT3 rayHitPosition, XMFLOAT3 boxScale, DecalType decalType);
 
 	bool DestroyDecals(string owner);
+
+	//void UpdateDecals();
 };
 

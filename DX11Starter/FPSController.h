@@ -2,6 +2,7 @@
 #include "ScriptManager.h"
 #include "BloodSword.h"
 #include <WinUser.h>
+#include "DXCore.h"
 
 enum class PlayerState
 {

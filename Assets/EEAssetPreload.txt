@@ -1,0 +1,73 @@
+
+TYPE="VSHADER" name="DEFAULT" cso="DefaultVS" shaderType="DEFAULT"
+TYPE="VSHADER" name="DepthStencil" cso="DepthStencilVS" shaderType="DEFAULT"
+TYPE="VSHADER" name="Sky" cso="SkyVS" shaderType="DEFAULT"
+TYPE="VSHADER" name="Normal" cso="NormalVS" shaderType="NORMAL"
+TYPE="VSHADER" name="DebugLine" cso="DebugLineVS" shaderType="DEFAULT"
+TYPE="VSHADER" name="Decal" cso="DecalVS" shaderType="DEFAULT"
+TYPE="VSHADER" name="Particle" cso="ParticleVS" shaderType="DEFAULT"
+TYPE="VSHADER" name="CPUParticle" cso="CPUParticleVS" shaderType="DEFAULT"
+TYPE="VSHADER" name="Fluid" cso="FluidVS" shaderType="MODIFY_VERTS"
+TYPE="VSHADER" name="FluidPrepass" cso="FluidPrepassVS" shaderType="MODIFY_VERTS"
+
+TYPE="PSHADER" name="DEFAULT" cso="DefaultPS" shaderType="DEFAULT"
+TYPE="PSHADER" name="Sky" cso="SkyPS" shaderType="DEFAULT"
+TYPE="PSHADER" name="Normal" cso="NormalPS" shaderType="NORMAL"
+TYPE="PSHADER" name="DebugLine" cso="DebugLinePS" shaderType="DEFAULT"
+TYPE="PSHADER" name="DEFAULT_SSAO" cso="DefaultPS_SSAO" shaderType="DEFAULT"
+TYPE="PSHADER" name="Decal" cso="DecalPS" shaderType="DEFAULT"
+TYPE="PSHADER" name="DepthStencil" cso="DepthStencilPS" shaderType="DEFAULT"
+TYPE="PSHADER" name="Particle" cso="ParticlePS" shaderType="DEFAULT"
+TYPE="PSHADER" name="CPUParticle" cso="CPUParticlePS" shaderType="DEFAULT"
+
+TYPE="CSHADER" name="InitDeadList" cso="InitDeadListCS"
+TYPE="CSHADER" name="ParticleDrawArgs" cso="ParticleDrawArgsCS"
+TYPE="CSHADER" name="EmitParticle" cso="EmitParticleCS"
+TYPE="CSHADER" name="UpdateParticle" cso="UpdateParticleCS"
+
+TYPE="MESH" name="Cube" path="Default/cube.obj"
+TYPE="MESH" name="InverseCube" path="Default/inverse_cube.obj"
+TYPE="MESH" name="Cylinder" path="Default/cylinder.obj"
+TYPE="MESH" name="Cone" path="Default/cone.obj"
+TYPE="MESH" name="Sphere" path="Default/sphere.obj"
+TYPE="MESH" name="Helix" path="Default/helix.obj"
+TYPE="MESH" name="Torus" path="Default/torus.obj"
+TYPE="MESH" name="bloodorb" path="City/bloodorb.obj"
+
+TYPE="TEXTURE" name="GrassDiffuse" path="Default/Grass/DefaultGrassDiffuse.jpg"
+TYPE="TEXTURE" name="GrassNormal" path="Default/Grass/DefaultGrassNormal.jpg"
+TYPE="TEXTURE" name="Red" path="Default/red.png"
+TYPE="TEXTURE" name="Marble" path="Default/marble.png"
+TYPE="TEXTURE" name="Hedge" path="Default/hedge.jpg"
+TYPE="TEXTURE" name="Grey" path="Default/grey.png"
+TYPE="TEXTURE" name="Grey4" path="Default/grey4.png"
+TYPE="TEXTURE" name="White" path="Default/white.png"
+TYPE="TEXTURE" name="BLOOD1" path="Default/BLOOD/BLOOD1.png"
+TYPE="TEXTURE" name="BLOOD2" path="Default/BLOOD/BLOOD2.png"
+TYPE="TEXTURE" name="BLOOD3" path="Default/BLOOD/BLOOD3.png"
+TYPE="TEXTURE" name="BLOOD4" path="Default/BLOOD/BLOOD4.png"
+TYPE="TEXTURE" name="BLOOD5" path="Default/BLOOD/BLOOD5.png"
+TYPE="TEXTURE" name="BLOOD6" path="Default/BLOOD/BLOOD6.png"
+TYPE="TEXTURE" name="BLOOD7" path="Default/BLOOD/BLOOD7.png"
+TYPE="TEXTURE" name="BLOOD8" path="Default/BLOOD/BLOOD8.png"
+
+//TYPE="MATERIAL" name="" vShader="" pShader="" ambientTexture="" diffuseTexture="" specularColorTexture="" specularHighlightTexture="" alphaTexture="" normalTexture="" ambientColor(0,0,0) diffuseColor(0,0,0) specularColor(0,0,0) specularExponent="0.0" transparency="1.0" illumination="1" ssao="false" hbaoPlus="true"
+TYPE="MATERIAL" name="DEFAULT" vShader="DEFAULT" pShader="DEFAULT"
+TYPE="MATERIAL" name="Grass" vShader="Normal" pShader="Normal" diffuseTexture="GrassDiffuse" normalTexture="GrassNormal"
+TYPE="MATERIAL" name="Red" vShader="DEFAULT" pShader="DEFAULT" diffuseTexture="Red"
+TYPE="MATERIAL" name="Marble" vShader="DEFAULT" pShader="DEFAULT" diffuseTexture="Marble"
+TYPE="MATERIAL" name="Hedge" vShader="DEFAULT" pShader="DEFAULT" diffuseTexture="Hedge"
+TYPE="MATERIAL" name="Grey" vShader="DEFAULT" pShader="DEFAULT" diffuseTexture="Grey" specularExponent="500"
+TYPE="MATERIAL" name="Grey4" vShader="DEFAULT" pShader="DEFAULT" diffuseTexture="Grey4" specularExponent="900"
+TYPE="MATERIAL" name="White" vShader="DEFAULT" pShader="DEFAULT" diffuseTexture="White" specularExponent="100"
+TYPE="MATERIAL" name="RedFluid" vShader="Fluid" pShader="DEFAULT" diffuseTexture="Red"
+
+
+
+
+
+
+
+
+
+

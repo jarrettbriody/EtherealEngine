@@ -246,7 +246,7 @@ void FPSController::CheckHookshot()
 
 			hookshotPoint = closestResult.m_hitPointWorld;
 
-			if (hit->tag->c_str() == std::string("Enemy"))
+			if (hit->tag.STDStr() == std::string("Enemy"))
 			{
 				ps = PlayerState::HookshotLeash;
 				leashedEnemy = (Entity*)hit->GetRBody()->getUserPointer();

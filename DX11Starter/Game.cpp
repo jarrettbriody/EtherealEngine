@@ -23,11 +23,10 @@ Game::~Game()
 {
 	SceneLoader::DestroyInstance();
 
-	Config::Sampler->Release();
+	delete cpuEmitter;
+	delete gpuEmitter;
 
-	skySRV->Release();
-	skyDepthState->Release();
-	skyRasterState->Release();
+	Config::Sampler->Release();
 
 	// FMOD
 	sound[0]->release(); // For now just release the one sound we have assigned
@@ -65,9 +64,10 @@ void Game::Init()
 {
 	//dont delete this, its for finding mem leaks
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-	//_CrtSetBreakAlloc(327967);
+	//_CrtSetBreakAlloc(193404);
 	//_CrtSetBreakAlloc(49892);
 
+	srand(static_cast <unsigned> (time(0)));
 	// Input 
 	if (Keyboard::SetupInstance())
 	{
@@ -87,10 +87,6 @@ void Game::Init()
 	Config::DynamicsWorld = new btDiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
 	Config::DynamicsWorld->setGravity(btVector3(0, -10.0f, 0));
 
-	//DirectX::CreateDDSTextureFromFile(Config::Device, L"../../Assets/Textures/SunnyCubeMap.dds", 0, &skySRV);
-	DirectX::CreateDDSTextureFromFile(Config::Device, L"../../Assets/Textures/night4.dds", 0, &skySRV);
-	//DirectX::CreateDDSTextureFromFile(Config::Device, L"../../Assets/Textures/pink.dds", 0, &skySRV);
-
 	D3D11_SAMPLER_DESC samplerDesc = {};
 	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
 	samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
@@ -101,24 +97,13 @@ void Game::Init()
 
 	Config::Device->CreateSamplerState(&samplerDesc, &Config::Sampler);
 
-	D3D11_RASTERIZER_DESC skyRD = {};
-	skyRD.CullMode = D3D11_CULL_FRONT;
-	skyRD.FillMode = D3D11_FILL_SOLID;
-	skyRD.DepthClipEnable = true;
-	Config::Device->CreateRasterizerState(&skyRD, &skyRasterState);
-
-	D3D11_DEPTH_STENCIL_DESC skyDS = {};
-	skyDS.DepthEnable = true;
-	skyDS.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
-	skyDS.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
-	Config::Device->CreateDepthStencilState(&skyDS, &skyDepthState);
-
 	MemoryAllocator::SetupInstance(Config::MemoryAllocatorSize, Config::MemoryAllocatorAlignment);
 	EEMemoryAllocator = MemoryAllocator::GetInstance();
 	EEMemoryAllocator->CreatePool((unsigned int)MEMORY_POOL::ENTITY_POOL, Config::MemoryAllocatorEntityPoolSize, sizeof(Entity));
 	EEMemoryAllocator->CreatePool((unsigned int)MEMORY_POOL::MESH_POOL, Config::MemoryAllocatorMeshPoolSize, sizeof(Mesh));
 	EEMemoryAllocator->CreatePool((unsigned int)MEMORY_POOL::MATERIAL_POOL, Config::MemoryAllocatorMaterialPoolSize, sizeof(Material));
 	EEMemoryAllocator->CreatePool((unsigned int)MEMORY_POOL::DECAL_POOL, Config::MemoryAllocatorDecalPoolSize, sizeof(DecalBucket));
+	//EEMemoryAllocator->CreatePool((unsigned int)MEMORY_POOL::PARTICLE_POOL, Config::MemoryAllocatorParticlePoolSize, sizeof(Particle));
 
 	EECamera = new Camera();
 	EECamera->UpdateProjectionMatrix();
@@ -126,19 +111,17 @@ void Game::Init()
 	SceneLoader::SetupInstance();
 	EESceneLoader = SceneLoader::GetInstance();
 
-	EESceneLoader->LoadShaders();
+	EESceneLoader->LoadAssetPreloadFile();
 
-	EESceneLoader->LoadDefaultMeshes();
-	EESceneLoader->LoadDefaultTextures();
-	EESceneLoader->LoadDefaultMaterials();
+	//EESceneLoader->LoadShaders();
+
+	//EESceneLoader->LoadDefaultMeshes();
+	//EESceneLoader->LoadDefaultTextures();
+	//EESceneLoader->LoadDefaultMaterials();
 
 	EESceneLoader->SetScriptLoader([](Entity* e, string script) {Scripts::CreateScript(e, script); });
 
-	//EESceneLoader->LoadScene("ArenaV2");
-
-	EESceneLoader->SetModelPath("../../Assets/Models/City/");
-	EESceneLoader->LoadScene("City");
-
+	/*
 	Light* dLight = new Light;
 	dLight->Type = LIGHT_TYPE_DIR;
 	XMFLOAT3 c = XMFLOAT3(1.0f, 252.0f / 255.0f, 222.0f / 255.0f);
@@ -147,6 +130,7 @@ void Game::Init()
 	dLight->Direction = d;
 	dLight->Intensity = 0.25f;
 	dLight->Position = XMFLOAT3(-334.0f, 179.5f, -175.9f);
+	*/
 
 	/*testLight = new Light;
 	testLight->Type = LIGHT_TYPE_SPOT;
@@ -164,6 +148,7 @@ void Game::Init()
 	EERenderer = Renderer::GetInstance();
 	EERenderer->AddCamera("main", EECamera);
 	EERenderer->EnableCamera("main");
+
 	RendererShaders rShaders;
 	rShaders.depthStencilVS = EESceneLoader->vertexShadersMap["DepthStencil"];
 	rShaders.depthStencilPS = EESceneLoader->pixelShadersMap["DepthStencil"];
@@ -171,17 +156,29 @@ void Game::Init()
 	rShaders.debugLinePS = EESceneLoader->pixelShadersMap["DebugLine"];
 	rShaders.decalVS = EESceneLoader->vertexShadersMap["Decal"];
 	rShaders.decalPS = EESceneLoader->pixelShadersMap["Decal"];
+	rShaders.skyVS = EESceneLoader->vertexShadersMap["Sky"];
+	rShaders.skyPS = EESceneLoader->pixelShadersMap["Sky"];
+
 	EERenderer->SetRendererShaders(rShaders);
+	EERenderer->InitDepthStencil();
+	EERenderer->InitHBAOPlus();
+	EERenderer->InitBlendState();
+	EESceneLoader->EERenderer = EERenderer;
+
+	//EESceneLoader->LoadScene("ArenaV2");
+
+	EESceneLoader->SetModelPath("../../Assets/Models/City/");
+	EESceneLoader->LoadScene("City");
+
+	EERenderer->SetShadowMapResolution(4096);
+	EERenderer->InitShadows();
+	EERenderer->InitSkybox();
+
 	EERenderer->SetEntities(&(EESceneLoader->sceneEntities));
-	EERenderer->AddLight("Sun", dLight);
+	
 	EERenderer->SendAllLightsToShader(EESceneLoader->pixelShadersMap["DEFAULT"]);
 	EERenderer->SendAllLightsToShader(EESceneLoader->pixelShadersMap["Normal"]);
 	EERenderer->SendAllLightsToShader(EESceneLoader->pixelShadersMap["Decal"]);
-	EERenderer->SetShadowMapResolution(4096);
-	EERenderer->InitShadows();
-	EERenderer->InitDepthStencil();
-	EERenderer->InitHBAOPlus();
-	EESceneLoader->EERenderer = EERenderer;
 
 	ID3D11ShaderResourceView* decals[8];
 	decals[0] = EESceneLoader->defaultTexturesMap["BLOOD1"];
@@ -192,7 +189,101 @@ void Game::Init()
 	decals[5] = EESceneLoader->defaultTexturesMap["BLOOD6"];
 	decals[6] = EESceneLoader->defaultTexturesMap["BLOOD7"];
 	decals[7] = EESceneLoader->defaultTexturesMap["BLOOD8"];
-	EERenderer->SetDecals(EESceneLoader->defaultMeshesMap["Cube"], decals);
+	EERenderer->SetDecals(decals);
+
+	EERenderer->SetMeshes(EESceneLoader->defaultMeshesMap["Cube"], EESceneLoader->defaultMeshesMap["InverseCube"]);
+
+	DefaultGPUParticleShaders gpuParticleShaders;
+	gpuParticleShaders.copyDrawCountCS = EESceneLoader->computeShadersMap["ParticleDrawArgs"];
+	gpuParticleShaders.initDeadListCS = EESceneLoader->computeShadersMap["InitDeadList"];
+	gpuParticleShaders.particleEmissionCS = EESceneLoader->computeShadersMap["EmitParticle"];
+	gpuParticleShaders.particleUpdateCS = EESceneLoader->computeShadersMap["UpdateParticle"];
+	gpuParticleShaders.particleVS = EESceneLoader->vertexShadersMap["Particle"];
+	gpuParticleShaders.particlePS = EESceneLoader->pixelShadersMap["Particle"];
+	GPUParticleEmitter::SetDefaultShaders(gpuParticleShaders);
+
+	DefaultCPUParticleShaders cpuParticleShaders;
+	cpuParticleShaders.particleVS = EESceneLoader->vertexShadersMap["CPUParticle"];
+	cpuParticleShaders.particlePS = EESceneLoader->pixelShadersMap["CPUParticle"];
+	CPUParticleEmitter::SetDefaultShaders(cpuParticleShaders);
+
+	ParticleEmitterDescription emitDesc;
+	emitDesc.emitterPosition = XMFLOAT3(-410.543f, 12.0f, -90.21f);
+	emitDesc.colorCount = 1;
+	ParticleColor partColors[1] = {
+		{XMFLOAT4(0.5f,0,0,1.0f),10},
+		//{XMFLOAT4(0,1,0,1),10},
+		//{XMFLOAT4(0,0,1,1),10},
+		//{XMFLOAT4(1,1,0,1),10},
+		//{XMFLOAT4(1,1,1,1),10},
+		//{XMFLOAT4(0,1,1,1),10},
+		//{XMFLOAT4(1,0,1,1),10},
+		//{XMFLOAT4(1,0,0,1),10},
+	};
+	emitDesc.colors = partColors;
+	emitDesc.maxParticles = 100;
+	emitDesc.emissionRate = 3.0f;
+	//emitDesc.emissionRotation = XMFLOAT3(-XM_PIDIV2,0.0f,0.0f);
+	emitDesc.emitterDirection = Y_AXIS;
+	emitDesc.particleInitMinSpeed = 10.0f;
+	emitDesc.particleInitMaxSpeed = 15.0f;
+	emitDesc.particleMinLifetime = 10.0f;
+	emitDesc.particleMaxLifetime = 15.0f;
+	emitDesc.particleInitMinScale = 0.1f;
+	emitDesc.particleInitMaxScale = 0.2f;
+	emitDesc.particleAcceleration = XMFLOAT3(0.0f, 0.0f, -20.0f);
+
+	cpuEmitter = new CPUParticleEmitter(emitDesc);
+
+	cpuEmitter->SetCollisionsEnabled([](void* collision) {
+		btPersistentManifold* manifold = (btPersistentManifold*)collision;
+		btCollisionObject* obA = (btCollisionObject*)(manifold->getBody0());
+		btCollisionObject* obB = (btCollisionObject*)(manifold->getBody1());
+	
+		PhysicsWrapper* wrapperA = (PhysicsWrapper*)obA->getUserPointer();
+		PhysicsWrapper* wrapperB = (PhysicsWrapper*)obB->getUserPointer();
+	
+		if (wrapperA->type == PHYSICS_WRAPPER_TYPE::PARTICLE && wrapperB->type == PHYSICS_WRAPPER_TYPE::ENTITY || 
+			wrapperB->type == PHYSICS_WRAPPER_TYPE::PARTICLE && wrapperA->type == PHYSICS_WRAPPER_TYPE::ENTITY) {
+
+			ParticlePhysicsWrapper* particleWrapper = (wrapperA->type == PHYSICS_WRAPPER_TYPE::PARTICLE) ? (ParticlePhysicsWrapper*)wrapperA->objectPointer : (ParticlePhysicsWrapper*)wrapperB->objectPointer;
+			Entity* entity = (wrapperA->type == PHYSICS_WRAPPER_TYPE::ENTITY) ? (Entity*)wrapperA->objectPointer : (Entity*)wrapperB->objectPointer;
+	
+			if (entity->layer == "decal") {
+				Particle* particle = (Particle*)particleWrapper->particle;
+				CPUParticleEmitter* emitter = (CPUParticleEmitter*)particleWrapper->emitter;
+				ParticleEmitter* emitterBase = (ParticleEmitter*)emitter;
+
+				//if (manifold->getNumContacts() <= 0) return;
+
+				//btVector3 point = manifold->getContactPoint(0).getPositionWorldOnA();
+				//XMFLOAT3 hitLocation = XMFLOAT3(point.getX(), point.getY(), point.getZ());
+
+				XMFLOAT3 particleWorld;
+				XMVECTOR particlePos = XMLoadFloat3(&particle->position);
+				XMMATRIX emitterWorld = XMMatrixTranspose(XMLoadFloat4x4(&emitterBase->GetWorldMatrix()));
+				particlePos.m128_f32[3] = 1.0f;
+				XMStoreFloat3(&particleWorld, XMVector4Transform(particlePos, emitterWorld));
+
+				XMFLOAT3 normalizedVel;
+				XMVECTOR particleVel = XMLoadFloat3(&particle->velocity);
+				particleVel.m128_f32[3] = 0.0f;
+				XMStoreFloat3(&normalizedVel, XMVector3Normalize(XMVector4Transform(particleVel, emitterWorld)));
+
+				DecalHandler::GetInstance()->GenerateDecal(entity, normalizedVel, particleWorld, XMFLOAT3(10.0f, 10.0f, 15.0f), DecalType(rand() % 8));
+
+				//cout << particleWrapper->particleIndex << endl;
+
+				emitter->KillParticle(particleWrapper->particleIndex);
+			}
+		}
+	});
+
+	emitDesc.maxParticles = 2000;
+	emitDesc.particleInitMinScale = 0.25f;
+	emitDesc.particleInitMaxScale = 0.3f;
+	emitDesc.emissionRate = 100.0f;
+	gpuEmitter = new GPUParticleEmitter(emitDesc);
 
 	Entity* e;
 	for (size_t i = 0; i < EESceneLoader->sceneEntities.size(); i++)
@@ -242,7 +333,7 @@ void Game::Init()
 	fmodResult = fmodSystem->playSound(backgroundMusic, 0, false, &musicChannel); // Start playing the 3D sound
 	FmodErrorCheck(fmodResult);
 
-	FMOD_VECTOR pos = { 1.0f, 1.0f, 1.0f };
+	FMOD_VECTOR pos = { 1.0f, 50.0f, 1.0f };
 	FMOD_VECTOR vel = { 0, 0, 0 };
 
 	// Set the 3D values for the channel
@@ -265,12 +356,29 @@ void Game::Init()
 		Config::DynamicsWorld->setDebugDrawer(physicsDraw);
 		Config::DynamicsWorld->debugDrawWorld(); // Use this to draw physics world once on start 
 	}
+
+	//-------------------------------------------------------
+	// Behavior tree tests
+	//-------------------------------------------------------
+
+	TestBehavior tb;
+	if (tb.initializeCalled == 0)
+		cout << "TEST 1 - SUCCESS" << endl;
+	else
+		cout << "TEST 1 - FAILURE" << endl;
+	tb.Tick();
+	if (tb.initializeCalled == 1)
+		cout << "TEST 2 - SUCCESS" << endl;
+	else
+		cout << "TEST 2 - FAILURE" << endl;
 }
 
 void Game::OnResize()
 {
 	DXCore::OnResize();
 	EECamera->UpdateProjectionMatrix();
+	EERenderer->InitDepthStencil();
+	EERenderer->InitHBAOPlus();
 }
 
 void Game::Update(float deltaTime, float totalTime)
@@ -293,10 +401,10 @@ void Game::Update(float deltaTime, float totalTime)
 
 	// Play the 2D sound only if the channel group is not playing something
 	sfxGroup->isPlaying(&isPlaying);
-	if (GetAsyncKeyState('P') & 0x8000 && !isPlaying) {
-		fmodResult = fmodSystem->playSound(sound[0], sfxGroup, false, 0); // Play the sound using any channel in the sfx group (free channels are used first)
-		FmodErrorCheck(fmodResult);
-	}
+	//if (GetAsyncKeyState('P') & 0x8000 && !isPlaying) {
+		//fmodResult = fmodSystem->playSound(sound[0], sfxGroup, false, 0); // Play the sound using any channel in the sfx group (free channels are used first)
+		//FmodErrorCheck(fmodResult);
+	//}
 
 	// Mute/unmute the master group
 	if (GetAsyncKeyState('M') & 0x8000)
@@ -312,6 +420,9 @@ void Game::Update(float deltaTime, float totalTime)
 		sf->CallUpdate(deltaTime);
 	}
 
+	cpuEmitter->Update(deltaTime, totalTime, EERenderer->GetCamera("main")->GetViewMatrix());
+	gpuEmitter->Update(deltaTime, totalTime);
+
 	int numManifolds = Config::DynamicsWorld->getDispatcher()->getNumManifolds();
 	for (int i = 0; i < numManifolds; i++)
 	{
@@ -319,23 +430,36 @@ void Game::Update(float deltaTime, float totalTime)
 		btCollisionObject* obA = (btCollisionObject*)(contactManifold->getBody0());
 		btCollisionObject* obB = (btCollisionObject*)(contactManifold->getBody1());
 
-		Entity* a = (Entity*)obA->getUserPointer();
-		Entity* b = (Entity*)obB->getUserPointer();
+		PhysicsWrapper* wrapperA = (PhysicsWrapper*)obA->getUserPointer();
+		PhysicsWrapper* wrapperB = (PhysicsWrapper*)obB->getUserPointer();
 
-		if (ScriptManager::scriptFunctionsMap.count(a->GetName())) {
-			vector<ScriptManager*> scripts = ScriptManager::scriptFunctionsMap[a->GetName()];
-			for (size_t j = 0; j < scripts.size(); j++)
-			{
-				scripts[j]->CallOnCollision(obB);
+		if(wrapperA->type == PHYSICS_WRAPPER_TYPE::ENTITY && wrapperB->type == PHYSICS_WRAPPER_TYPE::ENTITY) {
+			Entity* a = (Entity*)wrapperA->objectPointer;
+			Entity* b = (Entity*)wrapperB->objectPointer;
+
+			if (ScriptManager::scriptFunctionsMap.count(a->GetName())) {
+				vector<ScriptManager*> scripts = ScriptManager::scriptFunctionsMap[a->GetName()];
+				for (size_t j = 0; j < scripts.size(); j++)
+				{
+					scripts[j]->CallOnCollision(obB);
+				}
+			}
+
+			if (ScriptManager::scriptFunctionsMap.count(b->GetName())) {
+				vector<ScriptManager*> scripts = ScriptManager::scriptFunctionsMap[b->GetName()];
+				for (size_t j = 0; j < scripts.size(); j++)
+				{
+					scripts[j]->CallOnCollision(obB);
+				}
 			}
 		}
 
-		if (ScriptManager::scriptFunctionsMap.count(b->GetName())) {
-			vector<ScriptManager*> scripts = ScriptManager::scriptFunctionsMap[b->GetName()];
-			for (size_t j = 0; j < scripts.size(); j++)
-			{
-				scripts[j]->CallOnCollision(obA);
-			}
+		if (wrapperA->type == PHYSICS_WRAPPER_TYPE::PARTICLE && wrapperB->type == PHYSICS_WRAPPER_TYPE::ENTITY) {
+			wrapperA->callback(contactManifold);
+		}
+
+		if (wrapperB->type == PHYSICS_WRAPPER_TYPE::PARTICLE && wrapperA->type == PHYSICS_WRAPPER_TYPE::ENTITY) {
+			wrapperB->callback(contactManifold);
 		}
 	}
 
@@ -351,6 +475,8 @@ void Game::Update(float deltaTime, float totalTime)
 
 	EECamera->Update();
 
+	//EEDecalHandler->UpdateDecals();
+
 	AudioStep();
 
 	/*if (!GetAsyncKeyState(VK_CONTROL))
@@ -358,6 +484,7 @@ void Game::Update(float deltaTime, float totalTime)
 		testLight->Position = camera->position;
 		testLight->Direction = camera->direction;
 	}*/
+
 }
 
 void Game::PhysicsStep(float deltaTime)
@@ -373,23 +500,29 @@ void Game::PhysicsStep(float deltaTime)
 	for (int i = 0; i < Config::DynamicsWorld->getNumCollisionObjects(); i++)
 	{
 		obj = Config::DynamicsWorld->getCollisionObjectArray()[i];
-		body = btRigidBody::upcast(obj);
 
-		//transform = body->getWorldTransform();
-		entity = (Entity*)body->getUserPointer();
+		if (obj->getInternalType() == btCollisionObject::CO_RIGID_BODY) {
+			body = btRigidBody::upcast(obj);
 
-		transform = body->getCenterOfMassTransform();
-		btVector3 p = transform.getOrigin();
-		//XMFLOAT3 centerLocal = entity->GetCollider()->GetCenterLocal();
-		//XMFLOAT3 scale = entity->GetScale();
-		//centerLocal = XMFLOAT3(centerLocal.x * scale.x, centerLocal.y * scale.y, centerLocal.z * scale.z);
-		//XMFLOAT3 pos = XMFLOAT3(p.getX() - centerLocal.x, p.getY() - centerLocal.y, p.getZ() - centerLocal.z);
-		XMFLOAT3 pos = XMFLOAT3(p.getX(), p.getY(), p.getZ());
+			//transform = body->getWorldTransform();
+			PhysicsWrapper* wrapper = (PhysicsWrapper*)body->getUserPointer();
+			if (wrapper->type != PHYSICS_WRAPPER_TYPE::ENTITY) continue;
 
-		btQuaternion q = transform.getRotation();
-		entity->SetPosition(pos);
-		entity->SetRotation(XMFLOAT4(q.getX(), q.getY(), q.getZ(), q.getW()));
-		entity->CalcWorldMatrix();
+			entity = (Entity*)wrapper->objectPointer;
+
+			transform = body->getCenterOfMassTransform();
+			btVector3 p = transform.getOrigin();
+			//XMFLOAT3 centerLocal = entity->GetCollider()->GetCenterLocal();
+			//XMFLOAT3 scale = entity->GetScale();
+			//centerLocal = XMFLOAT3(centerLocal.x * scale.x, centerLocal.y * scale.y, centerLocal.z * scale.z);
+			//XMFLOAT3 pos = XMFLOAT3(p.getX() - centerLocal.x, p.getY() - centerLocal.y, p.getZ() - centerLocal.z);
+			XMFLOAT3 pos = XMFLOAT3(p.getX(), p.getY(), p.getZ());
+
+			btQuaternion q = transform.getRotation();
+			entity->SetPosition(pos);
+			entity->SetRotation(XMFLOAT4(q.getX(), q.getY(), q.getZ(), q.getW()));
+			entity->CalcWorldMatrix();
+		}
 	}
 
 	//EESceneLoader->sceneEntities[0]->GetRBody()->setLinearVelocity(btVector3(0.0f, EESceneLoader->sceneEntities[0]->GetRBody()->getLinearVelocity().getY(), 0.0f));
@@ -399,40 +532,65 @@ void Game::EnforcePhysics()
 {
 	btCollisionObject* obj = nullptr;
 	btRigidBody* body = nullptr;
+	btGhostObject* ghost = nullptr;
 	btTransform transform;
 	Entity* entity = nullptr;
 
 	for (int i = 0; i < Config::DynamicsWorld->getNumCollisionObjects(); i++)
 	{
 		obj = Config::DynamicsWorld->getCollisionObjectArray()[i];
-		body = btRigidBody::upcast(obj);
 
-		transform = body->getCenterOfMassTransform();
-		entity = (Entity*)body->getUserPointer();
-		entity->CalcWorldMatrix();
+		if (obj->getInternalType() == btCollisionObject::CO_RIGID_BODY) {
+			body = btRigidBody::upcast(obj);
 
-		XMFLOAT3 pos = entity->GetPosition();
-		//XMFLOAT3 centerLocal = entity->GetCollider()->GetCenterLocal();
-		//XMFLOAT3 scale = entity->GetScale();
-		//centerLocal = XMFLOAT3(centerLocal.x * scale.x, centerLocal.y * scale.y, centerLocal.z * scale.z);
-		//pos = XMFLOAT3(pos.x + centerLocal.x, pos.y + centerLocal.y, pos.z + centerLocal.z);
-		pos = XMFLOAT3(pos.x, pos.y, pos.z);
+			transform = body->getCenterOfMassTransform();
 
-		XMFLOAT4 rot = entity->GetRotationQuaternion();
+			PhysicsWrapper* wrapper = (PhysicsWrapper*)body->getUserPointer();
 
-		btVector3 transformPos = btVector3(pos.x, pos.y, pos.z);
-		transform.setOrigin(transformPos);
+			if (wrapper->type == PHYSICS_WRAPPER_TYPE::ENTITY) {
+				entity = (Entity*)wrapper->objectPointer;
+				entity->CalcWorldMatrix();
 
-		btQuaternion res = btQuaternion(rot.x, rot.y, rot.z, rot.w);
-		transform.setRotation(res);
+				XMFLOAT3 pos = entity->GetPosition();
+				//XMFLOAT3 centerLocal = entity->GetCollider()->GetCenterLocal();
+				//XMFLOAT3 scale = entity->GetScale();
+				//centerLocal = XMFLOAT3(centerLocal.x * scale.x, centerLocal.y * scale.y, centerLocal.z * scale.z);
+				//pos = XMFLOAT3(pos.x + centerLocal.x, pos.y + centerLocal.y, pos.z + centerLocal.z);
+				pos = XMFLOAT3(pos.x, pos.y, pos.z);
 
-		//TODO: ENFORCE LOCAL SCALING OF COLLIDER
+				XMFLOAT4 rot = entity->GetRotationQuaternion();
 
-		body->setCenterOfMassTransform(transform);
+				btVector3 transformPos = btVector3(pos.x, pos.y, pos.z);
+				transform.setOrigin(transformPos);
 
-		// body->getMotionState()->setWorldTransform(transform);
+				btQuaternion res = btQuaternion(rot.x, rot.y, rot.z, rot.w);
+				transform.setRotation(res);
 
-		// body->getMotionState()->getWorldTransform(transform);
+				//TODO: ENFORCE LOCAL SCALING OF COLLIDER
+
+				body->setCenterOfMassTransform(transform);
+
+				// body->getMotionState()->setWorldTransform(transform);
+
+				// body->getMotionState()->getWorldTransform(transform);
+			}
+		}
+
+		else if (obj->getInternalType() == btCollisionObject::CO_GHOST_OBJECT) {
+			ghost = btGhostObject::upcast(obj);
+
+			transform = ghost->getWorldTransform();
+
+			PhysicsWrapper* wrapper = (PhysicsWrapper*)ghost->getUserPointer();
+
+			//if (wrapper->type == PHYSICS_WRAPPER_TYPE::PARTICLE) {
+			//	ParticlePhysicsWrapper* particleWrap = (ParticlePhysicsWrapper*)wrapper->objectPointer;
+			//	if (particleWrap->particleIndex == 4) {
+			//		btVector3 p = transform.getOrigin();
+			//		std::cout << p.getX() << " | " << p.getY() << " | " << p.getZ() << std::endl;
+			//	}
+			//}
+		}
 	}
 }
 
@@ -476,37 +634,12 @@ void Game::Draw(float deltaTime, float totalTime)
 	EERenderer->RenderDepthStencil();
 	EERenderer->RenderFrame();
 
-	DrawSky();
+	EERenderer->RenderSkybox();
+
+	cpuEmitter->Draw(EERenderer->GetCamera("main")->GetViewMatrix(), EERenderer->GetCamera("main")->GetProjMatrix());
+	gpuEmitter->Draw(EERenderer->GetCamera("main")->GetViewMatrix(), EERenderer->GetCamera("main")->GetProjMatrix());
 
 	EERenderer->PresentFrame();
-}
-
-
-void Game::DrawSky() {
-	ID3D11Buffer* vb = EESceneLoader->defaultMeshesMap["Cube"]->GetVertexBuffer();
-	ID3D11Buffer* ib = EESceneLoader->defaultMeshesMap["Cube"]->GetIndexBuffer();
-
-	UINT stride = sizeof(Vertex);
-	UINT offset = 0;
-	Config::Context->IASetVertexBuffers(0, 1, &vb, &stride, &offset);
-	Config::Context->IASetIndexBuffer(ib, DXGI_FORMAT_R32_UINT, 0);
-
-	EESceneLoader->vertexShadersMap["Sky"]->SetMatrix4x4("view", EECamera->GetViewMatrix());
-	EESceneLoader->vertexShadersMap["Sky"]->SetMatrix4x4("projection", EECamera->GetProjMatrix());
-	EESceneLoader->vertexShadersMap["Sky"]->CopyAllBufferData();
-	EESceneLoader->vertexShadersMap["Sky"]->SetShader();
-
-	EESceneLoader->pixelShadersMap["Sky"]->SetShaderResourceView("Sky", skySRV);
-	EESceneLoader->pixelShadersMap["Sky"]->SetSamplerState("BasicSampler", Config::Sampler);
-	EESceneLoader->pixelShadersMap["Sky"]->SetShader();
-
-	Config::Context->RSSetState(skyRasterState);
-	Config::Context->OMSetDepthStencilState(skyDepthState, 0);
-
-	Config::Context->DrawIndexed(EESceneLoader->defaultMeshesMap["Cube"]->GetIndexCount(), 0, 0);
-
-	Config::Context->RSSetState(0);
-	Config::Context->OMSetDepthStencilState(0, 0);
 }
 
 void Game::GarbageCollect()
@@ -589,7 +722,7 @@ void Game::OnMouseDown(WPARAM buttonState, int x, int y)
 	XMMATRIX world = XMMatrixTranspose(XMLoadFloat4x4(&wm));
 
 	// Get the unprojected vector of the mouse click position in world space
-	XMVECTOR unprojVec = XMVector3Unproject(XMVectorSet(x, y, 1.0f, 1.0f), 0, 0, 1600, 900, 0.0f, 1.0f, proj, view, world);
+	XMVECTOR unprojVec = XMVector3Unproject(XMVectorSet(x, y, 1.0f, 1.0f), 0, 0, Config::ViewPortWidth, Config::ViewPortHeight, 0.0f, 1.0f, proj, view, world);
 	XMFLOAT3 start = EECamera->position;
 	XMFLOAT3 end = XMFLOAT3(XMVectorGetX(unprojVec), XMVectorGetY(unprojVec), XMVectorGetZ(unprojVec));
 	//printf("Projected values|- X: %f, Y: %f, Z: %f\n", end.x, end.y, end.z);
@@ -634,50 +767,50 @@ void Game::OnMouseDown(WPARAM buttonState, int x, int y)
 		if (closestResult.hasHit())
 		{
 			// Get the entity associated with the rigid body we hit
-			Entity* hit = (Entity*)(closestResult.m_collisionObject->getUserPointer());
-			printf("Hit: %s\n", hit->GetName().c_str());
-			btRigidBody* rigidBody = hit->GetRBody();
+			PhysicsWrapper* wrapper = (PhysicsWrapper*)closestResult.m_collisionObject->getUserPointer();
+			if (wrapper->type == PHYSICS_WRAPPER_TYPE::ENTITY) {
+				Entity* hit = (Entity*)(wrapper->objectPointer);
+				printf("Hit: %s\n", hit->GetName().c_str());
+				btRigidBody* rigidBody = hit->GetRBody();
 
-			/*
-			// In order to update the values associated with the rigid body we need to remove it from the dynamics world first
-			Config::DynamicsWorld->removeRigidBody(rigidBody);
-			btVector3 inertia(0, 0, 0);
-			float mass = 1.0f;
-			rigidBody->getCollisionShape()->calculateLocalInertia(mass, inertia);
-			rigidBody->setActivationState(DISABLE_DEACTIVATION);
-			rigidBody->setMassProps(mass, inertia);
+				/*
+				// In order to update the values associated with the rigid body we need to remove it from the dynamics world first
+				Config::DynamicsWorld->removeRigidBody(rigidBody);
+				btVector3 inertia(0, 0, 0);
+				float mass = 1.0f;
+				rigidBody->getCollisionShape()->calculateLocalInertia(mass, inertia);
+				rigidBody->setActivationState(DISABLE_DEACTIVATION);
+				rigidBody->setMassProps(mass, inertia);
+				*/
 
-			// Useful functions for updating an object in motion, but not really needed here
-			/*
-			rigidBody->setLinearFactor(btVector3(1, 1, 1));
-			rigidBody->setAngularFactor(btVector3(1, 1, 1));
-			rigidBody->updateInertiaTensor();
-			rigidBody->clearForces();
-			btTransform transform;
-			transform.setIdentity();
-			rigidBody->getMotionState()->getWorldTransform(transform);
-			float x = transform.getOrigin().getX();
-			float y = transform.getOrigin().getY();
-			float z = transform.getOrigin().getZ();
-			transform.setOrigin(btVector3(x, y, z));
-			rigidBody->getCollisionShape()->setLocalScaling(btVector3(1, 1, 1));
-			rigidBody->setWorldTransform(transform); 
-			
+				// Useful functions for updating an object in motion, but not really needed here
+				/*
+				rigidBody->setLinearFactor(btVector3(1, 1, 1));
+				rigidBody->setAngularFactor(btVector3(1, 1, 1));
+				rigidBody->updateInertiaTensor();
+				rigidBody->clearForces();
+				btTransform transform;
+				transform.setIdentity();
+				rigidBody->getMotionState()->getWorldTransform(transform);
+				float x = transform.getOrigin().getX();
+				float y = transform.getOrigin().getY();
+				float z = transform.getOrigin().getZ();
+				transform.setOrigin(btVector3(x, y, z));
+				rigidBody->getCollisionShape()->setLocalScaling(btVector3(1, 1, 1));
+				rigidBody->setWorldTransform(transform); 
+				
+				btVector3 h = closestResult.m_hitPointWorld;
+				XMFLOAT3 hitLocation(h.getX(), h.getY(), h.getZ());
+				EEDecalHandler->GenerateDecal(hit, XMFLOAT3(hitLocation.x - start.x, hitLocation.y - start.y, hitLocation.z - start.z), hitLocation, XMFLOAT3(10.0f, 10.0f, 15.0f), DecalType(rand() % 8));
 
-			btVector3 h = closestResult.m_hitPointWorld;
-			XMFLOAT3 hitLocation(h.getX(), h.getY(), h.getZ());
-			EEDecalHandler->GenerateDecal(hit, XMFLOAT3(hitLocation.x - start.x, hitLocation.y - start.y, hitLocation.z - start.z), hitLocation, XMFLOAT3(10.0f, 10.0f, 15.0f), DecalType(rand() % 8));
+				//Config::DynamicsWorld->addRigidBody(rigidBody); // Add the rigid body back into bullet
 
-			/*
-			Config::DynamicsWorld->addRigidBody(rigidBody); // Add the rigid body back into bullet		
-
-			if (hit->MeshHasChildren()) {
-				EESceneLoader->SplitMeshIntoChildEntities(hit, 0.5f);
+				if (hit->MeshHasChildren()) {
+					EESceneLoader->SplitMeshIntoChildEntities(hit, 0.5f);
+				}
 			}
-			
 		}
 	}
-	
 	SetCapture(hWnd);
 }
 

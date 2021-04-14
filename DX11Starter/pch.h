@@ -27,6 +27,7 @@
 
 //bullet
 #include "btBulletDynamicsCommon.h"
+#include "BulletCollision\CollisionDispatch\btGhostObject.h"
 #include "BulletCollision/NarrowPhaseCollision/btRaycastCallback.h"
 
 //HBAO+

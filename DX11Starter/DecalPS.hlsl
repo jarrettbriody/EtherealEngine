@@ -45,7 +45,8 @@ cbuffer constantPerFrame : register(b2) {
 
 Texture2D DepthBuffer	  : register(t0);
 Texture2D ShadowMap		  : register(t1);
-Texture2D Decal			  :  register(t2);
+Texture2D Decal			  : register(t2);
+Texture2D<uint> EntityInfoBuffer	  : register(t3);
 
 SamplerState BasicSampler               : register(s0);
 SamplerComparisonState ShadowSampler	: register(s1);
@@ -62,6 +63,11 @@ SamplerComparisonState ShadowSampler	: register(s1);
 float4 main(VertexToPixel input) : SV_TARGET
 {
 	float3 pixelIndex = float3(input.position.xy, 0);
+
+	unsigned int entityInfo = EntityInfoBuffer.Load(pixelIndex).r;
+
+	if (entityInfo != 1) discard;
+
 	float  depth = DepthBuffer.Load(pixelIndex).r;
 
 	input.viewRay = normalize(input.viewRay);
@@ -78,7 +84,7 @@ float4 main(VertexToPixel input) : SV_TARGET
 
 	float4 surfaceColor = Decal.Sample(BasicSampler, decalUV);
 
-	//float3 decalUV = float3((pos.xy + 0.5f) * 512, 0);
+	//float3 decalUV = float3((objPos.xy + 0.5f) * 512, 0);
 
 	//float4 surfaceColor = Decal.Load(decalUV);
 
@@ -107,7 +113,7 @@ float4 main(VertexToPixel input) : SV_TARGET
 	float3 toCameraVector = normalize(cameraPos - input.worldPos);
 
 
-	float3 finalColor = (surfaceColor * 0.1f) * shadowAmount + (surfaceColor * 0.01f);;
+	float3 finalColor = (surfaceColor * 0.1f) * shadowAmount + (surfaceColor * 0.01f);
 	/*
 	float3 finalColor = float3(0.f, 0.f, 0.f);
 	for (int i = 0; i < lightCount; i++)

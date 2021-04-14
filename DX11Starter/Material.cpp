@@ -5,14 +5,13 @@ Material::Material()
 {
 }
 
-Material::Material(string n, MaterialData matData, ShaderType shaderType, SimpleVertexShader * vShader, SimplePixelShader * pShader, ID3D11SamplerState* sampler)
+Material::Material(string n, MaterialData matData, SimpleVertexShader * vShader, SimplePixelShader * pShader, ID3D11SamplerState* sampler)
 {
 	vertexShader = vShader;
 	pixelShader = pShader;
 	materialData = matData;
-	this->shaderType = shaderType;
 	samplerState = sampler;
-	name = new string(n);
+	name = n;
 }
 
 Material::~Material()
@@ -20,14 +19,11 @@ Material::~Material()
 	vertexShader = nullptr;
 	pixelShader = nullptr;
 	samplerState = nullptr;
-	if (name != nullptr)
-		delete name;
 }
 
 void Material::operator=(const Material& m)
 {
-	if(m.name != nullptr)
-		this->name = new string(*m.name);
+	this->name = m.name;
 	this->vertexShader = m.vertexShader;
 	this->pixelShader = m.pixelShader;
 	this->materialData = m.materialData;
@@ -36,8 +32,6 @@ void Material::operator=(const Material& m)
 
 void Material::FreeMemory()
 {
-	if(name != nullptr)
-		delete name;
 }
 
 SimpleVertexShader * Material::GetVertexShader()
@@ -95,8 +89,10 @@ void Material::Prepare()
 		
 	pixelShader->SetInt("illumination", materialData.Illumination);
 
-	if (shaderType == ShaderType::DEFAULT)
+	if (pixelShader->GetShaderType() == ShaderType::DEFAULT)
 		pixelShader->SetFloat3("manualColor", materialData.DiffuseColor);
+
+	pixelShader->SetFloat("transparency", materialData.Transparency);
 
 	/*
 	if (materialData.SSAO) {
@@ -127,5 +123,5 @@ void Material::Prepare()
 
 string Material::GetName()
 {
-	return *name;
+	return name.STDStr();
 }

@@ -14,10 +14,11 @@ bool Config::ShowCursor = true;
 
 unsigned int Config::MemoryAllocatorSize = MEGABYTE * 512;
 unsigned int Config::MemoryAllocatorAlignment = 16; //16 byte boundary
-unsigned int Config::MemoryAllocatorEntityPoolSize = MEGABYTE * 128; //250 MB
-unsigned int Config::MemoryAllocatorMeshPoolSize = MEGABYTE * 128; //250 MB
-unsigned int Config::MemoryAllocatorMaterialPoolSize = MEGABYTE * 64; //250 MB
-unsigned int Config::MemoryAllocatorDecalPoolSize = MEGABYTE * 64;
+unsigned int Config::MemoryAllocatorEntityPoolSize = MEGABYTE * 128; //128 MB
+unsigned int Config::MemoryAllocatorMeshPoolSize = MEGABYTE * 128; //256 MB
+unsigned int Config::MemoryAllocatorMaterialPoolSize = MEGABYTE * 64; //320 MB
+unsigned int Config::MemoryAllocatorDecalPoolSize = MEGABYTE * 64; //384 MB
+//unsigned int Config::MemoryAllocatorParticlePoolSize = MEGABYTE * 64; //448 MB
 
 bool Config::EtherealDebugLinesEnabled = false;
 bool Config::BulletDebugLinesEnabled = false;
@@ -25,10 +26,20 @@ bool Config::BulletDebugLinesEnabled = false;
 bool Config::ShadowsEnabled = true;
 bool Config::SSAOEnabled = false;
 bool Config::HBAOPlusEnabled = true;
+
 bool Config::DecalsEnabled = true;
+unsigned int Config::InitialDecalVectorSize = 3000;
 
 btDiscreteDynamicsWorld* Config::DynamicsWorld = nullptr;
 
 unsigned int Config::SSAOSampleCount = 32;
 float Config::SSAOKernelRadius = 1.0f;
 DirectX::XMFLOAT4 Config::SSAOKernel[32];
+
+std::map<std::string, unsigned int> Config::EntityTags = {
+	{ "PLACEHOLDER", 1 },
+};
+
+std::map<std::string, unsigned int> Config::EntityLayers = {
+	{ "decal", 1 },
+};

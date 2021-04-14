@@ -40,6 +40,7 @@ cbuffer externalData : register(b2) {
 	float3 cameraPosition;
 	int illumination;
 	float3 manualColor;
+	float transparency;
 }
 
 Texture2D DiffuseTexture  :  register(t0);
@@ -107,5 +108,5 @@ float4 main(VertexToPixel input) : SV_TARGET
 
 	float3 gammaCorrect = pow(abs(finalColor), 1.0f / 2.2f);
 
-	return float4(gammaCorrect, 1.f);
+	return float4(gammaCorrect, transparency);
 }

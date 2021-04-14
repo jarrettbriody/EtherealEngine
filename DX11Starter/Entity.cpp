@@ -8,14 +8,11 @@ Entity::Entity()
 
 Entity::Entity(string entityName)
 {
-	name = new string();
-	tag = new string();
-	layer = new string();
 	materialMap = new map<string, Material*>;
 	children = new vector<Entity*>;
 	colliders = new vector<Collider*>;
 	
-	*name = entityName;
+	name = entityName;
 	position = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
 	scale = DirectX::XMFLOAT3(1.0f, 1.0f, 1.0f);
 	rotation = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
@@ -30,15 +27,12 @@ Entity::Entity(string entityName)
 
 Entity::Entity(string entityName, Mesh* entityMesh, Material* mat)
 {
-	name = new string();
-	tag = new string();
-	layer = new string();
 	materialMap = new map<string, Material*>;
 	children = new vector<Entity*>;
 	colliders = new vector<Collider*>;
 
 	mesh = entityMesh;
-	*name = entityName;
+	name = entityName;
 	position = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
 	scale = DirectX::XMFLOAT3(1.0f, 1.0f, 1.0f);
 	rotation = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
@@ -93,23 +87,17 @@ Entity::~Entity()
 	if (colliders != nullptr)
 		delete colliders;
 
-	delete name;
-	delete tag;
-	delete layer;
 }
 
 void Entity::operator=(const Entity& e)
 {
-	name = new string();
 	materialMap = new map<string, Material*>();
 	children = new vector<Entity*>();
 	colliders = new vector<Collider*>();
-	tag = new string();
-	layer = new string();
 
-	*name = *e.name;
-	*tag = *e.tag;
-	*layer = *e.layer;
+	name = e.name;
+	tag = e.tag;
+	layer = e.layer;
 	*children = vector<Entity*>(*e.children);
 	*colliders = vector<Collider*>(*e.colliders);
 	*materialMap = map<string, Material*>(*e.materialMap);
@@ -253,11 +241,13 @@ void Entity::InitRigidBody(BulletColliderShape shape, float entityMass, bool zer
 
 	rBody->setAnisotropicFriction(btVector3(2.0f, 0.0f, 0.0f));
 
-	//rBody->setCollisionFlags(btCollisionObject::CF_KINEMATIC_OBJECT);
+	if(mass == 0.0f)
+		rBody->setCollisionFlags(rBody->getCollisionFlags() & btCollisionObject::CF_NO_CONTACT_RESPONSE);
 
 	// Have the rigid body register a pointer to the entity it belongs to so we can access it
 	// TODO: Change this to a struct with everything included (name, entity pointer, tag)
-	rBody->setUserPointer((void*)(this));
+	pWrap = { PHYSICS_WRAPPER_TYPE::ENTITY, (void*)(this) };
+	rBody->setUserPointer(&pWrap);
 
 	Config::DynamicsWorld->addRigidBody(rBody);
 }
@@ -401,6 +391,8 @@ void Entity::CalcEulerAngles()
 	XMQuaternionToAxisAngle(&xs, &rotation.x, q);
 	XMQuaternionToAxisAngle(&ys, &rotation.y, q);
 	XMQuaternionToAxisAngle(&zs, &rotation.z, q);
+
+	rotationInDegrees = XMFLOAT3(DirectX::XMConvertToDegrees(rotation.x), DirectX::XMConvertToDegrees(rotation.y), DirectX::XMConvertToDegrees(rotation.z));
 }
 
 void Entity::SetRepeatTexture(float x, float y)
@@ -598,7 +590,7 @@ void Entity::AddMaterial(Material * mat, bool addToMesh)
 
 string Entity::GetName()
 {
-	return *name;
+	return name.STDStr();
 }
 
 void Entity::AddChildEntity(Entity* child, XMFLOAT4X4 childWorldMatrix)
@@ -798,9 +790,6 @@ void Entity::FreeMemory()
 	if (colliders != nullptr)
 		delete colliders;
 
-	delete name;
-	delete tag;
-	delete layer;
 }
 
 
