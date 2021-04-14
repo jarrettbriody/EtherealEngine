@@ -117,7 +117,7 @@ void FPSController::Update()
 
 void FPSController::CheckAllAbilities()
 {
-	CheckBloodSword();
+	CheckBloodSword(); // --> this makes it so that OnRMBDown() isn't responsive
 	CheckBloodIcicle();
 	CheckHookshot();
 	CheckBulletTime();

@@ -38,7 +38,7 @@ void BloodSword::SetLerpPositions()
 	// set start, end, and default pos (do multiple slash angles later after confirming basic functionality )
 	// defaultPos = entity->GetPosition();
 	startPos = entity->GetPosition();
-	endPos = XMFLOAT3(startPos.x + 5, startPos.y + 5, startPos.z + 5);
+	endPos = XMFLOAT3(startPos.x + 10, startPos.y + 10, startPos.z + 10);
 
 	// lerp from default to start pos
 
@@ -56,14 +56,14 @@ void BloodSword::Slash()
 	XMFLOAT3 current;
 	XMVECTOR start = XMLoadFloat3(&startPos);
 	XMVECTOR end = XMLoadFloat3(&endPos);
-	XMStoreFloat3(&current, DirectX::XMVectorLerp(start, end, deltaTime));
+	XMStoreFloat3(&current, DirectX::XMVectorLerp(start, end, deltaTime * 10.0f));
 
 	entity->SetPosition(current);
 
 	// use the bullet lerp fuction to move from the start to the end
 	// entity->SetPosition(Utility::BulletVectorToFloat3(startPos.lerp(endPos, deltaTime)));
 
-	// if the entity reaches the end positoin set the state to reset
+	// TODO: if the entity reaches the end positoin set the state to reset
 	// if()
 }
 
