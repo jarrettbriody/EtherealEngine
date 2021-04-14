@@ -532,9 +532,16 @@ void Entity::PrepareMaterialForDraw(string n, DirectX::XMFLOAT4X4 view, DirectX:
 	);
 
 	if (shadowsEnabled) {
-		vs->SetMatrix4x4("shadowView", shadowData.shadowViewMatrix);
-		vs->SetMatrix4x4("shadowProj", shadowData.shadowProjectionMatrix);
-		ps->SetShaderResourceView("ShadowMap", shadowData.shadowSRV);
+		for (size_t i = 0; i < shadowData.cascadeCount; i++)
+		{
+			string str = to_string(i);
+			ps->SetShaderResourceView("ShadowMap" + str, shadowData.shadowSRV[i]);
+			ps->SetMatrix4x4("shadowProj" + str, shadowData.shadowProjectionMatrix[i]);
+			ps->SetFloat("cascadeRange" + str, shadowData.range[i]);
+		}
+		ps->SetMatrix4x4("shadowView", shadowData.shadowViewMatrix);
+		//ps->SetData("nearPlane", shadowData.nears, sizeof(float) * MAX_SHADOW_CASCADES);
+		ps->SetFloat3("sunPos", shadowData.sunPos);
 		ps->SetSamplerState("ShadowSampler", shadowData.shadowSampler);
 	}
 

@@ -8,8 +8,13 @@
 
 struct ShadowData {
 	DirectX::XMFLOAT4X4 shadowViewMatrix;
-	DirectX::XMFLOAT4X4 shadowProjectionMatrix;
-	ID3D11ShaderResourceView* shadowSRV = nullptr;
+	DirectX::XMFLOAT4X4 shadowProjectionMatrix[MAX_SHADOW_CASCADES];
+	ID3D11ShaderResourceView* shadowSRV[MAX_SHADOW_CASCADES];
+	float nears[MAX_SHADOW_CASCADES];
+	float fars[MAX_SHADOW_CASCADES];
+	float range[MAX_SHADOW_CASCADES];
+	unsigned int cascadeCount = 0;
+	XMFLOAT3 sunPos;
 	ID3D11SamplerState* shadowSampler = nullptr;
 };
 

@@ -12,6 +12,8 @@ Camera::Camera()
 	xRotation = 0.0f;
 	yRotation = 0.0f;
 	zRotation = 0.0f;
+	mouse = Mouse::GetInstance();
+	prevMousePos = { 0, 0 };
 }
 
 
@@ -131,6 +133,18 @@ void Camera::Update()
 		if (GetAsyncKeyState('L') & 0x8000) {
 			RotateCamera(0, 0, -1);
 		}
+
+		if (mouse->OnLMBDown()) {
+			prevMousePos.x = mouse->GetPosX();
+			prevMousePos.y = mouse->GetPosY();
+		}
+
+		if (mouse->LMBIsPressed()) {
+			RotateCamera(mouse->GetPosX() - (int)prevMousePos.x, mouse->GetPosY() - (int)prevMousePos.y);
+			prevMousePos.x = mouse->GetPosX();
+			prevMousePos.y = mouse->GetPosY();
+		}
+
 	}
 	
 
