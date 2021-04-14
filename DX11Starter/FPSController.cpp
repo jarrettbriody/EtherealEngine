@@ -241,10 +241,12 @@ void FPSController::CheckHookshot()
 		if (closestResult.hasHit()) // if there is a surface to grapple to
 		{
 			// Get the entity associated with the rigid body we hit
-			Entity* hit = (Entity*)(closestResult.m_collisionObject->getUserPointer());
-			// printf("Hookshot Hit: %s\n", hit->GetName().c_str());
+			//Entity* hit = (Entity*)(closestResult.m_collisionObject->getUserPointer());
+			PhysicsWrapper* wrapper = (PhysicsWrapper*)closestResult.m_collisionObject->getUserPointer();
 
-			hookshotPoint = closestResult.m_hitPointWorld;
+			if (wrapper->type == PHYSICS_WRAPPER_TYPE::ENTITY) {
+				Entity* hit = (Entity*)wrapper->objectPointer;
+				// printf("Hookshot Hit: %s\n", hit->GetName().c_str());
 
 			if (hit->tag.STDStr() == std::string("Enemy"))
 			{
@@ -253,13 +255,6 @@ void FPSController::CheckHookshot()
 				leashSize = playerRBody->getCenterOfMassPosition().distance(leashedEnemy->GetRBody()->getCenterOfMassPosition());
 				// cout << leashSize << endl;
 			}
-			else
-			{
-				// playerRBody->clearForces(); --> don't know if needed
-				ps = PlayerState::HookshotFlight;
-			}
-			
-			// cout << hookshotImpulseDir.getX() << " " << hookshotImpulseDir.getY() << " " << hookshotImpulseDir.getZ() << endl;
 		}
 	}
 }
@@ -580,7 +575,7 @@ void FPSController::MouseLook()
 
 void FPSController::OnCollision(btCollisionObject* other)
 {
-	Entity* otherE = (Entity*)other->getUserPointer();
+	Entity* otherE = (Entity*)((PhysicsWrapper*)other->getUserPointer())->objectPointer;
 	
 }
 

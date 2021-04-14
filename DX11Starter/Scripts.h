@@ -19,6 +19,12 @@ namespace Scripts {
 		{"BLOODSWORD", SCRIPT_NAMES::BLOODSWORD}
 	};
 
+	static map<SCRIPT_NAMES, string> scriptStringNameMap = {
+		{SCRIPT_NAMES::BARREL, "BARREL"},
+		{SCRIPT_NAMES::FPSCONTROLLER, "FPSCONTROLLER"},
+		{SCRIPT_NAMES::BLOODICICLE, "BLOODICICLE"},
+	};
+
 	namespace {
 		static ScriptManager* Factory(Entity* e, SCRIPT_NAMES n) {
 			ScriptManager* script = nullptr;
@@ -41,7 +47,7 @@ namespace Scripts {
 				break;
 			}
 
-			if (script != nullptr) script->Setup(e);
+			if (script != nullptr) script->Setup(e, scriptStringNameMap[n]);
 
 			return script;
 		}
