@@ -8,7 +8,7 @@ private:
 	unsigned int bufferSize = N;
 	unsigned int count = 0;
 public:
-	EEString() { bufferSize = N; };
+	EEString() { bufferSize = N; count = 0; };
 	EEString(const EEString& other) {
 		bufferSize = N;
 		unsigned int size = (other.count > bufferSize) ? bufferSize : other.count;

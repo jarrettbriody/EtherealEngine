@@ -29,6 +29,8 @@ Renderer::~Renderer()
 	if(skyboxComponents.skyDepthStencilState) skyboxComponents.skyDepthStencilState->Release();
 	if(skyboxComponents.skyRasterizer) skyboxComponents.skyRasterizer->Release();
 
+	blendState->Release();
+
 	map<string, Light*>::iterator lightMapIterator;
 	for (int i = 0; i < lightCount; i++)
 	{
