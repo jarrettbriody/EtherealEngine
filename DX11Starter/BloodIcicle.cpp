@@ -21,13 +21,13 @@ void BloodIcicle::OnCollision(btCollisionObject* other)
 	Entity* otherE = (Entity*)other->getUserPointer();
 
 	// cout << "Blood Icicle Hit: " << otherE->GetName().c_str() << endl;
-	if (otherE->tag->c_str() == std::string("Environment"))
+	if (otherE->tag == std::string("Environment"))
 	{
 		icicleRb->clearForces();
 		icicleRb->setActivationState(0); // pin icicle to environment
 	}
 
-	if (otherE->tag->c_str() == std::string("Enemy"))
+	if (otherE->tag == std::string("Enemy"))
 	{
 		// TODO: Can I set the tag of the children and get a collision call back from them
 
