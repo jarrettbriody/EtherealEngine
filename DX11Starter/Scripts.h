@@ -13,7 +13,13 @@ namespace Scripts {
 	static map<string, SCRIPT_NAMES> scriptNameMap = {
 		{"BARREL", SCRIPT_NAMES::BARREL},
 		{"FPSCONTROLLER", SCRIPT_NAMES::FPSCONTROLLER},
-		{"BLOODICICLE", SCRIPT_NAMES::BLOODICICLE}
+		{"BLOODICICLE", SCRIPT_NAMES::BLOODICICLE},
+	};
+
+	static map<SCRIPT_NAMES, string> scriptStringNameMap = {
+		{SCRIPT_NAMES::BARREL, "BARREL"},
+		{SCRIPT_NAMES::FPSCONTROLLER, "FPSCONTROLLER"},
+		{SCRIPT_NAMES::BLOODICICLE, "BLOODICICLE"},
 	};
 
 	namespace {
@@ -35,7 +41,7 @@ namespace Scripts {
 				break;
 			}
 
-			if (script != nullptr) script->Setup(e);
+			if (script != nullptr) script->Setup(e, scriptStringNameMap[n]);
 
 			return script;
 		}

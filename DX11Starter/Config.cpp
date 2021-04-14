@@ -11,6 +11,7 @@ unsigned int Config::ViewPortWidth = 1600;
 unsigned int Config::ViewPortHeight = 900;
 bool Config::Fullscreen = false;
 bool Config::ShowCursor = true;
+bool Config::DebugCamera = true;
 
 unsigned int Config::MemoryAllocatorSize = MEGABYTE * 512;
 unsigned int Config::MemoryAllocatorAlignment = 16; //16 byte boundary

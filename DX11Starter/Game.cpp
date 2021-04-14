@@ -438,7 +438,7 @@ void Game::Update(float deltaTime, float totalTime)
 			Entity* b = (Entity*)wrapperB->objectPointer;
 
 			if (ScriptManager::scriptFunctionsMap.count(a->GetName())) {
-				vector<ScriptManager*> scripts = ScriptManager::scriptFunctionsMap[a->GetName()];
+				vector<ScriptManager*> scripts = ScriptManager::scriptFunctionsMapVector[a->GetName()];
 				for (size_t j = 0; j < scripts.size(); j++)
 				{
 					scripts[j]->CallOnCollision(obB);
@@ -446,7 +446,7 @@ void Game::Update(float deltaTime, float totalTime)
 			}
 
 			if (ScriptManager::scriptFunctionsMap.count(b->GetName())) {
-				vector<ScriptManager*> scripts = ScriptManager::scriptFunctionsMap[b->GetName()];
+				vector<ScriptManager*> scripts = ScriptManager::scriptFunctionsMapVector[b->GetName()];
 				for (size_t j = 0; j < scripts.size(); j++)
 				{
 					scripts[j]->CallOnCollision(obB);
@@ -663,13 +663,14 @@ void Game::GarbageCollect()
 			e->FreeMemory();
 			EEMemoryAllocator->DeallocateFromPool((unsigned int)MEMORY_POOL::ENTITY_POOL, e, sizeof(Entity));
 
-			vector<ScriptManager*> scriptFuncs = ScriptManager::scriptFunctionsMap[name];
+			vector<ScriptManager*> scriptFuncs = ScriptManager::scriptFunctionsMapVector[name];
 			size_t cnt = scriptFuncs.size();
 			for (size_t j = cnt; j > 0; j--)
 			{
 				scriptFuncs[j - 1]->destroyed = true;
 			}
 			ScriptManager::scriptFunctionsMap.erase(name);
+			ScriptManager::scriptFunctionsMapVector.erase(name);
 		}
 	}
 
