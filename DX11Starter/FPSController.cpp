@@ -117,7 +117,7 @@ void FPSController::Update()
 
 void FPSController::CheckAllAbilities()
 {
-	// CheckBloodSword();
+	CheckBloodSword();
 	CheckBloodIcicle();
 	CheckHookshot();
 	CheckBulletTime();
@@ -127,6 +127,8 @@ void FPSController::CheckBloodSword()
 {
 	if (mouse->OnLMBDown())
 	{
+		//std::vector<ScriptManager*> bloodSwordScripts = scriptFunctionsMap[sword->GetName()];
+		//BloodSword bS = (BloodSword)bloodSwordScripts[0];
 	
 	}
 }

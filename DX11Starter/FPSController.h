@@ -1,5 +1,6 @@
 #pragma once
 #include "ScriptManager.h"
+#include "BloodSword.h"
 #include <WinUser.h>
 
 enum class PlayerState

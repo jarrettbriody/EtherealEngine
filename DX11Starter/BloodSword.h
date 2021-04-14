@@ -12,9 +12,9 @@ class BloodSword : public ScriptManager
 
 	SwordState ss;
 	
-	btVector3 defaultPos;
-	btVector3 startPos;
-	btVector3 endPos;
+	XMFLOAT3 defaultPos;
+	XMFLOAT3 startPos;
+	XMFLOAT3 endPos;
 
 	void Init();
 
