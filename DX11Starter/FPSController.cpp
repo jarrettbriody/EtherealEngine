@@ -127,9 +127,8 @@ void FPSController::CheckBloodSword()
 {
 	if (mouse->OnLMBDown())
 	{
-		//std::vector<ScriptManager*> bloodSwordScripts = scriptFunctionsMap[sword->GetName()];
-		//BloodSword bS = (BloodSword)bloodSwordScripts[0];
-	
+		BloodSword* swordScript = (BloodSword*)scriptFunctionsMap[sword->GetName()]["BLOODSWORD"];
+		swordScript->StartSlash();
 	}
 }
 
@@ -152,7 +151,7 @@ void FPSController::UpdateSwordPosition()
 
 void FPSController::CheckBloodIcicle()
 {
-	if (mouse->OnRMBDown() && bloodIcicleCooldownTimer <= 0) 
+	if (mouse->OnRMBDown() /*&& bloodIcicleCooldownTimer <= 0*/) 
 	{
 		// update position and rotation of the EntityCreationParams
 		icicleParams.position = XMFLOAT3(cam->position.x + direction.x * 2, cam->position.y, cam->position.z + direction.z * 2); 
@@ -244,16 +243,26 @@ void FPSController::CheckHookshot()
 			//Entity* hit = (Entity*)(closestResult.m_collisionObject->getUserPointer());
 			PhysicsWrapper* wrapper = (PhysicsWrapper*)closestResult.m_collisionObject->getUserPointer();
 
-			if (wrapper->type == PHYSICS_WRAPPER_TYPE::ENTITY) {
+			hookshotPoint = closestResult.m_hitPointWorld;
+
+			if (wrapper->type == PHYSICS_WRAPPER_TYPE::ENTITY) 
+			{
 				Entity* hit = (Entity*)wrapper->objectPointer;
 				// printf("Hookshot Hit: %s\n", hit->GetName().c_str());
 
-			if (hit->tag.STDStr() == std::string("Enemy"))
-			{
-				ps = PlayerState::HookshotLeash;
-				leashedEnemy = (Entity*)hit->GetRBody()->getUserPointer();
-				leashSize = playerRBody->getCenterOfMassPosition().distance(leashedEnemy->GetRBody()->getCenterOfMassPosition());
-				// cout << leashSize << endl;
+				if (hit->tag.STDStr() == std::string("Enemy"))
+				{
+					ps = PlayerState::HookshotLeash;
+					leashedEnemy = hit;
+					leashSize = playerRBody->getCenterOfMassPosition().distance(leashedEnemy->GetRBody()->getCenterOfMassPosition());
+					// cout << leashSize << endl;
+				}
+
+				if (hit->tag.STDStr() == std::string("Environment"))
+				{
+					// playerRBody->clearForces(); --> don't know if needed
+					ps = PlayerState::HookshotFlight;
+				}
 			}
 		}
 	}

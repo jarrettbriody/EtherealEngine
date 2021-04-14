@@ -28,7 +28,7 @@ void BloodSword::Update()
 	}
 }
 
-void BloodSword::StartSwing()
+void BloodSword::StartSlash()
 {
 	ss = SwordState::SetTrajectory; 
 }
@@ -86,10 +86,18 @@ void BloodSword::ResetSword()
 
 void BloodSword::OnCollision(btCollisionObject* other)
 {
-	Entity* otherE = (Entity*)other->getUserPointer();
+	//Entity* otherE = (Entity*)other->getUserPointer();
 
-	// std::vector<Entity*> childEntities = EESceneLoader->SplitMeshIntoChildEntities(otherE, 1.0f);
+	PhysicsWrapper* wrapper = (PhysicsWrapper*)other->getUserPointer();
+
+	if (wrapper->type == PHYSICS_WRAPPER_TYPE::ENTITY)
+	{
+		Entity* otherE = (Entity*)wrapper->objectPointer;
+
+		// cout << "Blood Sword Hit: " << otherE->GetName().c_str() << endl;
+		
+		// std::vector<Entity*> childEntities = EESceneLoader->SplitMeshIntoChildEntities(otherE, 1.0f);
 
 
-	// cout << "Blood Sword Hit: " << otherE->GetName().c_str() << endl;
+	}
 }

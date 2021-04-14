@@ -20,7 +20,6 @@ class BloodSword : public ScriptManager
 
 	void Update();
 
-	void StartSwing();
 
 	void SetLerpPositions();
 
@@ -29,5 +28,9 @@ class BloodSword : public ScriptManager
 	void ResetSword();
 
 	void OnCollision(btCollisionObject* other);
+
+public:
+	void StartSlash();
+
 };
 

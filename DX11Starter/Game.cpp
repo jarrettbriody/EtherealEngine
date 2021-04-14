@@ -449,7 +449,7 @@ void Game::Update(float deltaTime, float totalTime)
 				vector<ScriptManager*> scripts = ScriptManager::scriptFunctionsMapVector[b->GetName()];
 				for (size_t j = 0; j < scripts.size(); j++)
 				{
-					scripts[j]->CallOnCollision(obB);
+					scripts[j]->CallOnCollision(obA);
 				}
 			}
 		}
