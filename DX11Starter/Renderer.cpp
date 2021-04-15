@@ -75,8 +75,9 @@ void Renderer::CalcShadowMatrices(unsigned int cascadeIndex)
 	// Create the matrices that represent seeing the scene from
 	// the light's point of view
 	XMFLOAT3 dir = lights["Sun"]->Direction;
-	XMFLOAT3 pos;
-	XMStoreFloat3(&pos, XMVectorAdd(XMVectorAdd(XMLoadFloat3(&lights["Sun"]->Position), XMLoadFloat3(&camera->position)), XMVectorScale(XMLoadFloat3(&dir), -1.0f)));
+	XMFLOAT3 pos = camera->position;
+	pos.y = 0.0f;
+	XMStoreFloat3(&pos, XMVectorAdd(XMLoadFloat3(&lights["Sun"]->Position), XMLoadFloat3(&pos)));
 	XMMATRIX shadowView = XMMatrixTranspose(XMMatrixLookToLH(
 		XMVectorSet(pos.x,pos.y,pos.z, 0),
 		XMVectorSet(dir.x, dir.y, dir.z, 0),
@@ -395,7 +396,7 @@ void Renderer::SetSkybox(ID3D11ShaderResourceView* srv)
 	skyboxComponents.skySRV = srv;
 }
 
-void Renderer::SetShadowCascadeInfo(unsigned int cascadeIndex, unsigned int resolution, float nearPlane, float farPlane, float width, float height, float maxRange)
+void Renderer::SetShadowCascadeInfo(unsigned int cascadeIndex, unsigned int resolution, float nearPlane, float farPlane, float width, float height)
 {
 	unsigned int exponent = (unsigned int)(log2((double)resolution) + 0.5);
 	shadowComponents.shadowCascades[cascadeIndex].shadowMapResolution = (unsigned int)(pow(2u, exponent) + 0.5);
@@ -403,7 +404,7 @@ void Renderer::SetShadowCascadeInfo(unsigned int cascadeIndex, unsigned int reso
 	shadowComponents.shadowCascades[cascadeIndex].farPlane = farPlane;
 	shadowComponents.shadowCascades[cascadeIndex].width = width;
 	shadowComponents.shadowCascades[cascadeIndex].height = height;
-	shadowComponents.shadowCascades[cascadeIndex].maxRange = maxRange;
+	//shadowComponents.shadowCascades[cascadeIndex].maxRange = maxRange;
 }
 
 void Renderer::InitBlendState()
@@ -478,7 +479,8 @@ void Renderer::RenderFrame()
 				d.shadowSRV[i] = shadowComponents.shadowCascades[i].shadowSRV;
 				d.nears[i] = shadowComponents.shadowCascades[i].nearPlane;
 				d.fars[i] = shadowComponents.shadowCascades[i].farPlane;
-				d.range[i] = shadowComponents.shadowCascades[i].maxRange;
+				//d.range[i] = shadowComponents.shadowCascades[i].maxRange;
+				d.widthHeight[i] = XMFLOAT2(shadowComponents.shadowCascades[i].width, shadowComponents.shadowCascades[i].height);
 			}
 			d.sunPos = shadowComponents.sunPos;
 			d.shadowViewMatrix = shadowComponents.shadowViewMatrix;
@@ -544,7 +546,7 @@ void Renderer::RenderFrame()
 			string str = to_string(i);
 			shaders.decalPS->SetShaderResourceView("ShadowMap" + str, shadowComponents.shadowCascades[i].shadowSRV);
 			shaders.decalPS->SetMatrix4x4("shadowProj" + str, shadowComponents.shadowCascades[i].shadowProjectionMatrix);
-			shaders.decalPS->SetFloat("cascadeRange" + str, shadowComponents.shadowCascades[i].maxRange);
+			shaders.decalPS->SetFloat2("cascadeRange" + str, XMFLOAT2(shadowComponents.shadowCascades[i].width, shadowComponents.shadowCascades[i].height));
 		}
 
 		shaders.decalPS->SetSamplerState("ShadowSampler", shadowComponents.shadowSampler);
@@ -683,19 +685,19 @@ void Renderer::RenderShadowMap()
 
 	D3D11_VIEWPORT vp = {};
 
-	for (size_t i = 0; i < shadowComponents.cascadeCount; i++)
+	for (size_t j = 0; j < shadowComponents.cascadeCount; j++)
 	{
 		// Initial setup - No RTV necessary - Clear shadow map
-		Config::Context->OMSetRenderTargets(0, 0, shadowComponents.shadowCascades[i].shadowDSV);
-		Config::Context->ClearDepthStencilView(shadowComponents.shadowCascades[i].shadowDSV, D3D11_CLEAR_DEPTH, 1.0f, 0);
+		Config::Context->OMSetRenderTargets(0, 0, shadowComponents.shadowCascades[j].shadowDSV);
+		Config::Context->ClearDepthStencilView(shadowComponents.shadowCascades[j].shadowDSV, D3D11_CLEAR_DEPTH, 1.0f, 0);
 		Config::Context->RSSetState(shadowComponents.shadowRasterizer);
 
 		// SET A VIEWPORT!!!
 		vp = {};
 		vp.TopLeftX = 0;
 		vp.TopLeftY = 0;
-		vp.Width = (float)shadowComponents.shadowCascades[i].shadowMapResolution;
-		vp.Height = (float)shadowComponents.shadowCascades[i].shadowMapResolution;
+		vp.Width = (float)shadowComponents.shadowCascades[j].shadowMapResolution;
+		vp.Height = (float)shadowComponents.shadowCascades[j].shadowMapResolution;
 		vp.MinDepth = 0.0f;
 		vp.MaxDepth = 1.0f;
 		Config::Context->RSSetViewports(1, &vp);
@@ -705,7 +707,7 @@ void Renderer::RenderShadowMap()
 		// Set up the shaders
 		shaders.depthStencilVS->SetShader();
 		shaders.depthStencilVS->SetMatrix4x4("view", shadowComponents.shadowViewMatrix);
-		shaders.depthStencilVS->SetMatrix4x4("projection", shadowComponents.shadowCascades[i].shadowProjectionMatrix);
+		shaders.depthStencilVS->SetMatrix4x4("projection", shadowComponents.shadowCascades[j].shadowProjectionMatrix);
 		//shaders.depthStencilPS->SetFloat3("cameraPosition", lights["Sun"]->Position);
 		//shaders.depthStencilPS->CopyAllBufferData();
 
@@ -750,7 +752,7 @@ void Renderer::RenderShadowMap()
 					callback->prepassVShader->SetShader();
 					callback->prepassVShader->SetMatrix4x4("world", e->GetWorldMatrix());
 					callback->prepassVShader->SetMatrix4x4("view", shadowComponents.shadowViewMatrix);
-					callback->prepassVShader->SetMatrix4x4("projection", shadowComponents.shadowCascades[i].shadowProjectionMatrix);
+					callback->prepassVShader->SetMatrix4x4("projection", shadowComponents.shadowCascades[j].shadowProjectionMatrix);
 					callback->PrePrepassVertexShaderCallback();
 					callback->prepassVShader->CopyAllBufferData();
 				}

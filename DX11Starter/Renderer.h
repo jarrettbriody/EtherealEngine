@@ -64,7 +64,7 @@ public:
 	void InitShadows(unsigned int cascadeCount = 3);
 	void InitSkybox();
 	void SetSkybox(ID3D11ShaderResourceView* srv);
-	void SetShadowCascadeInfo(unsigned int cascadeIndex, unsigned int resolution, float nearPlane, float farPlane, float width, float height, float maxRange);
+	void SetShadowCascadeInfo(unsigned int cascadeIndex, unsigned int resolution, float nearPlane, float farPlane, float width, float height);
 
 	void InitBlendState();
 	void ToggleBlendState(bool toggle);

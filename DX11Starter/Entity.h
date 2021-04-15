@@ -13,6 +13,7 @@ struct ShadowData {
 	float nears[MAX_SHADOW_CASCADES];
 	float fars[MAX_SHADOW_CASCADES];
 	float range[MAX_SHADOW_CASCADES];
+	XMFLOAT2 widthHeight[MAX_SHADOW_CASCADES];
 	unsigned int cascadeCount = 0;
 	XMFLOAT3 sunPos;
 	ID3D11SamplerState* shadowSampler = nullptr;

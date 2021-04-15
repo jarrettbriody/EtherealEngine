@@ -44,7 +44,7 @@ struct ShadowCascade {
 	float farPlane = 1000.0f;
 	float width = 250.f;
 	float height = 250.f;
-	float maxRange = 1000.0f;
+	//float maxRange = 1000.0f;
 	DirectX::XMFLOAT4X4 shadowProjectionMatrix;
 	DirectX::XMFLOAT4X4 shadowViewProj;
 };
