@@ -38,15 +38,28 @@ cbuffer externalData : register(b1) {
 
 cbuffer constantPerFrame : register(b2) {
 	float3 cameraPos;
-	matrix shadowViewProj;
+};
+
+cbuffer shadowStuff : register(b3) {
+	float3 sunPos;
+	float2 cascadeRange0;
+	float2 cascadeRange1;
+	float2 cascadeRange2;
+	float2 cascadeRange3;
 	matrix shadowView;
-	matrix shadowProj;
+	matrix shadowProj0;
+	matrix shadowProj1;
+	matrix shadowProj2;
+	matrix shadowProj3;
 };
 
 Texture2D DepthBuffer	  : register(t0);
-Texture2D ShadowMap		  : register(t1);
-Texture2D Decal			  : register(t2);
-Texture2D<uint> EntityInfoBuffer	  : register(t3);
+Texture2D Decal			  : register(t1);
+Texture2D<uint> EntityInfoBuffer	  : register(t2);
+Texture2D ShadowMap0		  : register(t3);
+Texture2D ShadowMap1		  : register(t4);
+Texture2D ShadowMap2		  : register(t5);
+Texture2D ShadowMap3		  : register(t6);
 
 SamplerState BasicSampler               : register(s0);
 SamplerComparisonState ShadowSampler	: register(s1);
@@ -95,20 +108,49 @@ float4 main(VertexToPixel input) : SV_TARGET
 	}
 
 	// Shadow calculations
+	float3 vec = mul(float4(worldPos - sunPos, 0.0f), shadowView);
+	//return float4(distToSun / 1000, 0.0f, 0.0f, 1.0f);
+	float shadowAmount = 1.0f;
+	if (vec.x >= -cascadeRange0.x / 2.001f && vec.x <= cascadeRange0.x / 2.001f && vec.y >= -cascadeRange0.y / 2.001f && vec.y <= cascadeRange0.y / 2.001f) {
+		//return float4(1.0f, 0.0f, 0.0f, 1.0f);
+		float4 posForShadow = mul(mul(float4(worldPos, 1.0f), shadowView), shadowProj0);
+		float2 shadowUV = ((posForShadow.xy / posForShadow.w) * 0.5f) + 0.5f;
+		shadowUV.y = 1.0f - shadowUV.y;
 
-	// Calculate shadow map position
-	float4 posForShadow = mul(mul(float4(worldPos, 1.0f), shadowView), shadowProj);
-	float2 shadowUV = ((posForShadow.xy / posForShadow.w) * 0.5f) + 0.5f;
-	shadowUV.y = 1.0f - shadowUV.y;
+		float depthFromLight = posForShadow.z / posForShadow.w;
 
-	// This pixel's actual depth from the light
-	float depthFromLight = posForShadow.z / posForShadow.w;
+		shadowAmount = ShadowMap0.SampleCmpLevelZero(ShadowSampler, shadowUV, depthFromLight);
+	}
+	else if (vec.x >= -cascadeRange1.x / 2.001f && vec.x <= cascadeRange1.x / 2.001f && vec.y >= -cascadeRange1.y / 2.001f && vec.y <= cascadeRange1.y / 2.001f) {
+		//return float4(0.0f, 1.0f, 0.0f, 1.0f);
+		float4 posForShadow = mul(mul(float4(worldPos, 1.0f), shadowView), shadowProj1);
+		float2 shadowUV = ((posForShadow.xy / posForShadow.w) * 0.5f) + 0.5f;
+		shadowUV.y = 1.0f - shadowUV.y;
 
-	// Sample the shadow map in the same location to get
-	// the closest depth along that "ray" from the light
-	// (Samples the shadow map with comparison built in)
+		float depthFromLight = posForShadow.z / posForShadow.w;
 
-	float shadowAmount = ShadowMap.SampleCmpLevelZero(ShadowSampler, shadowUV, depthFromLight);
+		shadowAmount = ShadowMap1.SampleCmpLevelZero(ShadowSampler, shadowUV, depthFromLight);
+	}
+	else if (vec.x >= -cascadeRange2.x / 2.001f && vec.x <= cascadeRange2.x / 2.001f && vec.y >= -cascadeRange2.y / 2.001f && vec.y <= cascadeRange2.y / 2.001f) {
+		//return float4(0.0f, 0.0f, 1.0f, 1.0f);
+		float4 posForShadow = mul(mul(float4(worldPos, 1.0f), shadowView), shadowProj2);
+		float2 shadowUV = ((posForShadow.xy / posForShadow.w) * 0.5f) + 0.5f;
+		shadowUV.y = 1.0f - shadowUV.y;
+
+		float depthFromLight = posForShadow.z / posForShadow.w;
+
+		shadowAmount = ShadowMap2.SampleCmpLevelZero(ShadowSampler, shadowUV, depthFromLight);
+	}
+	else if (vec.x >= -cascadeRange3.x / 2.001f && vec.x <= cascadeRange3.x / 2.001f && vec.y >= -cascadeRange3.y / 2.001f && vec.y <= cascadeRange3.y / 2.001f) {
+		//return float4(1.0f, 0.0f, 1.0f, 1.0f);
+		float4 posForShadow = mul(mul(float4(worldPos, 1.0f), shadowView), shadowProj3);
+		float2 shadowUV = ((posForShadow.xy / posForShadow.w) * 0.5f) + 0.5f;
+		shadowUV.y = 1.0f - shadowUV.y;
+
+		float depthFromLight = posForShadow.z / posForShadow.w;
+
+		shadowAmount = ShadowMap3.SampleCmpLevelZero(ShadowSampler, shadowUV, depthFromLight);
+	}
 
 	float3 toCameraVector = normalize(cameraPos - input.worldPos);
 

@@ -170,8 +170,10 @@ void Game::Init()
 	EESceneLoader->SetModelPath("../../Assets/Models/City/");
 	EESceneLoader->LoadScene("City");
 
-	EERenderer->SetShadowMapResolution(4096);
-	EERenderer->InitShadows();
+	EERenderer->SetShadowCascadeInfo(0, 4096, 0.1f, 1000.0f, 75.0f, 75.0f);
+	EERenderer->SetShadowCascadeInfo(1, 2048, 0.1f, 1000.0f, 500.0f, 500.0f);
+	EERenderer->SetShadowCascadeInfo(2, 1024, 0.1f, 1000.0f, 1000.0f, 1000.0f);
+	EERenderer->InitShadows(3);
 	EERenderer->InitSkybox();
 
 	EERenderer->SetEntities(&(EESceneLoader->sceneEntities));
