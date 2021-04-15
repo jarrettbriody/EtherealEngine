@@ -533,7 +533,7 @@ void FPSController::DampForces()
 		}
 	}
 
-	if (!keyboard->CheckKeysPressed(baseMovementKeys, 4) && !midAir) // Only damp overall movement if none of the base movement keys are pressed while on the ground. Also return roll to normal
+	if (!keyboard->CheckKeysPressed(baseMovementKeys, 4) && !midAir) // Only damp overall movement if none of the base movement keys are pressed while on the ground. 
 	{
 		controllerVelocity -= controllerVelocity * dampingScalar;
 	}
@@ -541,7 +541,8 @@ void FPSController::DampForces()
 
 void FPSController::MouseLook()
 {
-	// TODO: Roll does not work right in release
+	// TODO: Roll does not work right in release, too fast
+
 	// update camera roll
 	if ((!rollLeft && !rollRight) || (rollLeft && rollRight)) // if side movement keys are not being pressed return to normal camera zRotation depending on what the current rotation is or if both bools are true at the same time straighten cam to avoid jittering
 	{
@@ -577,10 +578,6 @@ void FPSController::MouseLook()
 	}
 
 	cam->RotateCamera(mouse->GetPosX() - (int)prevMousePos.x, mouse->GetPosY() - (int)prevMousePos.y, camRollAngle);
-	
-	// TODO: Ask Jarrett about having the camera being an entity
-	// camEntity->SetPosition(cam->position);
-	// camEntity->SetRotation(mouse->GetPosX() - (int)prevMousePos.x, mouse->GetPosY() - (int)prevMousePos.y, camRollAngle);
 
 	prevMousePos.x = mouse->GetPosX();
 	prevMousePos.y = mouse->GetPosY();
