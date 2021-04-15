@@ -43,6 +43,7 @@ private:
 	DirectX::XMFLOAT3 scale;
 	DirectX::XMFLOAT3 rotation;
 	DirectX::XMFLOAT3 rotationInDegrees;
+	XMFLOAT3 direction;
 	DirectX::XMFLOAT2 repeatTex;
 	map<string, Material*>* materialMap = nullptr;
 	unsigned int meshMaterialIndex = 0;
@@ -86,6 +87,7 @@ public:
 	DirectX::XMFLOAT3 GetEulerAngles();
 	DirectX::XMFLOAT3 GetEulerAnglesDegrees();
 	DirectX::XMFLOAT4 GetRotationQuaternion();
+	XMFLOAT3 GetDirectionVector();
 	void SetPosition(float x, float y, float z);
 	void SetPosition(XMFLOAT3 p);
 	void SetScale(float x, float y, float z);
@@ -95,6 +97,8 @@ public:
 	void SetRotation(XMFLOAT3 rotRadians);
 	void RotateAroundAxis(XMFLOAT3 axis, float scalar);
 	void CalcEulerAngles();
+	void SetDirectionVector(XMFLOAT3 direction);
+	void CalcDirectionVector();
 	void SetRepeatTexture(float x, float y);
 	void SetShadowData(ShadowData shadowData);
 	void SetDepthStencilData(DepthStencilData depthStencilData);
