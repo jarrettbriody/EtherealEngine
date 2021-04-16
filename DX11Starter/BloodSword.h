@@ -10,6 +10,8 @@ class BloodSword : public ScriptManager
 {
 	map<string, Entity*>* eMap;
 
+	Camera* cam;
+
 	SwordState ss;
 	
 	XMFLOAT3 defaultPos;
@@ -20,6 +22,7 @@ class BloodSword : public ScriptManager
 
 	void Update();
 
+	void UpdateSwordPostion();
 
 	void SetLerpPositions();
 

@@ -22,8 +22,10 @@ void FPSController::Init()
 			1,								// script count
 			XMFLOAT3(0.0f, 0.0f, 0.0f),		// position
 			XMFLOAT3(0.0f, 0.0f, 0.0f),		// rotation
-			XMFLOAT3(0.5f, 2.0f, 0.5f),		// scale
-			1.0f							// mass
+			XMFLOAT3(0.5f, 8.0f, 0.5f),		// scale
+			1.0f,							// mass
+			true,
+			BulletColliderShape::CAPSULE
 			// defaults work for the rest
 	};
 
@@ -63,8 +65,6 @@ void FPSController::Init()
 
 void FPSController::Update()
 {
-	UpdateSwordPosition();
-
 	// player state machine
 	switch (ps)
 	{
@@ -127,39 +127,16 @@ void FPSController::CheckBloodSword()
 {
 	if (mouse->OnLMBDown())
 	{
-		cout << "LMB" << endl;
-
 		BloodSword* swordScript = (BloodSword*)scriptFunctionsMap[sword->GetName()]["BLOODSWORD"];
 		swordScript->StartSlash();
 	}
 }
 
-void FPSController::UpdateSwordPosition()
-{
-	// Pseudo childing sword to camera
-	// position sword entity relative to camera
-	// multiply above into camera lookat matrix
-	// ^ will have to do this every frame 
-	XMFLOAT3 newSwordPos = XMFLOAT3(cam->position.x + cam->direction.x, cam->position.y, cam->position.z + cam->direction.z);
-	XMFLOAT3 lerpPos;
-	XMStoreFloat3(&lerpPos, XMVectorLerp(XMLoadFloat3(&sword->GetPosition()), XMLoadFloat3(&newSwordPos), deltaTime * 10.0f));
-	
-	sword->SetPosition(lerpPos);
-
-	/*XMMATRIX swordMatrix = XMLoadFloat4x4(&sword->GetWorldMatrix());
-	XMMATRIX camLookAtMatrix = XMLoadFloat4x4(&cam->GetViewMatrix());
-	XMFLOAT4X4 updatedSwordMatrix;
-	XMStoreFloat4x4(&updatedSwordMatrix, XMMatrixMultiply(swordMatrix, camLookAtMatrix));
-
-	sword->SetWorldMatrix(updatedSwordMatrix);*/
-}
 
 void FPSController::CheckBloodIcicle()
 {
-	if (mouse->OnRMBDown() /*&& bloodIcicleCooldownTimer <= 0*/) 
+	if (mouse->OnRMBDown() && bloodIcicleCooldownTimer <= 0) 
 	{
-		cout << "RMB" << endl;
-
 		// update position and rotation of the EntityCreationParams
 		icicleParams.position = XMFLOAT3(cam->position.x + direction.x * 2, cam->position.y, cam->position.z + direction.z * 2); 
 		icicleParams.rotationRadians = XMFLOAT3(cam->xRotation + 1.5708f /* 90 degress in radians */ , cam->yRotation, cam->zRotation);
@@ -247,7 +224,6 @@ void FPSController::CheckHookshot()
 		if (closestResult.hasHit()) // if there is a surface to grapple to
 		{
 			// Get the entity associated with the rigid body we hit
-			//Entity* hit = (Entity*)(closestResult.m_collisionObject->getUserPointer());
 			PhysicsWrapper* wrapper = (PhysicsWrapper*)closestResult.m_collisionObject->getUserPointer();
 
 			hookshotPoint = closestResult.m_hitPointWorld;
@@ -407,11 +383,7 @@ void FPSController::GroundCheck()
 	Config::DynamicsWorld->rayTest(from, to, closestResult); // Raycast
 
 	if (closestResult.hasHit()) // if there is a surface to stand on
-	{
-		// Get the entity associated with the rigid body we hit
-		/*Entity* hit = (Entity*)(closestResult.m_collisionObject->getUserPointer());
-		printf("Hit: %s\n", hit->GetName().c_str());*/
-		
+	{	
 		midAir = false;
 		playerRBody->setGravity(btVector3(0.0f, 0.0f, 0.0f));
 		jumpCount = 0;
@@ -544,18 +516,19 @@ void FPSController::DampForces()
 
 void FPSController::MouseLook()
 {
-	// TODO: Roll does not work right in release, too fast
+	// TODO: Roll does not work right in release (too fast), not sure why since it is being scaled by delta time (is our timestep the problem?)
+	
 
 	// update camera roll
 	if ((!rollLeft && !rollRight) || (rollLeft && rollRight)) // if side movement keys are not being pressed return to normal camera zRotation depending on what the current rotation is or if both bools are true at the same time straighten cam to avoid jittering
 	{
 		if (cam->zRotation > 0)
 		{
-			camRollAngle -= camRollSpeed * deltaTime;
+			camRollAngle -= CAM_ROLL_INTERVAL * deltaTime;
 		}
 		else if (cam->zRotation < 0)
 		{
-			camRollAngle += camRollSpeed * deltaTime;
+			camRollAngle += CAM_ROLL_INTERVAL * deltaTime;
 		}
 		else
 		{
@@ -566,11 +539,11 @@ void FPSController::MouseLook()
 	{
 		if (cam->zRotation < CAM_ROLL_MAX && rollRight)
 		{
-			camRollAngle += camRollSpeed * deltaTime;
+			camRollAngle += CAM_ROLL_INTERVAL * deltaTime;
 		}
 		else if (cam->zRotation > CAM_ROLL_MIN && rollLeft)
 		{
-			camRollAngle -= camRollSpeed * deltaTime;
+			camRollAngle -= CAM_ROLL_INTERVAL * deltaTime;
 		}
 		else
 		{

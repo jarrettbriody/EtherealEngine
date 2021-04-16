@@ -20,7 +20,6 @@ void BloodIcicle::Update()
 void BloodIcicle::OnCollision(btCollisionObject* other)
 {
 	btRigidBody* icicleRb = entity->GetRBody();
-	//Entity* otherE = (Entity*)other->getUserPointer();
 	PhysicsWrapper* wrapper = (PhysicsWrapper*)other->getUserPointer();
 
 	if (wrapper->type == PHYSICS_WRAPPER_TYPE::ENTITY)
@@ -28,48 +27,33 @@ void BloodIcicle::OnCollision(btCollisionObject* other)
 		Entity* otherE = (Entity*)wrapper->objectPointer;
 
 		// cout << "Blood Icicle Hit: " << otherE->GetName().c_str() << endl;
+
+		// pin icicle to environment
 		if (otherE->tag.STDStr() == std::string("Environment"))
 		{
 			icicleRb->clearForces();
-			icicleRb->setActivationState(0); // pin icicle to environment
+			icicleRb->setActivationState(0); 
 		}
 
-		if (otherE->tag.STDStr() == std::string("Enemy"))
+		// if this icicle hits an enemy and there is not already a body part pinned to the icicle then split the enemy mesh and give each of the child entities the tag "Body Part" to detect the next necessary collision to accurately pin a body part
+		if (otherE->tag.STDStr() == std::string("Enemy") && !bodyPartPinned)
 		{
-			// TODO: Can I set the tag of the children and get a collision call back from them
+			std::vector<Entity*> childEntities = EESceneLoader->SplitMeshIntoChildEntities(otherE, 1.0f);  
 
-			std::vector<Entity*> childEntities = EESceneLoader->SplitMeshIntoChildEntities(otherE, 1.0f);
-
-			if (!childEntities.empty())
+			for each (Entity* e in childEntities)
 			{
-				closestChild = childEntities[0];
-				for each (Entity * e in childEntities)
-				{
-					float currentClosestDistance = closestChild->GetRBody()->getCenterOfMassPosition().distance(icicleRb->getCenterOfMassPosition());
-					float contenderDistance = e->GetRBody()->getCenterOfMassPosition().distance(icicleRb->getCenterOfMassPosition());
-
-					if (currentClosestDistance > contenderDistance)
-					{
-						closestChild = e;
-					}
-				}
-
-				// will probably need these
-				// btRigidBody* closestChildRb = closestChild->GetRBody();
-
-				//closestChild->RemoveFromPhysicsSimulation();
-				bodyPartPinned = true;
-
-
-				// pull out scale from icicle, and get inverse scale and multiply that into the child; 
-				//XMFLOAT4X4 icicleScaleMatrix;
-				//XMFLOAT4X4 adjustedChildMatrix;
-				//XMStoreFloat4x4(&icicleScaleMatrix, XMMatrixTranspose(XMMatrixInverse(nullptr, XMLoadFloat4x4(&entity->GetWorldMatrix())))); // TODO: How to put the icicle scale into a matrix
-				//XMStoreFloat4x4(&adjustedChildMatrix, XMMatrixMultiply(XMLoadFloat4x4(&icicleScaleMatrix), XMLoadFloat4x4(&closestChild->GetWorldMatrix())));
-
-				//entity->AddChildEntity(closestChild, adjustedChildMatrix); // TODO: Figure out how to maintain scale, correctly position
-				//closestChild->SetPosition(XMFLOAT3(0, 0, 0));
+				e->tag = std::string("Body Part");
 			}
+		}
+
+		// if this icicle hits a child entity of a recently split enemy and there is not already a body part pinned to the icicle then pin the collided body part
+		if (otherE->tag.STDStr() == std::string("Body Part") && !bodyPartPinned)
+		{
+			closestChild = otherE;
+
+			//closestChild->RemoveFromPhysicsSimulation(); ---> works better without this right now
+			bodyPartPinned = true;
+			closestChild->GetRBody()->setAngularFactor(btVector3(0, 0, 0)); // do not allow the child to rotate after pinned
 		}
 	}
 }

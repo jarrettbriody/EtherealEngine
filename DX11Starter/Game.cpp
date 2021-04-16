@@ -497,7 +497,7 @@ void Game::PhysicsStep(float deltaTime)
 	Entity* entity = nullptr;
 
 	Config::DynamicsWorld->applyGravity();
-	Config::DynamicsWorld->stepSimulation(deltaTime * deltaTimeScalar, 10, 1.f / 60.f); // Config::DynamicsWorld->stepSimulation(deltaTime, 1, btScalar(1.0) / btScalar(60.0)); --> don't believe this framerate independent, needed to add max steps variable
+	Config::DynamicsWorld->stepSimulation((deltaTime * deltaTimeScalar), 10, 1.f / 60.f); // Config::DynamicsWorld->stepSimulation(deltaTime, 1, btScalar(1.0) / btScalar(60.0)); --> don't believe this framerate independent, needed to add max steps variable
 
 	for (int i = 0; i < Config::DynamicsWorld->getNumCollisionObjects(); i++)
 	{
