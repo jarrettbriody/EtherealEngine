@@ -37,7 +37,7 @@ void FPSController::Init()
 			1,								// script count
 			XMFLOAT3(0.0f, 0.0f, 0.0f),		// position
 			XMFLOAT3(0.0f, 0.0f, 0.0f),		// rotation
-			XMFLOAT3(1.0f, 1.0f, 1.0f),		// scale
+			XMFLOAT3(0.12f, 0.12f, 0.12f),		// scale
 			0.0f							// mass
 			// defaults work for the rest
 	};
@@ -117,7 +117,7 @@ void FPSController::Update()
 
 void FPSController::CheckAllAbilities()
 {
-	CheckBloodSword(); // --> this makes it so that OnRMBDown() isn't responsive
+	CheckBloodSword(); 
 	CheckBloodIcicle();
 	CheckHookshot();
 	CheckBulletTime();
@@ -125,7 +125,7 @@ void FPSController::CheckAllAbilities()
 
 void FPSController::CheckBloodSword()
 {
-	if (mouse->OnLMBDown()) 
+	if (mouse->OnLMBDown())
 	{
 		cout << "LMB" << endl;
 
@@ -140,15 +140,18 @@ void FPSController::UpdateSwordPosition()
 	// position sword entity relative to camera
 	// multiply above into camera lookat matrix
 	// ^ will have to do this every frame 
+	XMFLOAT3 newSwordPos = XMFLOAT3(cam->position.x + cam->direction.x, cam->position.y, cam->position.z + cam->direction.z);
+	XMFLOAT3 lerpPos;
+	XMStoreFloat3(&lerpPos, XMVectorLerp(XMLoadFloat3(&sword->GetPosition()), XMLoadFloat3(&newSwordPos), deltaTime * 10.0f));
 	
-	sword->SetPosition(XMFLOAT3(cam->position.x - 2, cam->position.y, cam->position.z + 1));
+	sword->SetPosition(lerpPos);
 
-	XMMATRIX swordMatrix = XMLoadFloat4x4(&sword->GetWorldMatrix());
+	/*XMMATRIX swordMatrix = XMLoadFloat4x4(&sword->GetWorldMatrix());
 	XMMATRIX camLookAtMatrix = XMLoadFloat4x4(&cam->GetViewMatrix());
 	XMFLOAT4X4 updatedSwordMatrix;
 	XMStoreFloat4x4(&updatedSwordMatrix, XMMatrixMultiply(swordMatrix, camLookAtMatrix));
 
-	sword->SetWorldMatrix(updatedSwordMatrix);
+	sword->SetWorldMatrix(updatedSwordMatrix);*/
 }
 
 void FPSController::CheckBloodIcicle()

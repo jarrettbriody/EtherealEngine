@@ -4,7 +4,6 @@
 void BloodIcicle::Init()
 {
 	eMap = ScriptManager::sceneEntitiesMap;
-	initialImpulse = entity->GetRBody()->getLinearVelocity();
 	
 	// Do not allow the icicle to receive reaction forces
 	entity->GetRBody()->setCollisionFlags(entity->GetRBody()->getCollisionFlags() | btRigidBody::CF_NO_CONTACT_RESPONSE); 
@@ -12,7 +11,10 @@ void BloodIcicle::Init()
 
 void BloodIcicle::Update()
 {
-	
+	if (bodyPartPinned)
+	{
+		closestChild->SetPosition(entity->GetPosition());
+	}
 }
 
 void BloodIcicle::OnCollision(btCollisionObject* other)
@@ -40,7 +42,7 @@ void BloodIcicle::OnCollision(btCollisionObject* other)
 
 			if (!childEntities.empty())
 			{
-				Entity* closestChild = childEntities[0];
+				closestChild = childEntities[0];
 				for each (Entity * e in childEntities)
 				{
 					float currentClosestDistance = closestChild->GetRBody()->getCenterOfMassPosition().distance(icicleRb->getCenterOfMassPosition());
@@ -55,16 +57,18 @@ void BloodIcicle::OnCollision(btCollisionObject* other)
 				// will probably need these
 				// btRigidBody* closestChildRb = closestChild->GetRBody();
 
-				closestChild->RemoveFromPhysicsSimulation();
+				//closestChild->RemoveFromPhysicsSimulation();
+				bodyPartPinned = true;
+
 
 				// pull out scale from icicle, and get inverse scale and multiply that into the child; 
-				XMFLOAT4X4 icicleScaleMatrix;
-				XMFLOAT4X4 adjustedChildMatrix;
-				XMStoreFloat4x4(&icicleScaleMatrix, XMMatrixTranspose(XMMatrixInverse(nullptr, XMLoadFloat4x4(&entity->GetWorldMatrix())))); // TODO: How to put the icicle scale into a matrix
-				XMStoreFloat4x4(&adjustedChildMatrix, XMMatrixMultiply(XMLoadFloat4x4(&icicleScaleMatrix), XMLoadFloat4x4(&closestChild->GetWorldMatrix())));
+				//XMFLOAT4X4 icicleScaleMatrix;
+				//XMFLOAT4X4 adjustedChildMatrix;
+				//XMStoreFloat4x4(&icicleScaleMatrix, XMMatrixTranspose(XMMatrixInverse(nullptr, XMLoadFloat4x4(&entity->GetWorldMatrix())))); // TODO: How to put the icicle scale into a matrix
+				//XMStoreFloat4x4(&adjustedChildMatrix, XMMatrixMultiply(XMLoadFloat4x4(&icicleScaleMatrix), XMLoadFloat4x4(&closestChild->GetWorldMatrix())));
 
-				entity->AddChildEntity(closestChild, adjustedChildMatrix); // TODO: Figure out how to maintain scale, correctly position
-				closestChild->SetPosition(XMFLOAT3(0, 0, 0));
+				//entity->AddChildEntity(closestChild, adjustedChildMatrix); // TODO: Figure out how to maintain scale, correctly position
+				//closestChild->SetPosition(XMFLOAT3(0, 0, 0));
 			}
 		}
 	}

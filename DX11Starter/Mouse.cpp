@@ -30,54 +30,90 @@ bool Mouse::DestroyInstance()
 void Mouse::RegisterLMBPress(int x, int y)
 {
 	this->leftIsDown = true;
-	this->eventBuffer.push(MouseEvent(MouseEvent::EventType::LPress, x, y));
+	this->eventBuffer.insert({ MouseEvent::EventType::LPress, MouseEvent(MouseEvent::EventType::LPress, x, y) });
 }
 
 void Mouse::RegisterLMBRelease(int x, int y)
 {
 	this->leftIsDown = false;
-	this->eventBuffer.push(MouseEvent(MouseEvent::EventType::LRelease, x, y));
+	this->eventBuffer.insert({ MouseEvent::EventType::LRelease, MouseEvent(MouseEvent::EventType::LRelease, x, y) });
 }
 
 void Mouse::RegisterRMBPress(int x, int y)
 {
 	this->rightIsDown = true;
-	this->eventBuffer.push(MouseEvent(MouseEvent::EventType::RPress, x, y));
+	this->eventBuffer.insert({ MouseEvent::EventType::RPress, MouseEvent(MouseEvent::EventType::RRelease, x, y) });
 }
 
 void Mouse::RegisterRMBRelease(int x, int y)
 {
 	this->rightIsDown = false;
-	this->eventBuffer.push(MouseEvent(MouseEvent::EventType::RRelease, x, y));
+	this->eventBuffer.insert({ MouseEvent::EventType::RRelease, MouseEvent(MouseEvent::EventType::RRelease, x, y) });
 }
 
 void Mouse::RegisterMMBPress(int x, int y)
 {
 	this->mButtonIsDown = true;
-	this->eventBuffer.push(MouseEvent(MouseEvent::EventType::MPress, x, y));
+	this->eventBuffer.insert({ MouseEvent::EventType::MPress, MouseEvent(MouseEvent::EventType::MPress, x, y) });
 }
 
 void Mouse::RegisterMMBRelease(int x, int y)
 {
 	this->mButtonIsDown = false;
-	this->eventBuffer.push(MouseEvent(MouseEvent::EventType::MRelease, x, y));
+	this->eventBuffer.insert({ MouseEvent::EventType::MRelease, MouseEvent(MouseEvent::EventType::MRelease, x, y) });
 }
 
 void Mouse::RegisterWheelUp(int x, int y)
 {
-	this->eventBuffer.push(MouseEvent(MouseEvent::EventType::WheelUp, x, y));
+	this->eventBuffer.insert({ MouseEvent::EventType::WheelUp, MouseEvent(MouseEvent::EventType::WheelUp, x, y) });
 }
 
 void Mouse::RegisterWheelDown(int x, int y)
 {
-	this->eventBuffer.push(MouseEvent(MouseEvent::EventType::WheelDown, x, y));
+	this->eventBuffer.insert({ MouseEvent::EventType::WheelDown, MouseEvent(MouseEvent::EventType::WheelDown, x, y) });
 }
 
 void Mouse::RegisterMouseMove(int x, int y)
 {
 	this->x = x;
 	this->y = y;
-	this->eventBuffer.push(MouseEvent(MouseEvent::EventType::Move, x, y));
+	this->eventBuffer.insert({ MouseEvent::EventType::Move, MouseEvent(MouseEvent::EventType::Move, x, y) }); // TODO: How useful is this/is it needed?
+}
+
+bool Mouse::OnMouseButtonDown(MouseEvent::EventType mouseEventType)
+{
+	if (EventBufferIsEmpty())
+	{
+		return false;
+	}
+	else
+	{
+		bool pressed = false;
+		if (this->eventBuffer.count(mouseEventType))
+		{
+			pressed = true;
+			this->eventBuffer.erase(mouseEventType);
+		}
+		return pressed;
+	}
+}
+
+bool Mouse::OnMouseButtonUp(MouseEvent::EventType mouseEventType)
+{
+	if (EventBufferIsEmpty())
+	{
+		return false;
+	}
+	else
+	{
+		bool released = false;
+		if (this->eventBuffer.count(mouseEventType))
+		{
+			released = true;
+			this->eventBuffer.erase(mouseEventType);
+		}
+		return released;
+	}
 }
 
 bool Mouse::LMBIsPressed()
@@ -97,32 +133,32 @@ bool Mouse::RMBIsPressed()
 
 bool Mouse::OnLMBDown()
 {
-	return ReadEvent().GetType() == MouseEvent::LPress;
+	return OnMouseButtonDown(MouseEvent::EventType::LPress);
 }
 
 bool Mouse::OnLMBUp()
 {
-	return ReadEvent().GetType() == MouseEvent::LRelease;
+	return OnMouseButtonUp(MouseEvent::EventType::LRelease);
 }
 
 bool Mouse::OnRMBDown()
 {
-	return ReadEvent().GetType() == MouseEvent::RPress;
+	return OnMouseButtonDown(MouseEvent::EventType::RPress);
 }
 
 bool Mouse::OnRMBUp()
 {
-	return ReadEvent().GetType() == MouseEvent::RRelease;
+	return OnMouseButtonUp(MouseEvent::EventType::RRelease);
 }
 
 bool Mouse::OnMMBDown()
 {
-	return ReadEvent().GetType() == MouseEvent::MPress;;
+	return OnMouseButtonDown(MouseEvent::EventType::MPress);
 }
 
 bool Mouse::OnMMBUp()
 {
-	return ReadEvent().GetType() == MouseEvent::MRelease;
+	return OnMouseButtonDown(MouseEvent::EventType::MRelease);
 }
 
 bool Mouse::EventBufferIsEmpty()
@@ -143,20 +179,4 @@ int Mouse::GetPosY()
 MousePoint Mouse::GetPos()
 {
 	return { this->x, this->y };
-}
-
-// TODO: Not handling all events given from windows or wierd issue with dequeing event as they are read instead of the end of frame
-
-MouseEvent Mouse::ReadEvent()
-{
-	if (this->eventBuffer.empty())
-	{
-		return MouseEvent();
-	}
-	else
-	{
-		MouseEvent me = this->eventBuffer.front();
-		this->eventBuffer.pop();
-		return me;
-	}
 }

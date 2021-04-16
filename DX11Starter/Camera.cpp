@@ -134,7 +134,7 @@ void Camera::Update()
 			RotateCamera(0, 0, -1);
 		}
 
-		if (mouse->OnLMBDown()) {
+		/*if (mouse->OnLMBDown()) {
 			prevMousePos.x = mouse->GetPosX();
 			prevMousePos.y = mouse->GetPosY();
 		}
@@ -143,7 +143,7 @@ void Camera::Update()
 			RotateCamera(mouse->GetPosX() - (int)prevMousePos.x, mouse->GetPosY() - (int)prevMousePos.y);
 			prevMousePos.x = mouse->GetPosX();
 			prevMousePos.y = mouse->GetPosY();
-		}
+		}*/
 
 	}
 	

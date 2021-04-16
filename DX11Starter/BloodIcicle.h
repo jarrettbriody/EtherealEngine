@@ -7,6 +7,10 @@ class BloodIcicle : public ScriptManager
 
 	btVector3 initialImpulse;
 
+	Entity* closestChild;
+
+	bool bodyPartPinned = false;
+
 	void Init();
 
 	void Update();

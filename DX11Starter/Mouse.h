@@ -2,6 +2,8 @@
 #include "MouseEvent.h"
 #include <queue>
 
+// TODO: Not confirmed that this set-up will work for input polling across multiple scripts
+
 class Mouse
 {
 public:
@@ -29,11 +31,12 @@ public:
 	bool OnMMBDown();
 	bool OnMMBUp();
 
+	// TODO: Methods for mouse move, mouse wheel?
+
 	bool EventBufferIsEmpty();
 	int GetPosX();
 	int GetPosY();
 	MousePoint GetPos();
-	MouseEvent ReadEvent();
 
 private:
 	static Mouse* instance;
@@ -43,6 +46,9 @@ private:
 	bool mButtonIsDown = false;
 	int x = 0;
 	int y = 0;
-	std::queue<MouseEvent> eventBuffer;
+	std::unordered_map<MouseEvent::EventType, MouseEvent> eventBuffer;
+	
+	bool OnMouseButtonDown(MouseEvent::EventType mouseEventType);
+	bool OnMouseButtonUp(MouseEvent::EventType mouseEventType);
 };
 
