@@ -1,6 +1,8 @@
 TYPE="DIRLIGHT" name="Sun" intensity="0.25" P(200,350,25)D(-0.4951,-0.8665,-0.0618)C(1.0,0.98823,0.87058)
 TYPE="SKYBOX" dds="night4"
 
+name="FPSController" colliders="true" mass="1.0" colliderType="CAPSULE" scripts="FPSCONTROLLER" P(0, 3, 0)R(0,0,0)S(0.25, 1.0, 0.25)
+
 obj="grave" layer="decal" colliders="true" repeatTexture="0.025,0.025" P(0,0,0)R(0,180,0)S(1,1,1)
 obj="graveline" layer="decal" colliders="true" P(-50.31,-0.87,-34.51)R(0,180,0)S(1,1,1)
 obj="graveline" layer="decal" colliders="true" P(-10.19,-0.87,-25.47)R(0,180,0)S(1,1,1)
