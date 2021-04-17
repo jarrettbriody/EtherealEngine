@@ -43,7 +43,11 @@ private:
 	DirectX::XMFLOAT3 scale;
 	DirectX::XMFLOAT3 rotation;
 	DirectX::XMFLOAT3 rotationInDegrees;
+
 	XMFLOAT3 direction;
+	XMFLOAT3 up;
+	XMFLOAT3 right;
+
 	DirectX::XMFLOAT2 repeatTex;
 	map<string, Material*>* materialMap = nullptr;
 	unsigned int meshMaterialIndex = 0;
@@ -88,6 +92,8 @@ public:
 	DirectX::XMFLOAT3 GetEulerAnglesDegrees();
 	DirectX::XMFLOAT4 GetRotationQuaternion();
 	XMFLOAT3 GetDirectionVector();
+	XMFLOAT3 GetUpVector();
+	XMFLOAT3 GetRightVector();
 	void SetPosition(float x, float y, float z);
 	void SetPosition(XMFLOAT3 p);
 	void SetScale(float x, float y, float z);

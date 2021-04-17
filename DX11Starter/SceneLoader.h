@@ -102,6 +102,7 @@ private:
 	regex objNameRegex = regex("obj=\"(\\w+)\""); //getting obj model name
 	regex materialNameRegex = regex("material=\"(\\w+)\"");
 	regex repeatTextureRegex = regex("repeatTexture=\"(\\d*\\.\\d*|\\d+),(\\d*\\.\\d*|\\d+)\"");
+	regex uvOffsetRegex = regex("uvOffset=\"(-?\\d*\\.\\d*|-?\\d+),(-?\\d*\\.\\d*|-?\\d+)\"");
 	regex tagNameRegex = regex("tag=\"(\\w+)\""); //for getting the entity tag
 	regex layerNameRegex = regex("layer=\"(\\w+)\""); //for getting the entity layer
 	regex scriptNamesRegex = regex("scripts=\"([\\w+|,]+)\""); //getting script names associated with entity
@@ -110,7 +111,10 @@ private:
 	regex colliderTypeRegex = regex("colliderType=\"(\\w+)\"");
 	regex massRegex = regex("mass=\"(\\d*\\.\\d*|\\d+)\"");
 	regex debugRegex = regex("debug=\"(\\w+)\"");
+	regex raaRegex = regex("rotateAroundAxis=\"(\\w+)\"");
+	regex clampTexRegex = regex("clampTex=\"(\\w+)\"");
 	regex transformationDataRegex = regex("P\\(.*\\)R\\(.*\\)S\\(.*\\)");
+	regex quaternionRegex = regex("Q\\(.*\\)");
 	regex transformNumIteratorRegex = regex("-\\d*\\.\\d*|\\d*\\.\\d*|-\\d+|\\d+"); //for iterating over each line to get the float values for transformations
 
 	//Material loading regular expressions

@@ -1,0 +1,13 @@
+newmtl BrickWall
+map_Kd bricks.png
+map_Bump bricks_N.png
+Kd 1 1 1
+d 1
+
+newmtl Window
+map_Kd pyrolbrwnplstcwndw1_bmp.png
+map_Bump pyrolbrwnplstcwndw1_nrm.png
+Kd 1 1 1
+d 1
+repeatTexture="0.1,0.1"
+uvOffset="0,-0.1"

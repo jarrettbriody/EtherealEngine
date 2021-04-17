@@ -365,6 +365,9 @@
     <Text Include="..\Assets\EEAssetPreload.txt">
       <Filter>EEScenes</Filter>
     </Text>
+    <Text Include="..\Assets\Scenes\Kamchatka.txt">
+      <Filter>EEScenes</Filter>
+    </Text>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="DX11Starter.rc">

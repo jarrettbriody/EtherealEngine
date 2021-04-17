@@ -16,9 +16,12 @@ Entity::Entity(string entityName)
 	position = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
 	scale = DirectX::XMFLOAT3(1.0f, 1.0f, 1.0f);
 	rotation = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
+	direction = Z_AXIS;
+	up = Y_AXIS;
+	right = X_AXIS;
 	rotationInDegrees = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
 	XMVECTOR quat = XMQuaternionRotationRollPitchYaw(rotation.x, rotation.y, rotation.z);
-	XMStoreFloat4(&quaternion, quat);
+	XMStoreFloat4(&quaternion, XMQuaternionNormalize(quat));
 	repeatTex = XMFLOAT2(1.0f, 1.0f);
 	DirectX::XMMATRIX W = DirectX::XMMatrixIdentity();
 	DirectX::XMStoreFloat4x4(&worldMatrix, XMMatrixTranspose(W));
@@ -36,9 +39,12 @@ Entity::Entity(string entityName, Mesh* entityMesh, Material* mat)
 	position = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
 	scale = DirectX::XMFLOAT3(1.0f, 1.0f, 1.0f);
 	rotation = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
+	direction = Z_AXIS;
+	up = Y_AXIS;
+	right = X_AXIS;
 	rotationInDegrees = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
 	XMVECTOR quat = XMQuaternionRotationRollPitchYaw(rotation.x, rotation.y, rotation.z);
-	XMStoreFloat4(&quaternion, quat);
+	XMStoreFloat4(&quaternion, XMQuaternionNormalize(quat));
 	repeatTex = XMFLOAT2(1.0f, 1.0f);
 	DirectX::XMMATRIX W = DirectX::XMMatrixIdentity();
 	DirectX::XMStoreFloat4x4(&worldMatrix, XMMatrixTranspose(W));
@@ -108,6 +114,9 @@ void Entity::operator=(const Entity& e)
 	scale = e.scale;
 	rotation = e.rotation;
 	rotationInDegrees = e.rotationInDegrees;
+	direction = e.direction;
+	up = e.up;
+	right = e.right;
 	repeatTex = e.repeatTex;
 	parent = e.parent;
 	shadowsEnabled = e.shadowsEnabled;
@@ -337,7 +346,7 @@ void Entity::SetRotation(float x, float y, float z)
 	rotationInDegrees.z = DirectX::XMConvertToDegrees(z);
 
 	XMVECTOR quat = XMQuaternionRotationRollPitchYaw(x, y, z);
-	XMStoreFloat4(&quaternion, quat);
+	XMStoreFloat4(&quaternion, XMQuaternionNormalize(quat));
 	CalcDirectionVector();
 }
 
@@ -360,7 +369,7 @@ void Entity::SetRotation(XMFLOAT3 rotRadians)
 	rotationInDegrees.z = DirectX::XMConvertToDegrees(rotation.z);
 
 	XMVECTOR quat = XMQuaternionRotationRollPitchYaw(rotation.x, rotation.y, rotation.z);
-	XMStoreFloat4(&quaternion, quat);
+	XMStoreFloat4(&quaternion, XMQuaternionNormalize(quat));
 	CalcDirectionVector();
 }
 
@@ -369,8 +378,8 @@ void Entity::RotateAroundAxis(XMFLOAT3 axis, float scalar)
 	XMVECTOR a = XMLoadFloat3(&axis);
 	XMVECTOR quat = XMQuaternionRotationAxis(a, scalar);
 	XMVECTOR existingQuat = XMLoadFloat4(&quaternion);
-	XMVECTOR result = XMQuaternionMultiply(existingQuat, quat);
-	XMStoreFloat4(&quaternion, result);
+	XMVECTOR result = XMQuaternionMultiply(XMQuaternionNormalize(quat), existingQuat);
+	XMStoreFloat4(&quaternion, XMQuaternionNormalize(result));
 	CalcEulerAngles();
 	CalcDirectionVector();
 }
@@ -380,13 +389,23 @@ XMFLOAT3 Entity::GetDirectionVector()
 	return direction;
 }
 
+XMFLOAT3 Entity::GetUpVector()
+{
+	return up;
+}
+
+XMFLOAT3 Entity::GetRightVector()
+{
+	return right;
+}
+
 void Entity::CalcEulerAngles()
 {
 	XMVECTOR q = XMLoadFloat4(&quaternion);
 
 	XMFLOAT3 x = X_AXIS;
-	XMFLOAT3 y = X_AXIS;
-	XMFLOAT3 z = X_AXIS;
+	XMFLOAT3 y = Y_AXIS;
+	XMFLOAT3 z = Z_AXIS;
 
 	XMVECTOR xs = XMLoadFloat3(&x);
 	XMVECTOR ys = XMLoadFloat3(&y);
@@ -460,7 +479,7 @@ void Entity::SetDirectionVector(XMFLOAT3 direction)
 
 	XMVECTOR quat = XMQuaternionRotationMatrix(rotation);
 
-	XMStoreFloat4(&quaternion, quat);
+	XMStoreFloat4(&quaternion, XMQuaternionNormalize(quat));
 
 	CalcEulerAngles();
 }
@@ -484,9 +503,18 @@ ID3D11Buffer * Entity::GetMeshIndexBuffer(int childIndex)
 void Entity::CalcDirectionVector()
 {
 	XMFLOAT3 zAxis = Z_AXIS;
+	XMFLOAT3 yAxis = Y_AXIS;
+	XMFLOAT3 xAxis = X_AXIS;
 	XMVECTOR dir = XMLoadFloat3(&zAxis);
-	dir = XMVector3Transform(dir, XMMatrixRotationQuaternion(XMLoadFloat4(&quaternion)));
+	XMVECTOR u = XMLoadFloat3(&yAxis);
+	XMVECTOR r = XMLoadFloat3(&xAxis);
+	XMVECTOR quat = XMLoadFloat4(&quaternion);
+	dir = XMVector3Transform(dir, XMMatrixRotationQuaternion(quat));
+	u = XMVector3Transform(u, XMMatrixRotationQuaternion(quat));
+	r = XMVector3Transform(r, XMMatrixRotationQuaternion(quat));
 	XMStoreFloat3(&direction, dir);
+	XMStoreFloat3(&up, u);
+	XMStoreFloat3(&right, r);
 }
 
 int Entity::GetMeshIndexCount(int childIndex)

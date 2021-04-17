@@ -1,0 +1,16 @@
+newmtl initialShadingGroup
+map_Kd oldFactoryDiffuse.png
+map_Bump oldFactoryNormal.png
+illum 4
+Kd 0.50 0.50 0.50
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+Ni 1.00
+newmtl new_moratorium:moratorium:initialShadingGroup
+map_Kd oldFactoryDiffuse.png
+map_Bump oldFactoryNormal.png
+illum 4
+Kd 0.50 0.50 0.50
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+Ni 1.00

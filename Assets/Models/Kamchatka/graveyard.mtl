@@ -1,0 +1,14 @@
+newmtl GraveyardBrickWall
+map_Kd bricks.png
+map_Bump bricks_N.png
+repeatTexture="0.3,0.05"
+Kd 1 1 1
+d 1
+
+newmtl GraveyardDirt
+map_Kd rockSoil.png
+map_Bump rockSoil_N.png
+repeatTexture="0.1,0.1"
+Kd 1 1 1
+d 1
+

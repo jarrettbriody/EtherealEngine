@@ -41,6 +41,7 @@ public:
 	static ID3D11Device* Device;
 	static ID3D11DeviceContext* Context;
 	static ID3D11SamplerState* Sampler;
+	static ID3D11SamplerState* ClampSampler;
 	static IDXGISwapChain* SwapChain;
 	static ID3D11RenderTargetView* BackBufferRTV;
 	static ID3D11DepthStencilView* DepthStencilView;

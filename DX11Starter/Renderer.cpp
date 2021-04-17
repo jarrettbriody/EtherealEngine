@@ -609,6 +609,15 @@ void Renderer::RenderFrame()
 		Mesh* mesh = renderObject.mesh;
 		Material* mat = renderObject.material;
 
+		if (e->destroyed || e->isEmptyObj) {
+			if (i != transparentObjectCount - 1) {
+				transparentObjects[i] = transparentObjects[transparentObjectCount - 1];
+			}
+			renderObjectsMap.erase(e);
+			transparentObjectCount--;
+			continue;
+		}
+
 		if (e->isEmptyObj) continue;
 
 		if (Config::SSAOEnabled) {
@@ -680,8 +689,9 @@ void Renderer::RenderDebugLines()
 
 void Renderer::RenderShadowMap()
 {
-	if (!entities || !shaders.depthStencilVS || !Config::ShadowsEnabled || renderObjectCount == 0)
+	if (!entities || !shaders.depthStencilVS || !Config::ShadowsEnabled || renderObjectCount == 0) {
 		return;
+	}
 
 	D3D11_VIEWPORT vp = {};
 
@@ -736,7 +746,9 @@ void Renderer::RenderShadowMap()
 				continue;
 			}
 
-			if (e->isEmptyObj) continue;
+			if (e->isEmptyObj) {
+				continue;
+			}
 
 			//if (mat->GetVertexShader()->GetShaderType() == ShaderType::MODIFY_VERTS) {}
 
@@ -1013,22 +1025,23 @@ void Renderer::AddRenderObject(Entity* e, Mesh* mesh, Material* mat)
 	RenderObject r;
 
 	float transparency = mat->GetMaterialData().Transparency;
-	RenderObject* objects = (transparency != 1.0f) ? transparentObjects : renderObjects;
+	RenderObject** objects = (transparency != 1.0f) ? &transparentObjects : &renderObjects;
 	int& count = (transparency != 1.0f) ? transparentObjectCount : renderObjectCount;
 	int& maxObjects = (transparency != 1.0f) ? maxTransparentObjects : maxRenderObjects;
 
 	if (!mesh->HasChildren()) {
 		r = { e, mesh, mat };
-		objects[count] = r;
+		(*objects)[count] = r;
 		if (!renderObjectsMap.count(e)) renderObjectsMap.insert({ e, vector<RenderObject*>() });
-		renderObjectsMap[e].push_back(&objects[count]);
+		renderObjectsMap[e].push_back(&(*objects)[count]);
 		count++;
 		if (count >= maxObjects) {
-			RenderObject* old = objects;
-			objects = new RenderObject[(size_t)maxObjects * 2];
-			memcpy(objects, old, sizeof(RenderObject) * maxObjects);
+			RenderObject* oldObjects = *objects;
+			RenderObject* newObjects = new RenderObject[(size_t)maxObjects * 2];
+			memcpy(newObjects, *objects, sizeof(RenderObject) * maxObjects);
 			maxObjects *= 2;
-			delete[] old;
+			*objects = newObjects;
+			delete[] oldObjects;
 		}
 	}
 	else {
@@ -1036,16 +1049,17 @@ void Renderer::AddRenderObject(Entity* e, Mesh* mesh, Material* mat)
 		for (size_t i = 0; i < mesh->GetChildCount(); i++)
 		{
 			r = { e, children[i], e->GetMaterial(e->GetMeshMaterialName(i)) };
-			objects[count] = r;
+			(*objects)[count] = r;
 			if (!renderObjectsMap.count(e)) renderObjectsMap.insert({ e, vector<RenderObject*>() });
-			renderObjectsMap[e].push_back(&objects[count]);
+			renderObjectsMap[e].push_back(&(*objects)[count]);
 			count++;
 			if (count >= maxObjects) {
-				RenderObject* old = objects;
-				objects = new RenderObject[(size_t)maxObjects * 2];
-				memcpy(objects, old, sizeof(RenderObject) * maxObjects);
+				RenderObject* oldObjects = *objects;
+				RenderObject* newObjects = new RenderObject[(size_t)maxObjects * 2];
+				memcpy(newObjects, *objects, sizeof(RenderObject) * maxObjects);
 				maxObjects *= 2;
-				delete[] old;
+				*objects = newObjects;
+				delete[] oldObjects;
 			}
 		}
 	}

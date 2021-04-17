@@ -1,0 +1,6 @@
+newmtl Dirt
+map_Kd rockSoil.png
+map_Bump rockSoil_N.png
+Kd 1 1 1
+d 1
+

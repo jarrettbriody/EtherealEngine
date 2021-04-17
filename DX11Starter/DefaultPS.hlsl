@@ -32,6 +32,7 @@ cbuffer lightCBuffer : register(b0)
 
 cbuffer uvRepeatCBuffer : register(b1) {
 	float2 uvMult;
+	float2 uvOffset;
 };
 
 cbuffer externalData : register(b2) {
@@ -78,7 +79,7 @@ SamplerComparisonState ShadowSampler	: register(s1);
 float4 main(VertexToPixel input) : SV_TARGET
 {
 	//return float4(1.0f,0.0f,0.0f,1.0f);
-	input.uv = float2(input.uv.x * uvMult.x, input.uv.y * uvMult.y);
+	input.uv = float2(input.uv.x * uvMult.x + uvOffset.x, input.uv.y * uvMult.y + uvOffset.y);
 
 	float4 surfaceColor = DiffuseTexture.Sample(BasicSampler, input.uv);
 	// Just return the input color

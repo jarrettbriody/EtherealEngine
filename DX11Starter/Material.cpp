@@ -94,6 +94,19 @@ void Material::Prepare()
 
 	pixelShader->SetFloat("transparency", materialData.Transparency);
 
+	if (materialData.repeatTexture.x != 1.0f && materialData.repeatTexture.y != 1.0f) {
+		pixelShader->SetData(
+			"uvMult",
+			&materialData.repeatTexture,
+			sizeof(materialData.repeatTexture)
+		);
+	}
+	pixelShader->SetData(
+		"uvOffset",
+		&materialData.uvOffset,
+		sizeof(materialData.uvOffset)
+	);
+
 	/*
 	if (materialData.SSAO) {
 		pixelShader->SetData(
