@@ -33,6 +33,8 @@ struct MaterialData {
 	ID3D11ShaderResourceView* NormalTextureMapSRV = nullptr; //map_Bump
 	bool SSAO = false;
 	bool hbaoPlusEnabled = true;
+	XMFLOAT2 repeatTexture = XMFLOAT2(1.0f, 1.0f);
+	XMFLOAT2 uvOffset = XMFLOAT2(0.0f, 0.0f);
 };
 
 class Material

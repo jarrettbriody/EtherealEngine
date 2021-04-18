@@ -1,0 +1,6 @@
+newmtl OldFactory
+map_Kd oldFactoryDiffuse.png
+map_Bump oldFactoryNormal.png
+Kd 1 1 1
+d 1
+

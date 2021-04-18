@@ -1,0 +1,19 @@
+newmtl OldFactory
+map_Kd oldFactoryDiffuse.png
+Kd 1 1 1
+d 1
+
+newmtl DefaultHDMaterial
+Kd 0.7279412 0.7279412 0.7279412
+d 1
+
+newmtl OldConcrete
+map_Kd sovietconcretefence.png
+Kd 1 1 1
+d 1
+
+newmtl OldMetal
+map_Kd OldMetalDiffuse.png
+Kd 1 1 1
+d 1
+

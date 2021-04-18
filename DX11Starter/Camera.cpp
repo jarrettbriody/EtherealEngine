@@ -4,7 +4,7 @@
 
 Camera::Camera()
 {
-	position = XMFLOAT3(-410.543f, 9.74101f, -100.0f);
+	position = XMFLOAT3(0, 10, 0);
 	direction = XMFLOAT3(0.0f, 0.0f, 1.0f);
 	XMVECTOR dir = XMLoadFloat3(&direction);
 	dir = XMVector3Normalize(dir);
@@ -98,7 +98,7 @@ void Camera::Update()
 	XMVECTOR dir = XMLoadFloat3(&direction);
 	XMVECTOR right = XMVector3Cross(dir, XMLoadFloat3(&yAxis));
 
-	float scalar = 3;
+	float scalar = 30;
 
 	if (Config::DebugCamera) {
 		//* Can now use the new input system instead!

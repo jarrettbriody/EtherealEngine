@@ -27,6 +27,7 @@ Game::~Game()
 	delete gpuEmitter;
 
 	Config::Sampler->Release();
+	Config::ClampSampler->Release();
 
 	// FMOD
 	sound[0]->release(); // For now just release the one sound we have assigned
@@ -96,6 +97,12 @@ void Game::Init()
 	samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
 
 	Config::Device->CreateSamplerState(&samplerDesc, &Config::Sampler);
+
+	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+	samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+	samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+
+	Config::Device->CreateSamplerState(&samplerDesc, &Config::ClampSampler);
 
 	MemoryAllocator::SetupInstance(Config::MemoryAllocatorSize, Config::MemoryAllocatorAlignment);
 	EEMemoryAllocator = MemoryAllocator::GetInstance();
@@ -167,8 +174,8 @@ void Game::Init()
 
 	//EESceneLoader->LoadScene("ArenaV2");
 
-	EESceneLoader->SetModelPath("../../Assets/Models/City/");
-	EESceneLoader->LoadScene("City");
+	EESceneLoader->SetModelPath("../../Assets/Models/Kamchatka/");
+	EESceneLoader->LoadScene("Kamchatka");
 
 	EERenderer->SetShadowCascadeInfo(0, 4096, 0.1f, 1000.0f, 75.0f, 75.0f);
 	EERenderer->SetShadowCascadeInfo(1, 2048, 0.1f, 1000.0f, 500.0f, 500.0f);
@@ -210,7 +217,7 @@ void Game::Init()
 	CPUParticleEmitter::SetDefaultShaders(cpuParticleShaders);
 
 	ParticleEmitterDescription emitDesc;
-	emitDesc.emitterPosition = XMFLOAT3(-410.543f, 12.0f, -90.21f);
+	emitDesc.emitterPosition = XMFLOAT3(-108.7f, 5, 37.6f);
 	emitDesc.colorCount = 1;
 	ParticleColor partColors[1] = {
 		{XMFLOAT4(0.5f,0,0,1.0f),10},

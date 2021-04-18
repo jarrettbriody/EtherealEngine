@@ -454,6 +454,7 @@ MESH_TYPE SceneLoader::AutoLoadOBJMTL(string name)
 	bool ongoingMat = false;
 	string ongoingMatName = "";
 	MaterialData matData;
+	bool clampSampler = false;
 
 	string line;
 	smatch match;
@@ -469,10 +470,10 @@ MESH_TYPE SceneLoader::AutoLoadOBJMTL(string name)
 
 					//Different shaders based on matData values
 					if (matData.NormalTextureMapSRV) {
-						someMaterial = Material(ongoingMatName, matData, vertexShadersMap["Normal"], pixelShadersMap["Normal"], Config::Sampler);
+						someMaterial = Material(ongoingMatName, matData, vertexShadersMap["Normal"], pixelShadersMap["Normal"], (clampSampler) ? Config::ClampSampler : Config::Sampler);
 					}
 					else {
-						someMaterial = Material(ongoingMatName, matData, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler);
+						someMaterial = Material(ongoingMatName, matData, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], (clampSampler) ? Config::ClampSampler : Config::Sampler);
 					}
 
 					matData = {};
@@ -530,6 +531,17 @@ MESH_TYPE SceneLoader::AutoLoadOBJMTL(string name)
 			else if (regex_search(line, match, illuminationRgx)) {
 				line = regex_replace(line, illuminationRgx, "");
 				ParseIntFromString(line, matData.Illumination);
+			}
+			//check for texture repeat
+			else if (regex_search(line, match, repeatTextureRegex))
+				matData.repeatTexture = XMFLOAT2(std::stof(match[1].str()), std::stof(match[2].str()));
+			//check for texture clamp
+			else if (regex_search(line, match, clampTexRegex)) {
+				if(match[1] == "true" || match[1] == "TRUE")
+					clampSampler = true;
+			}
+			else if (regex_search(line, match, uvOffsetRegex)) {
+				matData.uvOffset = XMFLOAT2(std::stof(match[1].str()), std::stof(match[2].str()));
 			}
 			//ambient occlusion map
 			else if (regex_search(line, match, ambientTextureRgx)) {
@@ -611,10 +623,10 @@ MESH_TYPE SceneLoader::AutoLoadOBJMTL(string name)
 
 		//Different shaders based on matData values
 		if (matData.NormalTextureMapSRV) {
-			someMaterial = Material(ongoingMatName, matData, vertexShadersMap["Normal"], pixelShadersMap["Normal"], Config::Sampler);
+			someMaterial = Material(ongoingMatName, matData, vertexShadersMap["Normal"], pixelShadersMap["Normal"], (clampSampler) ? Config::ClampSampler : Config::Sampler);
 		}
 		else {
-			someMaterial = Material(ongoingMatName, matData, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], Config::Sampler);
+			someMaterial = Material(ongoingMatName, matData, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], (clampSampler) ? Config::ClampSampler : Config::Sampler);
 		}
 
 		matData = {};
@@ -851,8 +863,36 @@ void SceneLoader::LoadScene(string sceneName)
 						counter++;
 					}
 					allocatedEntity->SetPosition(parsedNumbers[0], parsedNumbers[1], parsedNumbers[2]);
-					allocatedEntity->SetRotation(DirectX::XMConvertToRadians(parsedNumbers[3]), DirectX::XMConvertToRadians(parsedNumbers[4]), DirectX::XMConvertToRadians(parsedNumbers[5]));
+
+					if (regex_search(line, match, raaRegex)) {
+						if (match[1] == "true" || match[1] == "TRUE") {
+							allocatedEntity->RotateAroundAxis(Z_AXIS, DirectX::XMConvertToRadians(parsedNumbers[5]));
+							allocatedEntity->RotateAroundAxis(Y_AXIS, DirectX::XMConvertToRadians(parsedNumbers[4]));
+							allocatedEntity->RotateAroundAxis(X_AXIS, DirectX::XMConvertToRadians(parsedNumbers[3]));
+						}
+						else {
+							allocatedEntity->SetRotation(DirectX::XMConvertToRadians(parsedNumbers[3]), DirectX::XMConvertToRadians(parsedNumbers[4]), DirectX::XMConvertToRadians(parsedNumbers[5]));
+						}
+					}
+					else {
+						allocatedEntity->SetRotation(DirectX::XMConvertToRadians(parsedNumbers[3]), DirectX::XMConvertToRadians(parsedNumbers[4]), DirectX::XMConvertToRadians(parsedNumbers[5]));
+					}
 					allocatedEntity->SetScale(parsedNumbers[6], parsedNumbers[7], parsedNumbers[8]);
+					allocatedEntity->CalcWorldMatrix();
+				}
+
+				if (regex_search(line, match, quaternionRegex)) {
+					string transformData = match[0];
+					std::sregex_iterator iter(transformData.begin(), transformData.end(), transformNumIteratorRegex);
+					int counter = 0;
+					for (; iter != std::sregex_iterator(); ++iter) {
+						if (counter < 4) {
+							match = *iter;
+							parsedNumbers[counter] = std::stof(match.str());
+						}
+						counter++;
+					}
+					allocatedEntity->SetRotation(XMFLOAT4(parsedNumbers[0], parsedNumbers[1], parsedNumbers[2], parsedNumbers[3]));
 					allocatedEntity->CalcWorldMatrix();
 				}
 

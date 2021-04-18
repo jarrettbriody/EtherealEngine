@@ -32,12 +32,16 @@ cbuffer lightCBuffer : register(b0)
 
 cbuffer uvRepeatCBuffer : register(b1) {
 	float2 uvMult;
+	float2 uvOffset;
 };
 
 cbuffer externalData : register(b2) {
 
 	int specularValue;
 	float3 cameraPosition;
+	int illumination;
+	float3 manualColor;
+	float transparency;
 }
 
 cbuffer shadowStuff : register(b3) {
@@ -76,7 +80,7 @@ SamplerComparisonState ShadowSampler	: register(s1);
 // --------------------------------------------------------
 float4 main(VertexToPixel input) : SV_TARGET
 {
-	input.uv = float2(input.uv.x * uvMult.x, input.uv.y * uvMult.y);
+	input.uv = float2(input.uv.x * uvMult.x + uvOffset.x, input.uv.y * uvMult.y + uvOffset.y);
 
 	// Sample the normal from the normal map (remember to unpack it)
 	float3 normalFromMap = NormalTexture.Sample(BasicSampler, input.uv).rgb * 2 - 1;
@@ -91,6 +95,10 @@ float4 main(VertexToPixel input) : SV_TARGET
 	input.normal = normalize(mul(normalFromMap, TBN));
 
 	float4 surfaceColor = DiffuseTexture.Sample(BasicSampler, input.uv);
+
+	if (illumination == 11) {
+		surfaceColor = surfaceColor.xyzw - (1 - float4(manualColor.xyz, 0));
+	}
 	// Just return the input color
 	// - This color (like most values passing through the rasterizer) is 
 	//   interpolated for each pixel between the corresponding vertices 
@@ -162,5 +170,5 @@ float4 main(VertexToPixel input) : SV_TARGET
 
 	float3 gammaCorrect = pow(abs(finalColor), 1.0f / 2.2f);
 
-	return float4(gammaCorrect, surfaceColor.a);
+	return float4(gammaCorrect, transparency);
 }

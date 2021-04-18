@@ -1,0 +1,12 @@
+newmtl OldFactory
+map_Kd oldFactoryDiffuse.png
+map_Bump oldFactoryNormal.png
+Kd 1 1 1
+d 1
+
+newmtl Window
+map_Kd pyrolbrwnplstcwndw1_bmp.png
+map_Bump pyrolbrwnplstcwndw1_nrm.png
+Kd 1 1 1
+d 1
+

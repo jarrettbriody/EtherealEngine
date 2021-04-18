@@ -4,6 +4,7 @@
 ID3D11Device* Config::Device = nullptr;
 ID3D11DeviceContext* Config::Context = nullptr;
 ID3D11SamplerState* Config::Sampler = nullptr;
+ID3D11SamplerState* Config::ClampSampler = nullptr;
 IDXGISwapChain* Config::SwapChain = nullptr;
 ID3D11RenderTargetView* Config::BackBufferRTV = nullptr;
 ID3D11DepthStencilView* Config::DepthStencilView = nullptr;

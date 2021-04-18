@@ -1,0 +1,6 @@
+newmtl Street
+map_Kd TexturesCom_Asphalt11_2x2_1K_albedo.png
+map_Bump TexturesCom_Asphalt11_2x2_1K_normal.png
+Kd 1 1 1
+d 1
+

@@ -48,21 +48,33 @@ void TestScript::Update()
 
 	waveCounter++;
 	totalTime += deltaTime;
+
 	/*
 	if (entity->CheckSATCollisionAndCorrect((*eMap)["Rock (1)"]))
 	{
 		cout << test << endl;
 	}
+	*/
+
 	//ruin
 	if (GetAsyncKeyState('B') & 0x8000) {
-		(*eMap)["Ruin"]->RotateAroundAxis(Y_AXIS, -0.05f);
-		(*eMap)["Ruin"]->CalcWorldMatrix();
+		entity->RotateAroundAxis(Z_AXIS, -0.05f);
+		entity->CalcWorldMatrix();
 	}
 	if (GetAsyncKeyState('N') & 0x8000) {
-		(*eMap)["Ruin"]->RotateAroundAxis(Y_AXIS, 0.05f);
-		(*eMap)["Ruin"]->CalcWorldMatrix();
+		entity->RotateAroundAxis(Z_AXIS, 0.05f);
+		entity->CalcWorldMatrix();
+	}
+	if (GetAsyncKeyState('U') & 0x8000) {
+		entity->RotateAroundAxis(X_AXIS, -0.05f);
+		entity->CalcWorldMatrix();
+	}
+	if (GetAsyncKeyState('I') & 0x8000) {
+		entity->RotateAroundAxis(X_AXIS, 0.05f);
+		entity->CalcWorldMatrix();
 	}
 
+	/*
 	//transform hierarchy spheres
 	if (GetAsyncKeyState('F') & 0x8000) {
 		(*eMap)["cube1"]->RotateAroundAxis(Y_AXIS, 0.05f);

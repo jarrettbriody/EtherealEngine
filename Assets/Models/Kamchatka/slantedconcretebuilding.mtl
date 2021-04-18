@@ -1,0 +1,12 @@
+newmtl Concrete
+map_Kd damagedConcreteDiffuse.png
+map_Bump damagedConcreteNormal.png
+Kd 1 1 1
+d 1
+
+newmtl Window
+map_Kd pyrolbrwnplstcwndw1_bmp.png
+map_Bump pyrolbrwnplstcwndw1_nrm.png
+Kd 1 1 1
+d 1
+

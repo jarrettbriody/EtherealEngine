@@ -1,0 +1,4 @@
+newmtl DefaultHDMaterial
+Kd 0.7279412 0.7279412 0.7279412
+d 1
+map_Kd prototype_512x512_white.png

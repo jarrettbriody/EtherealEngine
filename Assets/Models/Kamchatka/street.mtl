@@ -1,0 +1,8 @@
+newmtl street:Street
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.40 0.40 0.40
+Tf 1.00 1.00 1.00
+Ni 1.00
+map_Kd TexturesCom_Asphalt11_2x2_1K_albedo.png
+map_Bump TexturesCom_Asphalt11_2x2_1K_normal.png
