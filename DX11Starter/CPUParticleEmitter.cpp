@@ -230,7 +230,7 @@ void CPUParticleEmitter::KillParticle(unsigned int index)
 	particlePool[index].remainingLife = 0.0f;
 }
 
-void CPUParticleEmitter::Update(float deltaTime, float totalTime, XMFLOAT4X4 view)
+void CPUParticleEmitter::Update(double deltaTime, double totalTime, XMFLOAT4X4 view)
 {
 	//if (deltaTime > 0.25f) return;
 	ParticleEmitter::Update(deltaTime, totalTime);

@@ -174,8 +174,8 @@ void Game::Init()
 
 	//EESceneLoader->LoadScene("ArenaV2");
 
-	EESceneLoader->SetModelPath("../../Assets/Models/Kamchatka/");
-	EESceneLoader->LoadScene("Kamchatka");
+	EESceneLoader->SetModelPath("../../Assets/Models/City/");
+	EESceneLoader->LoadScene("City");
 
 	EERenderer->SetShadowCascadeInfo(0, 4096, 0.1f, 1000.0f, 75.0f, 75.0f);
 	EERenderer->SetShadowCascadeInfo(1, 2048, 0.1f, 1000.0f, 500.0f, 500.0f);
@@ -390,7 +390,7 @@ void Game::OnResize()
 	EERenderer->InitHBAOPlus();
 }
 
-void Game::Update(float deltaTime, float totalTime)
+void Game::Update(double deltaTime, double totalTime)
 {
 	if (GetAsyncKeyState(VK_ESCAPE)) {
 		Config::SwapChain->SetFullscreenState(false, NULL);
@@ -423,10 +423,12 @@ void Game::Update(float deltaTime, float totalTime)
 		masterGroup->setMute(!mute);
 	}
 	
+	ScriptManager::deltaTime = deltaTime;
+
 	for (size_t i = 0; i < ScriptManager::scriptFunctions.size(); i++)
 	{
 		ScriptManager* sf = ScriptManager::scriptFunctions[i];
-		sf->CallUpdate(deltaTime);
+		sf->CallUpdate();
 	}
 
 	cpuEmitter->Update(deltaTime, totalTime, EERenderer->GetCamera("main")->GetViewMatrix());
@@ -496,7 +498,7 @@ void Game::Update(float deltaTime, float totalTime)
 
 }
 
-void Game::PhysicsStep(float deltaTime)
+void Game::PhysicsStep(double deltaTime)
 {
 	btCollisionObject* obj = nullptr;
 	btRigidBody* body = nullptr;
@@ -627,7 +629,7 @@ void Game::AudioStep()
 	fmodSystem->update();
 }
 
-void Game::Draw(float deltaTime, float totalTime)
+void Game::Draw(double deltaTime, double totalTime)
 {
 	EERenderer->ClearFrame();
 

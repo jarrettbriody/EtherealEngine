@@ -235,7 +235,7 @@ void GPUParticleEmitter::SetBlendingEnabled(bool toggle)
 	this->blendingEnabled = toggle;
 }
 
-void GPUParticleEmitter::Update(float deltaTime, float totalTime, XMFLOAT4X4 view)
+void GPUParticleEmitter::Update(double deltaTime, double totalTime, XMFLOAT4X4 view)
 {
 	ParticleEmitter::Update(deltaTime, totalTime);
 

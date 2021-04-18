@@ -14,7 +14,7 @@ public:
 	static vector<Entity*>* sceneEntities;
 	static Renderer* EERenderer;
 	static SceneLoader* EESceneLoader;
-	static float deltaTime;
+	static double deltaTime;
 
 	bool destroyed = false;
 
@@ -23,7 +23,7 @@ public:
 	bool GetIsInitialized() { return initialized; }
 
 	void CallInit();
-	void CallUpdate(float deltaTime);
+	void CallUpdate();
 	void CallOnCollision(btCollisionObject* other);
 
 	void Setup(Entity* e, string scriptName);

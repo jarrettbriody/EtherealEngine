@@ -51,11 +51,11 @@ void Camera::SetViewMatrix(XMFLOAT4X4 vm)
 	viewMatrix = vm;
 }
 
-void Camera::RotateCamera(int x, int y, int z)
+void Camera::RotateCamera(float x, float y, float z)
 {
-	xRotation += (float)y / 100.0f;
-	yRotation += (float)x / 100.0f;
-	zRotation += (float)z / 100.0f;
+	xRotation += (float)y;// / 100.0f;
+	yRotation += (float)x;// / 100.0f;
+	zRotation += (float)z;// / 100.0f;
 
 	if (xRotation > (89.0f * XM_PI) / 180.0f) xRotation = (89.0f * XM_PI) / 180.0f;
 	if (xRotation < (-89.0f * XM_PI) / 180.0f) xRotation = (-89.0f * XM_PI) / 180.0f;

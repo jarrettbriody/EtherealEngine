@@ -16,7 +16,8 @@ class FPSController : public ScriptManager
 	// Camera related attributes
 	Camera* cam;
 	POINT prevMousePos = POINT();
-	float camRollAngle = 0.0f;
+	double camRollAngle = 0.0f;
+	double camRollSpeed = 0.01f;
 	bool rollLeft = false;
 	bool rollRight = false;
 	const float CAM_ROLL_INTERVAL = 5.0f;
