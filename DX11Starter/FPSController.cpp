@@ -269,11 +269,12 @@ void FPSController::CheckHookshot()
 
 void FPSController::HookshotThrow()
 {
+	// TODO: Figure out loss of momentum for "swinging" from this new case
+	// playerRBody->applyCentralForce(controllerVelocity.normalized() + (hookshotPoint - playerRBody->getCenterOfMassPosition()).normalized() * 2.0f); // added this to keep the momentum from movement going into hookshot for more of a swing motion
+	
 	if (hookshotZScale < hookshotLength)
 	{
 		hookshotZScale += hookshotThrowSpeed * deltaTime;
-		
-		playerRBody->applyCentralForce(controllerVelocity.normalized() + (hookshotPoint - playerRBody->getCenterOfMassPosition()).normalized() * 2.0f); // added this to keep the momentum from movement going into hookshot for more of a swing motion
 	}
 	else
 	{
@@ -317,6 +318,8 @@ void FPSController::HookshotFlight()
 
 		if (distanceToHitPoint < EXIT_RANGE)
 		{
+			hookshot->SetPosition(XMFLOAT3(0, -500, 0));
+			hookshotZScale = 1;
 			ps = PlayerState::Normal;
 		}
 	}
@@ -332,8 +335,20 @@ void FPSController::HookshotLeash()
 {
 	if (keyboard->OnKeyDown(0x45)) // cancel after pressing E again
 	{
+		hookshot->SetPosition(XMFLOAT3(0, -500, 0));
+		hookshotZScale = 1;
 		ps = PlayerState::Normal;
 	}
+
+	// TODO: Scaling leash with enemy distance and can no longer use Hookshot point because we are affecting the target position
+	/*if (hookshotZScale < hookshotLength)
+	{
+		hookshotZScale += hookshotThrowSpeed * deltaTime;
+	}
+	else if (hookshotZScale > hookshotLength)
+	{
+		hookshotZScale -= hookshotThrowSpeed * deltaTime;
+	}*/
 
 	// pull enemy into range if they are "stretching" over the initial leash size
 	float leashDistanceToEnemy = playerRBody->getCenterOfMassPosition().distance(leashedEnemy->GetRBody()->getCenterOfMassPosition());
