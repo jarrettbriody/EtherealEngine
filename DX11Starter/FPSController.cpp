@@ -45,6 +45,24 @@ void FPSController::Init()
 	};
 
 	sword = ScriptManager::CreateEntity(swordParams);
+	
+	hookshotParams = {
+			"Hookshot",					// name
+			"Hookshot",					// tag
+			"Hookshot",					// layer
+			"Cube",							// mesh
+			"Red",							// material
+			{""},				// script names
+			0,								// script count
+			XMFLOAT3(0.0f, 0.0f, 0.0f),		// position
+			XMFLOAT3(0.0f, 0.0f, 0.0f),		// rotation
+			XMFLOAT3(0.1f, 0.1f, hookshotZScale),		// scale
+			0.0f							// mass
+											// defaults work for the rest
+	};
+
+	hookshot = ScriptManager::CreateEntity(hookshotParams);
+	hookshot->GetRBody()->setActivationState(DISABLE_SIMULATION);
 
 	playerRBody = entity->GetRBody(); // Get the bullet rigidbody
 	playerRBody->setAngularFactor(btVector3(0, 1, 0)); // constrain rotations on x and z axes
@@ -78,15 +96,24 @@ void FPSController::Update()
 			MouseLook();
 			cam->SetPosition(XMFLOAT3(entity->GetPosition().x, entity->GetPosition().y + entity->GetScale().y + headbobOffset, entity->GetPosition().z)); // after all updates make sure camera is following the affected entity
 			break;
+		
+		case PlayerState::HookshotThrow:
+			HookshotThrow();
+			UpdateHookShotTransform();
+			MouseLook();
+			cam->SetPosition(XMFLOAT3(entity->GetPosition().x, entity->GetPosition().y + entity->GetScale().y + headbobOffset, entity->GetPosition().z)); // after all updates make sure camera is following the affected entity
+			break;
 
 		case PlayerState::HookshotFlight:
 			HookshotFlight();
+			UpdateHookShotTransform();
 			MouseLook();
 			cam->SetPosition(XMFLOAT3(entity->GetPosition().x, entity->GetPosition().y + entity->GetScale().y + headbobOffset, entity->GetPosition().z)); // after all updates make sure camera is following the affected entity
 			break;
 
 		case PlayerState::HookshotLeash:
 			HookshotLeash();
+			UpdateHookShotTransform();
 			Move();
 			MouseLook();
 			cam->SetPosition(XMFLOAT3(entity->GetPosition().x, entity->GetPosition().y + entity->GetScale().y + headbobOffset, entity->GetPosition().z)); // after all updates make sure camera is following the affected entity
@@ -230,23 +257,40 @@ void FPSController::CheckHookshot()
 
 			if (wrapper->type == PHYSICS_WRAPPER_TYPE::ENTITY) 
 			{
-				Entity* hit = (Entity*)wrapper->objectPointer;
+				// Entity* hit = (Entity*)wrapper->objectPointer;
+				hookshotAttachedEntity = (Entity*)wrapper->objectPointer;
 				// printf("Hookshot Hit: %s\n", hit->GetName().c_str());
 
-				if (hit->tag.STDStr() == std::string("Enemy"))
-				{
-					ps = PlayerState::HookshotLeash;
-					leashedEnemy = hit;
-					leashSize = playerRBody->getCenterOfMassPosition().distance(leashedEnemy->GetRBody()->getCenterOfMassPosition());
-					// cout << leashSize << endl;
-				}
-
-				if (hit->tag.STDStr() == std::string("Environment"))
-				{
-					// playerRBody->clearForces(); --> don't know if needed
-					ps = PlayerState::HookshotFlight;
-				}
+				ps = PlayerState::HookshotThrow;
 			}
+		}
+	}
+}
+
+void FPSController::HookshotThrow()
+{
+	if (hookshotZScale < hookshotLength)
+	{
+		hookshotZScale += hookshotThrowSpeed * deltaTime;
+		
+		playerRBody->applyCentralForce(controllerVelocity.normalized() + (hookshotPoint - playerRBody->getCenterOfMassPosition()).normalized() * 2.0f); // added this to keep the momentum from movement going into hookshot for more of a swing motion
+	}
+	else
+	{
+		if (hookshotAttachedEntity->tag.STDStr() == std::string("Enemy"))
+		{
+			leashedEnemy = hookshotAttachedEntity;
+			leashSize = playerRBody->getCenterOfMassPosition().distance(leashedEnemy->GetRBody()->getCenterOfMassPosition());
+			// cout << leashSize << endl;
+
+			ps = PlayerState::HookshotLeash;
+		}
+
+		if (hookshotAttachedEntity->tag.STDStr() == std::string("Environment"))
+		{
+			// playerRBody->clearForces(); --> don't know if needed
+
+			ps = PlayerState::HookshotFlight;
 		}
 	}
 }
@@ -257,10 +301,19 @@ void FPSController::HookshotFlight()
 
 	if (keyboard->KeyIsPressed(0x45))
 	{
+		if (hookshotZScale < hookshotLength)
+		{
+			hookshotZScale += hookshotThrowSpeed * deltaTime;
+		}
+		else if(hookshotZScale > hookshotLength)
+		{
+			hookshotZScale -= hookshotThrowSpeed * deltaTime;
+		}
+
 		btScalar distanceToHitPoint = playerRBody->getCenterOfMassPosition().distance(hookshotPoint);
 
 		playerRBody->activate();
-		playerRBody->applyCentralForce((hookshotPoint - playerRBody->getCenterOfMassPosition()).normalized() * distanceToHitPoint * 2.0f); // adjust speed according to distance away with an added small scalar
+		playerRBody->applyCentralForce(controllerVelocity.normalized() + (hookshotPoint - playerRBody->getCenterOfMassPosition()).normalized() * distanceToHitPoint * 2.0f); // adjust speed according to distance away with an added small scalar
 
 		if (distanceToHitPoint < EXIT_RANGE)
 		{
@@ -269,6 +322,8 @@ void FPSController::HookshotFlight()
 	}
 	else // cancel if not holding E
 	{
+		hookshot->SetPosition(XMFLOAT3(0, -500, 0));
+		hookshotZScale = 1;
 		ps = PlayerState::Normal;
 	}
 }
@@ -287,6 +342,22 @@ void FPSController::HookshotLeash()
 		leashedEnemy->GetRBody()->activate();
 		leashedEnemy->GetRBody()->applyCentralImpulse((playerRBody->getCenterOfMassPosition() - leashedEnemy->GetRBody()->getCenterOfMassPosition()).normalized() * (leashDistanceToEnemy/leashedScalar));
 	}
+}
+
+void FPSController::UpdateHookShotTransform()
+{
+	hookshot->SetPosition(entity->GetPosition());
+
+	XMFLOAT3 hookshotDirection;
+	XMVECTOR direction = XMVectorSubtract(XMLoadFloat3(&Utility::BulletVectorToFloat3(hookshotPoint)), XMLoadFloat3(&hookshot->GetPosition()));
+	XMStoreFloat3(&hookshotDirection, direction);
+	XMStoreFloat(&hookshotLength, XMVector3Length(direction));
+
+	hookshot->SetDirectionVector(hookshotDirection);
+	
+	XMFLOAT3 hookshotScale = hookshot->GetScale();
+	hookshotScale.z = hookshotZScale;
+	hookshot->SetScale(hookshotScale);
 }
 
 void FPSController::Move()
@@ -352,7 +423,8 @@ void FPSController::Move()
 
 	// FORCES ADDED TO RIGIDBODY 
 	playerRBody->activate();
-	playerRBody->setLinearVelocity(controllerVelocity + jumpForce);
+	controllerVelocity += jumpForce;
+	playerRBody->setLinearVelocity(controllerVelocity);
 	playerRBody->applyCentralImpulse(impulseSumVec);
 
 	// cout << "Vel: (" << controllerVelocity.getX() << ", " << controllerVelocity.getY() << ", " << controllerVelocity.getZ() << ")" << endl;
@@ -516,9 +588,6 @@ void FPSController::DampForces()
 
 void FPSController::MouseLook()
 {
-	// TODO: Roll does not work right in release (too fast), not sure why since it is being scaled by delta time (is our timestep the problem?)
-	
-
 	// update camera roll
 	if ((!rollLeft && !rollRight) || (rollLeft && rollRight)) // if side movement keys are not being pressed return to normal camera zRotation depending on what the current rotation is or if both bools are true at the same time straighten cam to avoid jittering
 	{

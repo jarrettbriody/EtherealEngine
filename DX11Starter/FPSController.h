@@ -6,7 +6,7 @@
 
 enum class PlayerState
 {
-	Intro, Normal, HookshotFlight, HookshotLeash, Paused, Death, Victory
+	Intro, Normal, HookshotThrow, HookshotFlight, HookshotLeash, Paused, Death, Victory
 };
 
 class FPSController : public ScriptManager
@@ -77,9 +77,15 @@ class FPSController : public ScriptManager
 	const float BLOOD_ICICLE_MAX_COOLDOWN_TIME = 1.0f;
 	
 	// Hookshot
+	EntityCreationParameters hookshotParams;
+	Entity* hookshot;
+	Entity* hookshotAttachedEntity;
+	float hookshotLength;
+	float hookshotZScale = 1.0f;
 	btVector3 hookshotPoint;
+	float hookshotThrowSpeed = 350.0f;
 	float hookshotRangeScalar = 100.0f;
-	const float EXIT_RANGE = 5.0f;
+	const float EXIT_RANGE = 2.5f;
 
 	// Leash
 	Entity* leashedEnemy;
@@ -107,9 +113,13 @@ class FPSController : public ScriptManager
 
 	void CheckHookshot();
 
+	void HookshotThrow();
+
 	void HookshotFlight();
 
 	void HookshotLeash();
+
+	void UpdateHookShotTransform();
 	
 	void Move();
 

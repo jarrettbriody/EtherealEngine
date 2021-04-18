@@ -10,8 +10,8 @@ ID3D11RenderTargetView* Config::BackBufferRTV = nullptr;
 ID3D11DepthStencilView* Config::DepthStencilView = nullptr;
 unsigned int Config::ViewPortWidth = 1600;
 unsigned int Config::ViewPortHeight = 900;
-bool Config::Fullscreen = false;
-bool Config::ShowCursor = true;
+bool Config::Fullscreen = true;
+bool Config::ShowCursor = false;
 bool Config::DebugCamera = false;
 
 unsigned int Config::MemoryAllocatorSize = MEGABYTE * 512;
