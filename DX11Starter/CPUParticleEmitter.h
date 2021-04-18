@@ -44,7 +44,7 @@ public:
 	void SetCollisionsEnabled(void (*collisionCallback)(void* ptr));
 	void KillParticle(unsigned int index);
 
-	void Update(float deltaTime, float totalTime, XMFLOAT4X4 view = XMFLOAT4X4());
+	void Update(double deltaTime, double totalTime, XMFLOAT4X4 view = XMFLOAT4X4());
 	void Draw(XMFLOAT4X4 view, XMFLOAT4X4 proj);
 
 private:

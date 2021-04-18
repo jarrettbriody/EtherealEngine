@@ -492,7 +492,8 @@ void FPSController::DampForces()
 void FPSController::MouseLook()
 {
 	// update camera roll
-	if ((!rollLeft && !rollRight) || (rollLeft && rollRight)) // if side movement keys are not being pressed return to normal camera zRotation depending on what the current rotation is or if both bools are true at the same time straighten cam to avoid jittering
+	bool isReturning = (!rollLeft && !rollRight) || (rollLeft && rollRight);
+	if (isReturning) // if side movement keys are not being pressed return to normal camera zRotation depending on what the current rotation is or if both bools are true at the same time straighten cam to avoid jittering
 	{
 		if (cam->zRotation > 0)
 		{
@@ -525,7 +526,12 @@ void FPSController::MouseLook()
 		}
 	}
 
-	cam->RotateCamera(mouse->GetPosX() - (int)prevMousePos.x, mouse->GetPosY() - (int)prevMousePos.y, camRollAngle);
+
+	cam->RotateCamera((mouse->GetPosX() - (int)prevMousePos.x) / 100.0f, (mouse->GetPosY() - (int)prevMousePos.y) / 100.0f, camRollAngle);
+	if (cam->zRotation > CAM_ROLL_MAX) cam->zRotation = CAM_ROLL_MAX;
+	if (cam->zRotation < CAM_ROLL_MIN) cam->zRotation = CAM_ROLL_MIN;
+
+	if (((cam->zRotation > 0 && camRollAngle > 0) || (cam->zRotation < 0 && camRollAngle < 0)) && isReturning) cam->zRotation = 0;
 
 	prevMousePos.x = mouse->GetPosX();
 	prevMousePos.y = mouse->GetPosY();

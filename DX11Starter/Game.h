@@ -38,10 +38,10 @@ public:
 	// will be called automatically
 	void Init();
 	void OnResize();
-	void Update(float deltaTime, float totalTime);
-	void Draw(float deltaTime, float totalTime);
+	void Update(double deltaTime, double totalTime);
+	void Draw(double deltaTime, double totalTime);
 
-	void PhysicsStep(float deltaTime);
+	void PhysicsStep(double deltaTime);
 	void EnforcePhysics();
 	void AudioStep();
 

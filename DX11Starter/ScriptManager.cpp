@@ -8,7 +8,7 @@ map<string, Entity*>* ScriptManager::sceneEntitiesMap;
 vector<Entity*>* ScriptManager::sceneEntities;
 Renderer* ScriptManager::EERenderer;
 SceneLoader* ScriptManager::EESceneLoader;
-float ScriptManager::deltaTime;
+double ScriptManager::deltaTime;
 
 void ScriptManager::CallInit()
 {
@@ -18,9 +18,8 @@ void ScriptManager::CallInit()
 	}
 }
 
-void ScriptManager::CallUpdate(float deltaTime)
+void ScriptManager::CallUpdate()
 {
-	this->deltaTime = deltaTime;
 	if (setup)
 		Update();
 }

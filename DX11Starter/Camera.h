@@ -32,7 +32,7 @@ public:
 	XMFLOAT4X4 GetInverseProjMatrix();
 	void SetProjMatrix(XMFLOAT4X4 pm);
 	void SetViewMatrix(XMFLOAT4X4 vm);
-	void RotateCamera(int x, int y, int z = 0);
+	void RotateCamera(float x, float y, float z = 0.0f);
 	void SetPosition(XMFLOAT3 pos);
 	void SetFOV(float degrees);
 	void UpdateProjectionMatrix();

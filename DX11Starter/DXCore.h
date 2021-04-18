@@ -37,9 +37,9 @@ public:
 	virtual void OnResize();
 	
 	// Pure virtual methods for setup and game functionality
-	virtual void Init()										= 0;
-	virtual void Update(float deltaTime, float totalTime)	= 0;
-	virtual void Draw(float deltaTime, float totalTime)		= 0;
+	virtual void Init()											= 0;
+	virtual void Update(double deltaTime, double totalTime)		= 0;
+	virtual void Draw(double deltaTime, double totalTime)		= 0;
 	
 	static float deltaTimeScalar;
 protected:
@@ -62,8 +62,8 @@ protected:
 private:
 	// Timing related data
 	double perfCounterSeconds;
-	float totalTime;
-	float deltaTime;
+	double totalTime;
+	double deltaTime;
 	__int64 startTime;
 	__int64 currentTime;
 	__int64 previousTime;
