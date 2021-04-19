@@ -21,6 +21,7 @@ private:
 public:
 	XMFLOAT3 position;
 	XMFLOAT3 direction;
+	XMFLOAT3 right;
 	float xRotation;
 	float yRotation;
 	float zRotation;

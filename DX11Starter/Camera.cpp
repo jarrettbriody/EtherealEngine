@@ -9,6 +9,10 @@ Camera::Camera()
 	XMVECTOR dir = XMLoadFloat3(&direction);
 	dir = XMVector3Normalize(dir);
 	XMStoreFloat3(&direction, dir);
+	right = XMFLOAT3(1.0f, 0.0f, 0.0f);
+	XMVECTOR rightVec = XMLoadFloat3(&right);
+	rightVec = XMVector3Normalize(rightVec);
+	XMStoreFloat3(&right, rightVec);
 	xRotation = 0.0f;
 	yRotation = 0.0f;
 	zRotation = 0.0f;
@@ -96,7 +100,7 @@ void Camera::Update()
 
 	XMVECTOR pos = XMLoadFloat3(&position);
 	XMVECTOR dir = XMLoadFloat3(&direction);
-	XMVECTOR right = XMVector3Cross(dir, XMLoadFloat3(&yAxis));
+	XMVECTOR rightVec = XMVector3Cross(dir, XMLoadFloat3(&yAxis));
 
 	float scalar = 30;
 
@@ -111,11 +115,11 @@ void Camera::Update()
 			XMStoreFloat3(&position, pos);
 		}
 		if (GetAsyncKeyState('A') & 0x8000) {
-			pos = XMVectorAdd(pos, XMVectorScale(right, 0.05f * scalar));
+			pos = XMVectorAdd(pos, XMVectorScale(rightVec, 0.05f * scalar));
 			XMStoreFloat3(&position, pos);
 		}
 		if (GetAsyncKeyState('D') & 0x8000) {
-			pos = XMVectorAdd(pos, XMVectorScale(right, -0.05f * scalar));
+			pos = XMVectorAdd(pos, XMVectorScale(rightVec, -0.05f * scalar));
 			XMStoreFloat3(&position, pos);
 		}
 
@@ -157,6 +161,7 @@ void Camera::Update()
 	XMStoreFloat4x4(&viewMatrix, XMMatrixTranspose(view));
 	XMStoreFloat4x4(&invViewMatrix, XMMatrixTranspose(inverseView));
 	XMStoreFloat3(&direction, newDir);
+	XMStoreFloat3(&right, rightVec);
 
 	//cout << "Pos: (" << position.x << ", " << position.y << ", " << position.z << ")" << endl;
 	//cout << "Dir: (" << direction.x << ", " << direction.y << ", " << direction.z << ")" << endl;

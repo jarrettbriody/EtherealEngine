@@ -20,7 +20,6 @@ class FPSController : public ScriptManager
 	double camRollSpeed = 0.01f;
 	bool rollLeft = false;
 	bool rollRight = false;
-	const float CAM_ROLL_INTERVAL = 5.0f;
 	const float CAM_ROLL_MIN = -0.05f;
 	const float CAM_ROLL_MAX = 0.05f;
 	float headbobOffset = 0.0f;
@@ -121,6 +120,8 @@ class FPSController : public ScriptManager
 	void HookshotLeash();
 
 	void UpdateHookShotTransform();
+
+	void ResetHookshotTransform();
 	
 	void Move();
 

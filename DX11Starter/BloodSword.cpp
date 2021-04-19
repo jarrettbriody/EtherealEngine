@@ -14,105 +14,53 @@ void BloodSword::Update()
 {
 	switch (ss)
 	{
-	case SwordState::SetTrajectory:
-		SetLerpPositions();
-		break;
 	case SwordState::Slashing:
-		UpdateSwordPostion();
 		Slash();
 		break;
-	case SwordState::Reset:
-		ResetSword();
-		break;
 	case SwordState::Idle:
-		UpdateSwordPostion();
+		UpdateSwordTransform();
 		break;
 	default:
 		break;
 	}
 }
 
-void BloodSword::UpdateSwordPostion()
-{
-	// Pseudo childing sword to camera
-	// position sword entity relative to camera
-	// multiply above into camera lookat matrix
-	// ^ will have to do this every frame 
-	XMFLOAT3 newSwordPos = XMFLOAT3(cam->position.x + cam->direction.x, cam->position.y, cam->position.z + cam->direction.z);
-	XMFLOAT3 lerpPos;
-	XMStoreFloat3(&lerpPos, XMVectorLerp(XMLoadFloat3(&entity->GetPosition()), XMLoadFloat3(&newSwordPos), deltaTime * 10.0f));
-
-	entity->SetPosition(lerpPos);
-
-	/*XMMATRIX swordMatrix = XMLoadFloat4x4(&sword->GetWorldMatrix());
-	XMMATRIX camLookAtMatrix = XMLoadFloat4x4(&cam->GetViewMatrix());
-	XMFLOAT4X4 updatedSwordMatrix;
-	XMStoreFloat4x4(&updatedSwordMatrix, XMMatrixMultiply(swordMatrix, camLookAtMatrix));
-
-	sword->SetWorldMatrix(updatedSwordMatrix);*/
-}
-
 void BloodSword::StartSlash()
 {
-	ss = SwordState::SetTrajectory; 
+	ss = SwordState::Slashing; 
 }
 
-void BloodSword::SetLerpPositions()
+void BloodSword::UpdateSwordTransform()
 {
-	// set start, end, and default pos (do multiple slash angles later after confirming basic functionality )
-	// defaultPos = entity->GetPosition();
-	startPos = entity->GetPosition();
-	endPos = XMFLOAT3(cam->position.x + cam->direction.x*2, cam->position.y, cam->position.z + cam->direction.z * 2);
-
-	// lerp from default to start pos
-
-
-	// set state
-	ss = SwordState::Slashing;
+	entity->SetPosition(XMFLOAT3(cam->position.x + cam->right.x + cam->direction.x, cam->position.y, cam->position.z + cam->right.z + cam->direction.z));
+	entity->SetRotation(XMFLOAT3(cam->xRotation + 1.5708f /*90 degrees*/, cam->yRotation, cam->zRotation));
 }
 
 void BloodSword::Slash()
 {
-	// set up a collection of start and end points that make sense for the screen (cutting horizontal, vertical, diagonal) and randomly choose what to use
+	// Potenntially able to set up a collection of start and end points that make sense for the screen (cutting horizontal, vertical, diagonal) and randomly choose what to use
 	
-
-	// there is also the possiblity of using DirectX lerping
 	XMFLOAT3 current;
 	XMVECTOR start = XMLoadFloat3(&entity->GetPosition());
-	XMVECTOR end = XMLoadFloat3(&XMFLOAT3(cam->position.x + cam->direction.x * 2, cam->position.y, cam->position.z + cam->direction.z * 2));
-	XMStoreFloat3(&current, DirectX::XMVectorLerp(start, end, deltaTime * 10.0f));
+	XMVECTOR end = XMLoadFloat3(&XMFLOAT3(cam->position.x + -cam->right.x + cam->direction.x, cam->position.y, cam->position.z + -cam->right.z + cam->direction.z));
+	XMStoreFloat3(&current, DirectX::XMVectorLerp(start, end, deltaTime * lerpScalar));
 
 	entity->SetPosition(current);
 
-	// use the bullet lerp fuction to move from the start to the end
-	// entity->SetPosition(Utility::BulletVectorToFloat3(startPos.lerp(endPos, deltaTime)));
+	bool lerpEndPointReached = XMVector3Equal(XMLoadFloat3(&current), end);
 
-	// TODO: if the entity reaches the end position set the state to reset
-	if (Utility::CheckXMFLOAT3Equivalence(current, endPos))
+	// TODO: doesn't seem to correctly switch states once end point is reached
+	if (lerpEndPointReached)
 	{
 		ss = SwordState::Idle;
 	}
-}
 
-void BloodSword::ResetSword()
-{
-
-	/*XMFLOAT3 current;
-	XMVECTOR start = XMLoadFloat3(&entity->GetPosition());
-	XMVECTOR end = XMLoadFloat3(&startPos);
-	XMStoreFloat3(&current, DirectX::XMVectorLerp(start, end, deltaTime * 10.0f));
-
-	entity->SetPosition(current);*/
-
-	// entity->SetPosition(Utility::BulletVectorToFloat3(defaultPos)); // lerp back? 
-
-	ss = SwordState::Idle;
+	// could use the bullet lerp fuction to move from the start to the end
+	// entity->SetPosition(Utility::BulletVectorToFloat3(startPos.lerp(endPos, deltaTime)));
 }
 
 void BloodSword::OnCollision(btCollisionObject* other)
 {
-	//Entity* otherE = (Entity*)other->getUserPointer();
-
 	PhysicsWrapper* wrapper = (PhysicsWrapper*)other->getUserPointer();
 
 	if (wrapper->type == PHYSICS_WRAPPER_TYPE::ENTITY)
@@ -122,7 +70,5 @@ void BloodSword::OnCollision(btCollisionObject* other)
 		// cout << "Blood Sword Hit: " << otherE->GetName().c_str() << endl;
 		
 		// std::vector<Entity*> childEntities = EESceneLoader->SplitMeshIntoChildEntities(otherE, 1.0f);
-
-
 	}
 }

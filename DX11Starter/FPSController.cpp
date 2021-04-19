@@ -38,7 +38,7 @@ void FPSController::Init()
 			{"BLOODSWORD"},				// script names
 			1,								// script count
 			XMFLOAT3(0.0f, 0.0f, 0.0f),		// position
-			XMFLOAT3(0.0f, 0.0f, 0.0f),		// rotation
+			XMFLOAT3(1.5708f /*90 degrees*/, 0.0f, 0.0f),		// rotation
 			XMFLOAT3(0.12f, 0.12f, 0.12f),		// scale
 			0.0f							// mass
 			// defaults work for the rest
@@ -222,6 +222,7 @@ void FPSController::CheckHookshot()
 		btVector3 to(from.getX() + direction.x * hookshotRangeScalar, from.getY() + direction.y * hookshotRangeScalar, from.getZ() + direction.z * hookshotRangeScalar); // raycast direction the camera is looking
 
 		// debug line
+		/*
 		DebugLines* hookshotDebugLines = new DebugLines("hookshotDebugLines", 0, false); // cannot turn on the willUpdate paramater currently because not sure how to figure out which lines to update via the input Bullet gives 
 		XMFLOAT4X4 wm;
 		XMStoreFloat4x4(&wm, XMMatrixTranspose(DirectX::XMMatrixIdentity()));
@@ -241,6 +242,7 @@ void FPSController::CheckHookshot()
 		linePoints[7] = toVec;
 		hookshotDebugLines->GenerateCuboidVertexBuffer(linePoints, 8);
 		delete[] linePoints;
+		*/
 
 		// Create variable to store the ray hit and set flags
 		btCollisionWorld::ClosestRayResultCallback closestResult(from, to);
@@ -259,7 +261,6 @@ void FPSController::CheckHookshot()
 			{
 				// Entity* hit = (Entity*)wrapper->objectPointer;
 				hookshotAttachedEntity = (Entity*)wrapper->objectPointer;
-				// printf("Hookshot Hit: %s\n", hit->GetName().c_str());
 
 				ps = PlayerState::HookshotThrow;
 			}
@@ -275,6 +276,8 @@ void FPSController::HookshotThrow()
 	if (hookshotZScale < hookshotLength)
 	{
 		hookshotZScale += hookshotThrowSpeed * deltaTime;
+
+		// TODO: Reset whhen not reaching distance
 	}
 	else
 	{
@@ -318,16 +321,12 @@ void FPSController::HookshotFlight()
 
 		if (distanceToHitPoint < EXIT_RANGE)
 		{
-			hookshot->SetPosition(XMFLOAT3(0, -500, 0));
-			hookshotZScale = 1;
-			ps = PlayerState::Normal;
+			ResetHookshotTransform();
 		}
 	}
 	else // cancel if not holding E
 	{
-		hookshot->SetPosition(XMFLOAT3(0, -500, 0));
-		hookshotZScale = 1;
-		ps = PlayerState::Normal;
+		ResetHookshotTransform();
 	}
 }
 
@@ -335,9 +334,7 @@ void FPSController::HookshotLeash()
 {
 	if (keyboard->OnKeyDown(0x45)) // cancel after pressing E again
 	{
-		hookshot->SetPosition(XMFLOAT3(0, -500, 0));
-		hookshotZScale = 1;
-		ps = PlayerState::Normal;
+		ResetHookshotTransform();
 	}
 
 	// TODO: Scaling leash with enemy distance and can no longer use Hookshot point because we are affecting the target position
@@ -373,6 +370,13 @@ void FPSController::UpdateHookShotTransform()
 	XMFLOAT3 hookshotScale = hookshot->GetScale();
 	hookshotScale.z = hookshotZScale;
 	hookshot->SetScale(hookshotScale);
+}
+
+void FPSController::ResetHookshotTransform()
+{
+	hookshot->SetPosition(XMFLOAT3(0, -500, 0));
+	hookshotZScale = 1;
+	ps = PlayerState::Normal;
 }
 
 void FPSController::Move()
@@ -609,11 +613,11 @@ void FPSController::MouseLook()
 	{
 		if (cam->zRotation > 0)
 		{
-			camRollAngle -= CAM_ROLL_INTERVAL * deltaTime;
+			camRollAngle -= camRollSpeed * deltaTime;
 		}
 		else if (cam->zRotation < 0)
 		{
-			camRollAngle += CAM_ROLL_INTERVAL * deltaTime;
+			camRollAngle += camRollSpeed * deltaTime;
 		}
 		else
 		{
@@ -624,11 +628,11 @@ void FPSController::MouseLook()
 	{
 		if (cam->zRotation < CAM_ROLL_MAX && rollRight)
 		{
-			camRollAngle += CAM_ROLL_INTERVAL * deltaTime;
+			camRollAngle += camRollSpeed * deltaTime;
 		}
 		else if (cam->zRotation > CAM_ROLL_MIN && rollLeft)
 		{
-			camRollAngle -= CAM_ROLL_INTERVAL * deltaTime;
+			camRollAngle -= camRollSpeed * deltaTime;
 		}
 		else
 		{

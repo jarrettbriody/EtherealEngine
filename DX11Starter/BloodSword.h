@@ -3,7 +3,7 @@
 
 enum class SwordState
 {
-	SetTrajectory, Slashing, Reset, Idle
+	Slashing, Idle
 };
 
 class BloodSword : public ScriptManager
@@ -18,17 +18,15 @@ class BloodSword : public ScriptManager
 	XMFLOAT3 startPos;
 	XMFLOAT3 endPos;
 
+	float lerpScalar = 25.0f;
+
 	void Init();
 
 	void Update();
 
-	void UpdateSwordPostion();
-
-	void SetLerpPositions();
+	void UpdateSwordTransform();
 
 	void Slash();
-
-	void ResetSword();
 
 	void OnCollision(btCollisionObject* other);
 
