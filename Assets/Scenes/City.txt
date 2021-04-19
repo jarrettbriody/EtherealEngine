@@ -105,7 +105,7 @@ obj="sneklad" tag="Enemy" colliders="true" P(-344.8,7.23,-110)R(0,468.2668,0)S(0
 obj="sneklad" tag="Enemy" colliders="true" P(-398.9,7.23,-151.8)R(0,495.2681,0)S(0.1700535,0.1700535,0.1700535)
 obj="sneklad" tag="Enemy" colliders="true" P(-374,7.23,-78.5)R(0,414.6833,0)S(0.1700535,0.1700535,0.1700535)
 obj="horneddemon1" tag="Enemy" colliders="true" mass="1.0" P(-463.5,7.74,-86.6)R(0,403.3411,0)S(0.1592212,0.1592212,0.1592212)
-obj="horneddemon1" tag="Enemy" colliders="true" P(-410.7,7.74,-48.8)R(0,458.0894,0)S(0.1592212,0.1592212,0.1592212)
+obj="horneddemon1" tag="Enemy" colliders="true" scripts="ENEMYTEST" P(-410.7,7.74,-48.8)R(0,458.0894,0)S(0.1592212,0.1592212,0.1592212)
 obj="horneddemon1" tag="Enemy" colliders="true" P(-390.7,7.74,-114.6)R(0,478.2453,0)S(0.1592212,0.1592212,0.1592212)
 obj="horneddemon2" tag="Enemy" colliders="true" P(-404.5,8.1,-209.9)R(0,180.2974,0)S(0.2231389,0.2231389,0.2231389)
 obj="horneddemon2" tag="Enemy" colliders="true" P(-417,8.1,-137.3)R(0,491.0051,0)S(0.2231389,0.2231389,0.2231389)

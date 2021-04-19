@@ -302,6 +302,7 @@ protected:
 };
 
 //-------------------------------------------------------
+
 class BehaviorTree
 {
 private:
@@ -309,6 +310,11 @@ private:
 public:
     BehaviorTree(Behavior* rootBehavior) : root(rootBehavior) {}
     ~BehaviorTree() {}
+
+    Status Run()
+    {
+        return root->Tick();
+    }
 };
 
 //-------------------------------------------------------

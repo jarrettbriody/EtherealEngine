@@ -361,7 +361,7 @@ void Game::Init()
 	// Behavior tree tests
 	//-------------------------------------------------------
 
-	TestBehavior tb;
+	/*TestBehavior tb;
 	if (tb.initializeCalled == 0)
 		cout << "TEST 1 - SUCCESS" << endl;
 	else
@@ -370,7 +370,7 @@ void Game::Init()
 	if (tb.initializeCalled == 1)
 		cout << "TEST 2 - SUCCESS" << endl;
 	else
-		cout << "TEST 2 - FAILURE" << endl;
+		cout << "TEST 2 - FAILURE" << endl;*/
 }
 
 void Game::OnResize()

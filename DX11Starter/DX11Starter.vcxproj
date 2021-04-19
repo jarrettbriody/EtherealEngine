@@ -144,6 +144,8 @@
     <ClCompile Include="DebugLines.cpp" />
     <ClCompile Include="DecalHandler.cpp" />
     <ClCompile Include="DXCore.cpp" />
+    <ClCompile Include="EnemySeesPlayer.cpp" />
+    <ClCompile Include="EnemyTest.cpp" />
     <ClCompile Include="Entity.cpp" />
     <ClCompile Include="FPSController.cpp" />
     <ClCompile Include="Game.cpp" />
@@ -179,6 +181,8 @@
     <ClInclude Include="DecalHandler.h" />
     <ClInclude Include="DXCore.h" />
     <ClInclude Include="EEString.h" />
+    <ClInclude Include="EnemySeesPlayer.h" />
+    <ClInclude Include="EnemyTest.h" />
     <ClInclude Include="Entity.h" />
     <ClInclude Include="FPSController.h" />
     <ClInclude Include="Game.h" />

@@ -20,6 +20,7 @@
 #include "DebugLines.h"
 #include "DecalHandler.h"
 #include "TestBehavior.h"
+#include "EnemySeesPlayer.h"
 #include "ParticleEmitter.h"
 #include "GPUParticleEmitter.h"
 #include "CPUParticleEmitter.h"
