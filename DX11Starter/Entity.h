@@ -8,8 +8,14 @@
 
 struct ShadowData {
 	DirectX::XMFLOAT4X4 shadowViewMatrix;
-	DirectX::XMFLOAT4X4 shadowProjectionMatrix;
-	ID3D11ShaderResourceView* shadowSRV = nullptr;
+	DirectX::XMFLOAT4X4 shadowProjectionMatrix[MAX_SHADOW_CASCADES];
+	ID3D11ShaderResourceView* shadowSRV[MAX_SHADOW_CASCADES];
+	float nears[MAX_SHADOW_CASCADES];
+	float fars[MAX_SHADOW_CASCADES];
+	float range[MAX_SHADOW_CASCADES];
+	XMFLOAT2 widthHeight[MAX_SHADOW_CASCADES];
+	unsigned int cascadeCount = 0;
+	XMFLOAT3 sunPos;
 	ID3D11SamplerState* shadowSampler = nullptr;
 };
 
@@ -37,6 +43,7 @@ private:
 	DirectX::XMFLOAT3 scale;
 	DirectX::XMFLOAT3 rotation;
 	DirectX::XMFLOAT3 rotationInDegrees;
+	XMFLOAT3 direction;
 	DirectX::XMFLOAT2 repeatTex;
 	map<string, Material*>* materialMap = nullptr;
 	unsigned int meshMaterialIndex = 0;
@@ -80,6 +87,7 @@ public:
 	DirectX::XMFLOAT3 GetEulerAngles();
 	DirectX::XMFLOAT3 GetEulerAnglesDegrees();
 	DirectX::XMFLOAT4 GetRotationQuaternion();
+	XMFLOAT3 GetDirectionVector();
 	void SetPosition(float x, float y, float z);
 	void SetPosition(XMFLOAT3 p);
 	void SetScale(float x, float y, float z);
@@ -89,6 +97,8 @@ public:
 	void SetRotation(XMFLOAT3 rotRadians);
 	void RotateAroundAxis(XMFLOAT3 axis, float scalar);
 	void CalcEulerAngles();
+	void SetDirectionVector(XMFLOAT3 direction);
+	void CalcDirectionVector();
 	void SetRepeatTexture(float x, float y);
 	void SetShadowData(ShadowData shadowData);
 	void SetDepthStencilData(DepthStencilData depthStencilData);

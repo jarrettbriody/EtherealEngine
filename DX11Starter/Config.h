@@ -17,6 +17,8 @@
 #define MAX_KERNEL_SAMPLES 32
 #define MAX_DECALS_PER_ENTITY 128
 #define MAX_PARTICLE_COLORS 16
+#define MAX_SHADOW_CASCADES 4
+#define MAX_LIGHTS 32
 
 enum class MESH_TYPE {
 	LOAD_FAILURE = -1,
@@ -46,6 +48,7 @@ public:
 	static unsigned int ViewPortHeight;
 	static bool Fullscreen;
 	static bool ShowCursor;
+	static bool DebugCamera;
 
 	static unsigned int MemoryAllocatorSize; //1 gig ish
 	static unsigned int MemoryAllocatorAlignment; //32 byte boundary

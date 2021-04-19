@@ -8,7 +8,8 @@ class ScriptManager
 {
 public:
 	static vector<ScriptManager*> scriptFunctions;
-	static map<string, vector<ScriptManager*>> scriptFunctionsMap;
+	static map<string, map<string,ScriptManager*>> scriptFunctionsMap;
+	static map<string, vector<ScriptManager*>> scriptFunctionsMapVector;
 	static map<string, Entity*>* sceneEntitiesMap;
 	static vector<Entity*>* sceneEntities;
 	static Renderer* EERenderer;
@@ -25,7 +26,7 @@ public:
 	void CallUpdate(float deltaTime);
 	void CallOnCollision(btCollisionObject* other);
 
-	void Setup(Entity* e);
+	void Setup(Entity* e, string scriptName);
 
 	virtual ~ScriptManager();
 protected:

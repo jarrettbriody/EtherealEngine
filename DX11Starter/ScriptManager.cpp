@@ -2,7 +2,8 @@
 #include "ScriptManager.h"
 
 vector<ScriptManager*> ScriptManager::scriptFunctions;
-map<string, vector<ScriptManager*>> ScriptManager::scriptFunctionsMap;
+map<string, map<string, ScriptManager*>> ScriptManager::scriptFunctionsMap;
+map<string, vector<ScriptManager*>> ScriptManager::scriptFunctionsMapVector;
 map<string, Entity*>* ScriptManager::sceneEntitiesMap; 
 vector<Entity*>* ScriptManager::sceneEntities;
 Renderer* ScriptManager::EERenderer;
@@ -30,7 +31,7 @@ void ScriptManager::CallOnCollision(btCollisionObject* other)
 		OnCollision(other);
 }
 
-void ScriptManager::Setup(Entity* e)
+void ScriptManager::Setup(Entity* e, string scriptName)
 {
 	entity = e;
 	this->name = e->GetName();
@@ -43,9 +44,11 @@ void ScriptManager::Setup(Entity* e)
 	//add this script (and thereby all script function pointers) to the list of scripts
 	scriptFunctions.push_back(this);
 	if (!ScriptManager::scriptFunctionsMap.count(name)) {
-		ScriptManager::scriptFunctionsMap.insert({ this->name, vector<ScriptManager*>() });
+		ScriptManager::scriptFunctionsMap.insert({ this->name, map<string,ScriptManager*>() });
+		ScriptManager::scriptFunctionsMapVector.insert({ this->name, vector<ScriptManager*>() });
 	}
-	ScriptManager::scriptFunctionsMap[this->name].push_back(this);
+	ScriptManager::scriptFunctionsMap[this->name].insert({scriptName, this});
+	ScriptManager::scriptFunctionsMapVector[this->name].push_back(this);
 
 	setup = true;
 }

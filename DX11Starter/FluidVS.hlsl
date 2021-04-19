@@ -4,8 +4,8 @@ cbuffer externalData : register(b0)
 	matrix world;
 	matrix view;
 	matrix projection;
-	matrix shadowView;
-	matrix shadowProj;
+	//matrix shadowView;
+	//matrix shadowProj;
 	float fillLineY;
 	float totalTime;
 	float deltaTime;
@@ -30,7 +30,7 @@ struct VertexToPixel
 	float2 uv           : TEXCOORD;
 	float3 worldPos		: POSITION;
 	float3 tangent		: TANGENT;
-	float4 posForShadow : SHADOW;
+	//float4 posForShadow : SHADOW;
 };
 
 VertexToPixel main(VertexShaderInput input)
@@ -60,7 +60,7 @@ VertexToPixel main(VertexShaderInput input)
 	// Calculate shadow map position
 	//matrix shadowWVP = mul(mul(world, shadowView), shadowProj);
 
-	output.posForShadow = mul(float4(mul(float4(output.worldPos, 1.0f), shadowView).xyz, 1.0f), shadowProj);
+	//output.posForShadow = mul(float4(mul(float4(output.worldPos, 1.0f), shadowView).xyz, 1.0f), shadowProj);
 
 	// Whatever we return will make its way through the pipeline to the
 	// next programmable stage we're using (the pixel shader for now)

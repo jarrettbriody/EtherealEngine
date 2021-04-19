@@ -1,6 +1,7 @@
 #pragma once
 #include "pch.h"
 #include "Config.h"
+#include "Mouse.h"
 
 using namespace DirectX;
 using namespace std;
@@ -15,6 +16,8 @@ private:
 	float fov = 0.5f * 3.1415926535f;
 	float nearClip = 0.1f;
 	float farClip = 1000.0f;
+	Mouse* mouse;
+	POINT prevMousePos;
 public:
 	XMFLOAT3 position;
 	XMFLOAT3 direction;

@@ -338,12 +338,14 @@ void Entity::SetRotation(float x, float y, float z)
 
 	XMVECTOR quat = XMQuaternionRotationRollPitchYaw(x, y, z);
 	XMStoreFloat4(&quaternion, quat);
+	CalcDirectionVector();
 }
 
 void Entity::SetRotation(XMFLOAT4 quat)
 {
 	quaternion = quat;
 	CalcEulerAngles();
+	CalcDirectionVector();
 }
 
 ///<summary>
@@ -359,6 +361,7 @@ void Entity::SetRotation(XMFLOAT3 rotRadians)
 
 	XMVECTOR quat = XMQuaternionRotationRollPitchYaw(rotation.x, rotation.y, rotation.z);
 	XMStoreFloat4(&quaternion, quat);
+	CalcDirectionVector();
 }
 
 void Entity::RotateAroundAxis(XMFLOAT3 axis, float scalar)
@@ -369,6 +372,12 @@ void Entity::RotateAroundAxis(XMFLOAT3 axis, float scalar)
 	XMVECTOR result = XMQuaternionMultiply(existingQuat, quat);
 	XMStoreFloat4(&quaternion, result);
 	CalcEulerAngles();
+	CalcDirectionVector();
+}
+
+XMFLOAT3 Entity::GetDirectionVector()
+{
+	return direction;
 }
 
 void Entity::CalcEulerAngles()
@@ -433,6 +442,29 @@ void Entity::Move(float x, float y, float z)
 	CalcWorldMatrix();
 }
 
+void Entity::SetDirectionVector(XMFLOAT3 direction)
+{
+	this->direction = direction;
+
+	XMVECTOR dir = XMLoadFloat3(&direction);
+	dir = XMVector3Normalize(dir);
+	XMFLOAT3 y = Y_AXIS;
+	XMVECTOR up = XMLoadFloat3(&y);
+	XMVECTOR right = XMVector3Cross(up, dir);
+	right = XMVector3Normalize(right);
+	up = XMVector3Cross(dir, right);
+	up = XMVector3Normalize(up);
+	XMFLOAT4 botRow(0.0f, 0.0f, 0.0f, 1.0f);
+	XMVECTOR trans = XMLoadFloat4(&botRow);
+	XMMATRIX rotation = XMMATRIX(right, up, dir, trans);
+
+	XMVECTOR quat = XMQuaternionRotationMatrix(rotation);
+
+	XMStoreFloat4(&quaternion, quat);
+
+	CalcEulerAngles();
+}
+
 ID3D11Buffer * Entity::GetMeshVertexBuffer(int childIndex)
 {
 	if(childIndex == -1)
@@ -447,6 +479,14 @@ ID3D11Buffer * Entity::GetMeshIndexBuffer(int childIndex)
 		return mesh->GetIndexBuffer();
 	else
 		return mesh->GetChildren()[childIndex]->GetIndexBuffer();
+}
+
+void Entity::CalcDirectionVector()
+{
+	XMFLOAT3 zAxis = Z_AXIS;
+	XMVECTOR dir = XMLoadFloat3(&zAxis);
+	dir = XMVector3Transform(dir, XMMatrixRotationQuaternion(XMLoadFloat4(&quaternion)));
+	XMStoreFloat3(&direction, dir);
 }
 
 int Entity::GetMeshIndexCount(int childIndex)
@@ -532,9 +572,16 @@ void Entity::PrepareMaterialForDraw(string n, DirectX::XMFLOAT4X4 view, DirectX:
 	);
 
 	if (shadowsEnabled) {
-		vs->SetMatrix4x4("shadowView", shadowData.shadowViewMatrix);
-		vs->SetMatrix4x4("shadowProj", shadowData.shadowProjectionMatrix);
-		ps->SetShaderResourceView("ShadowMap", shadowData.shadowSRV);
+		for (size_t i = 0; i < shadowData.cascadeCount; i++)
+		{
+			string str = to_string(i);
+			ps->SetShaderResourceView("ShadowMap" + str, shadowData.shadowSRV[i]);
+			ps->SetMatrix4x4("shadowProj" + str, shadowData.shadowProjectionMatrix[i]);
+			ps->SetFloat2("cascadeRange" + str, shadowData.widthHeight[i]);
+		}
+		ps->SetMatrix4x4("shadowView", shadowData.shadowViewMatrix);
+		//ps->SetData("nearPlane", shadowData.nears, sizeof(float) * MAX_SHADOW_CASCADES);
+		ps->SetFloat3("sunPos", shadowData.sunPos);
 		ps->SetSamplerState("ShadowSampler", shadowData.shadowSampler);
 	}
 

@@ -170,8 +170,10 @@ void Game::Init()
 	EESceneLoader->SetModelPath("../../Assets/Models/City/");
 	EESceneLoader->LoadScene("City");
 
-	EERenderer->SetShadowMapResolution(4096);
-	EERenderer->InitShadows();
+	EERenderer->SetShadowCascadeInfo(0, 4096, 0.1f, 1000.0f, 75.0f, 75.0f);
+	EERenderer->SetShadowCascadeInfo(1, 2048, 0.1f, 1000.0f, 500.0f, 500.0f);
+	EERenderer->SetShadowCascadeInfo(2, 1024, 0.1f, 1000.0f, 1000.0f, 1000.0f);
+	EERenderer->InitShadows(3);
 	EERenderer->InitSkybox();
 
 	EERenderer->SetEntities(&(EESceneLoader->sceneEntities));
@@ -438,7 +440,7 @@ void Game::Update(float deltaTime, float totalTime)
 			Entity* b = (Entity*)wrapperB->objectPointer;
 
 			if (ScriptManager::scriptFunctionsMap.count(a->GetName())) {
-				vector<ScriptManager*> scripts = ScriptManager::scriptFunctionsMap[a->GetName()];
+				vector<ScriptManager*> scripts = ScriptManager::scriptFunctionsMapVector[a->GetName()];
 				for (size_t j = 0; j < scripts.size(); j++)
 				{
 					scripts[j]->CallOnCollision(obB);
@@ -446,10 +448,10 @@ void Game::Update(float deltaTime, float totalTime)
 			}
 
 			if (ScriptManager::scriptFunctionsMap.count(b->GetName())) {
-				vector<ScriptManager*> scripts = ScriptManager::scriptFunctionsMap[b->GetName()];
+				vector<ScriptManager*> scripts = ScriptManager::scriptFunctionsMapVector[b->GetName()];
 				for (size_t j = 0; j < scripts.size(); j++)
 				{
-					scripts[j]->CallOnCollision(obB);
+					scripts[j]->CallOnCollision(obA);
 				}
 			}
 		}
@@ -663,13 +665,14 @@ void Game::GarbageCollect()
 			e->FreeMemory();
 			EEMemoryAllocator->DeallocateFromPool((unsigned int)MEMORY_POOL::ENTITY_POOL, e, sizeof(Entity));
 
-			vector<ScriptManager*> scriptFuncs = ScriptManager::scriptFunctionsMap[name];
+			vector<ScriptManager*> scriptFuncs = ScriptManager::scriptFunctionsMapVector[name];
 			size_t cnt = scriptFuncs.size();
 			for (size_t j = cnt; j > 0; j--)
 			{
 				scriptFuncs[j - 1]->destroyed = true;
 			}
 			ScriptManager::scriptFunctionsMap.erase(name);
+			ScriptManager::scriptFunctionsMapVector.erase(name);
 		}
 	}
 
