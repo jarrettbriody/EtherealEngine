@@ -16,6 +16,7 @@ struct VStoPS
 	float4 position : SV_POSITION;
 	float4 color	: COLOR;
 	float2 uv		: TEXCOORD;
+	int textureIndex : TEXINDEX;
 };
 
 VStoPS main(uint id : SV_VertexID)
@@ -56,6 +57,7 @@ VStoPS main(uint id : SV_VertexID)
 	// Pass through
 	output.color = particle.color;
 	output.uv = saturate(uvs[cornerID]);
+	output.textureIndex = particle.textureIndex;
 
 	return output;
 }

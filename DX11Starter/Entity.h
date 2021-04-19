@@ -86,6 +86,7 @@ public:
 	void InitRigidBody(BulletColliderShape shape, float entityMass, bool zeroObjects = false);
 	DirectX::XMFLOAT4X4 GetWorldMatrix();
 	DirectX::XMFLOAT4X4 GetInverseWorldMatrix();
+	XMFLOAT4X4* GetWorldMatrixPtr();
 	DirectX::XMFLOAT3 GetPosition();
 	DirectX::XMFLOAT3 GetScale();
 	DirectX::XMFLOAT3 GetEulerAngles();

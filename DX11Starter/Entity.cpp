@@ -373,6 +373,11 @@ void Entity::SetRotation(XMFLOAT3 rotRadians)
 	CalcDirectionVector();
 }
 
+XMFLOAT4X4* Entity::GetWorldMatrixPtr()
+{
+	return &worldMatrix;
+}
+
 void Entity::RotateAroundAxis(XMFLOAT3 axis, float scalar)
 {
 	XMVECTOR a = XMLoadFloat3(&axis);

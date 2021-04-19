@@ -27,9 +27,11 @@ cbuffer ExternalData : register(b0)
 
 	float randomNum4;
 	float randomNum5;
-	float2 padding;
+	int textureCount;
+	float padding;
 
 	ParticleColor colors[MAX_PARTICLE_COLORS];
+	ParticleTexture textures[MAX_PARTICLE_TEXTURES];
 }
 
 // Order should match UpdateCS (RW binding issues)
@@ -52,11 +54,22 @@ void main(uint3 id : SV_DispatchThreadID)
 	newParticle.color = float4(1, 0, 0, 1);
 
 	// Color and position depend on the grid position and size
-	for (int i = colorCount - 1; i >= 0; i--)
+	bool isColor = false;
+	for (int i = 0; i < colorCount; i++)
 	{
 		if (randomNum3 <= colors[i].weight) {
 			newParticle.color = colors[i].color;
+			isColor = true;
 			break;
+		}
+	}
+	if (!isColor) {
+		for (int j = 0; j < textureCount; j++)
+		{
+			if (randomNum3 <= textures[j].weight) {
+				newParticle.textureIndex = j;
+				break;
+			}
 		}
 	}
 	

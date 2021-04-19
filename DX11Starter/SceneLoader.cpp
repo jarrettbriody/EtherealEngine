@@ -11,6 +11,12 @@ SceneLoader::SceneLoader()
 SceneLoader::~SceneLoader()
 {
 	//defaults
+	for (auto texMapIter = texture2DMap.begin(); texMapIter != texture2DMap.end(); ++texMapIter)
+	{
+		texMapIter->second->Release();
+		//cout << "Deleting " << texMapIter->first << endl;
+	}
+
 	for (auto texMapIter = defaultTexturesMap.begin(); texMapIter != defaultTexturesMap.end(); ++texMapIter)
 	{
 		texMapIter->second->Release();
@@ -104,10 +110,15 @@ Mesh* SceneLoader::LoadMesh(string meshName, string meshPath, map<string, Mesh*>
 	return allocMesh;
 }
 
-ID3D11ShaderResourceView* SceneLoader::LoadTexture(string texName, string texPath, map<string, ID3D11ShaderResourceView*>& texMap)
+ID3D11ShaderResourceView* SceneLoader::LoadTexture(string texName, string texPath, map<string, ID3D11ShaderResourceView*>& texMap, bool keepTex2D)
 {
-	ID3D11ShaderResourceView* tex = Utility::LoadSRV(texPath);
+	ID3D11Resource* tex2D = nullptr;
+	ID3D11ShaderResourceView* tex = Utility::LoadSRV(texPath, &tex2D);
 	texMap.insert({ texName, tex });
+	if (keepTex2D) {
+		ID3D11Texture2D* newTex2D = reinterpret_cast<ID3D11Texture2D*>(tex2D);
+		texture2DMap.insert({ texName, newTex2D });
+	}
 	return tex;
 }
 
@@ -283,7 +294,7 @@ void SceneLoader::LoadAssetPreloadFile()
 						if (regex_search(line, match, pathRegex)) {
 							string path = match[1];
 
-							LoadTexture(name, path, defaultTexturesMap);
+							LoadTexture(name, path, defaultTexturesMap, true);
 						}
 						else continue;
 						break;

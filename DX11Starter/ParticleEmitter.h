@@ -4,8 +4,14 @@
 #include "Particles.h"
 
 using namespace DirectX;
+using namespace std;
 
 struct ParticleEmitterDescription {
+	string emitterName = "DEFAULT";
+
+	string parentName = "";
+	XMFLOAT4X4* parentWorld = nullptr;
+
 	XMFLOAT3 emitterPosition = ZERO_VECTOR3; //position of particle emission point
 	XMFLOAT3 emissionRotation = ZERO_VECTOR3; //direction of the emission of particles
 	XMFLOAT3 emitterScale = ONE_VECTOR3; //scale of the emitter, scales all newly emitted particles
@@ -28,18 +34,31 @@ struct ParticleEmitterDescription {
 
 	unsigned int colorCount = 0; //number of possible colors
 	ParticleColor* colors = nullptr; //array of ParticleColor objects
+
+	unsigned int textureCount = 0; //number of possible colors
+	ParticleTexture* textures = nullptr; //array of ParticleColor objects
 };
 
 class ParticleEmitter
 {
 public:
+	static vector<ParticleEmitter*> EmitterVector;
+	static map<string, ParticleEmitter*> EmitterMap;
+	static map<string, map<string, ParticleEmitter*>> EntityEmitterMap;
+
 	bool isAlive = true;
 
 	virtual ~ParticleEmitter();
 
+	static void KillEmitters(string entityName);
+
 	void CalcWorldMatrix();
-	void CalcWorldMatrix(XMFLOAT4X4 parentWorld);
 	XMFLOAT4X4 GetWorldMatrix();
+
+	void SetName(string name);
+
+	void SetParent(string parentName, XMFLOAT4X4* parentWorld);
+
 	void SetPosition(XMFLOAT3 position);
 	void SetRotationDegrees(XMFLOAT3 rotation);
 	void SetRotationRadians(XMFLOAT3 rotation);
@@ -65,12 +84,22 @@ public:
 	//Set colors of particles (number of colors, color array, array of color weights in range [0.0f,1.0f])
 	void SetParticleColors(unsigned int colorCount, ParticleColor* colors);
 
+	void SetParticleTextures(unsigned int textureCount, ParticleTexture* textures);
+
+	string GetName();
+
 	virtual void Update(double deltaTime, double totalTime, XMFLOAT4X4 view = XMFLOAT4X4());
 	virtual void Draw(XMFLOAT4X4 view, XMFLOAT4X4 proj) = 0;
 
 protected:
 	ParticleEmitter();
 	ParticleEmitter(ParticleEmitterDescription d);
+
+	ID3D11ShaderResourceView* texturesSRV = nullptr;
+
+	string name;
+	string parentName;
+	XMFLOAT4X4* parentWorld;
 
 	float lifetime = 0.0f;
 	float maxLifetime = 0.0f;
@@ -104,6 +133,11 @@ protected:
 
 	unsigned int colorCount = 0;
 	ParticleColor colors[MAX_PARTICLE_COLORS];
+
+	unsigned int textureCount = 0;
+	ParticleTexture textures[MAX_PARTICLE_TEXTURES];
+	ParticleTextureToGPU texturesToGPU[MAX_PARTICLE_TEXTURES];
+
 	void CalcEulerAngles();
 	void SetMaxParticles(unsigned int maxParticles);
 };

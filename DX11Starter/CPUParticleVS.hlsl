@@ -16,6 +16,7 @@ struct VertexShaderInput
 	float4 color		: COLOR;
 	float scale			: SCALE;
 	int num				: ID;
+	int textureIndex	: TEXINDEX;
 };
 
 struct VStoPS
@@ -23,6 +24,7 @@ struct VStoPS
 	float4 position : SV_POSITION;
 	float4 color	: COLOR;
 	float2 uv		: TEXCOORD;
+	int textureIndex : TEXINDEX;
 };
 
 VStoPS main(VertexShaderInput input)
@@ -49,6 +51,7 @@ VStoPS main(VertexShaderInput input)
 	// Pass through
 	output.color = input.color;
 	output.uv = input.uv;
+	output.textureIndex = input.textureIndex;
 
 	return output;
 }

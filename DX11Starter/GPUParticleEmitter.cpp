@@ -264,6 +264,7 @@ void GPUParticleEmitter::Update(double deltaTime, double totalTime, XMFLOAT4X4 v
 		emitCS->SetInt("emitCount", emitCount);
 		emitCS->SetInt("maxParticles", (int)maxParticles);
 		emitCS->SetInt("colorCount", colorCount);
+		emitCS->SetInt("textureCount", textureCount);
 
 		emitCS->SetFloat("emissionStartRadius", emissionStartRadius);
 		emitCS->SetFloat("emissionEndRadius", emissionEndRadius);
@@ -290,6 +291,7 @@ void GPUParticleEmitter::Update(double deltaTime, double totalTime, XMFLOAT4X4 v
 		emitCS->SetFloat3("particleAcceleration", particleAcceleration);
 
 		emitCS->SetData("colors", &colors[0], sizeof(ParticleColor) * MAX_PARTICLE_COLORS);
+		emitCS->SetData("textures", &texturesToGPU[0], sizeof(ParticleTextureToGPU) * MAX_PARTICLE_TEXTURES);
 		emitCS->SetUnorderedAccessView("ParticlePool", particlePoolUAV);
 		emitCS->SetUnorderedAccessView("DeadParticles", particleDeadUAV);
 		emitCS->CopyAllBufferData();
@@ -347,6 +349,8 @@ void GPUParticleEmitter::Draw(XMFLOAT4X4 view, XMFLOAT4X4 proj)
 	defaultShaders.particleVS->CopyAllBufferData();
 
 	defaultShaders.particlePS->SetShader();
+	defaultShaders.particlePS->SetShaderResourceView("particleTextures", texturesSRV);
+	defaultShaders.particlePS->SetSamplerState("Sampler", Config::Sampler);
 
 	// Draw using indirect args
 	Config::Context->DrawIndexedInstancedIndirect(drawArgsBuffer, 0);

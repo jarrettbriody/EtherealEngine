@@ -131,6 +131,7 @@ void CPUParticleEmitter::CalcVertex(Particle p, XMFLOAT4X4 view)
 	particleVertices[particleVertCount].Scale = p.scale;
 	particleVertices[particleVertCount].UV = XMFLOAT2(0, 0);
 	particleVertices[particleVertCount].ID = 0;
+	particleVertices[particleVertCount].TextureIndex = p.textureIndex;
 	particleVertCount++;
 
 	particleVertices[particleVertCount].Position = p.position;
@@ -138,6 +139,7 @@ void CPUParticleEmitter::CalcVertex(Particle p, XMFLOAT4X4 view)
 	particleVertices[particleVertCount].Scale = p.scale;
 	particleVertices[particleVertCount].UV = XMFLOAT2(1, 0);
 	particleVertices[particleVertCount].ID = 1;
+	particleVertices[particleVertCount].TextureIndex = p.textureIndex;
 	particleVertCount++;
 
 	particleVertices[particleVertCount].Position = p.position;
@@ -145,6 +147,7 @@ void CPUParticleEmitter::CalcVertex(Particle p, XMFLOAT4X4 view)
 	particleVertices[particleVertCount].Scale = p.scale; 
 	particleVertices[particleVertCount].UV = XMFLOAT2(1, 1);
 	particleVertices[particleVertCount].ID = 2;
+	particleVertices[particleVertCount].TextureIndex = p.textureIndex;
 	particleVertCount++;
 
 	particleVertices[particleVertCount].Position = p.position;
@@ -152,6 +155,7 @@ void CPUParticleEmitter::CalcVertex(Particle p, XMFLOAT4X4 view)
 	particleVertices[particleVertCount].Scale = p.scale;
 	particleVertices[particleVertCount].UV = XMFLOAT2(0, 1);
 	particleVertices[particleVertCount].ID = 3;
+	particleVertices[particleVertCount].TextureIndex = p.textureIndex;
 	particleVertCount++;
 }
 
@@ -281,11 +285,22 @@ void CPUParticleEmitter::Update(double deltaTime, double totalTime, XMFLOAT4X4 v
 			newParticle.color = XMFLOAT4(1, 0, 0, 1);
 
 			// Color and position depend on the grid position and size
-			for (int j = colorCount - 1; j >= 0; j--)
+			bool isColor = false;
+			for (int j = 0; j < colorCount; j++)
 			{
 				if (randNum3 <= colors[j].weight) {
 					newParticle.color = colors[j].color;
+					isColor = true;
 					break;
+				}
+			}
+			if (!isColor) {
+				for (int j = 0; j < textureCount; j++)
+				{
+					if (randNum3 <= textures[j].weight) {
+						newParticle.textureIndex = j;
+						break;
+					}
 				}
 			}
 
@@ -423,7 +438,8 @@ void CPUParticleEmitter::Draw(XMFLOAT4X4 view, XMFLOAT4X4 proj)
 	defaultShaders.particleVS->SetShader();
 	defaultShaders.particleVS->CopyAllBufferData();
 
-	//defaultShaders.particlePS->SetShaderResourceView("particle", texture);
+	defaultShaders.particlePS->SetShaderResourceView("particleTextures", texturesSRV);
+	defaultShaders.particlePS->SetSamplerState("Sampler", Config::Sampler);
 	defaultShaders.particlePS->SetShader();
 
 	// Draw the correct parts of the buffer

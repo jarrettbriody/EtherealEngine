@@ -50,6 +50,7 @@ TYPE="TEXTURE" name="BLOOD5" path="Default/BLOOD/BLOOD5.png"
 TYPE="TEXTURE" name="BLOOD6" path="Default/BLOOD/BLOOD6.png"
 TYPE="TEXTURE" name="BLOOD7" path="Default/BLOOD/BLOOD7.png"
 TYPE="TEXTURE" name="BLOOD8" path="Default/BLOOD/BLOOD8.png"
+TYPE="TEXTURE" name="smile" path="smile.png"
 
 //TYPE="MATERIAL" name="" vShader="" pShader="" ambientTexture="" diffuseTexture="" specularColorTexture="" specularHighlightTexture="" alphaTexture="" normalTexture="" ambientColor(0,0,0) diffuseColor(0,0,0) specularColor(0,0,0) specularExponent="0.0" transparency="1.0" illumination="1" ssao="false" hbaoPlus="true"
 TYPE="MATERIAL" name="DEFAULT" vShader="DEFAULT" pShader="DEFAULT"

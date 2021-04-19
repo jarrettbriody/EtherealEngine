@@ -17,13 +17,25 @@ struct Particle
 	float rotationRadians;
 
 	float angularVelocity;
-	XMFLOAT3 padding;
+	int textureIndex = -1;
+	XMFLOAT2 padding;
 };
 
 struct ParticleColor {
 	XMFLOAT4 color; //color of the particle in rgba 0.0f-1.0f values
-	float weight; //weights as percentage change of that color [0.0f-1.0f] where 0.0f will never spawn and 1.0f will spawn 100% of the time
+	float weight; //weights as percentage chance of that color [0.0f-1.0f] where 0.0f will never spawn and 1.0f will spawn 100% of the time
 	XMFLOAT3 padding;
+};
+
+struct ParticleTextureToGPU {
+	int index;
+	float weight;
+	XMFLOAT2 padding;
+};
+
+struct ParticleTexture {
+	ID3D11Texture2D* texture;
+	float weight; //weights as percentage chance of that texture [0.0f-1.0f] where 0.0f will never spawn and 1.0f will spawn 100% of the time
 };
 
 struct ParticleVertex {
@@ -32,6 +44,7 @@ struct ParticleVertex {
 	XMFLOAT4 Color;
 	float Scale;
 	int ID;
+	int TextureIndex;
 };
 
 struct ParticleDrawInfo

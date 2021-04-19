@@ -87,9 +87,6 @@ private:
 	FMOD_VECTOR listener_forward = FMOD_VECTOR();
 	FMOD_VECTOR listener_up = FMOD_VECTOR();
 
-	CPUParticleEmitter* cpuEmitter;
-	GPUParticleEmitter* gpuEmitter;
-
 	// AI
 	
 };

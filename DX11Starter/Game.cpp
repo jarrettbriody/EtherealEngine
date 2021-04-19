@@ -23,8 +23,10 @@ Game::~Game()
 {
 	SceneLoader::DestroyInstance();
 
-	delete cpuEmitter;
-	delete gpuEmitter;
+	for (size_t i = 0; i < ParticleEmitter::EmitterVector.size(); i++)
+	{
+		delete ParticleEmitter::EmitterVector[i];
+	}
 
 	Config::Sampler->Release();
 	Config::ClampSampler->Release();
@@ -174,8 +176,8 @@ void Game::Init()
 
 	//EESceneLoader->LoadScene("ArenaV2");
 
-	EESceneLoader->SetModelPath("../../Assets/Models/City/");
-	EESceneLoader->LoadScene("City");
+	EESceneLoader->SetModelPath("../../Assets/Models/Kamchatka/");
+	EESceneLoader->LoadScene("Kamchatka");
 
 	EERenderer->SetShadowCascadeInfo(0, 4096, 0.1f, 1000.0f, 75.0f, 75.0f);
 	EERenderer->SetShadowCascadeInfo(1, 2048, 0.1f, 1000.0f, 500.0f, 500.0f);
@@ -217,10 +219,12 @@ void Game::Init()
 	CPUParticleEmitter::SetDefaultShaders(cpuParticleShaders);
 
 	ParticleEmitterDescription emitDesc;
-	emitDesc.emitterPosition = XMFLOAT3(-108.7f, 5, 37.6f);
-	emitDesc.colorCount = 1;
-	ParticleColor partColors[1] = {
-		{XMFLOAT4(0.5f,0,0,1.0f),10},
+	//emitDesc.parentName = "FPSController";
+	//emitDesc.parentWorld = EESceneLoader->sceneEntitiesMap["FPSController"]->GetWorldMatrixPtr();
+	emitDesc.emitterPosition = XMFLOAT3(0, 5, 0);
+	//emitDesc.colorCount = 1;
+	//ParticleColor partColors[1] = {
+		//{XMFLOAT4(0.5f,0,0,1.0f),1.0f},
 		//{XMFLOAT4(0,1,0,1),10},
 		//{XMFLOAT4(0,0,1,1),10},
 		//{XMFLOAT4(1,1,0,1),10},
@@ -228,8 +232,11 @@ void Game::Init()
 		//{XMFLOAT4(0,1,1,1),10},
 		//{XMFLOAT4(1,0,1,1),10},
 		//{XMFLOAT4(1,0,0,1),10},
-	};
-	emitDesc.colors = partColors;
+	//};
+	//emitDesc.colors = partColors;
+	ParticleTexture partTex[1] = { {EESceneLoader->texture2DMap["smile"], 1.0f} };
+	emitDesc.textures = partTex;
+	emitDesc.textureCount = 1;
 	emitDesc.maxParticles = 100;
 	emitDesc.emissionRate = 3.0f;
 	//emitDesc.emissionRotation = XMFLOAT3(-XM_PIDIV2,0.0f,0.0f);
@@ -238,11 +245,13 @@ void Game::Init()
 	emitDesc.particleInitMaxSpeed = 15.0f;
 	emitDesc.particleMinLifetime = 10.0f;
 	emitDesc.particleMaxLifetime = 15.0f;
-	emitDesc.particleInitMinScale = 0.1f;
-	emitDesc.particleInitMaxScale = 0.2f;
+	//emitDesc.particleInitMinScale = 0.1f;
+	//emitDesc.particleInitMaxScale = 0.2f;
+	emitDesc.particleInitMinScale = 1.f;
+	emitDesc.particleInitMaxScale = 1.01f;
 	emitDesc.particleAcceleration = XMFLOAT3(0.0f, 0.0f, -20.0f);
 
-	cpuEmitter = new CPUParticleEmitter(emitDesc);
+	CPUParticleEmitter* cpuEmitter = new CPUParticleEmitter(emitDesc);
 
 	cpuEmitter->SetCollisionsEnabled([](void* collision) {
 		btPersistentManifold* manifold = (btPersistentManifold*)collision;
@@ -292,7 +301,7 @@ void Game::Init()
 	emitDesc.particleInitMinScale = 0.25f;
 	emitDesc.particleInitMaxScale = 0.3f;
 	emitDesc.emissionRate = 100.0f;
-	gpuEmitter = new GPUParticleEmitter(emitDesc);
+	GPUParticleEmitter* gpuEmitter = new GPUParticleEmitter(emitDesc);
 
 	Entity* e;
 	for (size_t i = 0; i < EESceneLoader->sceneEntities.size(); i++)
@@ -431,8 +440,11 @@ void Game::Update(double deltaTime, double totalTime)
 		sf->CallUpdate();
 	}
 
-	cpuEmitter->Update(deltaTime, totalTime, EERenderer->GetCamera("main")->GetViewMatrix());
-	gpuEmitter->Update(deltaTime, totalTime);
+	XMFLOAT4X4 view = EERenderer->GetCamera("main")->GetViewMatrix();
+	for (size_t i = 0; i < ParticleEmitter::EmitterVector.size(); i++)
+	{
+		ParticleEmitter::EmitterVector[i]->Update(deltaTime, totalTime, view);
+	}
 
 	int numManifolds = Config::DynamicsWorld->getDispatcher()->getNumManifolds();
 	for (int i = 0; i < numManifolds; i++)
@@ -647,8 +659,12 @@ void Game::Draw(double deltaTime, double totalTime)
 
 	EERenderer->RenderSkybox();
 
-	cpuEmitter->Draw(EERenderer->GetCamera("main")->GetViewMatrix(), EERenderer->GetCamera("main")->GetProjMatrix());
-	gpuEmitter->Draw(EERenderer->GetCamera("main")->GetViewMatrix(), EERenderer->GetCamera("main")->GetProjMatrix());
+	XMFLOAT4X4 view = EERenderer->GetCamera("main")->GetViewMatrix();
+	XMFLOAT4X4 proj = EERenderer->GetCamera("main")->GetProjMatrix();
+	for (size_t i = 0; i < ParticleEmitter::EmitterVector.size(); i++)
+	{
+		ParticleEmitter::EmitterVector[i]->Draw(view, proj);
+	}
 
 	EERenderer->PresentFrame();
 }
@@ -665,6 +681,8 @@ void Game::GarbageCollect()
 			EESceneLoader->sceneEntities.erase(EESceneLoader->sceneEntities.begin() + i - 1);
 
 			EEDecalHandler->DestroyDecals(name);
+
+			ParticleEmitter::KillEmitters(name);
 
 			if (Config::EtherealDebugLinesEnabled) {
 				DebugLines::debugLinesMap[name]->destroyed = true;
@@ -702,6 +720,17 @@ void Game::GarbageCollect()
 		if (d->destroyed) {
 			DebugLines::debugLines.erase(DebugLines::debugLines.begin() + i - 1);
 			delete d;
+		}
+	}
+
+	start = ParticleEmitter::EmitterVector.size();
+	for (size_t i = start; i > 0; i--)
+	{
+		ParticleEmitter* e = ParticleEmitter::EmitterVector[i - 1];
+		if (!e->isAlive) {
+			ParticleEmitter::EmitterVector.erase(ParticleEmitter::EmitterVector.begin() + i - 1);
+			ParticleEmitter::EmitterMap.erase(e->GetName());
+			delete e;
 		}
 	}
 }

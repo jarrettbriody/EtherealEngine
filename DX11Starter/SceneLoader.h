@@ -145,7 +145,7 @@ private:
 
 	Mesh* LoadMesh(string meshName, string meshPath, map<string,Mesh*>& meshMap);
 
-	ID3D11ShaderResourceView* LoadTexture(string texName, string texPath, map<string, ID3D11ShaderResourceView*>& texMap);
+	ID3D11ShaderResourceView* LoadTexture(string texName, string texPath, map<string, ID3D11ShaderResourceView*>& texMap, bool keepTex2D = false);
 
 	Material* CreateMaterial(string name, MaterialData matData, string vertShaderName, string pixelShaderName, map<string, Material*>& matMap);
 public:
@@ -167,6 +167,7 @@ public:
 
 	map<string, ID3D11ShaderResourceView*> defaultTexturesMap;
 	map<string, ID3D11ShaderResourceView*> generatedTexturesMap;
+	map<string, ID3D11Texture2D*> texture2DMap;
 
 	map<string, Material*> defaultMaterialsMap;
 	map<string, Material*> generatedMaterialsMap;
