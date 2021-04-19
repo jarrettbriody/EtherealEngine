@@ -483,7 +483,7 @@ ID3D11Buffer * Entity::GetMeshIndexBuffer(int childIndex)
 
 void Entity::CalcDirectionVector()
 {
-	XMFLOAT3 zAxis = Z_AXIS;
+	XMFLOAT3 zAxis = NEG_Z_AXIS;
 	XMVECTOR dir = XMLoadFloat3(&zAxis);
 	dir = XMVector3Transform(dir, XMMatrixRotationQuaternion(XMLoadFloat4(&quaternion)));
 	XMStoreFloat3(&direction, dir);

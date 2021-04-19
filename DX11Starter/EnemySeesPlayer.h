@@ -2,6 +2,7 @@
 #include "pch.h"
 #include "BehaviorTree.h"
 #include "Entity.h"
+#include "DebugLines.h"
 #include <math.h>
 
 class EnemySeesPlayer : public Behavior
@@ -21,8 +22,4 @@ public:
     void OnTerminate(Status s);
 
     Status Update();
-
-    XMFLOAT3 CalculateEnemyForward();
-
-    XMVECTOR PointInsideTriangle(XMVECTOR p, XMVECTOR v0, XMVECTOR v1, XMVECTOR v2);
 };
