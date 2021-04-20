@@ -39,7 +39,7 @@ void FPSController::Init()
 			1,								// script count
 			XMFLOAT3(0.0f, 0.0f, 0.0f),		// position
 			XMFLOAT3(1.5708f /*90 degrees*/, 0.0f, 0.0f),		// rotation
-			XMFLOAT3(0.12f, 0.12f, 0.12f),		// scale
+			XMFLOAT3(0.25f, 0.25f, 0.25f),		// scale
 			0.0f							// mass
 			// defaults work for the rest
 	};

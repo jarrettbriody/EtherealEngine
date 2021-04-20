@@ -17,6 +17,8 @@ void BloodSword::Update()
 	case SwordState::Slashing:
 		Slash();
 		break;
+	case SwordState::Reset:
+		ResetSword();
 	case SwordState::Idle:
 		UpdateSwordTransform();
 		break;
@@ -32,31 +34,44 @@ void BloodSword::StartSlash()
 
 void BloodSword::UpdateSwordTransform()
 {
-	entity->SetPosition(XMFLOAT3(cam->position.x + cam->right.x + cam->direction.x, cam->position.y, cam->position.z + cam->right.z + cam->direction.z));
-	entity->SetRotation(XMFLOAT3(cam->xRotation + 1.5708f /*90 degrees*/, cam->yRotation, cam->zRotation));
+	entity->SetPosition(XMFLOAT3(cam->position.x + (cam->right.x*4) + cam->direction.x, cam->position.y, cam->position.z + (cam->right.z*4) + cam->direction.z));
+	entity->SetRotation(XMFLOAT3(cam->xRotation + (1.5708f) /*90 degrees*/, cam->yRotation, cam->zRotation));
 }
 
 void BloodSword::Slash()
 {
-	// Potenntially able to set up a collection of start and end points that make sense for the screen (cutting horizontal, vertical, diagonal) and randomly choose what to use
+	// Potentially able to set up a collection of start and end points that make sense for the screen (cutting horizontal, vertical, diagonal) and randomly choose what to use
 	
 	XMFLOAT3 current;
 	XMVECTOR start = XMLoadFloat3(&entity->GetPosition());
-	XMVECTOR end = XMLoadFloat3(&XMFLOAT3(cam->position.x + -cam->right.x + cam->direction.x, cam->position.y, cam->position.z + -cam->right.z + cam->direction.z));
+	XMVECTOR end = XMLoadFloat3(&XMFLOAT3(cam->position.x + (-cam->right.x*4) + cam->direction.x, cam->position.y, cam->position.z + (-cam->right.z*4) + cam->direction.z));
 	XMStoreFloat3(&current, DirectX::XMVectorLerp(start, end, deltaTime * lerpScalar));
 
 	entity->SetPosition(current);
 
-	bool lerpEndPointReached = XMVector3Equal(XMLoadFloat3(&current), end);
+	bool lerpEndPointReached = XMVector3NearEqual(XMLoadFloat3(&current), end, XMLoadFloat3(&lerpTolerance));
 
-	// TODO: doesn't seem to correctly switch states once end point is reached
+	if (lerpEndPointReached)
+	{
+		ss = SwordState::Reset;
+	}
+}
+
+void BloodSword::ResetSword()
+{
+	XMFLOAT3 current;
+	XMVECTOR start = XMLoadFloat3(&entity->GetPosition());
+	XMVECTOR end = XMLoadFloat3(&XMFLOAT3(cam->position.x + cam->right.x + cam->direction.x, cam->position.y, cam->position.z + cam->right.z + cam->direction.z));
+	XMStoreFloat3(&current, DirectX::XMVectorLerp(start, end, deltaTime * lerpScalar));
+
+	entity->SetPosition(current);
+
+	bool lerpEndPointReached = XMVector3NearEqual(XMLoadFloat3(&current), end, XMLoadFloat3(&lerpTolerance));
+
 	if (lerpEndPointReached)
 	{
 		ss = SwordState::Idle;
 	}
-
-	// could use the bullet lerp fuction to move from the start to the end
-	// entity->SetPosition(Utility::BulletVectorToFloat3(startPos.lerp(endPos, deltaTime)));
 }
 
 void BloodSword::OnCollision(btCollisionObject* other)
@@ -69,6 +84,9 @@ void BloodSword::OnCollision(btCollisionObject* other)
 
 		// cout << "Blood Sword Hit: " << otherE->GetName().c_str() << endl;
 		
-		// std::vector<Entity*> childEntities = EESceneLoader->SplitMeshIntoChildEntities(otherE, 1.0f);
+		if (otherE->tag.STDStr() == std::string("Enemy"))
+		{
+			std::vector<Entity*> childEntities = EESceneLoader->SplitMeshIntoChildEntities(otherE, 1.0f);
+		}
 	}
 }

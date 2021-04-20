@@ -3,7 +3,7 @@
 
 enum class SwordState
 {
-	Slashing, Idle
+	Slashing, Reset, Idle
 };
 
 class BloodSword : public ScriptManager
@@ -14,11 +14,13 @@ class BloodSword : public ScriptManager
 
 	SwordState ss;
 	
+	XMFLOAT3 lerpTolerance = XMFLOAT3(0.25f, 0.25f, 0.25f);
+
 	XMFLOAT3 defaultPos;
 	XMFLOAT3 startPos;
 	XMFLOAT3 endPos;
 
-	float lerpScalar = 25.0f;
+	float lerpScalar = 10.0f;
 
 	void Init();
 
@@ -27,6 +29,8 @@ class BloodSword : public ScriptManager
 	void UpdateSwordTransform();
 
 	void Slash();
+
+	void ResetSword();
 
 	void OnCollision(btCollisionObject* other);
 
