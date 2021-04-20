@@ -449,6 +449,8 @@ void CPUParticleEmitter::Draw(XMFLOAT4X4 view, XMFLOAT4X4 proj)
 	// Draw the correct parts of the buffer
 	Config::Context->DrawIndexed(maxParticles * 6, 0, 0);
 
+	defaultShaders.particlePS->SetShaderResourceView("particleTextures", NULL);
+
 	if (blendingEnabled)
 	{
 		Config::Context->OMSetBlendState(0, 0, 0xFFFFFFFF);

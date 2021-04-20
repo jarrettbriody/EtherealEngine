@@ -140,7 +140,7 @@ void Camera::Update()
 		}
 
 		if (mouse->LMBIsPressed()) {
-			RotateCamera(mouse->GetPosX() - (int)prevMousePos.x, mouse->GetPosY() - (int)prevMousePos.y);
+			RotateCamera((float)(mouse->GetPosX() - (int)prevMousePos.x) / 100.0f, (float)(mouse->GetPosY() - (int)prevMousePos.y) / 100.0f);
 			prevMousePos.x = mouse->GetPosX();
 			prevMousePos.y = mouse->GetPosY();
 		}

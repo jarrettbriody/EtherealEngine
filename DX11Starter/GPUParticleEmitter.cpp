@@ -357,6 +357,8 @@ void GPUParticleEmitter::Draw(XMFLOAT4X4 view, XMFLOAT4X4 proj)
 
 	Config::Context->VSSetShaderResources(0, 16, noneSRV);
 
+	defaultShaders.particlePS->SetShaderResourceView("particleTextures", NULL);
+
 	if (blendingEnabled)
 	{
 		Config::Context->OMSetBlendState(0, 0, 0xFFFFFFFF);
