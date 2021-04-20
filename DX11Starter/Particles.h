@@ -43,9 +43,9 @@ struct ParticleVertex {
 	XMFLOAT2 UV;
 	XMFLOAT4 Color;
 	float Scale;
+	float RotationRadians;
 	int ID;
 	int TextureIndex;
-	float RotationRadians;
 };
 
 struct ParticleDrawInfo

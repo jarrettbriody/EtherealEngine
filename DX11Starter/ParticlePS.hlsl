@@ -15,7 +15,7 @@ SamplerState Sampler			: register(s0);
 
 float4 main(VStoPS input) : SV_TARGET
 {
-	float3 color;
+	float4 color;
 	if (input.textureIndex != -1) {
 		color = particleTextures.Sample(Sampler, float3(input.uv, input.textureIndex));
 	}
@@ -24,8 +24,8 @@ float4 main(VStoPS input) : SV_TARGET
 		// Convert uv to -1 to 1
 		input.uv = input.uv * 2 - 1;
 		float fade = saturate(distance(float2(0, 0), input.uv));
-		color = lerp(input.color.rgb, float3(0, 0, 0), fade * fade);
+		color = lerp(input.color.rgba, float4(0, 0, 0, 0), fade * fade);
 	}
 
-return float4(color, 1);
+	return color;
 }

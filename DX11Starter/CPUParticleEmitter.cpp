@@ -104,8 +104,8 @@ void CPUParticleEmitter::InitBuffers()
 	blend.IndependentBlendEnable = false;
 	blend.RenderTarget[0].BlendEnable = true;
 	blend.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
-	blend.RenderTarget[0].SrcBlend = D3D11_BLEND_ONE;
-	blend.RenderTarget[0].DestBlend = D3D11_BLEND_ONE;
+	blend.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+	blend.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
 	blend.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
 	blend.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
 	blend.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ONE;

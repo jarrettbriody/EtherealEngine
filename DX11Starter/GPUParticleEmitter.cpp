@@ -207,9 +207,9 @@ void GPUParticleEmitter::InitBuffers()
 	blend.AlphaToCoverageEnable = false;
 	blend.IndependentBlendEnable = false;
 	blend.RenderTarget[0].BlendEnable = true;
-	blend.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
-	blend.RenderTarget[0].SrcBlend = D3D11_BLEND_ONE;
-	blend.RenderTarget[0].DestBlend = D3D11_BLEND_ONE;
+	blend.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD; 
+	blend.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+	blend.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
 	blend.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
 	blend.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
 	blend.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ONE;
@@ -290,8 +290,8 @@ void GPUParticleEmitter::Update(double deltaTime, double totalTime, XMFLOAT4X4 v
 
 		emitCS->SetFloat3("particleAcceleration", particleAcceleration);
 
-		emitCS->SetData("colors", &colors[0], sizeof(ParticleColor) * MAX_PARTICLE_COLORS);
-		emitCS->SetData("textures", &texturesToGPU[0], sizeof(ParticleTextureToGPU) * MAX_PARTICLE_TEXTURES);
+		emitCS->SetData("colors", colors, sizeof(ParticleColor) * MAX_PARTICLE_COLORS);
+		emitCS->SetData("textures", texturesToGPU, sizeof(ParticleTextureToGPU) * MAX_PARTICLE_TEXTURES);
 		emitCS->SetUnorderedAccessView("ParticlePool", particlePoolUAV);
 		emitCS->SetUnorderedAccessView("DeadParticles", particleDeadUAV);
 		emitCS->CopyAllBufferData();

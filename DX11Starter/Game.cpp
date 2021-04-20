@@ -221,22 +221,15 @@ void Game::Init()
 	ParticleEmitterDescription emitDesc;
 	//emitDesc.parentName = "FPSController";
 	//emitDesc.parentWorld = EESceneLoader->sceneEntitiesMap["FPSController"]->GetWorldMatrixPtr();
-	emitDesc.emitterPosition = XMFLOAT3(0, 5, 0);
-	//emitDesc.colorCount = 1;
-	//ParticleColor partColors[1] = {
-		//{XMFLOAT4(0.5f,0,0,1.0f),1.0f},
-		//{XMFLOAT4(0,1,0,1),10},
-		//{XMFLOAT4(0,0,1,1),10},
-		//{XMFLOAT4(1,1,0,1),10},
-		//{XMFLOAT4(1,1,1,1),10},
-		//{XMFLOAT4(0,1,1,1),10},
-		//{XMFLOAT4(1,0,1,1),10},
-		//{XMFLOAT4(1,0,0,1),10},
-	//};
-	//emitDesc.colors = partColors;
-	ParticleTexture partTex[1] = { {EESceneLoader->texture2DMap["smile"], 1.0f} };
-	emitDesc.textures = partTex;
-	emitDesc.textureCount = 1;
+	emitDesc.emitterPosition = XMFLOAT3(5, 0.1f, 0);
+	
+	ParticleColor partColors[3] = {
+		{XMFLOAT4(0.5f,0,0,1.0f),5.0f},
+		{XMFLOAT4(0.25f,0,0,1.0f),5.0f},
+		{XMFLOAT4(0.75f,0,0,1.0f),5.0f},
+	};
+	emitDesc.colors = partColors;
+	emitDesc.colorCount = 3;
 	emitDesc.maxParticles = 100;
 	emitDesc.emissionRate = 3.0f;
 	//emitDesc.emissionRotation = XMFLOAT3(-XM_PIDIV2,0.0f,0.0f);
@@ -247,13 +240,14 @@ void Game::Init()
 	emitDesc.particleMaxLifetime = 15.0f;
 	//emitDesc.particleInitMinScale = 0.1f;
 	//emitDesc.particleInitMaxScale = 0.2f;
-	emitDesc.particleInitMinScale = 1.f;
-	emitDesc.particleInitMaxScale = 1.01f;
-	emitDesc.particleInitMinAngularVelocity = -5.f;
-	emitDesc.particleInitMaxAngularVelocity = 5.f;
+	emitDesc.particleInitMinScale = 0.1f;
+	emitDesc.particleInitMaxScale = 0.11f;
+	emitDesc.particleInitMinAngularVelocity = -1.0f;
+	emitDesc.particleInitMaxAngularVelocity = 1.0f;
 	emitDesc.particleAcceleration = XMFLOAT3(0.0f, 0.0f, -20.0f);
 
 	CPUParticleEmitter* cpuEmitter = new CPUParticleEmitter(emitDesc);
+	//cpuEmitter->SetBlendingEnabled(true);
 
 	cpuEmitter->SetCollisionsEnabled([](void* collision) {
 		btPersistentManifold* manifold = (btPersistentManifold*)collision;
@@ -299,11 +293,46 @@ void Game::Init()
 		}
 	});
 
-	emitDesc.maxParticles = 2000;
-	emitDesc.particleInitMinScale = 1.0f;
-	emitDesc.particleInitMaxScale = 1.001f;
-	emitDesc.emissionRate = 100.0f;
+	emitDesc.maxParticles = 300;
+	emitDesc.emissionRate = 5.0f;
+
+	ParticleTexture partTex[3] = {
+		{EESceneLoader->texture2DMap["smoke1"], 1.0f},
+		{EESceneLoader->texture2DMap["smoke2"], 1.0f},
+		{EESceneLoader->texture2DMap["smoke3"], 1.0f},
+	};
+	emitDesc.textures = partTex;
+	emitDesc.textureCount = 3;
+
+	emitDesc.colorCount = 0;
+	emitDesc.colors = nullptr;
+
+	emitDesc.particleInitMinSpeed = 0.1f;
+	emitDesc.particleInitMaxSpeed = 1.0f;
+	emitDesc.particleMinLifetime = 10.0f;
+	emitDesc.particleMaxLifetime = 15.0f;
+	emitDesc.particleInitMinScale = 0.25f;
+	emitDesc.particleInitMaxScale = 1.0f;
+
+	emitDesc.particleAcceleration = XMFLOAT3(0.0f, 0.0f, -0.001f);
+
 	GPUParticleEmitter* gpuEmitter = new GPUParticleEmitter(emitDesc);
+	gpuEmitter->SetBlendingEnabled(true);
+
+	partTex[0] = { EESceneLoader->texture2DMap["fire"], 1.0f };
+	emitDesc.textureCount = 1;
+	emitDesc.maxParticles = 100;
+	emitDesc.emissionRate = 1.0f;
+	emitDesc.particleInitMinSpeed = 0.01f;
+	emitDesc.particleInitMaxSpeed = 0.1f;
+	emitDesc.particleMinLifetime = 1.0f;
+	emitDesc.particleMaxLifetime = 3.0f;
+	emitDesc.particleInitMinScale = 0.01f;
+	emitDesc.particleInitMaxScale = 0.1f;
+	emitDesc.particleAcceleration = XMFLOAT3(0.0f, 0.0f, 0.0f);
+
+	gpuEmitter = new GPUParticleEmitter(emitDesc);
+	gpuEmitter->SetBlendingEnabled(true);
 
 	Entity* e;
 	for (size_t i = 0; i < EESceneLoader->sceneEntities.size(); i++)

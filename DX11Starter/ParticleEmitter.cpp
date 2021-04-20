@@ -27,6 +27,7 @@ ParticleEmitter::ParticleEmitter()
 	ParticleColor color[1] = { XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f), 1.0f };
 	SetParticleColors(1, color);
 
+	CalcColorTextureWeights();
 	CalcWorldMatrix();
 
 	EmitterVector.push_back(this);
@@ -54,6 +55,7 @@ ParticleEmitter::ParticleEmitter(ParticleEmitterDescription d)
 	SetParticleColors(d.colorCount, d.colors);
 	SetParticleTextures(d.textureCount, d.textures);
 
+	CalcColorTextureWeights();
 	CalcWorldMatrix();
 
 	EmitterVector.push_back(this);
@@ -230,6 +232,44 @@ void ParticleEmitter::SetMaxParticles(unsigned int maxParticles)
 	this->maxParticles = maxParticles;
 }
 
+void ParticleEmitter::CalcColorTextureWeights()
+{
+	float total = 0.0f;
+
+	for (size_t i = 0; i < textureCount; i++)
+	{
+		total += textures[i].weight;
+	}
+	for (size_t i = 0; i < colorCount; i++)
+	{
+		total += colors[i].weight;
+	}
+
+	for (size_t i = 0; i < textureCount; i++)
+	{
+		textures[i].weight = textures[i].weight / total;
+	}
+	for (size_t i = 0; i < colorCount; i++)
+	{
+		colors[i].weight = colors[i].weight / total;
+	}
+
+	for (int i = 1; i < (int)colorCount; i++)
+	{
+		colors[i].weight += colors[i - 1].weight;
+	}
+	if (colorCount > 0 && textureCount > 0) textures[0].weight += colors[colorCount - 1].weight;
+	for (int i = 1; i < (int)textureCount; i++)
+	{
+		textures[i].weight += textures[i - 1].weight;
+	}
+
+	for (int i = 0; i < textureCount; i++)
+	{
+		texturesToGPU[i] = { i, this->textures[i].weight };
+	}
+}
+
 void ParticleEmitter::SetEmissionRate(float emissionRate)
 {
 	this->emissionRate = 1.0f / emissionRate;
@@ -266,38 +306,9 @@ void ParticleEmitter::SetParticleAcceleration(XMFLOAT3 accel)
 
 void ParticleEmitter::SetParticleColors(unsigned int colorCount, ParticleColor* colors)
 {
-	if (colorCount > MAX_PARTICLE_COLORS) return;
+	if (colorCount > MAX_PARTICLE_COLORS || colorCount == 0) return;
 	this->colorCount = colorCount;
 	if (colors == nullptr) return;
-	float total = 0.0f;
-
-	for (size_t i = 0; i < colorCount; i++)
-	{
-		total += colors[i].weight;
-	}
-	for (size_t i = 0; i < textureCount; i++)
-	{
-		total += textures[i].weight;
-	}
-
-	for (size_t i = 0; i < colorCount; i++)
-	{
-		colors[i].weight = colors[i].weight / total;
-	}
-	for (size_t i = 0; i < textureCount; i++)
-	{
-		textures[i].weight = textures[i].weight / total;
-	}
-
-	for (int i = 1; i < (int)colorCount; i++)
-	{
-		colors[i].weight += colors[i - 1].weight;
-	}
-	if (colorCount > 0 && textureCount > 0) textures[0].weight += colors[colorCount - 1].weight;
-	for (int i = 1; i < (int)textureCount; i++)
-	{
-		textures[i].weight += textures[i - 1].weight;
-	}
 
 	memcpy(this->colors, colors, sizeof(ParticleColor) * (size_t)colorCount);
 }
@@ -307,42 +318,8 @@ void ParticleEmitter::SetParticleTextures(unsigned int textureCount, ParticleTex
 	if (textureCount > MAX_PARTICLE_TEXTURES || textureCount == 0) return;
 	this->textureCount = textureCount;
 	if (textures == nullptr) return;
-	float total = 0.0f;
-
-	for (size_t i = 0; i < textureCount; i++)
-	{
-		total += textures[i].weight;
-	}
-	for (size_t i = 0; i < colorCount; i++)
-	{
-		total += colors[i].weight;
-	}
-
-	for (size_t i = 0; i < textureCount; i++)
-	{
-		textures[i].weight = textures[i].weight / total;
-	}
-	for (size_t i = 0; i < colorCount; i++)
-	{
-		colors[i].weight = colors[i].weight / total;
-	}
-
-	for (int i = 1; i < (int)colorCount; i++)
-	{
-		colors[i].weight += colors[i - 1].weight;
-	}
-	if (colorCount > 0 && textureCount > 0) textures[0].weight += colors[colorCount - 1].weight;
-	for (int i = 1; i < (int)textureCount; i++)
-	{
-		textures[i].weight += textures[i - 1].weight;
-	}
 
 	memcpy(this->textures, textures, sizeof(ParticleTexture) * (size_t)textureCount);
-
-	for (int i = 0; i < textureCount; i++)
-	{
-		texturesToGPU[i] = { i, this->textures[i].weight };
-	}
 
 	HRESULT hr;
 
@@ -355,7 +332,7 @@ void ParticleEmitter::SetParticleTextures(unsigned int textureCount, ParticleTex
 	texDesc.Width = firstTexDesc.Width;
 	texDesc.MipLevels = firstTexDesc.MipLevels;
 	texDesc.ArraySize = textureCount;
-	texDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	texDesc.Format = firstTexDesc.Format;
 	texDesc.SampleDesc.Count = 1;
 	texDesc.SampleDesc.Quality = 0;
 	texDesc.Usage = D3D11_USAGE_DEFAULT;
@@ -382,7 +359,7 @@ void ParticleEmitter::SetParticleTextures(unsigned int textureCount, ParticleTex
 	// Create the shader resource view for this texture
 	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2DARRAY;
-	srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	srvDesc.Format = firstTexDesc.Format;
 	srvDesc.Texture2DArray.MipLevels = firstTexDesc.MipLevels;
 	srvDesc.Texture2DArray.FirstArraySlice = 0;
 	srvDesc.Texture2DArray.MostDetailedMip = 0;

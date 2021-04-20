@@ -140,4 +140,5 @@ protected:
 
 	void CalcEulerAngles();
 	void SetMaxParticles(unsigned int maxParticles);
+	void CalcColorTextureWeights();
 };
