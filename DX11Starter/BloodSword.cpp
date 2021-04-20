@@ -14,6 +14,9 @@ void BloodSword::Update()
 {
 	switch (ss)
 	{
+	case SwordState::Raised:
+		Raise();
+		break;
 	case SwordState::Slashing:
 		Slash();
 		break;
@@ -29,44 +32,51 @@ void BloodSword::Update()
 
 void BloodSword::StartSlash()
 {
-	ss = SwordState::Slashing; 
+	ss = SwordState::Raised; 
 }
 
 void BloodSword::UpdateSwordTransform()
 {
-	entity->SetPosition(XMFLOAT3(cam->position.x + (cam->right.x*4) + cam->direction.x, cam->position.y, cam->position.z + (cam->right.z*4) + cam->direction.z));
-	entity->SetRotation(XMFLOAT3(cam->xRotation + (1.5708f) /*90 degrees*/, cam->yRotation, cam->zRotation));
+	XMFLOAT3 defaultPos = XMFLOAT3(cam->position.x + -cam->right.x + cam->direction.x, cam->position.y - 2.0f/*Offset*/, cam->position.z + -cam->right.z + cam->direction.z);
+	XMFLOAT3 defaultRot = XMFLOAT3(0, cam->yRotation + Utility::DegToRad(90), cam->zRotation);
+
+	entity->SetPosition(defaultPos);
+	entity->SetRotation(defaultRot);
+}
+
+void BloodSword::Raise()
+{
+	// Potentially able to set up a collection of start and end points that make sense for the screen (cutting horizontal, vertical, diagonal) and randomly choose what to use
+	XMFLOAT3 endPos = XMFLOAT3(cam->position.x + -cam->right.x + cam->direction.x, cam->position.y + 0.5f/*Offset*/, cam->position.z + -cam->right.z + cam->direction.z);
+	bool lerpEndPointReached = entity->LerpPositionFromTo(entity->GetPosition(), endPos, positionLerpTolerance, deltaTime, positionLerpScalar);
+
+	if (lerpEndPointReached)
+	{
+		// entity->RotateAroundAxis(Z_AXIS, 1.5708f);
+
+		// TODO: cam->zRotation works better than entity->GetEuelerAngles()
+		bool lerpEndRotationReached = entity->LerpRotationFromTo(Z_AXIS, cam->zRotation, Utility::DegToRad(45), rotationLerpTolerance, deltaTime, rotationLerpScalar);
+		
+		if(lerpEndRotationReached) ss = SwordState::Slashing;
+	}
 }
 
 void BloodSword::Slash()
 {
 	// Potentially able to set up a collection of start and end points that make sense for the screen (cutting horizontal, vertical, diagonal) and randomly choose what to use
-	
-	XMFLOAT3 current;
-	XMVECTOR start = XMLoadFloat3(&entity->GetPosition());
-	XMVECTOR end = XMLoadFloat3(&XMFLOAT3(cam->position.x + (-cam->right.x*4) + cam->direction.x, cam->position.y, cam->position.z + (-cam->right.z*4) + cam->direction.z));
-	XMStoreFloat3(&current, DirectX::XMVectorLerp(start, end, deltaTime * lerpScalar));
-
-	entity->SetPosition(current);
-
-	bool lerpEndPointReached = XMVector3NearEqual(XMLoadFloat3(&current), end, XMLoadFloat3(&lerpTolerance));
+	XMFLOAT3 endPos = XMFLOAT3(cam->position.x + cam->right.x*4.0f + cam->direction.x, cam->position.y - 2.0f/*Offset*/, cam->position.z + cam->right.z*4.0f + cam->direction.z);
+	bool lerpEndPointReached = entity->LerpPositionFromTo(entity->GetPosition(), endPos, positionLerpTolerance, deltaTime, positionLerpScalar);
 
 	if (lerpEndPointReached)
 	{
-		ss = SwordState::Reset;
+		ss = SwordState::Idle;
 	}
 }
 
 void BloodSword::ResetSword()
 {
-	XMFLOAT3 current;
-	XMVECTOR start = XMLoadFloat3(&entity->GetPosition());
-	XMVECTOR end = XMLoadFloat3(&XMFLOAT3(cam->position.x + cam->right.x + cam->direction.x, cam->position.y, cam->position.z + cam->right.z + cam->direction.z));
-	XMStoreFloat3(&current, DirectX::XMVectorLerp(start, end, deltaTime * lerpScalar));
-
-	entity->SetPosition(current);
-
-	bool lerpEndPointReached = XMVector3NearEqual(XMLoadFloat3(&current), end, XMLoadFloat3(&lerpTolerance));
+	XMFLOAT3 endPos = XMFLOAT3(cam->position.x + -cam->right.x + cam->direction.x, cam->position.y - 2.0f/*Offset*/, cam->position.z + -cam->right.z + cam->direction.z);
+	bool lerpEndPointReached = entity->LerpPositionFromTo(entity->GetPosition(), endPos, positionLerpTolerance, deltaTime, positionLerpScalar);
 
 	if (lerpEndPointReached)
 	{

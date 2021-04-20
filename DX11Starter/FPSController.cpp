@@ -273,6 +273,10 @@ void FPSController::HookshotThrow()
 	// TODO: Figure out loss of momentum for "swinging" from this new case
 	// playerRBody->applyCentralForce(controllerVelocity.normalized() + (hookshotPoint - playerRBody->getCenterOfMassPosition()).normalized() * 2.0f); // added this to keep the momentum from movement going into hookshot for more of a swing motion
 	
+
+	// TODO: Make model wiht pivot point at one side and use for hookshot so it only scales in that way
+
+
 	if (hookshotZScale < hookshotLength)
 	{
 		hookshotZScale += hookshotThrowSpeed * deltaTime;
@@ -659,4 +663,3 @@ void FPSController::OnCollision(btCollisionObject* other)
 	Entity* otherE = (Entity*)((PhysicsWrapper*)other->getUserPointer())->objectPointer;
 	
 }
-

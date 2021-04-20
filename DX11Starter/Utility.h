@@ -110,9 +110,4 @@ namespace Utility {
 	{
 		return btVector3(vec.x, vec.y, vec.z);
 	}
-
-	static bool CheckXMFLOAT3Equivalence(DirectX::XMFLOAT3 a, DirectX::XMFLOAT3 b)
-	{			
-		return a.x == b.x && a.y == b.y && a.z == b.z;
-	}
 }

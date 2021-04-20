@@ -98,7 +98,7 @@ public:
 	void SetPosition(float x, float y, float z);
 	void SetPosition(XMFLOAT3 p);
 	bool LerpPositionFromTo(XMFLOAT3 startPos, XMFLOAT3 endPos, XMFLOAT3 lerpTolerance, float deltaTime, float lerpScalar);
-	bool LerpRotationFromTo(XMFLOAT3 startRot, XMFLOAT3 endRot, XMFLOAT3 lerpTolerance, float deltaTime, float lerpScalar);
+	bool LerpRotationFromTo(XMFLOAT3 axis, float startRot, float endRot, float lerpTolerance, float deltaTime, float lerpScalar);
 	void SetRigidbodyPosition(btVector3 position, btVector3 orientation);
 	void SetScale(float x, float y, float z);
 	void SetScale(XMFLOAT3 s);

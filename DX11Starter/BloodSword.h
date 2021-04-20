@@ -3,7 +3,7 @@
 
 enum class SwordState
 {
-	Slashing, Reset, Idle
+	Raised, Slashing, Reset, Idle
 };
 
 class BloodSword : public ScriptManager
@@ -13,20 +13,22 @@ class BloodSword : public ScriptManager
 	Camera* cam;
 
 	SwordState ss;
-	
-	XMFLOAT3 lerpTolerance = XMFLOAT3(0.25f, 0.25f, 0.25f);
 
-	XMFLOAT3 defaultPos;
-	XMFLOAT3 startPos;
-	XMFLOAT3 endPos;
+	XMFLOAT3 positionLerpTolerance = XMFLOAT3(0.25f, 0.25f, 0.25f);
+	float rotationLerpTolerance = 0.1f;
 
-	float lerpScalar = 10.0f;
+	float positionLerpScalar = 10.0f;
+	float rotationLerpScalar = 2.0f;
+
+	std::vector<XMFLOAT3> slashLerpPoints;
 
 	void Init();
 
 	void Update();
 
 	void UpdateSwordTransform();
+
+	void Raise();
 
 	void Slash();
 

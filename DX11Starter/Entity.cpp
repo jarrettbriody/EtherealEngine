@@ -473,23 +473,25 @@ bool Entity::LerpPositionFromTo(XMFLOAT3 startPos, XMFLOAT3 endPos, XMFLOAT3 ler
 	XMVECTOR end = XMLoadFloat3(&endPos);
 	XMStoreFloat3(&current, DirectX::XMVectorLerp(start, end, deltaTime * lerpScalar));
 
-	position = current;
+	SetPosition(current);
 
 	return XMVector3NearEqual(XMLoadFloat3(&current), end, XMLoadFloat3(&lerpTolerance));
 }
 
-bool Entity::LerpRotationFromTo(XMFLOAT3 startRot, XMFLOAT3 endRot, XMFLOAT3 lerpTolerance, float deltaTime, float lerpScalar)
+bool Entity::LerpRotationFromTo(XMFLOAT3 axis, float startRot, float endRot, float lerpTolerance, float deltaTime, float lerpScalar)
 {
-	XMFLOAT3 current;
-	XMVECTOR start = XMLoadFloat3(&startRot);
-	XMVECTOR end = XMLoadFloat3(&endRot);
-	XMStoreFloat3(&current, DirectX::XMVectorLerp(start, end, deltaTime * lerpScalar));
+	float current;
+	XMVECTOR start = XMLoadFloat(&startRot);
+	XMVECTOR end = XMLoadFloat(&endRot);
+	XMStoreFloat(&current, DirectX::XMVectorLerp(start, end, deltaTime * lerpScalar));
 
-	rotation = current;
+	RotateAroundAxis(axis, current);
 
-	return XMVector3NearEqual(XMLoadFloat3(&current), end, XMLoadFloat3(&lerpTolerance));
+	// TODO: Figure out end condition for rotating around axis
+	float comparison = std::abs(current - endRot);
+
+	return comparison < lerpTolerance;
 }
-
 
 void Entity::SetDirectionVector(XMFLOAT3 direction)
 {
