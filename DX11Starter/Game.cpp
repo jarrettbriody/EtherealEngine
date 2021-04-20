@@ -31,12 +31,6 @@ Game::~Game()
 	Config::Sampler->Release();
 	Config::ClampSampler->Release();
 
-	// FMOD
-	sound[0]->release(); // For now just release the one sound we have assigned
-	backgroundMusic->release();
-	sfxGroup->release();
-	fmodSystem->close();
-	fmodSystem->release();
 	//delete terrain;
 	//delete water;
 
@@ -61,13 +55,20 @@ Game::~Game()
 	MemoryAllocator::DestroyInstance();
 
 	DecalHandler::DestroyInstance();
+
+	// FMOD
+	sound[0]->release(); // For now just release the one sound we have assigned
+	backgroundMusic->release();
+	sfxGroup->release();
+	fmodSystem->close();
+	fmodSystem->release();
 }
 
 void Game::Init()
 {
 	//dont delete this, its for finding mem leaks
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-	//_CrtSetBreakAlloc(193404);
+	//_CrtSetBreakAlloc(1048555);
 	//_CrtSetBreakAlloc(49892);
 
 	srand(static_cast <unsigned> (time(0)));
@@ -122,24 +123,7 @@ void Game::Init()
 
 	EESceneLoader->LoadAssetPreloadFile();
 
-	//EESceneLoader->LoadShaders();
-
-	//EESceneLoader->LoadDefaultMeshes();
-	//EESceneLoader->LoadDefaultTextures();
-	//EESceneLoader->LoadDefaultMaterials();
-
 	EESceneLoader->SetScriptLoader([](Entity* e, string script) {Scripts::CreateScript(e, script); });
-
-	/*
-	Light* dLight = new Light;
-	dLight->Type = LIGHT_TYPE_DIR;
-	XMFLOAT3 c = XMFLOAT3(1.0f, 252.0f / 255.0f, 222.0f / 255.0f);
-	dLight->Color = c;
-	XMFLOAT3 d = XMFLOAT3(-0.265943f, -0.92075f, 0.28547f);
-	dLight->Direction = d;
-	dLight->Intensity = 0.25f;
-	dLight->Position = XMFLOAT3(-334.0f, 179.5f, -175.9f);
-	*/
 
 	/*testLight = new Light;
 	testLight->Type = LIGHT_TYPE_SPOT;
@@ -420,6 +404,11 @@ void Game::Init()
 		cout << "TEST 2 - SUCCESS" << endl;
 	else
 		cout << "TEST 2 - FAILURE" << endl;
+
+	for (size_t i = 0; i < EESceneLoader->scriptPairs.size(); i++)
+	{
+		Scripts::CreateScript(EESceneLoader->scriptPairs[i].e, EESceneLoader->scriptPairs[i].script);
+	}
 }
 
 void Game::OnResize()
@@ -696,6 +685,8 @@ void Game::Draw(double deltaTime, double totalTime)
 	{
 		ParticleEmitter::EmitterVector[i]->Draw(view, proj);
 	}
+
+	EERenderer->RenderTransparents();
 
 	EERenderer->PresentFrame();
 }

@@ -23,7 +23,7 @@ private:
 	int transparentObjectCount = 0;
 	int maxRenderObjects = 0;
 	int maxTransparentObjects = 0;
-	map<Entity*, vector<RenderObject*>> renderObjectsMap;
+	//map<string, vector<RenderObject*>> renderObjectsMap;
 
 	RendererShaders shaders;
 
@@ -76,6 +76,7 @@ public:
 	void RenderShadowMap();
 	void RenderDepthStencil();
 	void RenderSkybox();
+	void RenderTransparents();
 
 	bool AddCamera(string name, Camera* newCamera);
 	bool RemoveCamera(string name);

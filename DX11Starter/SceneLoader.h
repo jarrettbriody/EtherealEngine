@@ -31,6 +31,11 @@ struct EntityCreationParameters {
 	bool drawShadow = true;
 };
 
+struct ScriptPair {
+	Entity* e;
+	string script;
+};
+
 class SceneLoader
 {
 private:
@@ -80,6 +85,8 @@ private:
 	regex shaderTypeRegex = regex("shaderType=\"(\\w+)\""); //get shader type
 
 	regex pathRegex = regex("path=\"(.+)\""); //get path to thing
+
+	regex texArrayRegex = regex("array=\"(\\w+)\"");
 
 	regex vShaderRegex = regex("vShader=\"(\\w+)\"");
 	regex pShaderRegex = regex("pShader=\"(\\w+)\"");
@@ -151,6 +158,8 @@ private:
 public:
 	MemoryAllocator* EEMemoryAllocator = nullptr;
 	Renderer* EERenderer = nullptr;
+
+	vector<ScriptPair> scriptPairs;
 
 	map<string, SimpleVertexShader*> vertexShadersMap;
 	map<string, SimplePixelShader*> pixelShadersMap;

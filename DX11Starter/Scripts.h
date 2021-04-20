@@ -2,24 +2,28 @@
 #include "Barrel.h"
 #include "FPSController.h"
 #include "BloodIcicle.h"
+#include "BloodOrb.h"
 
 namespace Scripts {
 	enum class SCRIPT_NAMES {
 		BARREL,
 		FPSCONTROLLER,
 		BLOODICICLE,
+		BLOODORB,
 	};
 
 	static map<string, SCRIPT_NAMES> scriptNameMap = {
 		{"BARREL", SCRIPT_NAMES::BARREL},
 		{"FPSCONTROLLER", SCRIPT_NAMES::FPSCONTROLLER},
 		{"BLOODICICLE", SCRIPT_NAMES::BLOODICICLE},
+		{"BLOODORB", SCRIPT_NAMES::BLOODORB},
 	};
 
 	static map<SCRIPT_NAMES, string> scriptStringNameMap = {
 		{SCRIPT_NAMES::BARREL, "BARREL"},
 		{SCRIPT_NAMES::FPSCONTROLLER, "FPSCONTROLLER"},
 		{SCRIPT_NAMES::BLOODICICLE, "BLOODICICLE"},
+		{SCRIPT_NAMES::BLOODORB, "BLOODORB"},
 	};
 
 	namespace {
@@ -36,6 +40,9 @@ namespace Scripts {
 				break;
 			case Scripts::SCRIPT_NAMES::BLOODICICLE:
 				script = new BloodIcicle();
+				break;
+			case Scripts::SCRIPT_NAMES::BLOODORB:
+				script = new BloodOrb();
 				break;
 			default:
 				break;

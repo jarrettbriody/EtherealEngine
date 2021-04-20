@@ -33,7 +33,7 @@ struct RenderObject {
 	Entity* entity;
 	Mesh* mesh;
 	Material* material;
-	RendererCallback* callback;
+	RendererCallback* callback = nullptr;
 };
 
 struct ShadowCascade {

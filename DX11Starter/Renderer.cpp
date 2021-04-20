@@ -293,7 +293,7 @@ void Renderer::InitHBAOPlus()
 	memcpy(mat, proj.m, sizeof(float) * 16);
 	hbaoPlusComponents.Input.DepthData.ProjectionMatrix.Data = GFSDK_SSAO_Float4x4(mat);
 	hbaoPlusComponents.Input.DepthData.ProjectionMatrix.Layout = GFSDK_SSAO_COLUMN_MAJOR_ORDER;
-	hbaoPlusComponents.Input.DepthData.MetersToViewSpaceUnits = 0.5f;
+	hbaoPlusComponents.Input.DepthData.MetersToViewSpaceUnits = 1.0f;
 
 	//(3.) SET AO PARAMETERS
 
@@ -597,49 +597,6 @@ void Renderer::RenderFrame()
 		Config::Context->OMSetBlendState(NULL, 0, 0xFFFFFFFF);
 	}
 
-	ToggleBlendState(true);
-
-	stride = sizeof(Vertex);
-	offset = 0;
-
-	for (int i = transparentObjectCount - 1; i >= 0; i--)
-	{
-		RenderObject renderObject = transparentObjects[i];
-		Entity* e = renderObject.entity;
-		Mesh* mesh = renderObject.mesh;
-		Material* mat = renderObject.material;
-
-		if (e->destroyed || e->isEmptyObj) {
-			if (i != transparentObjectCount - 1) {
-				transparentObjects[i] = transparentObjects[transparentObjectCount - 1];
-			}
-			renderObjectsMap.erase(e);
-			transparentObjectCount--;
-			continue;
-		}
-
-		if (e->isEmptyObj) continue;
-
-		if (Config::SSAOEnabled) {
-			DepthStencilData d;
-			d.depthStencilSRV = depthStencilComponents.depthStencilSRV;
-			d.depthStencilSampler = depthStencilComponents.depthStencilSampler;
-			e->SetDepthStencilData(d);
-		}
-
-		ID3D11Buffer* vbo = mesh->GetVertexBuffer();
-		ID3D11Buffer* ind = mesh->GetIndexBuffer();
-		Config::Context->IASetVertexBuffers(0, 1, &vbo, &stride, &offset);
-		Config::Context->IASetIndexBuffer(ind, DXGI_FORMAT_R32_UINT, 0);
-
-		e->PrepareMaterialForDraw(mat->GetName(), camera->GetViewMatrix(), camera->GetProjMatrix());
-
-		Config::Context->DrawIndexed(
-			mesh->GetIndexCount(),		// The number of indices to use (we could draw a subset if we wanted)
-			0,											// Offset to the first index we want to use
-			0);											// Offset to add to each index when looking up vertices
-	}
-
 	if (Config::HBAOPlusEnabled) {
 		//(4.) RENDER AO
 
@@ -737,11 +694,11 @@ void Renderer::RenderShadowMap()
 			Material* mat = renderObject.material;
 			RendererCallback* callback = renderObject.callback;
 
-			if (e->destroyed || e->isEmptyObj) {
+			if (e->destroyed) {
 				if (i != renderObjectCount - 1) {
 					renderObjects[i] = renderObjects[renderObjectCount - 1];
 				}
-				renderObjectsMap.erase(e);
+				//renderObjectsMap.erase(e->GetName());
 				renderObjectCount--;
 				continue;
 			}
@@ -913,6 +870,53 @@ void Renderer::RenderSkybox()
 		Config::Context->OMSetDepthStencilState(0, 0);
 }
 
+void Renderer::RenderTransparents()
+{
+	ToggleBlendState(true);
+
+	UINT stride = sizeof(Vertex);
+	UINT offset = 0;
+
+	for (int i = transparentObjectCount - 1; i >= 0; i--)
+	{
+		RenderObject renderObject = transparentObjects[i];
+		Entity* e = renderObject.entity;
+		Mesh* mesh = renderObject.mesh;
+		Material* mat = renderObject.material;
+
+		if (e->destroyed || e->isEmptyObj) {
+			if (i != transparentObjectCount - 1) {
+				transparentObjects[i] = transparentObjects[transparentObjectCount - 1];
+			}
+			//renderObjectsMap.erase(e->GetName());
+			transparentObjectCount--;
+			continue;
+		}
+
+		if (e->isEmptyObj) continue;
+
+		if (Config::SSAOEnabled) {
+			DepthStencilData d;
+			d.depthStencilSRV = depthStencilComponents.depthStencilSRV;
+			d.depthStencilSampler = depthStencilComponents.depthStencilSampler;
+			e->SetDepthStencilData(d);
+		}
+
+		ID3D11Buffer* vbo = mesh->GetVertexBuffer();
+		ID3D11Buffer* ind = mesh->GetIndexBuffer();
+		Config::Context->IASetVertexBuffers(0, 1, &vbo, &stride, &offset);
+		Config::Context->IASetIndexBuffer(ind, DXGI_FORMAT_R32_UINT, 0);
+
+		e->PrepareMaterialForDraw(mat->GetName(), camera->GetViewMatrix(), camera->GetProjMatrix());
+
+		Config::Context->DrawIndexed(
+			mesh->GetIndexCount(),		// The number of indices to use (we could draw a subset if we wanted)
+			0,											// Offset to the first index we want to use
+			0);											// Offset to add to each index when looking up vertices
+	}
+	ToggleBlendState(false);
+}
+
 bool Renderer::AddCamera(string name, Camera* newCamera)
 {
 	if (cameras.count(name)) {
@@ -1032,8 +1036,8 @@ void Renderer::AddRenderObject(Entity* e, Mesh* mesh, Material* mat)
 	if (!mesh->HasChildren()) {
 		r = { e, mesh, mat };
 		(*objects)[count] = r;
-		if (!renderObjectsMap.count(e)) renderObjectsMap.insert({ e, vector<RenderObject*>() });
-		renderObjectsMap[e].push_back(&(*objects)[count]);
+		//if (!renderObjectsMap.count(e->GetName())) renderObjectsMap.insert({ e->GetName(), vector<RenderObject*>() });
+		//renderObjectsMap[e->GetName()].push_back(&(*objects)[count]);
 		count++;
 		if (count >= maxObjects) {
 			RenderObject* oldObjects = *objects;
@@ -1050,8 +1054,8 @@ void Renderer::AddRenderObject(Entity* e, Mesh* mesh, Material* mat)
 		{
 			r = { e, children[i], e->GetMaterial(e->GetMeshMaterialName(i)) };
 			(*objects)[count] = r;
-			if (!renderObjectsMap.count(e)) renderObjectsMap.insert({ e, vector<RenderObject*>() });
-			renderObjectsMap[e].push_back(&(*objects)[count]);
+			//if (!renderObjectsMap.count(e->GetName())) renderObjectsMap.insert({ e->GetName(), vector<RenderObject*>() });
+			//renderObjectsMap[e->GetName()].push_back(&(*objects)[count]);
 			count++;
 			if (count >= maxObjects) {
 				RenderObject* oldObjects = *objects;
@@ -1067,9 +1071,21 @@ void Renderer::AddRenderObject(Entity* e, Mesh* mesh, Material* mat)
 
 void Renderer::SetRenderObjectCallback(Entity* e, RendererCallback* callback)
 {
-	int num = renderObjectsMap[e].size();
+	/*int num = renderObjectsMap[e->GetName()].size();
 	for (int i = 0; i < num; i++)
 	{
-		renderObjectsMap[e][i]->callback = callback;
+		renderObjectsMap[e->GetName()][i]->callback = callback;
+	}*/
+	for (size_t i = 0; i < renderObjectCount; i++)
+	{
+		if (renderObjects[i].entity == e) {
+			renderObjects[i].callback = callback;
+		}
+	}
+	for (size_t i = 0; i < transparentObjectCount; i++)
+	{
+		if (transparentObjects[i].entity == e) {
+			transparentObjects[i].callback = callback;
+		}
 	}
 }

@@ -1,6 +1,5 @@
 # This file uses centimeters as units for non-parametric coordinates.
 
-mtllib bloodorb.mtl
 g default
 v 0.041729 -0.999123 -0.003504
 v 0.041289 -0.999123 -0.006984
@@ -16882,7 +16881,6 @@ vn 0.000000 -1.000000 0.000001
 vn 0.000000 1.000000 -0.000002
 s 1
 g pSphere1
-usemtl initialShadingGroup
 f 1/1/1 2/2/2 77/78/3 76/77/4
 f 2/2/2 3/3/5 78/79/6 77/78/3
 f 3/3/5 4/4/7 79/80/8 78/79/6

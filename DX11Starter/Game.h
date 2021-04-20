@@ -16,13 +16,13 @@
 #include "SceneLoader.h"
 #include "DebugLines.h"
 #include "ScriptManager.h"
-#include "Scripts.h"
 #include "DebugLines.h"
 #include "DecalHandler.h"
 #include "TestBehavior.h"
 #include "ParticleEmitter.h"
 #include "GPUParticleEmitter.h"
 #include "CPUParticleEmitter.h"
+#include "Scripts.h"
 
 using namespace std;
 

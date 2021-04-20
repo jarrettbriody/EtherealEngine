@@ -85,7 +85,7 @@ void main(uint3 id : SV_DispatchThreadID)
 	float3 end = float3(float2(randomOffset, randomOffset2) * emissionEndRadius, 1.0f);
 
 	newParticle.remainingLife = particleMinLifetime + (particleMaxLifetime - particleMinLifetime) * randomNum;
-	newParticle.position = float3(0, 0, 0);
+	newParticle.position = start;
 	newParticle.scale = particleInitMinScale + (particleInitMaxScale - particleInitMinScale) * randomNum4;
 	newParticle.velocity = normalize(end - start) * speed;
 	newParticle.rotationRadians = 0.0f;

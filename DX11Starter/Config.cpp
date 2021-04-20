@@ -16,9 +16,9 @@ bool Config::DebugCamera = false;
 
 unsigned int Config::MemoryAllocatorSize = MEGABYTE * 512;
 unsigned int Config::MemoryAllocatorAlignment = 16; //16 byte boundary
-unsigned int Config::MemoryAllocatorEntityPoolSize = MEGABYTE * 128; //128 MB
+unsigned int Config::MemoryAllocatorEntityPoolSize = MEGABYTE * 32; //128 MB
 unsigned int Config::MemoryAllocatorMeshPoolSize = MEGABYTE * 128; //256 MB
-unsigned int Config::MemoryAllocatorMaterialPoolSize = MEGABYTE * 64; //320 MB
+unsigned int Config::MemoryAllocatorMaterialPoolSize = MEGABYTE * 32; //320 MB
 unsigned int Config::MemoryAllocatorDecalPoolSize = MEGABYTE * 64; //384 MB
 //unsigned int Config::MemoryAllocatorParticlePoolSize = MEGABYTE * 64; //448 MB
 

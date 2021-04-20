@@ -153,6 +153,9 @@
     <ClCompile Include="CPUParticleEmitter.cpp">
       <Filter>EECore\Source Files\Particle System</Filter>
     </ClCompile>
+    <ClCompile Include="BloodOrb.cpp">
+      <Filter>EEScripts\Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h">
@@ -265,6 +268,9 @@
     </ClInclude>
     <ClInclude Include="RendererStructs.h">
       <Filter>EECore\Utility\Structs</Filter>
+    </ClInclude>
+    <ClInclude Include="BloodOrb.h">
+      <Filter>EEScripts\Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
