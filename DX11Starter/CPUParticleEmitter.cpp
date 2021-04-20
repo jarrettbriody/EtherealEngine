@@ -132,6 +132,7 @@ void CPUParticleEmitter::CalcVertex(Particle p, XMFLOAT4X4 view)
 	particleVertices[particleVertCount].UV = XMFLOAT2(0, 0);
 	particleVertices[particleVertCount].ID = 0;
 	particleVertices[particleVertCount].TextureIndex = p.textureIndex;
+	particleVertices[particleVertCount].RotationRadians = p.rotationRadians;
 	particleVertCount++;
 
 	particleVertices[particleVertCount].Position = p.position;
@@ -140,6 +141,7 @@ void CPUParticleEmitter::CalcVertex(Particle p, XMFLOAT4X4 view)
 	particleVertices[particleVertCount].UV = XMFLOAT2(1, 0);
 	particleVertices[particleVertCount].ID = 1;
 	particleVertices[particleVertCount].TextureIndex = p.textureIndex;
+	particleVertices[particleVertCount].RotationRadians = p.rotationRadians;
 	particleVertCount++;
 
 	particleVertices[particleVertCount].Position = p.position;
@@ -148,6 +150,7 @@ void CPUParticleEmitter::CalcVertex(Particle p, XMFLOAT4X4 view)
 	particleVertices[particleVertCount].UV = XMFLOAT2(1, 1);
 	particleVertices[particleVertCount].ID = 2;
 	particleVertices[particleVertCount].TextureIndex = p.textureIndex;
+	particleVertices[particleVertCount].RotationRadians = p.rotationRadians;
 	particleVertCount++;
 
 	particleVertices[particleVertCount].Position = p.position;
@@ -156,6 +159,7 @@ void CPUParticleEmitter::CalcVertex(Particle p, XMFLOAT4X4 view)
 	particleVertices[particleVertCount].UV = XMFLOAT2(0, 1);
 	particleVertices[particleVertCount].ID = 3;
 	particleVertices[particleVertCount].TextureIndex = p.textureIndex;
+	particleVertices[particleVertCount].RotationRadians = p.rotationRadians;
 	particleVertCount++;
 }
 

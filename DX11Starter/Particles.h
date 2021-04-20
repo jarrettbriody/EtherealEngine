@@ -45,6 +45,7 @@ struct ParticleVertex {
 	float Scale;
 	int ID;
 	int TextureIndex;
+	float RotationRadians;
 };
 
 struct ParticleDrawInfo

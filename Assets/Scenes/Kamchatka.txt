@@ -1,9 +1,10 @@
 TYPE="DIRLIGHT" name="Sun" intensity="0.25" P(200,350,25)D(-0.4951,-0.8665,-0.0618)C(1.0,0.98823,0.87058)
 TYPE="SKYBOX" dds="night4"
 
-name="FPSController" colliders="true" mass="1.0" colliderType="CAPSULE" scripts="FPSCONTROLLER" P(0, 3, 0)R(0,0,0)S(0.25, 1.0, 0.25)
+name="FPSController" colliders="true" mass="1.0" colliderType="CAPSULE" scripts="FPSCONTROLLER" P(-5, 3, 0)R(0,0,0)S(1.0, 1.0, 1.0)
 
 obj="grave" layer="decal" colliders="true" repeatTexture="0.025,0.025" P(0,0,0)R(0,180,0)S(1,1,1)
+obj="graveyard" layer="decal" colliders="true" P(0,0,0)R(0,180,0)S(1,1,1)
 obj="graveline" layer="decal" colliders="true" P(-50.31,-0.87,-34.51)R(0,180,0)S(1,1,1)
 obj="graveline" layer="decal" colliders="true" P(-10.19,-0.87,-25.47)R(0,180,0)S(1,1,1)
 obj="graveline" layer="decal" colliders="true" P(-10.18,-0.87,29.74)R(0,180,0)S(1,1,1)
@@ -141,7 +142,6 @@ obj="dumpster" layer="decal" colliders="true" repeatTexture="0.1,0.1" P(-350,-0.
 obj="dumpster" layer="decal" colliders="true" repeatTexture="0.1,0.1" P(-257.4,-0.4899998,132.5)R(0,270,0)S(1,1,1)
 obj="dumpster" layer="decal" colliders="true" repeatTexture="0.1,0.1" P(348.07,26.01,2605.06)R(0,495,0)S(1,1,1)
 obj="dumpster" layer="decal" colliders="true" repeatTexture="0.1,0.1" P(341.93,26.01,2619.85)R(0,515,0)S(1,1,1)
-obj="graveyard" layer="decal" colliders="true" P(0,0,0)R(0,180,0)S(1,1,1)
 obj="largebrickbuilding" layer="decal" colliders="true" repeatTexture="0.1,0.1" P(55.01999,47.4,1308.2)R(0,270,0)S(1,1,1)
 obj="largebrickbuilding" layer="decal" colliders="true" repeatTexture="0.1,0.1" P(535.9,14,2385.6)R(0,360,0)S(1,1,1)
 obj="largebrickbuilding" layer="decal" colliders="true" repeatTexture="0.1,0.1" P(-143.08,47.4,1634.2)R(0,450,0)S(1,1,1)

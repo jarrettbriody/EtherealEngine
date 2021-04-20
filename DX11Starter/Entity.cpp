@@ -178,7 +178,7 @@ void Entity::InitRigidBody(BulletColliderShape shape, float entityMass, bool zer
 			collShape[i] = new btBoxShape(btVector3(btScalar(span.x), btScalar(span.y), btScalar(span.z)));
 			break;
 		case BulletColliderShape::CAPSULE:
-			collShape[i] = new btCapsuleShape(btScalar(span.x), btScalar(span.y));
+			collShape[i] = new btCapsuleShape(btScalar(span.x), btScalar(span.y * 2));
 			break;
 		default:
 			break;
@@ -690,8 +690,8 @@ void Entity::AddAutoBoxCollider()
 	}
 	else {
 		vector<XMFLOAT3> v;
-		v.push_back(XMFLOAT3(1.0f, 1.0f, 1.0f));
-		v.push_back(XMFLOAT3(-1.0f, -1.0f, -1.0f));
+		v.push_back(XMFLOAT3(0.5f, 0.5f, 0.5f));
+		v.push_back(XMFLOAT3(-0.5f, -0.5f, -0.5f));
 		colliders->push_back(new Collider(nullptr, v));
 	}
 

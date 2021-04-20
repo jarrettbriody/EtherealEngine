@@ -249,6 +249,8 @@ void Game::Init()
 	//emitDesc.particleInitMaxScale = 0.2f;
 	emitDesc.particleInitMinScale = 1.f;
 	emitDesc.particleInitMaxScale = 1.01f;
+	emitDesc.particleInitMinAngularVelocity = -5.f;
+	emitDesc.particleInitMaxAngularVelocity = 5.f;
 	emitDesc.particleAcceleration = XMFLOAT3(0.0f, 0.0f, -20.0f);
 
 	CPUParticleEmitter* cpuEmitter = new CPUParticleEmitter(emitDesc);
@@ -298,8 +300,8 @@ void Game::Init()
 	});
 
 	emitDesc.maxParticles = 2000;
-	emitDesc.particleInitMinScale = 0.25f;
-	emitDesc.particleInitMaxScale = 0.3f;
+	emitDesc.particleInitMinScale = 1.0f;
+	emitDesc.particleInitMaxScale = 1.001f;
 	emitDesc.emissionRate = 100.0f;
 	GPUParticleEmitter* gpuEmitter = new GPUParticleEmitter(emitDesc);
 
