@@ -110,4 +110,9 @@ namespace Utility {
 	{
 		return btVector3(vec.x, vec.y, vec.z);
 	}
+
+	static float FloatLerp(float a, float b, float f)
+	{
+		return a + f * (b - a);
+	}
 }

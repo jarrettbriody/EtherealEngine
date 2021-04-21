@@ -45,6 +45,7 @@ void FPSController::Init()
 	};
 
 	sword = ScriptManager::CreateEntity(swordParams);
+	// entity->AddChildEntity(sword, sword->GetWorldMatrix());
 	
 	hookshotParams = {
 			"Hookshot",					// name

@@ -466,33 +466,6 @@ void Entity::Move(float x, float y, float z)
 	CalcWorldMatrix();
 }
 
-bool Entity::LerpPositionFromTo(XMFLOAT3 startPos, XMFLOAT3 endPos, XMFLOAT3 lerpTolerance, float deltaTime, float lerpScalar)
-{
-	XMFLOAT3 current;
-	XMVECTOR start = XMLoadFloat3(&startPos);
-	XMVECTOR end = XMLoadFloat3(&endPos);
-	XMStoreFloat3(&current, DirectX::XMVectorLerp(start, end, deltaTime * lerpScalar));
-
-	SetPosition(current);
-
-	return XMVector3NearEqual(XMLoadFloat3(&current), end, XMLoadFloat3(&lerpTolerance));
-}
-
-bool Entity::LerpRotationFromTo(XMFLOAT3 axis, float startRot, float endRot, float lerpTolerance, float deltaTime, float lerpScalar)
-{
-	float current;
-	XMVECTOR start = XMLoadFloat(&startRot);
-	XMVECTOR end = XMLoadFloat(&endRot);
-	XMStoreFloat(&current, DirectX::XMVectorLerp(start, end, deltaTime * lerpScalar));
-
-	RotateAroundAxis(axis, current);
-
-	// TODO: Figure out end condition for rotating around axis
-	float comparison = std::abs(current - endRot);
-
-	return comparison < lerpTolerance;
-}
-
 void Entity::SetDirectionVector(XMFLOAT3 direction)
 {
 	this->direction = direction;

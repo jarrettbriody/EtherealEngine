@@ -3,7 +3,7 @@
 
 enum class SwordState
 {
-	Raised, Slashing, Reset, Idle
+	Raised, Slashing, Idle
 };
 
 class BloodSword : public ScriptManager
@@ -14,23 +14,32 @@ class BloodSword : public ScriptManager
 
 	SwordState ss;
 
+	bool negligentTransformationChange;
+
 	XMFLOAT3 positionLerpTolerance = XMFLOAT3(0.25f, 0.25f, 0.25f);
-	float rotationLerpTolerance = 0.1f;
+	XMFLOAT3 rotationLerpTolerance = XMFLOAT3(0.25f, 0.25f, 0.25f);
+	XMFLOAT3 directionLerpTolerance = XMFLOAT3(0.25f, 0.25f, 0.25f);
 
-	float positionLerpScalar = 10.0f;
+	float positionLerpScalar = 5.0f;
 	float rotationLerpScalar = 2.0f;
+	float directionLerpScalar = 2.0f;
 
-	std::vector<XMFLOAT3> slashLerpPoints;
+	XMFLOAT3 lerpPositionFrom = XMFLOAT3(0,0,0);
+	XMFLOAT3 lerpPositionTo = XMFLOAT3(0, 0, 0);
+	XMFLOAT3 lerpRotationFrom = XMFLOAT3(0, 0, 0);
+	XMFLOAT3 lerpRotationTo = XMFLOAT3(0, 0, 0);
+	XMFLOAT3 lerpDirectionFrom = XMFLOAT3(0, 0, 0);
+	XMFLOAT3 lerpDirectionTo = XMFLOAT3(0, 0, 0);
 
 	void Init();
 
 	void Update();
 
-	void UpdateSwordTransform();
+	void IdleState();
 
-	void Raise();
+	void RaisedState();
 
-	void Slash();
+	void SlashingState();
 
 	void ResetSword();
 

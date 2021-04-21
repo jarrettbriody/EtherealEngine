@@ -8,25 +8,50 @@ void BloodSword::Init()
 	cam = ScriptManager::EERenderer->GetCamera("main");
 
 	ss = SwordState::Idle;
+
+	// default positions
+	//entity->SetPosition(XMFLOAT3(cam->position.x + -cam->right.x + cam->direction.x, cam->position.y - 2.0f/*Offset*/, cam->position.z + -cam->right.z + cam->direction.z));
+	//entity->SetRotation(XMFLOAT3(0, cam->yRotation + Utility::DegToRad(-90), cam->zRotation));
+	//entity->SetDirectionVector(cam->direction);
 }
 
 void BloodSword::Update()
 {
 	switch (ss)
 	{
+	case SwordState::Idle:
+		IdleState();
+		break;
 	case SwordState::Raised:
-		Raise();
+		RaisedState();
 		break;
 	case SwordState::Slashing:
-		Slash();
-		break;
-	case SwordState::Reset:
-		ResetSword();
-	case SwordState::Idle:
-		UpdateSwordTransform();
+		SlashingState();
 		break;
 	default:
 		break;
+	}
+
+	XMVECTOR lerpPosFrom = XMLoadFloat3(&lerpPositionFrom);
+	XMVECTOR lerpPosTo = XMLoadFloat3(&lerpPositionTo);
+	XMVECTOR lerpRotFrom = XMLoadFloat3(&lerpRotationFrom);
+	XMVECTOR lerpRotTo = XMLoadFloat3(&lerpRotationTo);
+	XMVECTOR lerpDirFrom = XMLoadFloat3(&lerpDirectionFrom);
+	XMVECTOR lerpDirTo = XMLoadFloat3(&lerpDirectionTo);
+	XMVECTOR posTolerance = XMLoadFloat3(&positionLerpTolerance);
+	XMVECTOR rotTolerance = XMLoadFloat3(&rotationLerpTolerance);
+	XMVECTOR dirTolerance = XMLoadFloat3(&directionLerpTolerance);
+
+	negligentTransformationChange = XMVector3NearEqual(lerpPosFrom, lerpPosTo, posTolerance) /*&& XMVector3NearEqual(lerpRotFrom, lerpRotTo, rotTolerance)*/ && XMVector3NearEqual(lerpDirFrom, lerpDirTo, dirTolerance);
+
+	if (!negligentTransformationChange /*|| ss != SwordState::Idle*/)
+	{
+		lerpPositionFrom = entity->GetPosition();
+		lerpRotationFrom = entity->GetEulerAngles();
+		lerpDirectionFrom = entity->GetDirectionVector();
+		entity->SetPosition(XMFLOAT3(Utility::FloatLerp(lerpPositionFrom.x, lerpPositionTo.x, deltaTime * positionLerpScalar), Utility::FloatLerp(lerpPositionFrom.y, lerpPositionTo.y, deltaTime * positionLerpScalar), Utility::FloatLerp(lerpPositionFrom.z, lerpPositionTo.z, deltaTime * positionLerpScalar)));
+		// entity->SetRotation(XMFLOAT3(Utility::FloatLerp(lerpRotationFrom.x, lerpRotationTo.x, deltaTime * rotationLerpScalar), Utility::FloatLerp(lerpRotationFrom.y, lerpRotationTo.y, deltaTime * rotationLerpScalar), Utility::FloatLerp(lerpRotationFrom.z, lerpRotationTo.z, deltaTime * rotationLerpScalar)));
+		entity->SetDirectionVector(XMFLOAT3(Utility::FloatLerp(lerpDirectionFrom.x, lerpDirectionTo.x, deltaTime * directionLerpScalar), Utility::FloatLerp(lerpDirectionFrom.y, lerpDirectionTo.y, deltaTime * directionLerpScalar), Utility::FloatLerp(lerpDirectionFrom.z, lerpDirectionTo.z, deltaTime * directionLerpScalar)));
 	}
 }
 
@@ -35,53 +60,40 @@ void BloodSword::StartSlash()
 	ss = SwordState::Raised; 
 }
 
-void BloodSword::UpdateSwordTransform()
+void BloodSword::IdleState()
 {
-	XMFLOAT3 defaultPos = XMFLOAT3(cam->position.x + -cam->right.x + cam->direction.x, cam->position.y - 2.0f/*Offset*/, cam->position.z + -cam->right.z + cam->direction.z);
-	XMFLOAT3 defaultRot = XMFLOAT3(0, cam->yRotation + Utility::DegToRad(90), cam->zRotation);
-
-	entity->SetPosition(defaultPos);
-	entity->SetRotation(defaultRot);
+	lerpPositionTo = XMFLOAT3(cam->position.x + -cam->right.x + cam->direction.x, cam->position.y - 2.0f /*Offset*/, cam->position.z + -cam->right.z + cam->direction.z);
+	lerpRotationTo = XMFLOAT3(cam->xRotation, cam->yRotation + Utility::DegToRad(90), cam->zRotation);
+	lerpDirectionTo = XMFLOAT3(cam->right.x, cam->right.y, cam->right.z);
 }
 
-void BloodSword::Raise()
+void BloodSword::RaisedState()
 {
-	// Potentially able to set up a collection of start and end points that make sense for the screen (cutting horizontal, vertical, diagonal) and randomly choose what to use
-	XMFLOAT3 endPos = XMFLOAT3(cam->position.x + -cam->right.x + cam->direction.x, cam->position.y + 0.5f/*Offset*/, cam->position.z + -cam->right.z + cam->direction.z);
-	bool lerpEndPointReached = entity->LerpPositionFromTo(entity->GetPosition(), endPos, positionLerpTolerance, deltaTime, positionLerpScalar);
+	lerpPositionTo = XMFLOAT3(cam->position.x + -cam->right.x + cam->direction.x, cam->position.y + 0.5f/*Offset*/, cam->position.z + -cam->right.z + cam->direction.z);
 
-	if (lerpEndPointReached)
+	if (negligentTransformationChange)
 	{
-		// entity->RotateAroundAxis(Z_AXIS, 1.5708f);
-
-		// TODO: cam->zRotation works better than entity->GetEuelerAngles()
-		bool lerpEndRotationReached = entity->LerpRotationFromTo(Z_AXIS, cam->zRotation, Utility::DegToRad(45), rotationLerpTolerance, deltaTime, rotationLerpScalar);
-		
-		if(lerpEndRotationReached) ss = SwordState::Slashing;
+		negligentTransformationChange = false;
+		ss = SwordState::Slashing;
 	}
 }
 
-void BloodSword::Slash()
+void BloodSword::SlashingState()
 {
-	// Potentially able to set up a collection of start and end points that make sense for the screen (cutting horizontal, vertical, diagonal) and randomly choose what to use
-	XMFLOAT3 endPos = XMFLOAT3(cam->position.x + cam->right.x*4.0f + cam->direction.x, cam->position.y - 2.0f/*Offset*/, cam->position.z + cam->right.z*4.0f + cam->direction.z);
-	bool lerpEndPointReached = entity->LerpPositionFromTo(entity->GetPosition(), endPos, positionLerpTolerance, deltaTime, positionLerpScalar);
+	lerpPositionTo = XMFLOAT3(cam->position.x + cam->right.x*4.0f + cam->direction.x, cam->position.y - 4.0f/*Offset*/, cam->position.z + cam->right.z*4.0f + cam->direction.z);
 
-	if (lerpEndPointReached)
+	if (negligentTransformationChange)
 	{
+		negligentTransformationChange = false;
 		ss = SwordState::Idle;
 	}
+	
 }
 
 void BloodSword::ResetSword()
 {
+	// TODO: Is this needed? 
 	XMFLOAT3 endPos = XMFLOAT3(cam->position.x + -cam->right.x + cam->direction.x, cam->position.y - 2.0f/*Offset*/, cam->position.z + -cam->right.z + cam->direction.z);
-	bool lerpEndPointReached = entity->LerpPositionFromTo(entity->GetPosition(), endPos, positionLerpTolerance, deltaTime, positionLerpScalar);
-
-	if (lerpEndPointReached)
-	{
-		ss = SwordState::Idle;
-	}
 }
 
 void BloodSword::OnCollision(btCollisionObject* other)
