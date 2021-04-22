@@ -1,5 +1,8 @@
 #include "pch.h"
 #include "BloodSword.h"
+	
+// TODO: Lerping offset -> XMFLOAT3 newPos = XMFLAOT3(camPos.x + camDir.x + lerpOffest, etc...)
+// TODO: camervaViewMatrix * swordWorldMatrix = puts it in space to camera -> set this to new blood sword every frame, need to calc world matrix (every frame!) whenever setting this 
 
 void BloodSword::Init()
 {
@@ -8,13 +11,20 @@ void BloodSword::Init()
 	cam = ScriptManager::EERenderer->GetCamera("main");
 
 	ss = SwordState::Idle;
+	
+	// starting positioning
+	finalLerpPos = XMFLOAT3(2, 0, 2);
+	lerpPositionFrom = finalLerpPos; 
+	entity->SetPosition(lerpPositionFrom); 
+	entity->CalcWorldMatrix();
 }
 
 void BloodSword::Update()
 {
-	lerpPositionFrom = entity->GetPosition();
-	lerpDirectionFrom = entity->GetDirectionVector();
-	
+	// Get the camera view matrix 
+	XMFLOAT4X4 camView = cam->GetViewMatrix();
+
+	// Get the current lerp in relative to the local space of the camera
 	switch (ss)
 	{
 	case SwordState::Idle:
@@ -32,9 +42,29 @@ void BloodSword::Update()
 	default:
 		break;
 	}
+	
+	// Update the lerpFromPosition for the next time the lerp calculation is made 
+	lerpPositionFrom = finalLerpPos;
+	
+	// Update blood sword position with local coordinate lerping data relative to camera 
+	entity->SetPosition(finalLerpPos);
 
-	entity->SetPosition(finalLerpPos);	
-	entity->SetDirectionVector(finalLerpDir);
+	// Calc world matrix of the sword
+	entity->CalcWorldMatrix();
+
+	// Multiply the blood sword matrix into the camera view matrix so it turns the the local coordinates we lerped into world coordinates relative to the camera space
+	XMFLOAT4X4 swordMatrix;
+	XMMATRIX camParentMatrix = XMMatrixTranspose(XMLoadFloat4x4(&camView));
+	XMMATRIX swordLocalMatrix = XMMatrixTranspose(XMLoadFloat4x4(&entity->GetWorldMatrix()));
+	XMStoreFloat4x4(&swordMatrix, XMMatrixTranspose(XMMatrixMultiply(swordLocalMatrix, camParentMatrix)));
+
+	// Set the resulting matrix and calc it
+	entity->SetWorldMatrix(swordMatrix);
+	entity->CalcWorldMatrix();
+
+	// Debugging to check if positions are proper
+	cout << "Camera Position: " << cam->position.x << " " << cam->position.y << " " << cam->position.z << endl;
+	cout << "Sword Position: " << entity->GetPosition().x << " " << entity->GetPosition().y << " " << entity->GetPosition().z << endl;
 }
 
 void BloodSword::StartSlash()
@@ -44,17 +74,19 @@ void BloodSword::StartSlash()
 
 void BloodSword::IdleState()
 {
-	finalLerpPos = XMFLOAT3(cam->position.x + -cam->right.x + cam->direction.x, cam->position.y - 2.0f /*Offset*/, cam->position.z + -cam->right.z + cam->direction.z);
-	finalLerpDir = XMFLOAT3(cam->right.x, cam->right.y, cam->right.z);
+	// not doing any lerping in the idle state
+	finalLerpPos = XMFLOAT3(2, 0, 2); // starting pos
 }
 
 void BloodSword::RaisedState()
 {
-	lerpPositionTo = XMFLOAT3(cam->position.x + -cam->right.x + cam->direction.x, cam->position.y + 0.5f/*Offset*/, cam->position.z + -cam->right.z + cam->direction.z);
+	lerpPositionTo = XMFLOAT3(0, 5, 0);
 
 	CalcLerp();
 
-	if (CheckTransformationsNearEqual(true, false))
+	cout << "Raising" << endl;
+
+	if (CheckTransformationsNearEqual())
 	{
 		ss = SwordState::Slashing;
 	}
@@ -62,63 +94,47 @@ void BloodSword::RaisedState()
 
 void BloodSword::SlashingState()
 {
-	lerpPositionTo = XMFLOAT3(cam->position.x + cam->direction.x * 5.0f + cam->right.x * 4.0f, cam->position.y - 4.0f/*Offset*/, cam->position.z + cam->direction.z * 2.0f + cam->right.z * 5.0f);
-	lerpDirectionTo = XMFLOAT3(cam->right.x, cam->right.y + Utility::DegToRad(45), cam->right.z + Utility::DegToRad(10));
 
+	lerpPositionTo = XMFLOAT3(10, 2.5, 10);
+	
 	CalcLerp();
 
-	if (CheckTransformationsNearEqual(true, true))
+	cout << "Slashing" << endl;
+
+	if (CheckTransformationsNearEqual())
 	{
 		ss = SwordState::Reset;
 	}
-	
 }
 
 void BloodSword::ResetState()
 {
-	lerpPositionTo = XMFLOAT3(cam->position.x + -cam->right.x + cam->direction.x, cam->position.y - 2.0f /*Offset*/, cam->position.z + -cam->right.z + cam->direction.z);
-	lerpDirectionTo = XMFLOAT3(cam->right.x, cam->right.y, cam->right.z);
+	lerpPositionTo = XMFLOAT3(2, 0, 2);
 
 	CalcLerp();
 
-	if (CheckTransformationsNearEqual(true, true))
+	cout << "Resetting" << endl;
+
+	if (CheckTransformationsNearEqual())
 	{
 		ss = SwordState::Idle;
 	}
-
 }
 
-bool BloodSword::CheckTransformationsNearEqual(bool checkPos, bool checkDir)
+bool BloodSword::CheckTransformationsNearEqual()
 {
 	XMVECTOR lerpPosFrom = XMLoadFloat3(&lerpPositionFrom);
 	XMVECTOR lerpPosTo = XMLoadFloat3(&lerpPositionTo);
-	XMVECTOR lerpDirFrom = XMLoadFloat3(&lerpDirectionFrom);
-	XMVECTOR lerpDirTo = XMLoadFloat3(&lerpDirectionTo);
 	XMVECTOR posTolerance = XMLoadFloat3(&positionLerpTolerance);
-	XMVECTOR dirTolerance = XMLoadFloat3(&directionLerpTolerance);
-	
-	if (checkPos && checkDir)
-	{
-		return XMVector3NearEqual(lerpPosFrom, lerpPosTo, posTolerance) && XMVector3NearEqual(lerpDirFrom, lerpDirTo, dirTolerance);
-	}
-	else if (checkPos)
-	{
-		return XMVector3NearEqual(lerpPosFrom, lerpPosTo, posTolerance);
-	}
-	else if (checkDir)
-	{
-		return XMVector3NearEqual(lerpDirFrom, lerpDirTo, dirTolerance);
-	}
-	else
-	{
-		return false;
-	}
+
+	return XMVector3NearEqual(lerpPosFrom, lerpPosTo, posTolerance);
 }
 
-void BloodSword::CalcLerp()
+void BloodSword::CalcLerp() 
 {
-	finalLerpPos = XMFLOAT3(Utility::FloatLerp(lerpPositionFrom.x, lerpPositionTo.x, deltaTime * positionLerpScalar), Utility::FloatLerp(lerpPositionFrom.y, lerpPositionTo.y, deltaTime * positionLerpScalar), Utility::FloatLerp(lerpPositionFrom.z, lerpPositionTo.z, deltaTime * positionLerpScalar));
-	finalLerpDir = XMFLOAT3(Utility::FloatLerp(lerpDirectionFrom.x, lerpDirectionTo.x, deltaTime * directionLerpScalar), Utility::FloatLerp(lerpDirectionFrom.y, lerpDirectionTo.y, deltaTime * directionLerpScalar), Utility::FloatLerp(lerpDirectionFrom.z, lerpDirectionTo.z, deltaTime * directionLerpScalar));
+	XMStoreFloat3(&finalLerpPos, XMVectorLerp(XMLoadFloat3(&lerpPositionFrom), XMLoadFloat3(&lerpPositionTo), deltaTime * positionLerpScalar));
+
+	// finalLerpPos = XMFLOAT3(Utility::FloatLerp(lerpPositionFrom.x, lerpPositionTo.x, deltaTime * positionLerpScalar), Utility::FloatLerp(lerpPositionFrom.y, lerpPositionTo.y, deltaTime * positionLerpScalar), Utility::FloatLerp(lerpPositionFrom.z, lerpPositionTo.z, deltaTime * positionLerpScalar));
 }
 
 void BloodSword::OnCollision(btCollisionObject* other)

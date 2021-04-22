@@ -38,14 +38,12 @@ void FPSController::Init()
 			{"BLOODSWORD"},				// script names
 			1,								// script count
 			XMFLOAT3(0.0f, 0.0f, 0.0f),		// position
-			XMFLOAT3(1.5708f /*90 degrees*/, 0.0f, 0.0f),		// rotation
-			XMFLOAT3(0.25f, 0.25f, 0.25f),		// scale
+			XMFLOAT3(0.0, 0.0f, 0.0f),		// rotation
+			XMFLOAT3(1.0f, 1.0f, 1.0f),		// scale
 			0.0f							// mass
 			// defaults work for the rest
 	};
-
 	sword = ScriptManager::CreateEntity(swordParams);
-	// entity->AddChildEntity(sword, sword->GetWorldMatrix());
 	
 	hookshotParams = {
 			"Hookshot",					// name
