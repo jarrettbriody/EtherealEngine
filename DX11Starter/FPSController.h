@@ -3,6 +3,12 @@
 #include <WinUser.h>
 #include "DXCore.h"
 
+struct DashBlurCallback : RendererCallback {
+	void PrePixelShaderCallback() {
+		pShader->SetInt("blurAmount", 5);
+	}
+};
+
 enum PlayerState
 {
 	Intro, Normal, HookshotFlight, HookshotLeash, Paused, Death, Victory
@@ -11,6 +17,8 @@ enum PlayerState
 class FPSController : public ScriptManager
 {
 	map<string, Entity*>* eMap;
+
+	DashBlurCallback dashBlurCallback;
 
 	// Camera related attributes
 	Camera* cam;

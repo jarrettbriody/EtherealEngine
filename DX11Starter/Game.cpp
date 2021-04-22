@@ -156,6 +156,7 @@ void Game::Init()
 	EERenderer->InitDepthStencil();
 	EERenderer->InitHBAOPlus();
 	EERenderer->InitBlendState();
+	EERenderer->InitPostProcessRTV();
 	EESceneLoader->EERenderer = EERenderer;
 
 	//EESceneLoader->LoadScene("ArenaV2");
@@ -164,9 +165,10 @@ void Game::Init()
 	EESceneLoader->LoadScene("Kamchatka");
 
 	EERenderer->SetShadowCascadeInfo(0, 4096, 0.1f, 2000.0f, 100.0f, 100.0f);
-	EERenderer->SetShadowCascadeInfo(1, 4096, 0.1f, 2000.0f, 500.0f, 500.0f);
-	EERenderer->SetShadowCascadeInfo(2, 4096, 0.1f, 2000.0f, 2000.0f, 2000.0f);
-	EERenderer->InitShadows(3);
+	EERenderer->SetShadowCascadeInfo(1, 4096, 0.1f, 2000.0f, 250.0f, 250.0f);
+	EERenderer->SetShadowCascadeInfo(2, 4096, 0.1f, 2000.0f, 750.0f, 750.0f);
+	EERenderer->SetShadowCascadeInfo(3, 2048, 0.1f, 2000.0f, 3000.0f, 3000.0f);
+	EERenderer->InitShadows(4);
 	EERenderer->InitSkybox();
 
 	EERenderer->SetEntities(&(EESceneLoader->sceneEntities));
@@ -687,6 +689,8 @@ void Game::Draw(double deltaTime, double totalTime)
 	}
 
 	EERenderer->RenderTransparents();
+
+	EERenderer->RenderPostProcess();
 
 	EERenderer->PresentFrame();
 }

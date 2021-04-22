@@ -6,6 +6,7 @@ name="FPSController" colliders="true" mass="1.0" colliderType="CAPSULE" scripts=
 name="Blood_Orb" obj="bloodorb" material="RedFluid" scripts="BLOODORB" P(-15,5,0)R(0,0,0)S(0.5,0.5,0.5)
 name="Blood_Orb_Glass" obj="Sphere" material="Glass" P(-15,5,0)R(0,0,0)S(1.05,1.05,1.05)
 
+//obj="burningcommieblocv2" P(500,240,0)R(0,90,0)S(25,25,25)
 obj="grave" layer="decal" colliders="true" repeatTexture="0.025,0.025" P(0,0,0)R(0,180,0)S(1,1,1)
 obj="graveyard" layer="decal" colliders="true" P(0,0,0)R(0,180,0)S(1,1,1)
 obj="graveline" layer="decal" colliders="true" P(-50.31,-0.87,-34.51)R(0,180,0)S(1,1,1)

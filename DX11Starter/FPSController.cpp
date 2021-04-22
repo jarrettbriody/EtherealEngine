@@ -43,6 +43,10 @@ void FPSController::Init()
 	collider = entity->GetCollider();
 
 	ps = PlayerState::Normal;
+
+	dashBlurCallback.vShader = EESceneLoader->vertexShadersMap["PostProcess"];
+	dashBlurCallback.pShader = EESceneLoader->pixelShadersMap["DashBlur"];
+	dashBlurCallback.active = true;
 }
 
 void FPSController::Update()
@@ -472,6 +476,8 @@ btVector3 FPSController::DashImpulseFromInput()
 		}
 
 		dashDampTimer = DASH_DAMP_TIMER_MAX;
+
+		EERenderer->SetPostProcess(true, &dashBlurCallback);
 	}
 
 	return dashImpulse;
@@ -489,6 +495,9 @@ void FPSController::DampForces()
 			// cout << fov << endl;
 			fov -= fovDashToNormalSpeed * deltaTime;
 			cam->SetFOV(fov);
+		}
+		else {
+			EERenderer->SetPostProcess(false);
 		}
 	}
 
