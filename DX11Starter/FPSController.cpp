@@ -269,18 +269,11 @@ void FPSController::CheckHookshot()
 
 void FPSController::HookshotThrow()
 {
-	// TODO: Figure out loss of momentum for "swinging" from this new case
-	// playerRBody->applyCentralForce(controllerVelocity.normalized() + (hookshotPoint - playerRBody->getCenterOfMassPosition()).normalized() * 2.0f); // added this to keep the momentum from movement going into hookshot for more of a swing motion
-	
-
 	// TODO: Make model wiht pivot point at one side and use for hookshot so it only scales in that way
-
 
 	if (hookshotZScale < hookshotLength)
 	{
 		hookshotZScale += hookshotThrowSpeed * deltaTime;
-
-		// TODO: Reset whhen not reaching distance
 	}
 	else
 	{
@@ -292,12 +285,15 @@ void FPSController::HookshotThrow()
 
 			ps = PlayerState::HookshotLeash;
 		}
-
-		if (hookshotAttachedEntity->tag.STDStr() == std::string("Environment"))
+		else if (hookshotAttachedEntity->tag.STDStr() == std::string("Environment"))
 		{
 			// playerRBody->clearForces(); --> don't know if needed
 
 			ps = PlayerState::HookshotFlight;
+		}
+		else
+		{
+			ResetHookshotTransform();
 		}
 	}
 }
@@ -341,14 +337,14 @@ void FPSController::HookshotLeash()
 	}
 
 	// TODO: Scaling leash with enemy distance and can no longer use Hookshot point because we are affecting the target position
-	/*if (hookshotZScale < hookshotLength)
+	if (hookshotZScale < hookshotLength)
 	{
 		hookshotZScale += hookshotThrowSpeed * deltaTime;
 	}
 	else if (hookshotZScale > hookshotLength)
 	{
 		hookshotZScale -= hookshotThrowSpeed * deltaTime;
-	}*/
+	}
 
 	// pull enemy into range if they are "stretching" over the initial leash size
 	float leashDistanceToEnemy = playerRBody->getCenterOfMassPosition().distance(leashedEnemy->GetRBody()->getCenterOfMassPosition());
@@ -361,10 +357,32 @@ void FPSController::HookshotLeash()
 
 void FPSController::UpdateHookShotTransform()
 {
-	hookshot->SetPosition(entity->GetPosition());
+	XMFLOAT3 hookshotPosOffset = XMFLOAT3(cam->position.x, cam->position.y - 2.0f, cam->position.z);
+	XMFLOAT3 hookshotPosTolerance = XMFLOAT3(0.01, 0.01, 0.01);
+
+	XMVECTOR hookPos = XMLoadFloat3(&hookshot->GetPosition());
+	XMVECTOR newHookPos = XMLoadFloat3(&hookshotPosOffset);
+	XMVECTOR hookTolerance = XMLoadFloat3(&hookshotPosTolerance);
+
+	if (XMVector3NearEqual(hookPos, newHookPos, hookTolerance))
+	{
+	}
+		XMStoreFloat3(&hookshotPosOffset, XMVectorLerp(hookPos, newHookPos, 10 * deltaTime));
+
+	hookshot->SetPosition(hookshotPosOffset);
+
 
 	XMFLOAT3 hookshotDirection;
-	XMVECTOR direction = XMVectorSubtract(XMLoadFloat3(&Utility::BulletVectorToFloat3(hookshotPoint)), XMLoadFloat3(&hookshot->GetPosition()));
+	XMVECTOR direction;
+	if (ps == PlayerState::HookshotLeash)
+	{
+		direction = XMVectorSubtract(XMLoadFloat3(&Utility::BulletVectorToFloat3(leashedEnemy->GetRBody()->getCenterOfMassPosition())), XMLoadFloat3(&hookshot->GetPosition()));
+	}
+	else
+	{
+		direction = XMVectorSubtract(XMLoadFloat3(&Utility::BulletVectorToFloat3(hookshotPoint)), XMLoadFloat3(&hookshot->GetPosition()));
+	}
+
 	XMStoreFloat3(&hookshotDirection, direction);
 	XMStoreFloat(&hookshotLength, XMVector3Length(direction));
 
@@ -377,8 +395,7 @@ void FPSController::UpdateHookShotTransform()
 
 void FPSController::ResetHookshotTransform()
 {
-	hookshot->SetPosition(XMFLOAT3(0, -500, 0));
-	hookshotZScale = 1;
+	hookshotZScale = 0.1;
 	ps = PlayerState::Normal;
 }
 

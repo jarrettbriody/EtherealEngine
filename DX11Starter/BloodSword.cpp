@@ -56,15 +56,17 @@ void BloodSword::Update()
 	XMFLOAT4X4 swordMatrix;
 	XMMATRIX camParentMatrix = XMMatrixTranspose(XMLoadFloat4x4(&camView));
 	XMMATRIX swordLocalMatrix = XMMatrixTranspose(XMLoadFloat4x4(&entity->GetWorldMatrix()));
-	XMStoreFloat4x4(&swordMatrix, XMMatrixTranspose(XMMatrixMultiply(swordLocalMatrix, camParentMatrix)));
+	XMStoreFloat4x4(&swordMatrix, XMMatrixTranspose(XMMatrixMultiply(swordLocalMatrix, camParentMatrix))); // TODO: take out translation for both of them and set to zero, multiply, and do simple add for translation and set the matrix 
 
 	// Set the resulting matrix and calc it
 	entity->SetWorldMatrix(swordMatrix);
-	entity->CalcWorldMatrix();
+	// entity->CalcWorldMatrix();
+
+	// TODO: Calculate pos manually using the view matrix 
 
 	// Debugging to check if positions are proper
 	cout << "Camera Position: " << cam->position.x << " " << cam->position.y << " " << cam->position.z << endl;
-	cout << "Sword Position: " << entity->GetPosition().x << " " << entity->GetPosition().y << " " << entity->GetPosition().z << endl;
+	cout << "Sword Position: " << swordMatrix._14 << " " << swordMatrix._24 << " " << swordMatrix._34 << endl;
 }
 
 void BloodSword::StartSlash()
