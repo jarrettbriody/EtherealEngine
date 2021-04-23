@@ -11,7 +11,6 @@ void FPSController::Init()
 	direction = cam->direction; 
 	cam->SetFOV(fov);
 
-
 	icicleParams = {
 			"Blood Icicle",					// name
 			"Blood Icicle",					// tag
@@ -40,7 +39,8 @@ void FPSController::Init()
 			XMFLOAT3(0.0f, 0.0f, 0.0f),		// position
 			XMFLOAT3(0.0f, XMConvertToRadians(-90.0f), 0.0f),		// rotation
 			XMFLOAT3(1.0f, 1.0f, 1.0f),		// scale
-			0.0f							// mass
+			0.0f,							// mass
+			false
 			// defaults work for the rest
 	};
 	sword = ScriptManager::CreateEntity(swordParams);
@@ -336,7 +336,6 @@ void FPSController::HookshotLeash()
 		ResetHookshotTransform();
 	}
 
-	// TODO: Scaling leash with enemy distance and can no longer use Hookshot point because we are affecting the target position
 	if (hookshotZScale < hookshotLength)
 	{
 		hookshotZScale += hookshotThrowSpeed * deltaTime;
@@ -364,13 +363,7 @@ void FPSController::UpdateHookShotTransform()
 	XMVECTOR newHookPos = XMLoadFloat3(&hookshotPosOffset);
 	XMVECTOR hookTolerance = XMLoadFloat3(&hookshotPosTolerance);
 
-	if (XMVector3NearEqual(hookPos, newHookPos, hookTolerance))
-	{
-	}
-		XMStoreFloat3(&hookshotPosOffset, XMVectorLerp(hookPos, newHookPos, 10 * deltaTime));
-
 	hookshot->SetPosition(hookshotPosOffset);
-
 
 	XMFLOAT3 hookshotDirection;
 	XMVECTOR direction;
@@ -414,6 +407,7 @@ void FPSController::Move()
 	// update the controller velocity vector based on input
 	GroundCheck();
 	UpdateHeadbob();
+
 	// base movement
 	if (keyboard->KeyIsPressed(0x57)) // w
 	{ 

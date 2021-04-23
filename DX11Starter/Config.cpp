@@ -11,7 +11,7 @@ ID3D11DepthStencilView* Config::DepthStencilView = nullptr;
 unsigned int Config::ViewPortWidth = 1600;
 unsigned int Config::ViewPortHeight = 900;
 bool Config::Fullscreen = false;
-bool Config::ShowCursor = false;
+bool Config::ShowCursor = true;
 bool Config::DebugCamera = false;
 
 unsigned int Config::MemoryAllocatorSize = MEGABYTE * 512;
