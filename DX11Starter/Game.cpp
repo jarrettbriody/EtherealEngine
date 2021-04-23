@@ -397,6 +397,8 @@ void Game::Update(double deltaTime, double totalTime)
 		Quit();
 	}
 
+	EECamera->Update();
+
 	for (size_t i = 0; i < ScriptManager::scriptFunctions.size(); i++)
 	{
 		ScriptManager* sf = ScriptManager::scriptFunctions[i];
@@ -483,8 +485,6 @@ void Game::Update(double deltaTime, double totalTime)
 			dbl->worldMatrix = EESceneLoader->sceneEntitiesMap[dbl->entityName]->GetCollider(dbl->colliderID)->GetWorldMatrix();
 		}
 	}
-
-	EECamera->Update();
 
 	//EEDecalHandler->UpdateDecals();
 

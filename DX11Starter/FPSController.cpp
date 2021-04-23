@@ -38,7 +38,7 @@ void FPSController::Init()
 			{"BLOODSWORD"},				// script names
 			1,								// script count
 			XMFLOAT3(0.0f, 0.0f, 0.0f),		// position
-			XMFLOAT3(0.0, 0.0f, 0.0f),		// rotation
+			XMFLOAT3(0.0f, XMConvertToRadians(-90.0f), 0.0f),		// rotation
 			XMFLOAT3(1.0f, 1.0f, 1.0f),		// scale
 			0.0f							// mass
 			// defaults work for the rest

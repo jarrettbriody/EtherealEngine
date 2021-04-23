@@ -13,17 +13,17 @@ void BloodSword::Init()
 	ss = SwordState::Idle;
 	
 	// starting positioning
-	finalLerpPos = XMFLOAT3(2, 0, 2);
+	entity->SetParentWorldMatrix(cam->GetWorldMatrixPtr());
+	finalLerpPos = XMFLOAT3(3, -3, 3);
 	lerpPositionFrom = finalLerpPos; 
 	entity->SetPosition(lerpPositionFrom); 
+	entity->SetRotation(0.0f, XMConvertToRadians(180.0f), 0.0f);
+	entity->SetScale(0.4f, 0.4f, 0.4f);
 	entity->CalcWorldMatrix();
 }
 
 void BloodSword::Update()
 {
-	// Get the camera view matrix 
-	XMFLOAT4X4 camView = cam->GetViewMatrix();
-
 	// Get the current lerp in relative to the local space of the camera
 	switch (ss)
 	{
@@ -48,25 +48,26 @@ void BloodSword::Update()
 	
 	// Update blood sword position with local coordinate lerping data relative to camera 
 	entity->SetPosition(finalLerpPos);
-
+	cam->CalcWorldMatrix();
 	// Calc world matrix of the sword
 	entity->CalcWorldMatrix();
 
 	// Multiply the blood sword matrix into the camera view matrix so it turns the the local coordinates we lerped into world coordinates relative to the camera space
-	XMFLOAT4X4 swordMatrix;
-	XMMATRIX camParentMatrix = XMMatrixTranspose(XMLoadFloat4x4(&camView));
-	XMMATRIX swordLocalMatrix = XMMatrixTranspose(XMLoadFloat4x4(&entity->GetWorldMatrix()));
-	XMStoreFloat4x4(&swordMatrix, XMMatrixTranspose(XMMatrixMultiply(swordLocalMatrix, camParentMatrix))); // TODO: take out translation for both of them and set to zero, multiply, and do simple add for translation and set the matrix 
-
+	//XMFLOAT4X4 swordMatrix;
+	// Get the camera view matrix 
+	//XMFLOAT4X4 camWorld = cam->GetWorldMatrix();
+	//XMMATRIX camParentMatrix = XMMatrixTranspose(XMLoadFloat4x4(&camWorld));
+	//XMMATRIX swordLocalMatrix = XMMatrixTranspose(XMLoadFloat4x4(&entity->GetWorldMatrix()));
+	//XMStoreFloat4x4(&swordMatrix, XMMatrixTranspose(XMMatrixMultiply(swordLocalMatrix, camParentMatrix))); // TODO: take out translation for both of them and set to zero, multiply, and do simple add for translation and set the matrix 
 	// Set the resulting matrix and calc it
-	entity->SetWorldMatrix(swordMatrix);
+	//entity->SetWorldMatrix(swordMatrix);
 	// entity->CalcWorldMatrix();
 
 	// TODO: Calculate pos manually using the view matrix 
 
 	// Debugging to check if positions are proper
-	cout << "Camera Position: " << cam->position.x << " " << cam->position.y << " " << cam->position.z << endl;
-	cout << "Sword Position: " << swordMatrix._14 << " " << swordMatrix._24 << " " << swordMatrix._34 << endl;
+	//cout << "Camera Position: " << cam->position.x << " " << cam->position.y << " " << cam->position.z << endl;
+	//cout << "Sword Position: " << swordMatrix._14 << " " << swordMatrix._24 << " " << swordMatrix._34 << endl;
 }
 
 void BloodSword::StartSlash()
@@ -77,12 +78,12 @@ void BloodSword::StartSlash()
 void BloodSword::IdleState()
 {
 	// not doing any lerping in the idle state
-	finalLerpPos = XMFLOAT3(2, 0, 2); // starting pos
+	finalLerpPos = XMFLOAT3(3, -3, 3); // starting pos
 }
 
 void BloodSword::RaisedState()
 {
-	lerpPositionTo = XMFLOAT3(0, 5, 0);
+	lerpPositionTo = XMFLOAT3(0, 2, 0);
 
 	CalcLerp();
 
@@ -97,7 +98,7 @@ void BloodSword::RaisedState()
 void BloodSword::SlashingState()
 {
 
-	lerpPositionTo = XMFLOAT3(10, 2.5, 10);
+	lerpPositionTo = XMFLOAT3(5, 0, 5);
 	
 	CalcLerp();
 
@@ -111,7 +112,7 @@ void BloodSword::SlashingState()
 
 void BloodSword::ResetState()
 {
-	lerpPositionTo = XMFLOAT3(2, 0, 2);
+	lerpPositionTo = XMFLOAT3(3, -3, 3);
 
 	CalcLerp();
 

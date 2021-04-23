@@ -1072,18 +1072,17 @@ Entity* SceneLoader::CreateEntity(EntityCreationParameters& para)
 			sceneEntities.push_back(allocatedEntity);
 		}
 	}
-
-	if (para.collisionsEnabled) {
-		allocatedEntity->collisionsEnabled = true;
-		allocatedEntity->AddAutoBoxCollider();
-	}
 		
-
 	allocatedEntity->SetPosition(para.position);
 	allocatedEntity->SetRotation(para.rotationRadians);
 	allocatedEntity->SetScale(para.scale);
 	
 	allocatedEntity->CalcWorldMatrix();
+
+	if (para.collisionsEnabled) {
+		allocatedEntity->collisionsEnabled = true;
+		allocatedEntity->AddAutoBoxCollider();
+	}
 
 	if (para.drawShadow)
 		allocatedEntity->ToggleShadows(true);
@@ -1110,13 +1109,13 @@ Entity* SceneLoader::CreateEntity(EntityCreationParameters& para)
 		}
 	}
 
+	allocatedEntity->tag = para.tagName;
+	allocatedEntity->layer = para.layerName;
+
 	for (size_t i = 0; i < para.scriptCount; i++)
 	{
 		scriptCallback(allocatedEntity, para.scriptNames[i]);
 	}
-
-	allocatedEntity->tag = para.tagName;
-	allocatedEntity->layer = para.layerName;
 
 	return allocatedEntity;
 }

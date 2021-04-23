@@ -108,6 +108,7 @@ void Entity::operator=(const Entity& e)
 	*colliders = vector<Collider*>(*e.colliders);
 	*materialMap = map<string, Material*>(*e.materialMap);
 	worldMatrix = e.worldMatrix;
+	parentWorld = e.parentWorld;
 	mesh = e.mesh;
 	quaternion = e.quaternion;
 	position = e.position;
@@ -551,6 +552,11 @@ void Entity::CalcWorldMatrix()
 		DirectX::XMMATRIX parentWorld = DirectX::XMMatrixTranspose(DirectX::XMLoadFloat4x4(&parent->worldMatrix));
 		world = DirectX::XMMatrixMultiply(world, parentWorld);
 	}
+	else if (parentWorld != nullptr) {
+		XMFLOAT4X4 parentW = *parentWorld;
+		DirectX::XMMATRIX parentWorld = DirectX::XMMatrixTranspose(DirectX::XMLoadFloat4x4(&parentW));
+		world = DirectX::XMMatrixMultiply(world, parentWorld);
+	}
 	DirectX::XMStoreFloat4x4(&worldMatrix, DirectX::XMMatrixTranspose(world));
 	for (size_t i = 0; i < children->size(); i++)
 	{
@@ -814,6 +820,11 @@ void Entity::EmptyEntity()
 	}
 		
 	this->isEmptyObj = true;
+}
+
+void Entity::SetParentWorldMatrix(XMFLOAT4X4* parentWorld)
+{
+	this->parentWorld = parentWorld;
 }
 
 void Entity::Destroy()

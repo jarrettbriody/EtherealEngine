@@ -45,6 +45,21 @@ XMFLOAT4X4 Camera::GetInverseProjMatrix()
 	return invProjMatrix;
 }
 
+XMFLOAT4X4 Camera::GetWorldMatrix()
+{
+	return worldMatrix;
+}
+
+XMFLOAT4X4 Camera::GetInvWorldMatrix()
+{
+	return invWorldMatrix;
+}
+
+XMFLOAT4X4* Camera::GetWorldMatrixPtr()
+{
+	return &worldMatrix;
+}
+
 void Camera::SetProjMatrix(XMFLOAT4X4 pm)
 {
 	projMatrix = pm;
@@ -91,6 +106,16 @@ void Camera::UpdateProjectionMatrix()
 	XMStoreFloat4x4(&projMatrix, XMMatrixTranspose(P));			// Transpose for HLSL!
 
 	XMStoreFloat4x4(&invProjMatrix, XMMatrixTranspose(XMMatrixInverse(nullptr, P)));
+}
+
+void Camera::CalcWorldMatrix()
+{
+	XMVECTOR quat = XMQuaternionRotationRollPitchYaw(xRotation, yRotation, zRotation);
+	DirectX::XMMATRIX rot = DirectX::XMMatrixRotationQuaternion(quat);
+	DirectX::XMMATRIX trans = DirectX::XMMatrixTranslation(position.x, position.y, position.z);
+	DirectX::XMMATRIX world = rot * trans;
+	DirectX::XMStoreFloat4x4(&worldMatrix, DirectX::XMMatrixTranspose(world));
+	XMStoreFloat4x4(&invWorldMatrix, XMMatrixTranspose(XMMatrixInverse(nullptr, world)));
 }
 
 void Camera::Update()
@@ -162,6 +187,8 @@ void Camera::Update()
 	XMStoreFloat4x4(&invViewMatrix, XMMatrixTranspose(inverseView));
 	XMStoreFloat3(&direction, newDir);
 	XMStoreFloat3(&right, rightVec);
+
+	CalcWorldMatrix();
 
 	//cout << "Pos: (" << position.x << ", " << position.y << ", " << position.z << ")" << endl;
 	//cout << "Dir: (" << direction.x << ", " << direction.y << ", " << direction.z << ")" << endl;

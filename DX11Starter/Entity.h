@@ -43,6 +43,7 @@ private:
 	DirectX::XMFLOAT3 scale;
 	DirectX::XMFLOAT3 rotation;
 	DirectX::XMFLOAT3 rotationInDegrees;
+	XMFLOAT4X4* parentWorld = nullptr;
 
 	XMFLOAT3 direction;
 	XMFLOAT3 up;
@@ -119,6 +120,7 @@ public:
 	int GetMeshIndexCount(int childIndex = -1);
 	string GetMeshMaterialName(int childIndex = -1);
 	void CalcWorldMatrix();
+	void SetParentWorldMatrix(XMFLOAT4X4* parentWorld);
 	XMMATRIX CalcWorldToModelMatrix();
 	void PrepareMaterialForDraw(string n, DirectX::XMFLOAT4X4 view, DirectX::XMFLOAT4X4 proj);
 	Material* GetMaterial(string n);
