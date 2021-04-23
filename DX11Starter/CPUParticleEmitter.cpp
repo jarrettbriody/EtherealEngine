@@ -133,6 +133,7 @@ void CPUParticleEmitter::CalcVertex(Particle p, XMFLOAT4X4 view)
 	particleVertices[particleVertCount].ID = 0;
 	particleVertices[particleVertCount].TextureIndex = p.textureIndex;
 	particleVertices[particleVertCount].RotationRadians = p.rotationRadians;
+	particleVertices[particleVertCount].Transparency = p.transparency;
 	particleVertCount++;
 
 	particleVertices[particleVertCount].Position = p.position;
@@ -142,6 +143,7 @@ void CPUParticleEmitter::CalcVertex(Particle p, XMFLOAT4X4 view)
 	particleVertices[particleVertCount].ID = 1;
 	particleVertices[particleVertCount].TextureIndex = p.textureIndex;
 	particleVertices[particleVertCount].RotationRadians = p.rotationRadians;
+	particleVertices[particleVertCount].Transparency = p.transparency;
 	particleVertCount++;
 
 	particleVertices[particleVertCount].Position = p.position;
@@ -151,6 +153,7 @@ void CPUParticleEmitter::CalcVertex(Particle p, XMFLOAT4X4 view)
 	particleVertices[particleVertCount].ID = 2;
 	particleVertices[particleVertCount].TextureIndex = p.textureIndex;
 	particleVertices[particleVertCount].RotationRadians = p.rotationRadians;
+	particleVertices[particleVertCount].Transparency = p.transparency;
 	particleVertCount++;
 
 	particleVertices[particleVertCount].Position = p.position;
@@ -160,6 +163,7 @@ void CPUParticleEmitter::CalcVertex(Particle p, XMFLOAT4X4 view)
 	particleVertices[particleVertCount].ID = 3;
 	particleVertices[particleVertCount].TextureIndex = p.textureIndex;
 	particleVertices[particleVertCount].RotationRadians = p.rotationRadians;
+	particleVertices[particleVertCount].Transparency = p.transparency;
 	particleVertCount++;
 }
 
@@ -236,6 +240,8 @@ void CPUParticleEmitter::SetCollisionsEnabled(void(*collisionCallback)(void* ptr
 void CPUParticleEmitter::KillParticle(unsigned int index)
 {
 	particlePool[index].remainingLife = 0.0f;
+	particlePool[index].transparency = 0.0f;
+	particlePool[index].color.w = 0.0f;
 }
 
 void CPUParticleEmitter::Update(double deltaTime, double totalTime, XMFLOAT4X4 view)
@@ -294,6 +300,7 @@ void CPUParticleEmitter::Update(double deltaTime, double totalTime, XMFLOAT4X4 v
 			{
 				if (randNum3 <= colors[j].weight) {
 					newParticle.color = colors[j].color;
+					newParticle.originalTransparency = colors[i].color.w;
 					isColor = true;
 					break;
 				}
@@ -303,6 +310,8 @@ void CPUParticleEmitter::Update(double deltaTime, double totalTime, XMFLOAT4X4 v
 				{
 					if (randNum3 <= textures[j].weight) {
 						newParticle.textureIndex = j;
+						newParticle.transparency = textures[j].transparency;
+						newParticle.originalTransparency = textures[j].transparency;
 						break;
 					}
 				}
@@ -316,6 +325,7 @@ void CPUParticleEmitter::Update(double deltaTime, double totalTime, XMFLOAT4X4 v
 			end = XMFLOAT3(randomOffset * emissionEndRadius, randomOffset2 * emissionEndRadius, 1.0f);
 
 			newParticle.remainingLife = particleMinLifetime + (particleMaxLifetime - particleMinLifetime) * randNum;
+			newParticle.originalRemainingLife = newParticle.remainingLife;
 			newParticle.position = start;
 			newParticle.scale = particleInitMinScale + (particleInitMaxScale - particleInitMinScale) * randNum4;
 			DirectX::XMStoreFloat3(&newParticle.velocity, XMVectorScale(XMVector3Normalize(XMVectorSubtract(XMLoadFloat3(&end), XMLoadFloat3(&start))), speed));
@@ -371,6 +381,22 @@ void CPUParticleEmitter::Update(double deltaTime, double totalTime, XMFLOAT4X4 v
 			DirectX::XMStoreFloat3(&particle.velocity, XMVectorAdd(vel, XMVectorScale(XMLoadFloat3(&particle.acceleration), deltaTime)));
 			DirectX::XMStoreFloat3(&particle.position, XMVectorAdd(XMLoadFloat3(&particle.position), XMVectorScale(vel, deltaTime)));
 			particle.rotationRadians += particle.angularVelocity * deltaTime;
+
+			if (fadeIn) {
+				float totalLifetime = particle.originalRemainingLife - particle.remainingLife;
+				if (fadeInEndTime > 0.0f && (totalLifetime < fadeInEndTime)) {
+					particle.transparency = min((totalLifetime / fadeInEndTime), 1.0f) * particle.originalTransparency;
+				}
+			}
+
+			if (fadeOut) {
+				if (fadeOutStartTime > 0.0f && (particle.remainingLife < fadeOutStartTime)) {
+					particle.transparency = (particle.remainingLife / fadeOutStartTime) * particle.originalTransparency;
+				}
+				else if (fadeOutStartTime <= 0.0f) {
+					particle.transparency = (particle.remainingLife / particleAvgLifetime) * particle.originalTransparency;
+				}
+			}
 
 			// Put the particle back
 			particlePool[i] = particle;

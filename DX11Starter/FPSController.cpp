@@ -352,7 +352,7 @@ void FPSController::GroundCheck()
 	//cout << pos.x << "|" << pos.y << "|" << pos.z << endl;
 	//XMFLOAT3 dir = entity->GetDirectionVector();
 	btVector3 from(pos.x, pos.y, pos.z);
-	btVector3 to(pos.x, pos.y - 2.05f, pos.z); // check a little below the player for any surface to stand on 
+	btVector3 to(pos.x, pos.y - 3.05f, pos.z); // check a little below the player for any surface to stand on 
 
 	// Create variable to store the ray hit and set flags
 	btCollisionWorld::ClosestRayResultCallback closestResult(from, to);
@@ -487,6 +487,7 @@ void FPSController::DampForces()
 {
 	if (dashDampTimer <= 0) // always damp the impulse vec unless player is the player just initiated a dash
 	{
+		EERenderer->SetPostProcess(false);
 		impulseSumVec -= impulseSumVec * dampingScalar;
 
 		// return fov to normal when damping dash impulse
@@ -495,9 +496,6 @@ void FPSController::DampForces()
 			// cout << fov << endl;
 			fov -= fovDashToNormalSpeed * deltaTime;
 			cam->SetFOV(fov);
-		}
-		else {
-			EERenderer->SetPostProcess(false);
 		}
 	}
 

@@ -7,6 +7,12 @@ cbuffer ExternalData : register(b0)
 	float lifetime;
 	float totalTime;
 	int maxParticles;
+	float fadeOutStartTime;
+	float fadeInEndTime;
+	int fadeOut;
+	int fadeIn;
+	float particleAvgLifetime;
+	float3 cameraPos;
 }
 
 // Order should match EmitCS (RW binding issues)
@@ -14,7 +20,7 @@ RWStructuredBuffer<Particle>		 ParticlePool		: register(u0);
 AppendStructuredBuffer<uint>		 DeadParticles		: register(u1);
 RWStructuredBuffer<ParticleDrawInfo> ParticleDrawList	: register(u2);
 
-[numthreads(32, 1, 1)]
+[numthreads(64, 1, 1)]
 void main(uint3 id : SV_DispatchThreadID)
 {
 	// Valid particle?
@@ -31,6 +37,22 @@ void main(uint3 id : SV_DispatchThreadID)
 	particle.velocity = particle.velocity + particle.acceleration * deltaTime;
 	particle.position += particle.velocity * deltaTime;
 	particle.rotationRadians += particle.angularVelocity * deltaTime;
+
+	if (fadeIn == 1) {
+		float totalLifetime = particle.originalRemainingLife - particle.remainingLife;
+		if (fadeInEndTime > 0.0f && (totalLifetime < fadeInEndTime)) {
+			particle.transparency = min((totalLifetime / fadeInEndTime), 1.0f) * particle.originalTransparency;
+		}
+	}
+
+	if (fadeOut == 1) {
+		if (fadeOutStartTime > 0.0f && (particle.remainingLife < fadeOutStartTime)) {
+			particle.transparency = (particle.remainingLife / fadeOutStartTime) * particle.originalTransparency;
+		}
+		else if(fadeOutStartTime <= 0.0f){
+			particle.transparency = (particle.remainingLife / particleAvgLifetime) * particle.originalTransparency;
+		}
+	}
 
 	// Put the particle back
 	ParticlePool[id.x] = particle;
@@ -50,7 +72,7 @@ void main(uint3 id : SV_DispatchThreadID)
 		// Set up draw data
 		ParticleDrawInfo drawData;
 		drawData.index = id.x; // This particle's actual index
-		drawData.distanceSq = 0.0f; // Not being used yet, but put here for future work
+		drawData.distanceSq = 0.0f;//dot(particle.position - cameraPos); // Not being used yet, but put here for future work
 
 		ParticleDrawList[drawIndex] = drawData;
 	}

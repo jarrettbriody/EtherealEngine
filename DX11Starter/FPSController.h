@@ -4,8 +4,9 @@
 #include "DXCore.h"
 
 struct DashBlurCallback : RendererCallback {
+	int blurAmount = 1;
 	void PrePixelShaderCallback() {
-		pShader->SetInt("blurAmount", 5);
+		pShader->SetInt("blurAmount", blurAmount);
 	}
 };
 
@@ -24,13 +25,13 @@ class FPSController : public ScriptManager
 	Camera* cam;
 	POINT prevMousePos = POINT();
 	double camRollAngle = 0.0f;
-	double camRollSpeed = 0.01f;
+	double camRollSpeed = 0.03f;
 	bool rollLeft = false;
 	bool rollRight = false;
 	const float CAM_ROLL_MIN = -0.05f;
 	const float CAM_ROLL_MAX = 0.05f;
 	float headbobOffset = 0.0f;
-	const float HEADBOB_OFFSET_INTERVAL = 3.5f;
+	const float HEADBOB_OFFSET_INTERVAL = 3.0f;
 	const float HEADBOB_OFFSET_MIN = 0.0f;
 	const float HEADBOB_OFFSET_MAX = 0.5f;
 	bool resetHeadbob = false;
@@ -55,8 +56,8 @@ class FPSController : public ScriptManager
 	btVector3 controllerVelocity;
 	btVector3 impulseSumVec;
 
-	float spd = 10.0f;
-	float maxSpeed = 25.0f;
+	float spd = 15.0f;
+	float maxSpeed = 40.0f;
 	float dampingScalar = 0.09f;
 
 	const unsigned char baseMovementKeys[4] = { 0x57, 0x53, 0x41, 0x44 }; // WASD

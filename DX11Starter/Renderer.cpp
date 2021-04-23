@@ -644,8 +644,12 @@ void Renderer::RenderFrame()
 
 	if (Config::HBAOPlusEnabled) {
 		//(4.) RENDER AO
-
-		hbaoPlusComponents.status = hbaoPlusComponents.pAOContext->RenderAO(Config::Context, &hbaoPlusComponents.Input, &hbaoPlusComponents.Params, Config::BackBufferRTV);
+		if (postProcessComponents.enabled) {
+			hbaoPlusComponents.status = hbaoPlusComponents.pAOContext->RenderAO(Config::Context, &hbaoPlusComponents.Input, &hbaoPlusComponents.Params, postProcessComponents.RTV);
+		}
+		else {
+			hbaoPlusComponents.status = hbaoPlusComponents.pAOContext->RenderAO(Config::Context, &hbaoPlusComponents.Input, &hbaoPlusComponents.Params, Config::BackBufferRTV);
+		}
 		assert(hbaoPlusComponents.status == GFSDK_SSAO_OK);
 	}
 
@@ -940,6 +944,25 @@ void Renderer::RenderTransparents()
 
 		if (e->isEmptyObj) continue;
 
+		e->ToggleShadows(Config::ShadowsEnabled);
+		if (Config::ShadowsEnabled) {
+			ShadowData d;
+			for (size_t i = 0; i < MAX_SHADOW_CASCADES; i++)
+			{
+				d.shadowProjectionMatrix[i] = shadowComponents.shadowCascades[i].proj;
+				d.shadowSRV[i] = shadowComponents.shadowCascades[i].SRV;
+				d.nears[i] = shadowComponents.shadowCascades[i].nearPlane;
+				d.fars[i] = shadowComponents.shadowCascades[i].farPlane;
+				//d.range[i] = shadowComponents.shadowCascades[i].maxRange;
+				d.widthHeight[i] = XMFLOAT2(shadowComponents.shadowCascades[i].width, shadowComponents.shadowCascades[i].height);
+			}
+			d.sunPos = shadowComponents.sunPos;
+			d.shadowViewMatrix = shadowComponents.view;
+			d.shadowSampler = shadowComponents.Sampler;
+			d.cascadeCount = shadowComponents.cascadeCount;
+			e->SetShadowData(d);
+		}
+
 		if (Config::SSAOEnabled) {
 			DepthStencilData d;
 			d.depthStencilSRV = depthStencilComponents.depthStencilSRV;
@@ -958,6 +981,11 @@ void Renderer::RenderTransparents()
 			mesh->GetIndexCount(),		// The number of indices to use (we could draw a subset if we wanted)
 			0,											// Offset to the first index we want to use
 			0);											// Offset to add to each index when looking up vertices
+
+		mat->GetPixelShader()->SetShaderResourceView("ShadowMap0", NULL);
+		mat->GetPixelShader()->SetShaderResourceView("ShadowMap1", NULL);
+		mat->GetPixelShader()->SetShaderResourceView("ShadowMap2", NULL);
+		mat->GetPixelShader()->SetShaderResourceView("ShadowMap3", NULL);
 	}
 	ToggleBlendState(false);
 }

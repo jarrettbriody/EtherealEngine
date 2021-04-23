@@ -24,6 +24,9 @@ ParticleEmitter::ParticleEmitter()
 	SetParticleInitialAngularVelocity(d.particleInitMinAngularVelocity, d.particleInitMaxAngularVelocity);
 	SetParticleInitialSpeed(d.particleInitMinSpeed, d.particleInitMaxSpeed);
 	SetParticleAcceleration(d.particleAcceleration);
+
+	SetFadeOverTime(d.fadeIn, d.fadeOut, d.fadeInEndTime, d.fadeOutStartTime);
+
 	ParticleColor color[1] = { XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f), 1.0f };
 	SetParticleColors(1, color);
 
@@ -52,6 +55,9 @@ ParticleEmitter::ParticleEmitter(ParticleEmitterDescription d)
 	SetParticleInitialAngularVelocity(d.particleInitMinAngularVelocity, d.particleInitMaxAngularVelocity);
 	SetParticleInitialSpeed(d.particleInitMinSpeed, d.particleInitMaxSpeed);
 	SetParticleAcceleration(d.particleAcceleration);
+
+	SetFadeOverTime(d.fadeIn, d.fadeOut, d.fadeInEndTime, d.fadeOutStartTime);
+
 	SetParticleColors(d.colorCount, d.colors);
 	SetParticleTextures(d.textureCount, d.textures);
 
@@ -266,7 +272,7 @@ void ParticleEmitter::CalcColorTextureWeights()
 
 	for (int i = 0; i < textureCount; i++)
 	{
-		texturesToGPU[i] = { i, this->textures[i].weight };
+		texturesToGPU[i] = { i, this->textures[i].weight, this->textures[i].transparency };
 	}
 }
 
@@ -279,6 +285,7 @@ void ParticleEmitter::SetParticleLifetime(float min, float max)
 {
 	this->particleMinLifetime = min;
 	this->particleMaxLifetime = max;
+	this->particleAvgLifetime = (min + max) / 2;
 }
 
 void ParticleEmitter::SetParticleInitialScale(float min, float max)
@@ -302,6 +309,14 @@ void ParticleEmitter::SetParticleInitialSpeed(float min, float max)
 void ParticleEmitter::SetParticleAcceleration(XMFLOAT3 accel)
 {
 	particleAcceleration = accel;
+}
+
+void ParticleEmitter::SetFadeOverTime(bool fadeIn, bool fadeOut, float fadeInEndTime, float fadeOutStartTime)
+{
+	this->fadeIn = fadeIn;
+	this->fadeOut = fadeOut;
+	this->fadeInEndTime = fadeInEndTime;
+	this->fadeOutStartTime = fadeOutStartTime;
 }
 
 void ParticleEmitter::SetParticleColors(unsigned int colorCount, ParticleColor* colors)

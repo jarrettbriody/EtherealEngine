@@ -19,16 +19,11 @@ cbuffer ExternalData : register(b0)
 
 	float particleInitMinSpeed; //minimum initial speed of the particle
 	float particleInitMaxSpeed; //maximum initial speed of the particle
-	float randomNum;
-	float randomNum2;
+	float2 padding;
 
 	float3 particleAcceleration;
-	float randomNum3;
-
-	float randomNum4;
-	float randomNum5;
 	int textureCount;
-	float padding;
+
 
 	ParticleTexture textures[MAX_PARTICLE_TEXTURES];
 }
@@ -37,12 +32,15 @@ cbuffer colorsBuffer : register(b1) {
 	ParticleColor colors[MAX_PARTICLE_COLORS];
 }
 
+cbuffer randomNumbersBuffer : register(b2) {
+	float4 randomNumbers[MAX_RANDOM_NUMS_X4];
+}
+
 // Order should match UpdateCS (RW binding issues)
 RWStructuredBuffer<Particle>  ParticlePool		: register(u0);
 ConsumeStructuredBuffer<uint> DeadParticles		: register(u1);
 
-
-[numthreads(32, 1, 1)]
+[numthreads(64, 1, 1)]
 void main(uint3 id : SV_DispatchThreadID)
 {
 	// Outside range?
@@ -60,9 +58,10 @@ void main(uint3 id : SV_DispatchThreadID)
 	bool isColor = false;
 	for (int i = 0; i < colorCount; i++)
 	{
-		if (randomNum3 <= colors[i].weight) {
+		if (randomNumbers[0][2] <= colors[i].weight) {
 			newParticle.color = colors[i].color;
 			newParticle.textureIndex = -1;
+			newParticle.originalTransparency = colors[i].color.a;
 			isColor = true;
 			break;
 		}
@@ -70,26 +69,31 @@ void main(uint3 id : SV_DispatchThreadID)
 	if (!isColor) {
 		for (int j = 0; j < textureCount; j++)
 		{
-			if (randomNum3 <= textures[j].weight) {
+			if (randomNumbers[0][2] <= textures[j].weight) {
 				newParticle.textureIndex = textures[j].index;
+				newParticle.transparency = textures[j].transparency;
+				newParticle.originalTransparency = textures[j].transparency;
 				break;
 			}
 		}
 	}
-	
-	float speed = particleInitMinSpeed + (particleInitMaxSpeed - particleInitMinSpeed) * randomNum5;
-	float randomOffset = randomNum * 2.0f - 1.0f;
-	float randomOffset2 = randomNum2 * 2.0f - 1.0f;
 
-	float3 start = float3(randomOffset, randomOffset2, 0.0f) * emissionStartRadius;
-	float3 end = float3(float2(randomOffset, randomOffset2) * emissionEndRadius, 1.0f);
+	float speed = particleInitMinSpeed + (particleInitMaxSpeed - particleInitMinSpeed) * randomNumbers[0][3];
+	int idOffset = (id.x + 6);
+	int idOffset2 = (id.x + 7);
+	float randomOffset = randomNumbers[idOffset / 4][idOffset % 4] * 2.0f - 1.0f;
+	float randomOffset2 = randomNumbers[idOffset2 / 4][idOffset2 % 4] * 2.0f - 1.0f;
 
-	newParticle.remainingLife = particleMinLifetime + (particleMaxLifetime - particleMinLifetime) * randomNum;
+	float3 start = normalize(float3(randomOffset, randomOffset2, 0.0f)) * (emissionStartRadius * randomNumbers[1][1]);
+	float3 end = float3(normalize(float2(randomOffset, randomOffset2)) * (emissionEndRadius * randomNumbers[1][1]), 1.0f);
+
+	newParticle.remainingLife = particleMinLifetime + (particleMaxLifetime - particleMinLifetime) * randomNumbers[0][0];
+	newParticle.originalRemainingLife = newParticle.remainingLife;
 	newParticle.position = start;
-	newParticle.scale = particleInitMinScale + (particleInitMaxScale - particleInitMinScale) * randomNum4;
+	newParticle.scale = particleInitMinScale + (particleInitMaxScale - particleInitMinScale) * randomNumbers[1][0];
 	newParticle.velocity = normalize(end - start) * speed;
 	newParticle.rotationRadians = 0.0f;
-	newParticle.angularVelocity = particleInitMinAngularVelocity + (particleInitMaxAngularVelocity - particleInitMinAngularVelocity) * randomNum;
+	newParticle.angularVelocity = particleInitMinAngularVelocity + (particleInitMaxAngularVelocity - particleInitMinAngularVelocity) * randomNumbers[0][1];
 	newParticle.acceleration = particleAcceleration;
 
 	// Put it back

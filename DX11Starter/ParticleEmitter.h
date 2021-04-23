@@ -32,6 +32,12 @@ struct ParticleEmitterDescription {
 
 	XMFLOAT3 particleAcceleration = ZERO_VECTOR3;
 
+	bool fadeOut = false;
+	float fadeOutStartTime = -1.0f;
+
+	bool fadeIn = false;
+	float fadeInEndTime = 1.0f;
+
 	unsigned int colorCount = 0; //number of possible colors
 	ParticleColor* colors = nullptr; //array of ParticleColor objects
 
@@ -81,6 +87,8 @@ public:
 
 	void SetParticleAcceleration(XMFLOAT3 accel);
 
+	void SetFadeOverTime(bool fadeIn, bool fadeOut, float fadeInEndTime = 1.0f, float fadeOutStartTime = -1.0f);
+
 	//Set colors of particles (number of colors, color array, array of color weights in range [0.0f,1.0f])
 	void SetParticleColors(unsigned int colorCount, ParticleColor* colors);
 
@@ -122,12 +130,19 @@ protected:
 	float emissionRate = 0.0f;
 	float particleMinLifetime = 0.0f;
 	float particleMaxLifetime = 0.0f;
+	float particleAvgLifetime = 0.0f;
 	float particleInitMinScale = 0.0f; //minimum initial scale of the particle
 	float particleInitMaxScale = 0.0f; //maximum initial scale of the particle
 	float particleInitMinAngularVelocity = 0.0f; //minimum initial angular velocity of the particle
 	float particleInitMaxAngularVelocity = 0.0f; //maximum initial angular velocity of the particle
 	float particleInitMinSpeed = 0.0f; //minimum initial speed of the particle
 	float particleInitMaxSpeed = 0.0f; //maximum initial speed of the particle
+
+	bool fadeOut = false;
+	float fadeOutStartTime = -1.0f;
+
+	bool fadeIn = false;
+	float fadeInEndTime = 1.0f;
 
 	XMFLOAT3 particleAcceleration = ZERO_VECTOR3;
 

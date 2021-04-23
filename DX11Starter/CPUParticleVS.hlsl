@@ -18,6 +18,7 @@ struct VertexShaderInput
 	float rotationRadians : ROTATION;
 	int num				: ID;
 	int textureIndex	: TEXINDEX;
+	float transparency  : TRANSPARENCY;
 };
 
 struct VStoPS
@@ -26,6 +27,7 @@ struct VStoPS
 	float4 color	: COLOR;
 	float2 uv		: TEXCOORD;
 	int textureIndex : TEXINDEX;
+	float transparency : TRANSPARENCY;
 };
 
 VStoPS main(VertexShaderInput input)
@@ -55,6 +57,7 @@ VStoPS main(VertexShaderInput input)
 	output.color = input.color;
 	output.uv = input.uv;
 	output.textureIndex = input.textureIndex;
+	output.transparency = input.transparency;
 
 	return output;
 }

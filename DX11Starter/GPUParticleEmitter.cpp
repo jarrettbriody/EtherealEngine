@@ -245,6 +245,8 @@ void GPUParticleEmitter::Update(double deltaTime, double totalTime, XMFLOAT4X4 v
 	// Reset UAVs (potential issue with setting the following ones)
 	Config::Context->CSSetUnorderedAccessViews(0, 8, noneUAV, 0);
 
+	float randomNumbers[128];
+
 	// Track time
 	while (emitTimeCounter >= emissionRate)
 	{
@@ -277,16 +279,13 @@ void GPUParticleEmitter::Update(double deltaTime, double totalTime, XMFLOAT4X4 v
 		emitCS->SetFloat("particleInitMinSpeed", particleInitMinSpeed);
 		emitCS->SetFloat("particleInitMaxSpeed", particleInitMaxSpeed);
 
-		float randNum = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
-		float randNum2 = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
-		float randNum3 = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
-		float randNum4 = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
-		float randNum5 = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
-		emitCS->SetFloat("randomNum", randNum);
-		emitCS->SetFloat("randomNum2", randNum2);
-		emitCS->SetFloat("randomNum3", randNum3);
-		emitCS->SetFloat("randomNum4", randNum4);
-		emitCS->SetFloat("randomNum5", randNum5);
+		int randNumCnt = min(emitCount*2 + 6, MAX_RANDOM_NUMS);
+		for (int i = 0; i < randNumCnt; i++)
+		{
+			randomNumbers[i] = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+		}
+		emitCS->SetData("randomNumbers", randomNumbers, sizeof(float) * MAX_RANDOM_NUMS);
+		//emitCS->SetInt("randNumCount", randNumCnt);
 
 		emitCS->SetFloat3("particleAcceleration", particleAcceleration);
 
@@ -306,6 +305,12 @@ void GPUParticleEmitter::Update(double deltaTime, double totalTime, XMFLOAT4X4 v
 	updateCS->SetFloat("totalTime", totalTime);
 	updateCS->SetFloat("lifetime", lifetime);
 	updateCS->SetInt("maxParticles", maxParticles);
+	updateCS->SetFloat("fadeOutStartTime", fadeOutStartTime);
+	updateCS->SetInt("fadeOut", (int)fadeOut);
+	updateCS->SetFloat("fadeInEndTime", fadeInEndTime);
+	updateCS->SetInt("fadeIn", (int)fadeIn);
+	updateCS->SetFloat("particleAvgLifetime", particleAvgLifetime);
+	//updateCS->SetFloat3("cameraPos", XMFLOAT3(view._14, view._24, view._34));
 	updateCS->SetUnorderedAccessView("ParticlePool", particlePoolUAV);
 	updateCS->SetUnorderedAccessView("DeadParticles", particleDeadUAV);
 	updateCS->SetUnorderedAccessView("ParticleDrawList", particleDrawUAV, 0); // Reset counter for update!

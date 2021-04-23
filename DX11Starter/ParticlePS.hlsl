@@ -8,6 +8,7 @@ struct VStoPS
 	float4 color	: COLOR;
 	float2 uv		: TEXCOORD0;
 	int textureIndex : TEXINDEX;
+	float transparency : TRANSPARENCY;
 };
 
 Texture2DArray particleTextures : register(t0);
@@ -18,6 +19,7 @@ float4 main(VStoPS input) : SV_TARGET
 	float4 color;
 	if (input.textureIndex != -1) {
 		color = particleTextures.Sample(Sampler, float3(input.uv, input.textureIndex));
+		color.a = color.a - (1.0f - input.transparency);
 	}
 	else {
 		// Distance from center

@@ -1,13 +1,13 @@
 TYPE="DIRLIGHT" name="Sun" intensity="0.25" P(200,500,25)D(-0.37099,-0.92748,-0.046374)C(1.0,1.0,1.0)
 TYPE="SKYBOX" dds="night4"
 
-name="FPSController" colliders="true" mass="1.0" colliderType="CAPSULE" scripts="FPSCONTROLLER" P(-5, 3, 0)R(0,0,0)S(1.0, 3.0, 1.0)
+name="FPSController" colliders="true" mass="1.0" colliderType="CAPSULE" scripts="FPSCONTROLLER" P(-5, 3, 0)R(0,0,0)S(3.0, 3.0, 3.0)
 
 name="Blood_Orb" obj="bloodorb" material="RedFluid" scripts="BLOODORB" P(-15,5,0)R(0,0,0)S(0.5,0.5,0.5)
 name="Blood_Orb_Glass" obj="Sphere" material="Glass" P(-15,5,0)R(0,0,0)S(1.05,1.05,1.05)
 
 //obj="burningcommieblocv2" P(500,240,0)R(0,90,0)S(25,25,25)
-obj="grave" layer="decal" colliders="true" repeatTexture="0.025,0.025" P(0,0,0)R(0,180,0)S(1,1,1)
+obj="grave" layer="decal" colliders="true" repeatTexture="0.025,0.025" P(0,-0.8,0)R(0,180,0)S(1,1,1)
 obj="graveyard" layer="decal" colliders="true" P(0,0,0)R(0,180,0)S(1,1,1)
 obj="graveline" layer="decal" colliders="true" P(-50.31,-0.87,-34.51)R(0,180,0)S(1,1,1)
 obj="graveline" layer="decal" colliders="true" P(-10.19,-0.87,-25.47)R(0,180,0)S(1,1,1)

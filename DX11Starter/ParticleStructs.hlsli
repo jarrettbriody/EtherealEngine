@@ -1,5 +1,6 @@
 #define MAX_PARTICLE_COLORS 16
 #define MAX_PARTICLE_TEXTURES 8
+#define MAX_RANDOM_NUMS_X4 32
 
 struct Particle
 {
@@ -16,7 +17,11 @@ struct Particle
 
 	float angularVelocity;
 	int textureIndex;
-	float2 padding;
+	float transparency;
+	float originalTransparency;
+
+	float originalRemainingLife;
+	float3 padding;
 };
 
 struct ParticleColor {
@@ -28,7 +33,8 @@ struct ParticleColor {
 struct ParticleTexture {
 	int index;
 	float weight;
-	float2 padding;
+	float transparency;
+	float padding;
 };
 
 struct ParticleDrawInfo

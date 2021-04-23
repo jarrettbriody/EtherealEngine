@@ -17,6 +17,7 @@ struct VStoPS
 	float4 color	: COLOR;
 	float2 uv		: TEXCOORD;
 	int textureIndex : TEXINDEX;
+	float transparency : TRANSPARENCY;
 };
 
 VStoPS main(uint id : SV_VertexID)
@@ -42,9 +43,23 @@ VStoPS main(uint id : SV_VertexID)
 	offsets[3] = float2(-1.0f * angularOffsetX + 1.0f * angularOffsetY, -1.0f * angularOffsetY - 1.0f * angularOffsetX);  // BL
 
 	// Calc position of this corner
+	float zOffset[12];
+	zOffset[0] = 0.001f;
+	zOffset[1] = 0.0011f;
+	zOffset[2] = 0.0012f;
+	zOffset[3] = 0.0013f;
+	zOffset[4] = 0.0014f;
+	zOffset[5] = 0.0015f;
+	zOffset[6] = -0.001f;
+	zOffset[7] = -0.0011f;
+	zOffset[8] = -0.0012f;
+	zOffset[9] = -0.0013f;
+	zOffset[10] = -0.0014f;
+	zOffset[11] = -0.0015f;
 	float3 pos = particle.position;
 	pos = mul(mul(float4(pos, 1.0f), world), view);
 	pos.xy += offsets[cornerID].xy * particle.scale;
+	pos.z += zOffset[id % 12];
 
 	output.position = mul(float4(pos,1.0f), projection);
 
@@ -58,6 +73,7 @@ VStoPS main(uint id : SV_VertexID)
 	output.color = particle.color;
 	output.uv = saturate(uvs[cornerID]);
 	output.textureIndex = particle.textureIndex;
+	output.transparency = particle.transparency;
 
 	return output;
 }
