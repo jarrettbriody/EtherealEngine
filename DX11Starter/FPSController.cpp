@@ -44,6 +44,7 @@ void FPSController::Init()
 			// defaults work for the rest
 	};
 	sword = ScriptManager::CreateEntity(swordParams);
+	sword->collisionsEnabled = false;
 	
 	hookshotParams = {
 			"Hookshot",					// name
@@ -62,6 +63,7 @@ void FPSController::Init()
 
 	hookshot = ScriptManager::CreateEntity(hookshotParams);
 	hookshot->GetRBody()->setActivationState(DISABLE_SIMULATION);
+	hookshot->collisionsEnabled = false;
 
 	playerRBody = entity->GetRBody(); // Get the bullet rigidbody
 	playerRBody->setAngularFactor(btVector3(0, 1, 0)); // constrain rotations on x and z axes

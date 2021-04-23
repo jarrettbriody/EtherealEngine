@@ -96,14 +96,14 @@ void BloodSword::StartSlash()
 		if (keyboard->KeyIsPressed(0x41)) // a - left -> since character is right handed we only have to check for this, otherwise do the right handed slash
 		{
 			slashPoints = slashPointsLeft;
-			slashRotation = XMFLOAT3(XMConvertToRadians(45.0f), XMConvertToRadians(-90.0f), XMConvertToRadians(-70.0f));
 			raisedRotation = XMFLOAT3(XMConvertToRadians(45.0f), XMConvertToRadians(-90.0f), 0.0f);
+			slashRotation = XMFLOAT3(XMConvertToRadians(45.0f), XMConvertToRadians(-90.0f), XMConvertToRadians(-70.0f));
 		}
 		else
 		{
 			slashPoints = slashPointsRight;
-			slashRotation = XMFLOAT3(XMConvertToRadians(-45.0f), XMConvertToRadians(-90.0f), XMConvertToRadians(-70.0f));;
 			raisedRotation = XMFLOAT3(XMConvertToRadians(-45.0f), XMConvertToRadians(-90.0f), 0.0f);
+			slashRotation = XMFLOAT3(XMConvertToRadians(-45.0f), XMConvertToRadians(-90.0f), XMConvertToRadians(-70.0f));;
 		}
 
 		ss = SwordState::Raised;
@@ -121,6 +121,7 @@ void BloodSword::RaisedState()
 {
 	lerpPositionTo = slashPoints[slashPointsIndex]; // First index is the raised state
 	lerpRotationTo = raisedRotation;
+	
 	CalcLerp();
 
 	cout << "Raising" << endl;

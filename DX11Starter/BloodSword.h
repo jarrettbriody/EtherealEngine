@@ -38,6 +38,10 @@ class BloodSword : public ScriptManager
 	XMFLOAT3 slashRotation;
 	XMFLOAT3 raisedRotation;
 
+	/*TODO: Jitter Issue?
+	bool posLerpComplete = false;
+	bool rotLerpComplete = false;*/
+
 	void Init();
 
 	void Update();
