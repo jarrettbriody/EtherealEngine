@@ -19,11 +19,13 @@ cbuffer ExternalData : register(b0)
 
 	float particleInitMinSpeed; //minimum initial speed of the particle
 	float particleInitMaxSpeed; //maximum initial speed of the particle
-	float2 padding;
+	int bakeWorldMat;
+	float padding;
 
 	float3 particleAcceleration;
 	int textureCount;
 
+	matrix world;
 
 	ParticleTexture textures[MAX_PARTICLE_TEXTURES];
 }
@@ -95,6 +97,12 @@ void main(uint3 id : SV_DispatchThreadID)
 	newParticle.rotationRadians = 0.0f;
 	newParticle.angularVelocity = particleInitMinAngularVelocity + (particleInitMaxAngularVelocity - particleInitMinAngularVelocity) * randomNumbers[0][1];
 	newParticle.acceleration = particleAcceleration;
+	newParticle.worldMatBaked = bakeWorldMat;
+	if (bakeWorldMat == 1) {
+		newParticle.position = mul(float4(newParticle.position, 1.0f), world);
+		newParticle.velocity = mul(float4(newParticle.velocity, 0.0f), world);
+		newParticle.acceleration = mul(float4(newParticle.acceleration, 0.0f), world);
+	}
 
 	// Put it back
 	ParticlePool[newParticleIndex] = newParticle;

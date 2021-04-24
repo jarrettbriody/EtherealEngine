@@ -278,6 +278,8 @@ void GPUParticleEmitter::Update(double deltaTime, double totalTime, XMFLOAT4X4 v
 		emitCS->SetFloat("particleInitMaxAngularVelocity", particleInitMaxAngularVelocity);
 		emitCS->SetFloat("particleInitMinSpeed", particleInitMinSpeed);
 		emitCS->SetFloat("particleInitMaxSpeed", particleInitMaxSpeed);
+		emitCS->SetMatrix4x4("world", worldMatrix);
+		emitCS->SetInt("bakeWorldMat", (int)bakeWorldMatOnEmission);
 
 		int randNumCnt = min(emitCount*2 + 6, MAX_RANDOM_NUMS);
 		for (int i = 0; i < randNumCnt; i++)

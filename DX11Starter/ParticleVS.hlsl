@@ -57,7 +57,12 @@ VStoPS main(uint id : SV_VertexID)
 	zOffset[10] = -0.0014f;
 	zOffset[11] = -0.0015f;
 	float3 pos = particle.position;
-	pos = mul(mul(float4(pos, 1.0f), world), view);
+	if (particle.worldMatBaked == 0) {
+		pos = mul(mul(float4(pos, 1.0f), world), view);
+	}
+	else {
+		pos = mul(float4(pos, 1.0f), view);
+	}
 	pos.xy += offsets[cornerID].xy * particle.scale;
 	pos.z += zOffset[id % 12];
 

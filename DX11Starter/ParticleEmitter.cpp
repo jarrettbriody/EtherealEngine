@@ -27,6 +27,8 @@ ParticleEmitter::ParticleEmitter()
 
 	SetFadeOverTime(d.fadeIn, d.fadeOut, d.fadeInEndTime, d.fadeOutStartTime);
 
+	SetBakeWorldMatOnEmission(d.bakeWorldMatOnEmission);
+
 	ParticleColor color[1] = { XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f), 1.0f };
 	SetParticleColors(1, color);
 
@@ -57,6 +59,8 @@ ParticleEmitter::ParticleEmitter(ParticleEmitterDescription d)
 	SetParticleAcceleration(d.particleAcceleration);
 
 	SetFadeOverTime(d.fadeIn, d.fadeOut, d.fadeInEndTime, d.fadeOutStartTime);
+
+	SetBakeWorldMatOnEmission(d.bakeWorldMatOnEmission);
 
 	SetParticleColors(d.colorCount, d.colors);
 	SetParticleTextures(d.textureCount, d.textures);
@@ -317,6 +321,11 @@ void ParticleEmitter::SetFadeOverTime(bool fadeIn, bool fadeOut, float fadeInEnd
 	this->fadeOut = fadeOut;
 	this->fadeInEndTime = fadeInEndTime;
 	this->fadeOutStartTime = fadeOutStartTime;
+}
+
+void ParticleEmitter::SetBakeWorldMatOnEmission(bool toggle)
+{
+	bakeWorldMatOnEmission = toggle;
 }
 
 void ParticleEmitter::SetParticleColors(unsigned int colorCount, ParticleColor* colors)

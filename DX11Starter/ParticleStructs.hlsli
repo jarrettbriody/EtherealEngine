@@ -21,7 +21,8 @@ struct Particle
 	float originalTransparency;
 
 	float originalRemainingLife;
-	float3 padding;
+	int worldMatBaked;
+	float2 padding;
 };
 
 struct ParticleColor {

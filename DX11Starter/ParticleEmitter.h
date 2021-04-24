@@ -38,6 +38,8 @@ struct ParticleEmitterDescription {
 	bool fadeIn = false;
 	float fadeInEndTime = 1.0f;
 
+	bool bakeWorldMatOnEmission = false;
+
 	unsigned int colorCount = 0; //number of possible colors
 	ParticleColor* colors = nullptr; //array of ParticleColor objects
 
@@ -88,6 +90,8 @@ public:
 	void SetParticleAcceleration(XMFLOAT3 accel);
 
 	void SetFadeOverTime(bool fadeIn, bool fadeOut, float fadeInEndTime = 1.0f, float fadeOutStartTime = -1.0f);
+
+	void SetBakeWorldMatOnEmission(bool toggle);
 
 	//Set colors of particles (number of colors, color array, array of color weights in range [0.0f,1.0f])
 	void SetParticleColors(unsigned int colorCount, ParticleColor* colors);
@@ -143,6 +147,8 @@ protected:
 
 	bool fadeIn = false;
 	float fadeInEndTime = 1.0f;
+
+	bool bakeWorldMatOnEmission = false;
 
 	XMFLOAT3 particleAcceleration = ZERO_VECTOR3;
 

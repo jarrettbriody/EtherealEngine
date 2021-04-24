@@ -2,6 +2,9 @@
 #include "ScriptManager.h"
 #include <WinUser.h>
 #include "DXCore.h"
+#include "ParticleEmitter.h"
+#include "CPUParticleEmitter.h"
+#include "GPUParticleEmitter.h"
 
 struct DashBlurCallback : RendererCallback {
 	int blurAmount = 1;

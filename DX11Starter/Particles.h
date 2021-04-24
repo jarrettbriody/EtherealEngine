@@ -22,7 +22,8 @@ struct Particle
 	float originalTransparency = 1.0f;
 
 	float originalRemainingLife;
-	XMFLOAT3 padding;
+	int worldMatBaked = 0;
+	XMFLOAT2 padding;
 };
 
 struct ParticleColor {
@@ -53,6 +54,7 @@ struct ParticleVertex {
 	int ID;
 	int TextureIndex;
 	float Transparency;
+	//int WorldMatBaked;
 };
 
 struct ParticleDrawInfo

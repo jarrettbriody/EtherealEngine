@@ -339,8 +339,8 @@ void Game::Init()
 	emitDesc.textureCount = 0;
 	emitDesc.colorCount = 3;
 	ParticleColor particleColors[3] = {
-		{XMFLOAT4(1.0f, 0.313725f, 0, 1.0f), 1.0f},
-		{XMFLOAT4(1.0f, 0.4823529f, 0, 0.75f), 1.0f},
+		{XMFLOAT4(1.0f, 0.313725f, 0, 1.0f), 0.5f},
+		{XMFLOAT4(1.0f, 0.4823529f, 0, 0.75f), 0.5f},
 		{XMFLOAT4(0.5f, 0.5f, 0.5f, 0.5f), 5.0f},
 	};
 	emitDesc.colors = particleColors;
