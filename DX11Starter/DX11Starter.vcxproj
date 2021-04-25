@@ -139,6 +139,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="AmbientParticles.cpp" />
     <ClCompile Include="Barrel.cpp" />
     <ClCompile Include="BloodIcicle.cpp" />
     <ClCompile Include="BloodOrb.cpp" />
@@ -172,6 +173,7 @@
     <ClCompile Include="SimpleShader.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AmbientParticles.h" />
     <ClInclude Include="Barrel.h" />
     <ClInclude Include="BehaviorTree.h" />
     <ClInclude Include="BehaviorTreeBuilder.h" />

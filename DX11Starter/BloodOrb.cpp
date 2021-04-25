@@ -44,37 +44,6 @@ void BloodOrb::Init()
 	//emitDesc.particleAcceleration = XMFLOAT3(0.0f, 0.0f, -20.0f);
 
 	orbEmitter = new GPUParticleEmitter(orbEmitDesc);
-
-	ParticleEmitterDescription emitDesc;
-	emitDesc.emitterPosition = XMFLOAT3(0.0f, 10.0f, 0.0f);
-	emitDesc.parentName = "FPSController";
-	emitDesc.parentWorld = entity->GetWorldMatrixPtr();
-	emitDesc.emitterDirection = NEG_Y_AXIS;
-	emitDesc.colorCount = 3;
-	ParticleColor particleColors[3] = {
-		{XMFLOAT4(0.0f, 0.0f, 0.0f, 0.5f), 0.5f},
-		{XMFLOAT4(0.2f, 0.2f, 0.2f, 0.75f), 1.0f},
-		{XMFLOAT4(0.5f, 0.5f, 0.5f, 0.5f), 1.0f},
-	};
-	emitDesc.colors = particleColors;
-	emitDesc.bakeWorldMatOnEmission = true;
-	emitDesc.emissionStartRadius = 20.0f;
-	emitDesc.emissionEndRadius = 20.0f;
-	emitDesc.emissionRate = 500.0f;
-	emitDesc.maxParticles = 20000;
-	emitDesc.particleInitMinSpeed = 0.5f;
-	emitDesc.particleInitMaxSpeed = 1.0f;
-	emitDesc.particleMinLifetime = 15.0f;
-	emitDesc.particleMaxLifetime = 30.0f;
-	emitDesc.particleInitMinScale = 0.005f;
-	emitDesc.particleInitMaxScale = 0.010f;
-	emitDesc.fadeInEndTime = 0.1f;
-	emitDesc.fadeIn = true;
-	emitDesc.fadeOutStartTime = 1.0f;
-	emitDesc.fadeOut = true;
-	emitDesc.particleAcceleration = XMFLOAT3(-0.0001f, -0.0005f, 0.0f);
-
-	GPUParticleEmitter* gpuEmitter = new GPUParticleEmitter(emitDesc);
 }
 
 void BloodOrb::Update()

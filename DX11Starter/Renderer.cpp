@@ -396,6 +396,9 @@ void Renderer::InitSkybox()
 
 void Renderer::InitPostProcessRTV()
 {
+	if (postProcessComponents.RTV) postProcessComponents.RTV->Release();
+	if (postProcessComponents.SRV) postProcessComponents.SRV->Release();
+
 	D3D11_TEXTURE2D_DESC textureDesc = {};
 	textureDesc.Width = Config::ViewPortWidth;
 	textureDesc.Height = Config::ViewPortHeight;

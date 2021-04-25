@@ -280,84 +280,6 @@ void Game::Init()
 		}
 	});
 
-	emitDesc.emitterPosition = XMFLOAT3(-5, 0.5f, 0);
-	emitDesc.maxParticles = 500;
-	emitDesc.emissionRate = 3.0f;
-
-	ParticleTexture partTex[2] = {
-		//{EESceneLoader->texture2DMap["smoke1"], 1.0f},
-		{EESceneLoader->texture2DMap["smoke2"], 1.0f, 0.5f},
-		{EESceneLoader->texture2DMap["smoke3"], 1.0f, 0.5f},
-	};
-	emitDesc.textures = partTex;
-	emitDesc.textureCount = 2;
-
-	emitDesc.colorCount = 0;
-	emitDesc.colors = nullptr;
-
-	emitDesc.emissionStartRadius = 3.0f;
-	emitDesc.emissionEndRadius = 3.5f;
-	emitDesc.particleInitMinSpeed = 0.3f;
-	emitDesc.particleInitMaxSpeed = 0.5f;
-	emitDesc.particleMinLifetime = 10.0f;
-	emitDesc.particleMaxLifetime = 15.0f;
-	emitDesc.particleInitMinScale = 1.0f;
-	emitDesc.particleInitMaxScale = 3.0f;
-	emitDesc.particleInitMinAngularVelocity = -0.05f;
-	emitDesc.particleInitMaxAngularVelocity = 0.05f;
-
-	emitDesc.particleAcceleration = XMFLOAT3(0.0f, 0.0f, -0.0001f);
-
-	emitDesc.fadeOut = true;
-	emitDesc.fadeIn = true;
-	emitDesc.fadeOutStartTime = 2.0f;
-	emitDesc.fadeInEndTime = 0.5f;
-
-	GPUParticleEmitter* gpuEmitter = new GPUParticleEmitter(emitDesc);
-	gpuEmitter->SetBlendingEnabled(true);
-
-	emitDesc.emitterPosition = XMFLOAT3(-5, 0.1f, 0);
-	emitDesc.emissionStartRadius = 2.0f;
-	emitDesc.emissionEndRadius = 2.0f;
-	emitDesc.fadeOutStartTime = -1.0f;
-	emitDesc.fadeInEndTime = 0.05f;
-	partTex[0] = { EESceneLoader->texture2DMap["fire"], 1.0f, 0.2f };
-	emitDesc.textureCount = 1;
-	emitDesc.maxParticles = 5000;
-	emitDesc.emissionRate = 500.0f;
-	emitDesc.particleInitMinSpeed = 0.5f;
-	emitDesc.particleInitMaxSpeed = 1.0f;
-	emitDesc.particleMinLifetime = 0.2f;
-	emitDesc.particleMaxLifetime = 0.3f;
-	emitDesc.particleInitMinScale = 0.3f;
-	emitDesc.particleInitMaxScale = 0.5f;
-	emitDesc.particleAcceleration = XMFLOAT3(0.0f, 0.0f, 0.0f);
-
-	gpuEmitter = new GPUParticleEmitter(emitDesc);
-	gpuEmitter->SetBlendingEnabled(true);
-
-	emitDesc.textureCount = 0;
-	emitDesc.colorCount = 3;
-	ParticleColor particleColors[3] = {
-		{XMFLOAT4(1.0f, 0.313725f, 0, 1.0f), 0.5f},
-		{XMFLOAT4(1.0f, 0.4823529f, 0, 0.75f), 0.5f},
-		{XMFLOAT4(0.5f, 0.5f, 0.5f, 0.5f), 5.0f},
-	};
-	emitDesc.colors = particleColors;
-	emitDesc.emissionRate = 100.0f;
-	emitDesc.maxParticles = 3000;
-	emitDesc.particleInitMinSpeed = 1.0f;
-	emitDesc.particleInitMaxSpeed = 2.0f;
-	emitDesc.particleMinLifetime = 3.0f;
-	emitDesc.particleMaxLifetime = 3.5f;
-	emitDesc.particleInitMinScale = 0.02f;
-	emitDesc.particleInitMaxScale = 0.03f;
-	emitDesc.fadeOutStartTime = -1.0f;
-	emitDesc.fadeInEndTime = 0.1f;
-	emitDesc.particleAcceleration = XMFLOAT3(-0.01f, -0.5f, 0.5f);
-
-	gpuEmitter = new GPUParticleEmitter(emitDesc);
-	//gpuEmitter->SetBlendingEnabled(true);
 
 
 	Entity* e;
@@ -459,6 +381,7 @@ void Game::OnResize()
 	EECamera->UpdateProjectionMatrix();
 	EERenderer->InitDepthStencil();
 	EERenderer->InitHBAOPlus();
+	EERenderer->InitPostProcessRTV();
 }
 
 void Game::Update(double deltaTime, double totalTime)

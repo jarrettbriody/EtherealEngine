@@ -3,6 +3,7 @@
 #include "FPSController.h"
 #include "BloodIcicle.h"
 #include "BloodOrb.h"
+#include "AmbientParticles.h"
 
 namespace Scripts {
 	enum class SCRIPT_NAMES {
@@ -10,6 +11,7 @@ namespace Scripts {
 		FPSCONTROLLER,
 		BLOODICICLE,
 		BLOODORB,
+		AMBIENTPARTICLES,
 	};
 
 	static map<string, SCRIPT_NAMES> scriptNameMap = {
@@ -17,6 +19,7 @@ namespace Scripts {
 		{"FPSCONTROLLER", SCRIPT_NAMES::FPSCONTROLLER},
 		{"BLOODICICLE", SCRIPT_NAMES::BLOODICICLE},
 		{"BLOODORB", SCRIPT_NAMES::BLOODORB},
+		{"AMBIENTPARTICLES", SCRIPT_NAMES::AMBIENTPARTICLES},
 	};
 
 	static map<SCRIPT_NAMES, string> scriptStringNameMap = {
@@ -24,6 +27,7 @@ namespace Scripts {
 		{SCRIPT_NAMES::FPSCONTROLLER, "FPSCONTROLLER"},
 		{SCRIPT_NAMES::BLOODICICLE, "BLOODICICLE"},
 		{SCRIPT_NAMES::BLOODORB, "BLOODORB"},
+		{SCRIPT_NAMES::AMBIENTPARTICLES, "AMBIENTPARTICLES"},
 	};
 
 	namespace {
@@ -43,6 +47,9 @@ namespace Scripts {
 				break;
 			case Scripts::SCRIPT_NAMES::BLOODORB:
 				script = new BloodOrb();
+				break;
+			case Scripts::SCRIPT_NAMES::AMBIENTPARTICLES:
+				script = new AmbientParticles();
 				break;
 			default:
 				break;
