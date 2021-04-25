@@ -82,6 +82,7 @@ float4 main(VertexToPixel input) : SV_TARGET
 	input.uv = float2(input.uv.x * uvMult.x + uvOffset.x, input.uv.y * uvMult.y + uvOffset.y);
 
 	float4 surfaceColor = DiffuseTexture.Sample(BasicSampler, input.uv);
+	if (surfaceColor.a <= 0.001f) discard;
 	// Just return the input color
 	// - This color (like most values passing through the rasterizer) is 
 	//   interpolated for each pixel between the corresponding vertices 

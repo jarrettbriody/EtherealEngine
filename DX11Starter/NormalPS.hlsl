@@ -95,6 +95,7 @@ float4 main(VertexToPixel input) : SV_TARGET
 	input.normal = normalize(mul(normalFromMap, TBN));
 
 	float4 surfaceColor = DiffuseTexture.Sample(BasicSampler, input.uv);
+	if (surfaceColor.a <= 0.001f) discard;
 
 	if (illumination == 11) {
 		surfaceColor = surfaceColor.xyzw - (1 - float4(manualColor.xyz, 0));
