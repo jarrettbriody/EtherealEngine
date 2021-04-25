@@ -128,7 +128,6 @@ void FPSController::Update()
 			// ragdoll the player
 			playerRBody->setAngularFactor(btVector3(1, 1, 1)); // free rotations on x and z axes
 			playerRBody->setGravity(btVector3(0.0f, -25.0f, 0.0f));
-
 			cam->SetPosition(XMFLOAT3(entity->GetPosition().x, entity->GetPosition().y + entity->GetScale().y + headbobOffset, entity->GetPosition().z)); // after all updates make sure camera is following the affected entity
 			break;
 

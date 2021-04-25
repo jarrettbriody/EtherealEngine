@@ -53,8 +53,8 @@ void BloodSword::Init()
 		XMFLOAT3(8, -6, 3)
 	};*/
 
-	slashPointsRight = GenerateSlashPoints(XMFLOAT3(5, 0, 3), XMFLOAT3(-8, -8, 3), 1.0f/5.0f, 6.0f);
-	slashPointsLeft = GenerateSlashPoints(XMFLOAT3(-5, 0, 3), XMFLOAT3(8, -8, 3), 1.0f/5.0f, 6.0f);
+	slashPointsRight = GenerateSlashPoints(XMFLOAT3(5, 0, 3), XMFLOAT3(-8, -8, 3), 1.0f/5.0f, 4.0f);
+	slashPointsLeft = GenerateSlashPoints(XMFLOAT3(-5, 0, 3), XMFLOAT3(8, -8, 3), 1.0f/5.0f, 4.0f);
 }
 
 void BloodSword::Update()
@@ -132,6 +132,7 @@ void BloodSword::RaisedState()
 	if (CheckTransformationsNearEqual(true, true))
 	{
 		slashPointsIndex++;
+		CheckSwordSlashHit();
 		ss = SwordState::Slashing;
 	}
 }
@@ -287,6 +288,53 @@ void BloodSword::CheckSwordSlashHit()
 
 	XMFLOAT3 viewFront;
 	XMStoreFloat3(&viewFront, XMVectorSubtract(XMLoadFloat3(&viewRight), XMLoadFloat3(&viewLeft)));
+
+	std::vector<Entity*> enemies = EESceneLoader->sceneEntitiesTagMap["Enemy"];
+
+	for each (Entity* enemy in enemies)
+	{
+		XMFLOAT3 playerPos =  Utility::BulletVectorToFloat3(eMap->find("FPSController")->second->GetRBody()->getCenterOfMassPosition());
+		XMFLOAT3 enemyPos = Utility::BulletVectorToFloat3(enemy->GetRBody()->getCenterOfMassPosition());
+
+		XMFLOAT3 flooredPos = XMFLOAT3(playerPos.x, 0, playerPos.z);
+		XMFLOAT3 flooredEnemyPos = XMFLOAT3(enemyPos.x, 0, enemyPos.z);
+
+		XMFLOAT3 triVertToEnemy;
+		XMStoreFloat3(&triVertToEnemy, XMVectorSubtract(XMLoadFloat3(&flooredEnemyPos), XMLoadFloat3(&flooredPos)));
+
+		XMFLOAT3 perpendicular = XMFLOAT3(viewLeft.z, viewLeft.y, -viewLeft.x);
+
+		float dotProduct = 0;
+		XMStoreFloat(&dotProduct, XMVector3Dot(XMLoadFloat3(&triVertToEnemy), XMLoadFloat3(&perpendicular)));
+
+		if (dotProduct > 0)
+		{
+			XMStoreFloat3(&triVertToEnemy,XMVectorSubtract(XMLoadFloat3(&flooredEnemyPos), XMVectorAdd(XMLoadFloat3(&flooredPos), XMLoadFloat3(&viewLeft))));
+			perpendicular = XMFLOAT3(viewFront.z, viewFront.y, -viewFront.x);
+
+			XMStoreFloat(&dotProduct, XMVector3Dot(XMLoadFloat3(&triVertToEnemy), XMLoadFloat3(&perpendicular)));
+
+			if (dotProduct > 0)
+			{
+				XMStoreFloat3(&triVertToEnemy, XMVectorSubtract(XMLoadFloat3(&flooredEnemyPos), XMVectorAdd(XMLoadFloat3(&flooredPos), XMLoadFloat3(&viewRight))));
+				perpendicular = XMFLOAT3(-viewRight.z, -viewRight.y, viewRight.x);
+
+				XMStoreFloat(&dotProduct, XMVector3Dot(XMLoadFloat3(&triVertToEnemy), XMLoadFloat3(&perpendicular)));
+
+				if (dotProduct > 0)
+				{
+					// enemy is in the triangle, split it apart
+					std::vector<Entity*> childEntities = EESceneLoader->SplitMeshIntoChildEntities(enemy, 1.0f);
+
+					for each (Entity * e in childEntities)
+					{
+						e->tag = std::string("Body Part");
+					}
+				}
+
+			}
+		}
+	}
 }
 
 
