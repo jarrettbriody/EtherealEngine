@@ -358,6 +358,8 @@ void FPSController::HookshotLeash()
 
 void FPSController::UpdateHookShotTransform()
 {
+	hookshot->SetRepeatTexture(1.0f, hookshotZScale);
+
 	XMFLOAT3 hookshotPosOffset = XMFLOAT3(cam->position.x, cam->position.y - 2.0f, cam->position.z);
 	XMFLOAT3 hookshotPosTolerance = XMFLOAT3(0.01, 0.01, 0.01);
 
@@ -390,7 +392,10 @@ void FPSController::UpdateHookShotTransform()
 
 void FPSController::ResetHookshotTransform()
 {
-	hookshotZScale = 0.1;
+	XMFLOAT3 restingPos = entity->GetPosition();
+	restingPos.y += 5;
+	hookshot->SetPosition(restingPos);
+	hookshotZScale = 0.01;
 	ps = PlayerState::Normal;
 }
 

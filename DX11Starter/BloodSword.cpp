@@ -280,7 +280,7 @@ std::vector<XMFLOAT3> BloodSword::GenerateSlashPoints(XMFLOAT3 startingPos, XMFL
 
 void BloodSword::CheckSwordSlashHit()
 {
-	float currentAngle = atan2(cam->direction.z, cam->direction.z);
+	float currentAngle = atan2(cam->direction.z, cam->direction.x);
 	float halfViewAngle = XMConvertToRadians(viewAngle / 2);
 	float hypotenuse = viewDistance / cos(halfViewAngle);
 	XMFLOAT3 viewLeft = XMFLOAT3(cos(currentAngle + halfViewAngle) * hypotenuse, 0.0f, sin(currentAngle + halfViewAngle) * hypotenuse);
