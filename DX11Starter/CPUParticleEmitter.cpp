@@ -104,8 +104,8 @@ void CPUParticleEmitter::InitBuffers()
 	blend.IndependentBlendEnable = false;
 	blend.RenderTarget[0].BlendEnable = true;
 	blend.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
-	blend.RenderTarget[0].SrcBlend = D3D11_BLEND_ONE;
-	blend.RenderTarget[0].DestBlend = D3D11_BLEND_ONE;
+	blend.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+	blend.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
 	blend.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
 	blend.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
 	blend.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ONE;
@@ -131,6 +131,10 @@ void CPUParticleEmitter::CalcVertex(Particle p, XMFLOAT4X4 view)
 	particleVertices[particleVertCount].Scale = p.scale;
 	particleVertices[particleVertCount].UV = XMFLOAT2(0, 0);
 	particleVertices[particleVertCount].ID = 0;
+	particleVertices[particleVertCount].TextureIndex = p.textureIndex;
+	particleVertices[particleVertCount].RotationRadians = p.rotationRadians;
+	particleVertices[particleVertCount].Transparency = p.transparency;
+	particleVertices[particleVertCount].WorldMatBaked = p.worldMatBaked;
 	particleVertCount++;
 
 	particleVertices[particleVertCount].Position = p.position;
@@ -138,6 +142,10 @@ void CPUParticleEmitter::CalcVertex(Particle p, XMFLOAT4X4 view)
 	particleVertices[particleVertCount].Scale = p.scale;
 	particleVertices[particleVertCount].UV = XMFLOAT2(1, 0);
 	particleVertices[particleVertCount].ID = 1;
+	particleVertices[particleVertCount].TextureIndex = p.textureIndex;
+	particleVertices[particleVertCount].RotationRadians = p.rotationRadians;
+	particleVertices[particleVertCount].Transparency = p.transparency;
+	particleVertices[particleVertCount].WorldMatBaked = p.worldMatBaked;
 	particleVertCount++;
 
 	particleVertices[particleVertCount].Position = p.position;
@@ -145,6 +153,10 @@ void CPUParticleEmitter::CalcVertex(Particle p, XMFLOAT4X4 view)
 	particleVertices[particleVertCount].Scale = p.scale; 
 	particleVertices[particleVertCount].UV = XMFLOAT2(1, 1);
 	particleVertices[particleVertCount].ID = 2;
+	particleVertices[particleVertCount].TextureIndex = p.textureIndex;
+	particleVertices[particleVertCount].RotationRadians = p.rotationRadians;
+	particleVertices[particleVertCount].Transparency = p.transparency;
+	particleVertices[particleVertCount].WorldMatBaked = p.worldMatBaked;
 	particleVertCount++;
 
 	particleVertices[particleVertCount].Position = p.position;
@@ -152,6 +164,10 @@ void CPUParticleEmitter::CalcVertex(Particle p, XMFLOAT4X4 view)
 	particleVertices[particleVertCount].Scale = p.scale;
 	particleVertices[particleVertCount].UV = XMFLOAT2(0, 1);
 	particleVertices[particleVertCount].ID = 3;
+	particleVertices[particleVertCount].TextureIndex = p.textureIndex;
+	particleVertices[particleVertCount].RotationRadians = p.rotationRadians;
+	particleVertices[particleVertCount].Transparency = p.transparency;
+	particleVertices[particleVertCount].WorldMatBaked = p.worldMatBaked;
 	particleVertCount++;
 }
 
@@ -228,6 +244,8 @@ void CPUParticleEmitter::SetCollisionsEnabled(void(*collisionCallback)(void* ptr
 void CPUParticleEmitter::KillParticle(unsigned int index)
 {
 	particlePool[index].remainingLife = 0.0f;
+	particlePool[index].transparency = 0.0f;
+	particlePool[index].color.w = 0.0f;
 }
 
 void CPUParticleEmitter::Update(double deltaTime, double totalTime, XMFLOAT4X4 view)
@@ -281,11 +299,25 @@ void CPUParticleEmitter::Update(double deltaTime, double totalTime, XMFLOAT4X4 v
 			newParticle.color = XMFLOAT4(1, 0, 0, 1);
 
 			// Color and position depend on the grid position and size
-			for (int j = colorCount - 1; j >= 0; j--)
+			bool isColor = false;
+			for (int j = 0; j < colorCount; j++)
 			{
 				if (randNum3 <= colors[j].weight) {
 					newParticle.color = colors[j].color;
+					newParticle.originalTransparency = colors[j].color.w;
+					isColor = true;
 					break;
+				}
+			}
+			if (!isColor) {
+				for (int j = 0; j < textureCount; j++)
+				{
+					if (randNum3 <= textures[j].weight) {
+						newParticle.textureIndex = j;
+						newParticle.transparency = textures[j].transparency;
+						newParticle.originalTransparency = textures[j].transparency;
+						break;
+					}
 				}
 			}
 
@@ -297,12 +329,26 @@ void CPUParticleEmitter::Update(double deltaTime, double totalTime, XMFLOAT4X4 v
 			end = XMFLOAT3(randomOffset * emissionEndRadius, randomOffset2 * emissionEndRadius, 1.0f);
 
 			newParticle.remainingLife = particleMinLifetime + (particleMaxLifetime - particleMinLifetime) * randNum;
-			newParticle.position = XMFLOAT3(0, 0, 0);
+			newParticle.originalRemainingLife = newParticle.remainingLife;
+			newParticle.position = start;
 			newParticle.scale = particleInitMinScale + (particleInitMaxScale - particleInitMinScale) * randNum4;
 			DirectX::XMStoreFloat3(&newParticle.velocity, XMVectorScale(XMVector3Normalize(XMVectorSubtract(XMLoadFloat3(&end), XMLoadFloat3(&start))), speed));
 			newParticle.rotationRadians = 0.0f;
 			newParticle.angularVelocity = particleInitMinAngularVelocity + (particleInitMaxAngularVelocity - particleInitMinAngularVelocity) * randNum;
 			newParticle.acceleration = particleAcceleration;
+
+			newParticle.worldMatBaked = (int)bakeWorldMatOnEmission;
+			if (bakeWorldMatOnEmission == true) {
+				XMVECTOR pos = XMLoadFloat3(&newParticle.position);
+				XMVECTOR vel = XMLoadFloat3(&newParticle.velocity);
+				XMVECTOR accel = XMLoadFloat3(&newParticle.acceleration);
+				pos.m128_f32[3] = 1.0f;
+				vel.m128_f32[3], accel.m128_f32[3] = 0.0f;
+				XMMATRIX world = XMMatrixTranspose(XMLoadFloat4x4(&worldMatrix));
+				XMStoreFloat3(&newParticle.position, XMVector4Transform(pos, world));
+				XMStoreFloat3(&newParticle.velocity, XMVector4Transform(vel, world));
+				XMStoreFloat3(&newParticle.acceleration, XMVector4Transform(accel, world));
+			}
 
 			// Put it back
 			particlePool[newParticleIndex] = newParticle;
@@ -352,6 +398,24 @@ void CPUParticleEmitter::Update(double deltaTime, double totalTime, XMFLOAT4X4 v
 			DirectX::XMStoreFloat3(&particle.velocity, XMVectorAdd(vel, XMVectorScale(XMLoadFloat3(&particle.acceleration), deltaTime)));
 			DirectX::XMStoreFloat3(&particle.position, XMVectorAdd(XMLoadFloat3(&particle.position), XMVectorScale(vel, deltaTime)));
 			particle.rotationRadians += particle.angularVelocity * deltaTime;
+
+			if (fadeIn) {
+				float totalLifetime = particle.originalRemainingLife - particle.remainingLife;
+				if (fadeInEndTime > 0.0f && (totalLifetime < fadeInEndTime)) {
+					particle.transparency = min((totalLifetime / fadeInEndTime), 1.0f) * particle.originalTransparency;
+					particle.color.w = particle.transparency;
+				}
+			}
+
+			if (fadeOut) {
+				if (fadeOutStartTime > 0.0f && (particle.remainingLife < fadeOutStartTime)) {
+					particle.transparency = (particle.remainingLife / fadeOutStartTime) * particle.originalTransparency;
+				}
+				else if (fadeOutStartTime <= 0.0f) {
+					particle.transparency = (particle.remainingLife / particleAvgLifetime) * particle.originalTransparency;
+					particle.color.w = particle.transparency;
+				}
+			}
 
 			// Put the particle back
 			particlePool[i] = particle;
@@ -423,11 +487,14 @@ void CPUParticleEmitter::Draw(XMFLOAT4X4 view, XMFLOAT4X4 proj)
 	defaultShaders.particleVS->SetShader();
 	defaultShaders.particleVS->CopyAllBufferData();
 
-	//defaultShaders.particlePS->SetShaderResourceView("particle", texture);
+	defaultShaders.particlePS->SetShaderResourceView("particleTextures", texturesSRV);
+	defaultShaders.particlePS->SetSamplerState("Sampler", Config::Sampler);
 	defaultShaders.particlePS->SetShader();
 
 	// Draw the correct parts of the buffer
 	Config::Context->DrawIndexed(maxParticles * 6, 0, 0);
+
+	defaultShaders.particlePS->SetShaderResourceView("particleTextures", NULL);
 
 	if (blendingEnabled)
 	{

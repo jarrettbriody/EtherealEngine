@@ -23,18 +23,14 @@ Game::~Game()
 {
 	SceneLoader::DestroyInstance();
 
-	delete cpuEmitter;
-	delete gpuEmitter;
+	for (size_t i = 0; i < ParticleEmitter::EmitterVector.size(); i++)
+	{
+		delete ParticleEmitter::EmitterVector[i];
+	}
 
 	Config::Sampler->Release();
 	Config::ClampSampler->Release();
 
-	// FMOD
-	sound[0]->release(); // For now just release the one sound we have assigned
-	backgroundMusic->release();
-	sfxGroup->release();
-	fmodSystem->close();
-	fmodSystem->release();
 	//delete terrain;
 	//delete water;
 
@@ -59,13 +55,20 @@ Game::~Game()
 	MemoryAllocator::DestroyInstance();
 
 	DecalHandler::DestroyInstance();
+
+	// FMOD
+	sound[0]->release(); // For now just release the one sound we have assigned
+	backgroundMusic->release();
+	sfxGroup->release();
+	fmodSystem->close();
+	fmodSystem->release();
 }
 
 void Game::Init()
 {
 	//dont delete this, its for finding mem leaks
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-	//_CrtSetBreakAlloc(193404);
+	//_CrtSetBreakAlloc(1048555);
 	//_CrtSetBreakAlloc(49892);
 
 	srand(static_cast <unsigned> (time(0)));
@@ -110,43 +113,21 @@ void Game::Init()
 	EEMemoryAllocator->CreatePool((unsigned int)MEMORY_POOL::MESH_POOL, Config::MemoryAllocatorMeshPoolSize, sizeof(Mesh));
 	EEMemoryAllocator->CreatePool((unsigned int)MEMORY_POOL::MATERIAL_POOL, Config::MemoryAllocatorMaterialPoolSize, sizeof(Material));
 	EEMemoryAllocator->CreatePool((unsigned int)MEMORY_POOL::DECAL_POOL, Config::MemoryAllocatorDecalPoolSize, sizeof(DecalBucket));
+	EEMemoryAllocator->CreatePool((unsigned int)MEMORY_POOL::LIGHT_POOL, Config::MemoryAllocatorLightPoolSize, sizeof(Light));
 	//EEMemoryAllocator->CreatePool((unsigned int)MEMORY_POOL::PARTICLE_POOL, Config::MemoryAllocatorParticlePoolSize, sizeof(Particle));
 
+	LightHandler::SetupInstance();
+	EELightHandler = LightHandler::GetInstance();
+
 	EECamera = new Camera();
-	EECamera->UpdateProjectionMatrix();
+	EECamera->CalcProjMatrix();
 
 	SceneLoader::SetupInstance();
 	EESceneLoader = SceneLoader::GetInstance();
 
 	EESceneLoader->LoadAssetPreloadFile();
 
-	//EESceneLoader->LoadShaders();
-
-	//EESceneLoader->LoadDefaultMeshes();
-	//EESceneLoader->LoadDefaultTextures();
-	//EESceneLoader->LoadDefaultMaterials();
-
 	EESceneLoader->SetScriptLoader([](Entity* e, string script) {Scripts::CreateScript(e, script); });
-
-	/*
-	Light* dLight = new Light;
-	dLight->Type = LIGHT_TYPE_DIR;
-	XMFLOAT3 c = XMFLOAT3(1.0f, 252.0f / 255.0f, 222.0f / 255.0f);
-	dLight->Color = c;
-	XMFLOAT3 d = XMFLOAT3(-0.265943f, -0.92075f, 0.28547f);
-	dLight->Direction = d;
-	dLight->Intensity = 0.25f;
-	dLight->Position = XMFLOAT3(-334.0f, 179.5f, -175.9f);
-	*/
-
-	/*testLight = new Light;
-	testLight->Type = LIGHT_TYPE_SPOT;
-	testLight->Direction = camera->direction;
-	testLight->Intensity = 5.f;
-	testLight->Position = XMFLOAT3(-3.2f, 2.f, -5.f);
-	testLight->Color = XMFLOAT3(1.f, 1.f, 1.f);
-	testLight->Range = 10.f;
-	testLight->SpotFalloff = 20.f;*/
 
 	DecalHandler::SetupInstance();
 	EEDecalHandler = DecalHandler::GetInstance();
@@ -155,6 +136,18 @@ void Game::Init()
 	EERenderer = Renderer::GetInstance();
 	EERenderer->AddCamera("main", EECamera);
 	EERenderer->EnableCamera("main");
+
+	/*
+	Light* testLight = new Light;
+	testLight->Type = LIGHT_TYPE_POINT;
+	//testLight->Direction = EECamera->direction;
+	testLight->Intensity = 5.f;
+	testLight->Position = XMFLOAT3(-5, 3.0f, 0);
+	testLight->Color = XMFLOAT3(1.f, 0.f, 0.f);
+	testLight->Range = 10.f;
+	//testLight->SpotFalloff = 20.f;
+	EERenderer->AddLight("fire", testLight);
+	*/
 
 	RendererShaders rShaders;
 	rShaders.depthStencilVS = EESceneLoader->vertexShadersMap["DepthStencil"];
@@ -170,17 +163,19 @@ void Game::Init()
 	EERenderer->InitDepthStencil();
 	EERenderer->InitHBAOPlus();
 	EERenderer->InitBlendState();
+	EERenderer->InitPostProcessRTV();
 	EESceneLoader->EERenderer = EERenderer;
 
 	//EESceneLoader->LoadScene("ArenaV2");
 
-	EESceneLoader->SetModelPath("../../Assets/Models/City/");
-	EESceneLoader->LoadScene("City");
+	EESceneLoader->SetModelPath("../../Assets/Models/Kamchatka/");
+	EESceneLoader->LoadScene("Kamchatka");
 
-	EERenderer->SetShadowCascadeInfo(0, 4096, 0.1f, 1000.0f, 75.0f, 75.0f);
-	EERenderer->SetShadowCascadeInfo(1, 2048, 0.1f, 1000.0f, 500.0f, 500.0f);
-	EERenderer->SetShadowCascadeInfo(2, 1024, 0.1f, 1000.0f, 1000.0f, 1000.0f);
-	EERenderer->InitShadows(3);
+	EERenderer->SetShadowCascadeInfo(0, 4096, 0.1f, 2000.0f, 100.0f, 100.0f);
+	EERenderer->SetShadowCascadeInfo(1, 4096, 0.1f, 2000.0f, 250.0f, 250.0f);
+	EERenderer->SetShadowCascadeInfo(2, 4096, 0.1f, 2000.0f, 750.0f, 750.0f);
+	EERenderer->SetShadowCascadeInfo(3, 2048, 0.1f, 2000.0f, 3000.0f, 3000.0f);
+	EERenderer->InitShadows(4);
 	EERenderer->InitSkybox();
 
 	EERenderer->SetEntities(&(EESceneLoader->sceneEntities));
@@ -217,19 +212,17 @@ void Game::Init()
 	CPUParticleEmitter::SetDefaultShaders(cpuParticleShaders);
 
 	ParticleEmitterDescription emitDesc;
-	emitDesc.emitterPosition = XMFLOAT3(-108.7f, 5, 37.6f);
-	emitDesc.colorCount = 1;
-	ParticleColor partColors[1] = {
-		{XMFLOAT4(0.5f,0,0,1.0f),10},
-		//{XMFLOAT4(0,1,0,1),10},
-		//{XMFLOAT4(0,0,1,1),10},
-		//{XMFLOAT4(1,1,0,1),10},
-		//{XMFLOAT4(1,1,1,1),10},
-		//{XMFLOAT4(0,1,1,1),10},
-		//{XMFLOAT4(1,0,1,1),10},
-		//{XMFLOAT4(1,0,0,1),10},
+	//emitDesc.parentName = "FPSController";
+	//emitDesc.parentWorld = EESceneLoader->sceneEntitiesMap["FPSController"]->GetWorldMatrixPtr();
+	emitDesc.emitterPosition = XMFLOAT3(-30, 0.1f, 0);
+	
+	ParticleColor partColors[3] = {
+		{XMFLOAT4(1.0f,0,0,0.5f),5.0f},
+		{XMFLOAT4(1.0f,0,0,0.5f),5.0f},
+		{XMFLOAT4(1.0f,0,0,0.2f),5.0f},
 	};
 	emitDesc.colors = partColors;
+	emitDesc.colorCount = 3;
 	emitDesc.maxParticles = 100;
 	emitDesc.emissionRate = 3.0f;
 	//emitDesc.emissionRotation = XMFLOAT3(-XM_PIDIV2,0.0f,0.0f);
@@ -238,11 +231,14 @@ void Game::Init()
 	emitDesc.particleInitMaxSpeed = 15.0f;
 	emitDesc.particleMinLifetime = 10.0f;
 	emitDesc.particleMaxLifetime = 15.0f;
+	//emitDesc.particleInitMinScale = 0.1f;
+	//emitDesc.particleInitMaxScale = 0.2f;
 	emitDesc.particleInitMinScale = 0.1f;
-	emitDesc.particleInitMaxScale = 0.2f;
+	emitDesc.particleInitMaxScale = 0.11f;
 	emitDesc.particleAcceleration = XMFLOAT3(0.0f, 0.0f, -20.0f);
 
-	cpuEmitter = new CPUParticleEmitter(emitDesc);
+	CPUParticleEmitter* cpuEmitter = new CPUParticleEmitter(emitDesc);
+	//cpuEmitter->SetBlendingEnabled(true);
 
 	cpuEmitter->SetCollisionsEnabled([](void* collision) {
 		btPersistentManifold* manifold = (btPersistentManifold*)collision;
@@ -288,11 +284,7 @@ void Game::Init()
 		}
 	});
 
-	emitDesc.maxParticles = 2000;
-	emitDesc.particleInitMinScale = 0.25f;
-	emitDesc.particleInitMaxScale = 0.3f;
-	emitDesc.emissionRate = 100.0f;
-	gpuEmitter = new GPUParticleEmitter(emitDesc);
+
 
 	Entity* e;
 	for (size_t i = 0; i < EESceneLoader->sceneEntities.size(); i++)
@@ -380,14 +372,20 @@ void Game::Init()
 		cout << "TEST 2 - SUCCESS" << endl;
 	else
 		cout << "TEST 2 - FAILURE" << endl;
+
+	for (size_t i = 0; i < EESceneLoader->scriptPairs.size(); i++)
+	{
+		Scripts::CreateScript(EESceneLoader->scriptPairs[i].e, EESceneLoader->scriptPairs[i].script);
+	}
 }
 
 void Game::OnResize()
 {
 	DXCore::OnResize();
-	EECamera->UpdateProjectionMatrix();
+	EECamera->CalcProjMatrix();
 	EERenderer->InitDepthStencil();
 	EERenderer->InitHBAOPlus();
+	EERenderer->InitPostProcessRTV();
 }
 
 void Game::Update(double deltaTime, double totalTime)
@@ -397,8 +395,6 @@ void Game::Update(double deltaTime, double totalTime)
 		Quit();
 	}
 
-	EECamera->Update();
-
 	for (size_t i = 0; i < ScriptManager::scriptFunctions.size(); i++)
 	{
 		ScriptManager* sf = ScriptManager::scriptFunctions[i];
@@ -407,6 +403,8 @@ void Game::Update(double deltaTime, double totalTime)
 	}
 
 	GarbageCollect();
+
+	EECamera->Update();
 
 	PhysicsStep(deltaTime);
 
@@ -433,8 +431,11 @@ void Game::Update(double deltaTime, double totalTime)
 		sf->CallUpdate();
 	}
 
-	cpuEmitter->Update(deltaTime, totalTime, EERenderer->GetCamera("main")->GetViewMatrix());
-	gpuEmitter->Update(deltaTime, totalTime);
+	XMFLOAT4X4 view = EERenderer->GetCamera("main")->GetViewMatrix();
+	for (size_t i = 0; i < ParticleEmitter::EmitterVector.size(); i++)
+	{
+		ParticleEmitter::EmitterVector[i]->Update(deltaTime, totalTime, view);
+	}
 
 	int numManifolds = Config::DynamicsWorld->getDispatcher()->getNumManifolds();
 	for (int i = 0; i < numManifolds; i++)
@@ -485,6 +486,8 @@ void Game::Update(double deltaTime, double totalTime)
 			dbl->worldMatrix = EESceneLoader->sceneEntitiesMap[dbl->entityName]->GetCollider(dbl->colliderID)->GetWorldMatrix();
 		}
 	}
+
+	EECamera->Update();
 
 	//EEDecalHandler->UpdateDecals();
 
@@ -636,6 +639,7 @@ void Game::Draw(double deltaTime, double totalTime)
 	EERenderer->SendAllLightsToShader(EESceneLoader->pixelShadersMap["DEFAULT"]);
 	EERenderer->SendAllLightsToShader(EESceneLoader->pixelShadersMap["Normal"]);
 	EERenderer->SendAllLightsToShader(EESceneLoader->pixelShadersMap["Decal"]);
+	EERenderer->SendAllLightsToShader(EESceneLoader->pixelShadersMap["Fluid"]);
 	//EERenderer->SendAllLightsToShader(EESceneLoader->pixelShadersMap["Water"]);
 	//EERenderer->SendAllLightsToShader(EESceneLoader->pixelShadersMap["Terrain"]);
 
@@ -647,8 +651,16 @@ void Game::Draw(double deltaTime, double totalTime)
 
 	EERenderer->RenderSkybox();
 
-	cpuEmitter->Draw(EERenderer->GetCamera("main")->GetViewMatrix(), EERenderer->GetCamera("main")->GetProjMatrix());
-	gpuEmitter->Draw(EERenderer->GetCamera("main")->GetViewMatrix(), EERenderer->GetCamera("main")->GetProjMatrix());
+	XMFLOAT4X4 view = EERenderer->GetCamera("main")->GetViewMatrix();
+	XMFLOAT4X4 proj = EERenderer->GetCamera("main")->GetProjMatrix();
+	for (size_t i = 0; i < ParticleEmitter::EmitterVector.size(); i++)
+	{
+		ParticleEmitter::EmitterVector[i]->Draw(view, proj);
+	}
+
+	EERenderer->RenderTransparents();
+
+	EERenderer->RenderPostProcess();
 
 	EERenderer->PresentFrame();
 }
@@ -665,6 +677,8 @@ void Game::GarbageCollect()
 			EESceneLoader->sceneEntities.erase(EESceneLoader->sceneEntities.begin() + i - 1);
 
 			EEDecalHandler->DestroyDecals(name);
+
+			ParticleEmitter::KillEmitters(name);
 
 			if (Config::EtherealDebugLinesEnabled) {
 				DebugLines::debugLinesMap[name]->destroyed = true;
@@ -704,6 +718,19 @@ void Game::GarbageCollect()
 			delete d;
 		}
 	}
+
+	start = ParticleEmitter::EmitterVector.size();
+	for (size_t i = start; i > 0; i--)
+	{
+		ParticleEmitter* e = ParticleEmitter::EmitterVector[i - 1];
+		if (!e->isAlive) {
+			ParticleEmitter::EmitterVector.erase(ParticleEmitter::EmitterVector.begin() + i - 1);
+			ParticleEmitter::EmitterMap.erase(e->GetName());
+			delete e;
+		}
+	}
+
+	EELightHandler->GarbageCollect();
 }
 
 /*

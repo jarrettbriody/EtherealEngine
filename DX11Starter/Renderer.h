@@ -23,7 +23,7 @@ private:
 	int transparentObjectCount = 0;
 	int maxRenderObjects = 0;
 	int maxTransparentObjects = 0;
-	map<Entity*, vector<RenderObject*>> renderObjectsMap;
+	//map<string, vector<RenderObject*>> renderObjectsMap;
 
 	RendererShaders shaders;
 
@@ -37,11 +37,6 @@ private:
 	map<string, Light*> lights;
 	//map<string, Shadow> shadows;
 	unsigned int lightCount = 0;
-	ID3D11BlendState* blendState;
-	ShadowComponents shadowComponents;
-	DepthStencilComponents depthStencilComponents;
-	HBAOPlusComponents hbaoPlusComponents;
-	SkyboxComponents skyboxComponents;
 
 	ID3D11ShaderResourceView* decals[8];
 
@@ -54,6 +49,13 @@ public:
 	static Renderer* GetInstance();
 	static bool DestroyInstance();
 
+	ID3D11BlendState* blendState;
+	ShadowComponents shadowComponents;
+	DepthStencilComponents depthStencilComponents;
+	HBAOPlusComponents hbaoPlusComponents;
+	SkyboxComponents skyboxComponents;
+	PostProcessComponents postProcessComponents;
+
 	void SetEntities(vector<Entity*>* entities);
 	void SetRendererShaders(RendererShaders rShaders);
 	void SetDecals(ID3D11ShaderResourceView* decals[8]);
@@ -63,6 +65,7 @@ public:
 	void InitHBAOPlus();
 	void InitShadows(unsigned int cascadeCount = 3);
 	void InitSkybox();
+	void InitPostProcessRTV();
 	void SetSkybox(ID3D11ShaderResourceView* srv);
 	void SetShadowCascadeInfo(unsigned int cascadeIndex, unsigned int resolution, float nearPlane, float farPlane, float width, float height);
 
@@ -76,6 +79,8 @@ public:
 	void RenderShadowMap();
 	void RenderDepthStencil();
 	void RenderSkybox();
+	void RenderTransparents();
+	void RenderPostProcess();
 
 	bool AddCamera(string name, Camera* newCamera);
 	bool RemoveCamera(string name);
@@ -93,4 +98,5 @@ public:
 	void AddTransparentObject(Entity* e, Mesh* mesh, Material* mat = nullptr);
 
 	void SetRenderObjectCallback(Entity* e, RendererCallback* callback);
+	void SetPostProcess(bool toggle, RendererCallback* callback = nullptr);
 };

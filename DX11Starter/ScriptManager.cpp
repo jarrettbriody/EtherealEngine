@@ -8,7 +8,7 @@ map<string, Entity*>* ScriptManager::sceneEntitiesMap;
 vector<Entity*>* ScriptManager::sceneEntities;
 Renderer* ScriptManager::EERenderer;
 SceneLoader* ScriptManager::EESceneLoader;
-double ScriptManager::deltaTime;
+double ScriptManager::deltaTime = 0.0;
 
 void ScriptManager::CallInit()
 {
@@ -33,7 +33,8 @@ void ScriptManager::CallOnCollision(btCollisionObject* other)
 void ScriptManager::Setup(Entity* e, string scriptName)
 {
 	entity = e;
-	this->name = e->GetName();
+	this->name = scriptName;
+	string entityName = e->GetName();
 
 	this->EERenderer = Renderer::GetInstance();
 	this->EESceneLoader = SceneLoader::GetInstance();
@@ -42,12 +43,12 @@ void ScriptManager::Setup(Entity* e, string scriptName)
 
 	//add this script (and thereby all script function pointers) to the list of scripts
 	scriptFunctions.push_back(this);
-	if (!ScriptManager::scriptFunctionsMap.count(name)) {
-		ScriptManager::scriptFunctionsMap.insert({ this->name, map<string,ScriptManager*>() });
-		ScriptManager::scriptFunctionsMapVector.insert({ this->name, vector<ScriptManager*>() });
+	if (!ScriptManager::scriptFunctionsMap.count(entityName)) {
+		ScriptManager::scriptFunctionsMap.insert({ entityName, map<string,ScriptManager*>() });
+		ScriptManager::scriptFunctionsMapVector.insert({ entityName, vector<ScriptManager*>() });
 	}
-	ScriptManager::scriptFunctionsMap[this->name].insert({scriptName, this});
-	ScriptManager::scriptFunctionsMapVector[this->name].push_back(this);
+	ScriptManager::scriptFunctionsMap[entityName].insert({scriptName, this});
+	ScriptManager::scriptFunctionsMapVector[entityName].push_back(this);
 
 	setup = true;
 }

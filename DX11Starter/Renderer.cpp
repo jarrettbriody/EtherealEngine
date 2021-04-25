@@ -11,11 +11,11 @@ Renderer::~Renderer()
 {
 	for (size_t i = 0; i < shadowComponents.cascadeCount; i++)
 	{
-		if (shadowComponents.shadowCascades[i].shadowDSV)shadowComponents.shadowCascades[i].shadowDSV->Release();
-		if (shadowComponents.shadowCascades[i].shadowSRV)shadowComponents.shadowCascades[i].shadowSRV->Release();
+		if (shadowComponents.shadowCascades[i].DSV)shadowComponents.shadowCascades[i].DSV->Release();
+		if (shadowComponents.shadowCascades[i].SRV)shadowComponents.shadowCascades[i].SRV->Release();
 	}
-	if(shadowComponents.shadowRasterizer) shadowComponents.shadowRasterizer->Release();
-	if(shadowComponents.shadowSampler) shadowComponents.shadowSampler->Release();
+	if(shadowComponents.Rasterizer) shadowComponents.Rasterizer->Release();
+	if(shadowComponents.Sampler) shadowComponents.Sampler->Release();
 
 	if(depthStencilComponents.depthStencilDSV) depthStencilComponents.depthStencilDSV->Release();
 	if(depthStencilComponents.depthStencilSRV) depthStencilComponents.depthStencilSRV->Release();
@@ -29,8 +29,11 @@ Renderer::~Renderer()
 	if(depthStencilComponents.depthStencilState) depthStencilComponents.depthStencilState->Release();
 	if(depthStencilComponents.decalBlendState) depthStencilComponents.decalBlendState->Release();
 
-	if(skyboxComponents.skyDepthStencilState) skyboxComponents.skyDepthStencilState->Release();
-	if(skyboxComponents.skyRasterizer) skyboxComponents.skyRasterizer->Release();
+	if(skyboxComponents.DepthStencilState) skyboxComponents.DepthStencilState->Release();
+	if(skyboxComponents.Rasterizer) skyboxComponents.Rasterizer->Release();
+
+	if (postProcessComponents.RTV) postProcessComponents.RTV->Release();
+	if (postProcessComponents.SRV) postProcessComponents.SRV->Release();
 
 	blendState->Release();
 
@@ -82,7 +85,7 @@ void Renderer::CalcShadowMatrices(unsigned int cascadeIndex)
 		XMVectorSet(pos.x,pos.y,pos.z, 0),
 		XMVectorSet(dir.x, dir.y, dir.z, 0),
 		XMVectorSet(0, 1, 0, 0)));
-	XMStoreFloat4x4(&shadowComponents.shadowViewMatrix, shadowView);
+	XMStoreFloat4x4(&shadowComponents.view, shadowView);
 	shadowComponents.sunPos = pos;
 
 	XMMATRIX shadowProj = XMMatrixTranspose(XMMatrixOrthographicLH(
@@ -90,9 +93,9 @@ void Renderer::CalcShadowMatrices(unsigned int cascadeIndex)
 		shadowComponents.shadowCascades[cascadeIndex].height,
 		shadowComponents.shadowCascades[cascadeIndex].nearPlane,
 		shadowComponents.shadowCascades[cascadeIndex].farPlane));
-	XMStoreFloat4x4(&shadowComponents.shadowCascades[cascadeIndex].shadowProjectionMatrix, shadowProj);
+	XMStoreFloat4x4(&shadowComponents.shadowCascades[cascadeIndex].proj, shadowProj);
 
-	XMStoreFloat4x4(&shadowComponents.shadowCascades[cascadeIndex].shadowViewProj, XMMatrixTranspose(XMMatrixMultiply(shadowView, shadowProj)));
+	XMStoreFloat4x4(&shadowComponents.shadowCascades[cascadeIndex].viewProj, XMMatrixTranspose(XMMatrixMultiply(shadowView, shadowProj)));
 }
 
 bool Renderer::SetupInstance()
@@ -293,7 +296,7 @@ void Renderer::InitHBAOPlus()
 	memcpy(mat, proj.m, sizeof(float) * 16);
 	hbaoPlusComponents.Input.DepthData.ProjectionMatrix.Data = GFSDK_SSAO_Float4x4(mat);
 	hbaoPlusComponents.Input.DepthData.ProjectionMatrix.Layout = GFSDK_SSAO_COLUMN_MAJOR_ORDER;
-	hbaoPlusComponents.Input.DepthData.MetersToViewSpaceUnits = 0.5f;
+	hbaoPlusComponents.Input.DepthData.MetersToViewSpaceUnits = 1.0f;
 
 	//(3.) SET AO PARAMETERS
 
@@ -315,8 +318,8 @@ void Renderer::InitShadows(unsigned int cascadeCount)
 	{
 		// Create the actual texture that will be the shadow map
 		D3D11_TEXTURE2D_DESC shadowDesc = {};
-		shadowDesc.Width = shadowComponents.shadowCascades[i].shadowMapResolution;
-		shadowDesc.Height = shadowComponents.shadowCascades[i].shadowMapResolution;
+		shadowDesc.Width = shadowComponents.shadowCascades[i].resolution;
+		shadowDesc.Height = shadowComponents.shadowCascades[i].resolution;
 		shadowDesc.ArraySize = 1;
 		shadowDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE;
 		shadowDesc.CPUAccessFlags = 0;
@@ -334,7 +337,7 @@ void Renderer::InitShadows(unsigned int cascadeCount)
 		shadowDSDesc.Format = DXGI_FORMAT_D32_FLOAT;
 		shadowDSDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
 		shadowDSDesc.Texture2D.MipSlice = 0;
-		Config::Device->CreateDepthStencilView(shadowTexture, &shadowDSDesc, &shadowComponents.shadowCascades[i].shadowDSV);
+		Config::Device->CreateDepthStencilView(shadowTexture, &shadowDSDesc, &shadowComponents.shadowCascades[i].DSV);
 
 		// Create the SRV for the shadow map
 		D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
@@ -342,7 +345,7 @@ void Renderer::InitShadows(unsigned int cascadeCount)
 		srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
 		srvDesc.Texture2D.MipLevels = 1;
 		srvDesc.Texture2D.MostDetailedMip = 0;
-		Config::Device->CreateShaderResourceView(shadowTexture, &srvDesc, &shadowComponents.shadowCascades[i].shadowSRV);
+		Config::Device->CreateShaderResourceView(shadowTexture, &srvDesc, &shadowComponents.shadowCascades[i].SRV);
 
 		// Release the texture reference since we don't need it
 		shadowTexture->Release();
@@ -352,8 +355,8 @@ void Renderer::InitShadows(unsigned int cascadeCount)
 
 	// Create the special "comparison" sampler state for shadows
 	D3D11_SAMPLER_DESC shadowSampDesc = {};
-	shadowSampDesc.Filter = D3D11_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR; // Could be anisotropic
-	//shadowSampDesc.Filter = D3D11_FILTER_COMPARISON_ANISOTROPIC;
+	//shadowSampDesc.Filter = D3D11_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR; // Could be anisotropic
+	shadowSampDesc.Filter = D3D11_FILTER_COMPARISON_ANISOTROPIC;
 	shadowSampDesc.MaxAnisotropy = 16;
 	shadowSampDesc.ComparisonFunc = D3D11_COMPARISON_LESS;
 	shadowSampDesc.AddressU = D3D11_TEXTURE_ADDRESS_BORDER;
@@ -363,7 +366,7 @@ void Renderer::InitShadows(unsigned int cascadeCount)
 	shadowSampDesc.BorderColor[1] = 1.0f;
 	shadowSampDesc.BorderColor[2] = 1.0f;
 	shadowSampDesc.BorderColor[3] = 1.0f;
-	Config::Device->CreateSamplerState(&shadowSampDesc, &shadowComponents.shadowSampler);
+	Config::Device->CreateSamplerState(&shadowSampDesc, &shadowComponents.Sampler);
 
 	// Create a rasterizer state
 	D3D11_RASTERIZER_DESC shadowRastDesc = {};
@@ -373,7 +376,7 @@ void Renderer::InitShadows(unsigned int cascadeCount)
 	shadowRastDesc.DepthBias = 1000; // Multiplied by (smallest possible value > 0 in depth buffer)
 	shadowRastDesc.DepthBiasClamp = 0.0f;
 	shadowRastDesc.SlopeScaledDepthBias = 1.0f;
-	Config::Device->CreateRasterizerState(&shadowRastDesc, &shadowComponents.shadowRasterizer);
+	Config::Device->CreateRasterizerState(&shadowRastDesc, &shadowComponents.Rasterizer);
 }
 
 void Renderer::InitSkybox()
@@ -382,24 +385,66 @@ void Renderer::InitSkybox()
 	skyRD.CullMode = D3D11_CULL_FRONT;
 	skyRD.FillMode = D3D11_FILL_SOLID;
 	skyRD.DepthClipEnable = true;
-	Config::Device->CreateRasterizerState(&skyRD, &skyboxComponents.skyRasterizer);
+	Config::Device->CreateRasterizerState(&skyRD, &skyboxComponents.Rasterizer);
 
 	D3D11_DEPTH_STENCIL_DESC skyDS = {};
 	skyDS.DepthEnable = true;
 	skyDS.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
 	skyDS.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
-	Config::Device->CreateDepthStencilState(&skyDS, &skyboxComponents.skyDepthStencilState);
+	Config::Device->CreateDepthStencilState(&skyDS, &skyboxComponents.DepthStencilState);
+}
+
+void Renderer::InitPostProcessRTV()
+{
+	if (postProcessComponents.RTV) postProcessComponents.RTV->Release();
+	if (postProcessComponents.SRV) postProcessComponents.SRV->Release();
+
+	D3D11_TEXTURE2D_DESC textureDesc = {};
+	textureDesc.Width = Config::ViewPortWidth;
+	textureDesc.Height = Config::ViewPortHeight;
+	textureDesc.ArraySize = 1;
+	textureDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+	textureDesc.CPUAccessFlags = 0;
+	textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	textureDesc.MipLevels = 1;
+	textureDesc.MiscFlags = 0;
+	textureDesc.SampleDesc.Count = 1;
+	textureDesc.SampleDesc.Quality = 0;
+	textureDesc.Usage = D3D11_USAGE_DEFAULT;
+
+	ID3D11Texture2D* ppTexture;
+	Config::Device->CreateTexture2D(&textureDesc, 0, &ppTexture);
+
+	// Create the Render Target View
+	D3D11_RENDER_TARGET_VIEW_DESC rtvDesc = {};
+	rtvDesc.Format = textureDesc.Format;
+	rtvDesc.Texture2D.MipSlice = 0;
+	rtvDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+
+	Config::Device->CreateRenderTargetView(ppTexture, &rtvDesc, &postProcessComponents.RTV);
+
+	// Create the Shader Resource View
+	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+	srvDesc.Format = textureDesc.Format;
+	srvDesc.Texture2D.MipLevels = 1;
+	srvDesc.Texture2D.MostDetailedMip = 0;
+	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+
+	Config::Device->CreateShaderResourceView(ppTexture, &srvDesc, &postProcessComponents.SRV);
+
+	// We don't need the texture reference itself no mo'
+	ppTexture->Release();
 }
 
 void Renderer::SetSkybox(ID3D11ShaderResourceView* srv)
 {
-	skyboxComponents.skySRV = srv;
+	skyboxComponents.SRV = srv;
 }
 
 void Renderer::SetShadowCascadeInfo(unsigned int cascadeIndex, unsigned int resolution, float nearPlane, float farPlane, float width, float height)
 {
 	unsigned int exponent = (unsigned int)(log2((double)resolution) + 0.5);
-	shadowComponents.shadowCascades[cascadeIndex].shadowMapResolution = (unsigned int)(pow(2u, exponent) + 0.5);
+	shadowComponents.shadowCascades[cascadeIndex].resolution = (unsigned int)(pow(2u, exponent) + 0.5);
 	shadowComponents.shadowCascades[cascadeIndex].nearPlane = nearPlane;
 	shadowComponents.shadowCascades[cascadeIndex].farPlane = farPlane;
 	shadowComponents.shadowCascades[cascadeIndex].width = width;
@@ -444,6 +489,7 @@ void Renderer::ClearFrame()
 	//  - Do this ONCE PER FRAME
 	//  - At the beginning of Draw (before drawing *anything*)
 	Config::Context->ClearRenderTargetView(Config::BackBufferRTV, color);
+	Config::Context->ClearRenderTargetView(postProcessComponents.RTV, color);
 	Config::Context->ClearDepthStencilView(
 		Config::DepthStencilView,
 		D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL,
@@ -458,6 +504,8 @@ void Renderer::RenderFrame()
 
 	UINT stride = sizeof(Vertex);
 	UINT offset = 0;
+
+	if(postProcessComponents.enabled) Config::Context->OMSetRenderTargets(1, &postProcessComponents.RTV, Config::DepthStencilView);
 
 	ToggleBlendState(false);
 
@@ -475,16 +523,16 @@ void Renderer::RenderFrame()
 			ShadowData d;
 			for (size_t i = 0; i < MAX_SHADOW_CASCADES; i++)
 			{
-				d.shadowProjectionMatrix[i] = shadowComponents.shadowCascades[i].shadowProjectionMatrix;
-				d.shadowSRV[i] = shadowComponents.shadowCascades[i].shadowSRV;
+				d.shadowProjectionMatrix[i] = shadowComponents.shadowCascades[i].proj;
+				d.shadowSRV[i] = shadowComponents.shadowCascades[i].SRV;
 				d.nears[i] = shadowComponents.shadowCascades[i].nearPlane;
 				d.fars[i] = shadowComponents.shadowCascades[i].farPlane;
 				//d.range[i] = shadowComponents.shadowCascades[i].maxRange;
 				d.widthHeight[i] = XMFLOAT2(shadowComponents.shadowCascades[i].width, shadowComponents.shadowCascades[i].height);
 			}
 			d.sunPos = shadowComponents.sunPos;
-			d.shadowViewMatrix = shadowComponents.shadowViewMatrix;
-			d.shadowSampler = shadowComponents.shadowSampler;
+			d.shadowViewMatrix = shadowComponents.view;
+			d.shadowSampler = shadowComponents.Sampler;
 			d.cascadeCount = shadowComponents.cascadeCount;
 			e->SetShadowData(d);
 		}
@@ -504,6 +552,9 @@ void Renderer::RenderFrame()
 		if (callback != nullptr) {
 			if (callback->active && callback->vShader) {
 				callback->PreVertexShaderCallback();
+			}
+			if (callback->active && callback->pShader) {
+				callback->PrePixelShaderCallback();
 			}
 		}
 		e->PrepareMaterialForDraw(mat->GetName(), camera->GetViewMatrix(), camera->GetProjMatrix());
@@ -535,7 +586,7 @@ void Renderer::RenderFrame()
 		shaders.decalVS->SetFloat3("cameraPos", camera->position);
 
 		//shaders.decalPS->SetMatrix4x4("shadowViewProj", shadowComponents.shadowViewProj);
-		shaders.decalPS->SetMatrix4x4("shadowView", shadowComponents.shadowViewMatrix);
+		shaders.decalPS->SetMatrix4x4("shadowView", shadowComponents.view);
 
 		shaders.decalPS->SetFloat3("sunPos", shadowComponents.sunPos);
 		shaders.decalPS->SetShaderResourceView("DepthBuffer", depthStencilComponents.depthStencilSRV);
@@ -544,12 +595,12 @@ void Renderer::RenderFrame()
 		for (size_t i = 0; i < MAX_SHADOW_CASCADES; i++)
 		{
 			string str = to_string(i);
-			shaders.decalPS->SetShaderResourceView("ShadowMap" + str, shadowComponents.shadowCascades[i].shadowSRV);
-			shaders.decalPS->SetMatrix4x4("shadowProj" + str, shadowComponents.shadowCascades[i].shadowProjectionMatrix);
+			shaders.decalPS->SetShaderResourceView("ShadowMap" + str, shadowComponents.shadowCascades[i].SRV);
+			shaders.decalPS->SetMatrix4x4("shadowProj" + str, shadowComponents.shadowCascades[i].proj);
 			shaders.decalPS->SetFloat2("cascadeRange" + str, XMFLOAT2(shadowComponents.shadowCascades[i].width, shadowComponents.shadowCascades[i].height));
 		}
 
-		shaders.decalPS->SetSamplerState("ShadowSampler", shadowComponents.shadowSampler);
+		shaders.decalPS->SetSamplerState("ShadowSampler", shadowComponents.Sampler);
 		shaders.decalPS->SetFloat3("cameraPos", camera->position);
 
 		XMFLOAT4X4 world;
@@ -597,53 +648,14 @@ void Renderer::RenderFrame()
 		Config::Context->OMSetBlendState(NULL, 0, 0xFFFFFFFF);
 	}
 
-	ToggleBlendState(true);
-
-	stride = sizeof(Vertex);
-	offset = 0;
-
-	for (int i = transparentObjectCount - 1; i >= 0; i--)
-	{
-		RenderObject renderObject = transparentObjects[i];
-		Entity* e = renderObject.entity;
-		Mesh* mesh = renderObject.mesh;
-		Material* mat = renderObject.material;
-
-		if (e->destroyed || e->isEmptyObj) {
-			if (i != transparentObjectCount - 1) {
-				transparentObjects[i] = transparentObjects[transparentObjectCount - 1];
-			}
-			renderObjectsMap.erase(e);
-			transparentObjectCount--;
-			continue;
-		}
-
-		if (e->isEmptyObj) continue;
-
-		if (Config::SSAOEnabled) {
-			DepthStencilData d;
-			d.depthStencilSRV = depthStencilComponents.depthStencilSRV;
-			d.depthStencilSampler = depthStencilComponents.depthStencilSampler;
-			e->SetDepthStencilData(d);
-		}
-
-		ID3D11Buffer* vbo = mesh->GetVertexBuffer();
-		ID3D11Buffer* ind = mesh->GetIndexBuffer();
-		Config::Context->IASetVertexBuffers(0, 1, &vbo, &stride, &offset);
-		Config::Context->IASetIndexBuffer(ind, DXGI_FORMAT_R32_UINT, 0);
-
-		e->PrepareMaterialForDraw(mat->GetName(), camera->GetViewMatrix(), camera->GetProjMatrix());
-
-		Config::Context->DrawIndexed(
-			mesh->GetIndexCount(),		// The number of indices to use (we could draw a subset if we wanted)
-			0,											// Offset to the first index we want to use
-			0);											// Offset to add to each index when looking up vertices
-	}
-
 	if (Config::HBAOPlusEnabled) {
 		//(4.) RENDER AO
-
-		hbaoPlusComponents.status = hbaoPlusComponents.pAOContext->RenderAO(Config::Context, &hbaoPlusComponents.Input, &hbaoPlusComponents.Params, Config::BackBufferRTV);
+		if (postProcessComponents.enabled) {
+			hbaoPlusComponents.status = hbaoPlusComponents.pAOContext->RenderAO(Config::Context, &hbaoPlusComponents.Input, &hbaoPlusComponents.Params, postProcessComponents.RTV);
+		}
+		else {
+			hbaoPlusComponents.status = hbaoPlusComponents.pAOContext->RenderAO(Config::Context, &hbaoPlusComponents.Input, &hbaoPlusComponents.Params, Config::BackBufferRTV);
+		}
 		assert(hbaoPlusComponents.status == GFSDK_SSAO_OK);
 	}
 
@@ -698,16 +710,16 @@ void Renderer::RenderShadowMap()
 	for (size_t j = 0; j < shadowComponents.cascadeCount; j++)
 	{
 		// Initial setup - No RTV necessary - Clear shadow map
-		Config::Context->OMSetRenderTargets(0, 0, shadowComponents.shadowCascades[j].shadowDSV);
-		Config::Context->ClearDepthStencilView(shadowComponents.shadowCascades[j].shadowDSV, D3D11_CLEAR_DEPTH, 1.0f, 0);
-		Config::Context->RSSetState(shadowComponents.shadowRasterizer);
+		Config::Context->OMSetRenderTargets(0, 0, shadowComponents.shadowCascades[j].DSV);
+		Config::Context->ClearDepthStencilView(shadowComponents.shadowCascades[j].DSV, D3D11_CLEAR_DEPTH, 1.0f, 0);
+		Config::Context->RSSetState(shadowComponents.Rasterizer);
 
 		// SET A VIEWPORT!!!
 		vp = {};
 		vp.TopLeftX = 0;
 		vp.TopLeftY = 0;
-		vp.Width = (float)shadowComponents.shadowCascades[j].shadowMapResolution;
-		vp.Height = (float)shadowComponents.shadowCascades[j].shadowMapResolution;
+		vp.Width = (float)shadowComponents.shadowCascades[j].resolution;
+		vp.Height = (float)shadowComponents.shadowCascades[j].resolution;
 		vp.MinDepth = 0.0f;
 		vp.MaxDepth = 1.0f;
 		Config::Context->RSSetViewports(1, &vp);
@@ -716,8 +728,8 @@ void Renderer::RenderShadowMap()
 
 		// Set up the shaders
 		shaders.depthStencilVS->SetShader();
-		shaders.depthStencilVS->SetMatrix4x4("view", shadowComponents.shadowViewMatrix);
-		shaders.depthStencilVS->SetMatrix4x4("projection", shadowComponents.shadowCascades[j].shadowProjectionMatrix);
+		shaders.depthStencilVS->SetMatrix4x4("view", shadowComponents.view);
+		shaders.depthStencilVS->SetMatrix4x4("projection", shadowComponents.shadowCascades[j].proj);
 		//shaders.depthStencilPS->SetFloat3("cameraPosition", lights["Sun"]->Position);
 		//shaders.depthStencilPS->CopyAllBufferData();
 
@@ -737,11 +749,11 @@ void Renderer::RenderShadowMap()
 			Material* mat = renderObject.material;
 			RendererCallback* callback = renderObject.callback;
 
-			if (e->destroyed || e->isEmptyObj) {
+			if (e->destroyed) {
 				if (i != renderObjectCount - 1) {
 					renderObjects[i] = renderObjects[renderObjectCount - 1];
 				}
-				renderObjectsMap.erase(e);
+				//renderObjectsMap.erase(e->GetName());
 				renderObjectCount--;
 				continue;
 			}
@@ -763,8 +775,8 @@ void Renderer::RenderShadowMap()
 				if (callback->active && callback->prepassVShader) {
 					callback->prepassVShader->SetShader();
 					callback->prepassVShader->SetMatrix4x4("world", e->GetWorldMatrix());
-					callback->prepassVShader->SetMatrix4x4("view", shadowComponents.shadowViewMatrix);
-					callback->prepassVShader->SetMatrix4x4("projection", shadowComponents.shadowCascades[j].shadowProjectionMatrix);
+					callback->prepassVShader->SetMatrix4x4("view", shadowComponents.view);
+					callback->prepassVShader->SetMatrix4x4("projection", shadowComponents.shadowCascades[j].proj);
 					callback->PrePrepassVertexShaderCallback();
 					callback->prepassVShader->CopyAllBufferData();
 				}
@@ -832,6 +844,7 @@ void Renderer::RenderDepthStencil()
 	for (int i = renderObjectCount - 1; i >= 0; i--)
 	{
 		shaders.depthStencilVS->SetShader();
+		shaders.depthStencilPS->SetShader();
 
 		RenderObject renderObject = renderObjects[i];
 		Entity* e = renderObject.entity;
@@ -871,8 +884,23 @@ void Renderer::RenderDepthStencil()
 
 		entityInfo = 0;
 		entityInfo = Config::EntityLayers[e->layer.STDStr()];
-		shaders.depthStencilPS->SetInt("entityInfo", entityInfo);
-		shaders.depthStencilPS->CopyAllBufferData();
+		if (callback != nullptr) {
+			if (callback->active && callback->prepassPShader) {
+				callback->prepassPShader->SetShader();
+				callback->prepassPShader->SetInt("entityInfo", entityInfo);
+				callback->prepassPShader->SetFloat3("cameraPosition", camera->position);
+				callback->PrePrepassPixelShaderCallback();
+				callback->prepassPShader->CopyAllBufferData();
+			}
+			else {
+				shaders.depthStencilPS->SetInt("entityInfo", entityInfo);
+				shaders.depthStencilPS->CopyAllBufferData();
+			}
+		}
+		else {
+			shaders.depthStencilPS->SetInt("entityInfo", entityInfo);
+			shaders.depthStencilPS->CopyAllBufferData();
+		}
 
 		// Finally do the actual drawing
 		Config::Context->DrawIndexed(mesh->GetIndexCount(), 0, 0);
@@ -900,17 +928,132 @@ void Renderer::RenderSkybox()
 		shaders.skyVS->CopyAllBufferData();
 		shaders.skyVS->SetShader();
 
-		shaders.skyPS->SetShaderResourceView("Sky", skyboxComponents.skySRV);
+		shaders.skyPS->SetShaderResourceView("Sky", skyboxComponents.SRV);
 		shaders.skyPS->SetSamplerState("BasicSampler", Config::Sampler);
 		shaders.skyPS->SetShader();
 
-		Config::Context->RSSetState(skyboxComponents.skyRasterizer);
-		Config::Context->OMSetDepthStencilState(skyboxComponents.skyDepthStencilState, 0);
+		Config::Context->RSSetState(skyboxComponents.Rasterizer);
+		Config::Context->OMSetDepthStencilState(skyboxComponents.DepthStencilState, 0);
 
 		Config::Context->DrawIndexed(cube->GetIndexCount(), 0, 0);
 
 		Config::Context->RSSetState(0);
 		Config::Context->OMSetDepthStencilState(0, 0);
+}
+
+void Renderer::RenderTransparents()
+{
+	ToggleBlendState(true);
+
+	UINT stride = sizeof(Vertex);
+	UINT offset = 0;
+
+	for (int i = transparentObjectCount - 1; i >= 0; i--)
+	{
+		RenderObject renderObject = transparentObjects[i];
+		Entity* e = renderObject.entity;
+		Mesh* mesh = renderObject.mesh;
+		Material* mat = renderObject.material;
+		RendererCallback* callback = renderObject.callback;
+
+		if (e->destroyed || e->isEmptyObj) {
+			if (i != transparentObjectCount - 1) {
+				transparentObjects[i] = transparentObjects[transparentObjectCount - 1];
+			}
+			//renderObjectsMap.erase(e->GetName());
+			transparentObjectCount--;
+			continue;
+		}
+
+		if (e->isEmptyObj) continue;
+
+		e->ToggleShadows(Config::ShadowsEnabled);
+		if (Config::ShadowsEnabled) {
+			ShadowData d;
+			for (size_t i = 0; i < MAX_SHADOW_CASCADES; i++)
+			{
+				d.shadowProjectionMatrix[i] = shadowComponents.shadowCascades[i].proj;
+				d.shadowSRV[i] = shadowComponents.shadowCascades[i].SRV;
+				d.nears[i] = shadowComponents.shadowCascades[i].nearPlane;
+				d.fars[i] = shadowComponents.shadowCascades[i].farPlane;
+				//d.range[i] = shadowComponents.shadowCascades[i].maxRange;
+				d.widthHeight[i] = XMFLOAT2(shadowComponents.shadowCascades[i].width, shadowComponents.shadowCascades[i].height);
+			}
+			d.sunPos = shadowComponents.sunPos;
+			d.shadowViewMatrix = shadowComponents.view;
+			d.shadowSampler = shadowComponents.Sampler;
+			d.cascadeCount = shadowComponents.cascadeCount;
+			e->SetShadowData(d);
+		}
+
+		if (Config::SSAOEnabled) {
+			DepthStencilData d;
+			d.depthStencilSRV = depthStencilComponents.depthStencilSRV;
+			d.depthStencilSampler = depthStencilComponents.depthStencilSampler;
+			e->SetDepthStencilData(d);
+		}
+
+		ID3D11Buffer* vbo = mesh->GetVertexBuffer();
+		ID3D11Buffer* ind = mesh->GetIndexBuffer();
+		Config::Context->IASetVertexBuffers(0, 1, &vbo, &stride, &offset);
+		Config::Context->IASetIndexBuffer(ind, DXGI_FORMAT_R32_UINT, 0);
+
+		if (callback != nullptr) {
+			if (callback->active && callback->vShader) {
+				callback->PreVertexShaderCallback();
+			}
+			if (callback->active && callback->pShader) {
+				callback->PrePixelShaderCallback();
+			}
+		}
+
+		e->PrepareMaterialForDraw(mat->GetName(), camera->GetViewMatrix(), camera->GetProjMatrix());
+
+		Config::Context->DrawIndexed(
+			mesh->GetIndexCount(),		// The number of indices to use (we could draw a subset if we wanted)
+			0,											// Offset to the first index we want to use
+			0);											// Offset to add to each index when looking up vertices
+
+		mat->GetPixelShader()->SetShaderResourceView("ShadowMap0", NULL);
+		mat->GetPixelShader()->SetShaderResourceView("ShadowMap1", NULL);
+		mat->GetPixelShader()->SetShaderResourceView("ShadowMap2", NULL);
+		mat->GetPixelShader()->SetShaderResourceView("ShadowMap3", NULL);
+	}
+	ToggleBlendState(false);
+}
+
+void Renderer::RenderPostProcess()
+{
+	if (!postProcessComponents.enabled) return;
+
+	UINT stride = sizeof(Vertex);
+	UINT offset = 0;
+
+	Config::Context->OMSetRenderTargets(1, &Config::BackBufferRTV, 0);
+
+	postProcessComponents.callback->vShader->SetShader();
+	postProcessComponents.callback->PreVertexShaderCallback();
+	postProcessComponents.callback->vShader->CopyAllBufferData();
+
+	postProcessComponents.callback->pShader->SetShader();
+	postProcessComponents.callback->PrePixelShaderCallback();
+	postProcessComponents.callback->pShader->SetShaderResourceView("Pixels", postProcessComponents.SRV);
+	postProcessComponents.callback->pShader->SetSamplerState("Sampler", Config::Sampler);
+	postProcessComponents.callback->pShader->SetFloat("pixelWidth", 1.0f / Config::ViewPortWidth);
+	postProcessComponents.callback->pShader->SetFloat("pixelHeight", 1.0f / Config::ViewPortHeight);
+	postProcessComponents.callback->pShader->CopyAllBufferData();
+	
+	// Deactivate vertex and index buffers
+	ID3D11Buffer* nothing = 0;
+	Config::Context->IASetVertexBuffers(0, 1, &nothing, &stride, &offset);
+	Config::Context->IASetIndexBuffer(0, DXGI_FORMAT_R32_UINT, 0);
+
+	// Draw a set number of vertices
+	Config::Context->Draw(3, 0);
+
+	// Unbind all pixel shader SRVs
+	ID3D11ShaderResourceView* nullSRVs[16] = {};
+	Config::Context->PSSetShaderResources(0, 16, nullSRVs);
 }
 
 bool Renderer::AddCamera(string name, Camera* newCamera)
@@ -1032,8 +1175,8 @@ void Renderer::AddRenderObject(Entity* e, Mesh* mesh, Material* mat)
 	if (!mesh->HasChildren()) {
 		r = { e, mesh, mat };
 		(*objects)[count] = r;
-		if (!renderObjectsMap.count(e)) renderObjectsMap.insert({ e, vector<RenderObject*>() });
-		renderObjectsMap[e].push_back(&(*objects)[count]);
+		//if (!renderObjectsMap.count(e->GetName())) renderObjectsMap.insert({ e->GetName(), vector<RenderObject*>() });
+		//renderObjectsMap[e->GetName()].push_back(&(*objects)[count]);
 		count++;
 		if (count >= maxObjects) {
 			RenderObject* oldObjects = *objects;
@@ -1050,8 +1193,8 @@ void Renderer::AddRenderObject(Entity* e, Mesh* mesh, Material* mat)
 		{
 			r = { e, children[i], e->GetMaterial(e->GetMeshMaterialName(i)) };
 			(*objects)[count] = r;
-			if (!renderObjectsMap.count(e)) renderObjectsMap.insert({ e, vector<RenderObject*>() });
-			renderObjectsMap[e].push_back(&(*objects)[count]);
+			//if (!renderObjectsMap.count(e->GetName())) renderObjectsMap.insert({ e->GetName(), vector<RenderObject*>() });
+			//renderObjectsMap[e->GetName()].push_back(&(*objects)[count]);
 			count++;
 			if (count >= maxObjects) {
 				RenderObject* oldObjects = *objects;
@@ -1067,9 +1210,28 @@ void Renderer::AddRenderObject(Entity* e, Mesh* mesh, Material* mat)
 
 void Renderer::SetRenderObjectCallback(Entity* e, RendererCallback* callback)
 {
-	int num = renderObjectsMap[e].size();
+	/*int num = renderObjectsMap[e->GetName()].size();
 	for (int i = 0; i < num; i++)
 	{
-		renderObjectsMap[e][i]->callback = callback;
+		renderObjectsMap[e->GetName()][i]->callback = callback;
+	}*/
+	for (size_t i = 0; i < renderObjectCount; i++)
+	{
+		if (renderObjects[i].entity == e) {
+			renderObjects[i].callback = callback;
+		}
 	}
+	for (size_t i = 0; i < transparentObjectCount; i++)
+	{
+		if (transparentObjects[i].entity == e) {
+			transparentObjects[i].callback = callback;
+		}
+	}
+}
+
+void Renderer::SetPostProcess(bool toggle, RendererCallback* callback)
+{
+	postProcessComponents.enabled = toggle;
+	if (!toggle || (toggle && callback == nullptr)) return;
+	postProcessComponents.callback = callback;
 }

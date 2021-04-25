@@ -207,9 +207,9 @@ void GPUParticleEmitter::InitBuffers()
 	blend.AlphaToCoverageEnable = false;
 	blend.IndependentBlendEnable = false;
 	blend.RenderTarget[0].BlendEnable = true;
-	blend.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
-	blend.RenderTarget[0].SrcBlend = D3D11_BLEND_ONE;
-	blend.RenderTarget[0].DestBlend = D3D11_BLEND_ONE;
+	blend.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD; 
+	blend.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+	blend.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
 	blend.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
 	blend.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
 	blend.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ONE;
@@ -245,6 +245,8 @@ void GPUParticleEmitter::Update(double deltaTime, double totalTime, XMFLOAT4X4 v
 	// Reset UAVs (potential issue with setting the following ones)
 	Config::Context->CSSetUnorderedAccessViews(0, 8, noneUAV, 0);
 
+	float randomNumbers[128];
+
 	// Track time
 	while (emitTimeCounter >= emissionRate)
 	{
@@ -264,6 +266,7 @@ void GPUParticleEmitter::Update(double deltaTime, double totalTime, XMFLOAT4X4 v
 		emitCS->SetInt("emitCount", emitCount);
 		emitCS->SetInt("maxParticles", (int)maxParticles);
 		emitCS->SetInt("colorCount", colorCount);
+		emitCS->SetInt("textureCount", textureCount);
 
 		emitCS->SetFloat("emissionStartRadius", emissionStartRadius);
 		emitCS->SetFloat("emissionEndRadius", emissionEndRadius);
@@ -275,21 +278,21 @@ void GPUParticleEmitter::Update(double deltaTime, double totalTime, XMFLOAT4X4 v
 		emitCS->SetFloat("particleInitMaxAngularVelocity", particleInitMaxAngularVelocity);
 		emitCS->SetFloat("particleInitMinSpeed", particleInitMinSpeed);
 		emitCS->SetFloat("particleInitMaxSpeed", particleInitMaxSpeed);
+		emitCS->SetMatrix4x4("world", worldMatrix);
+		emitCS->SetInt("bakeWorldMat", (int)bakeWorldMatOnEmission);
 
-		float randNum = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
-		float randNum2 = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
-		float randNum3 = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
-		float randNum4 = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
-		float randNum5 = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
-		emitCS->SetFloat("randomNum", randNum);
-		emitCS->SetFloat("randomNum2", randNum2);
-		emitCS->SetFloat("randomNum3", randNum3);
-		emitCS->SetFloat("randomNum4", randNum4);
-		emitCS->SetFloat("randomNum5", randNum5);
+		int randNumCnt = min(emitCount*2 + 6, MAX_RANDOM_NUMS);
+		for (int i = 0; i < randNumCnt; i++)
+		{
+			randomNumbers[i] = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+		}
+		emitCS->SetData("randomNumbers", randomNumbers, sizeof(float) * MAX_RANDOM_NUMS);
+		//emitCS->SetInt("randNumCount", randNumCnt);
 
 		emitCS->SetFloat3("particleAcceleration", particleAcceleration);
 
-		emitCS->SetData("colors", &colors[0], sizeof(ParticleColor) * MAX_PARTICLE_COLORS);
+		emitCS->SetData("colors", colors, sizeof(ParticleColor) * MAX_PARTICLE_COLORS);
+		emitCS->SetData("textures", texturesToGPU, sizeof(ParticleTextureToGPU) * MAX_PARTICLE_TEXTURES);
 		emitCS->SetUnorderedAccessView("ParticlePool", particlePoolUAV);
 		emitCS->SetUnorderedAccessView("DeadParticles", particleDeadUAV);
 		emitCS->CopyAllBufferData();
@@ -304,6 +307,12 @@ void GPUParticleEmitter::Update(double deltaTime, double totalTime, XMFLOAT4X4 v
 	updateCS->SetFloat("totalTime", totalTime);
 	updateCS->SetFloat("lifetime", lifetime);
 	updateCS->SetInt("maxParticles", maxParticles);
+	updateCS->SetFloat("fadeOutStartTime", fadeOutStartTime);
+	updateCS->SetInt("fadeOut", (int)fadeOut);
+	updateCS->SetFloat("fadeInEndTime", fadeInEndTime);
+	updateCS->SetInt("fadeIn", (int)fadeIn);
+	updateCS->SetFloat("particleAvgLifetime", particleAvgLifetime);
+	//updateCS->SetFloat3("cameraPos", XMFLOAT3(view._14, view._24, view._34));
 	updateCS->SetUnorderedAccessView("ParticlePool", particlePoolUAV);
 	updateCS->SetUnorderedAccessView("DeadParticles", particleDeadUAV);
 	updateCS->SetUnorderedAccessView("ParticleDrawList", particleDrawUAV, 0); // Reset counter for update!
@@ -347,11 +356,15 @@ void GPUParticleEmitter::Draw(XMFLOAT4X4 view, XMFLOAT4X4 proj)
 	defaultShaders.particleVS->CopyAllBufferData();
 
 	defaultShaders.particlePS->SetShader();
+	defaultShaders.particlePS->SetShaderResourceView("particleTextures", texturesSRV);
+	defaultShaders.particlePS->SetSamplerState("Sampler", Config::Sampler);
 
 	// Draw using indirect args
 	Config::Context->DrawIndexedInstancedIndirect(drawArgsBuffer, 0);
 
 	Config::Context->VSSetShaderResources(0, 16, noneSRV);
+
+	defaultShaders.particlePS->SetShaderResourceView("particleTextures", NULL);
 
 	if (blendingEnabled)
 	{

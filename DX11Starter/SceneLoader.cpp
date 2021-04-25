@@ -11,6 +11,12 @@ SceneLoader::SceneLoader()
 SceneLoader::~SceneLoader()
 {
 	//defaults
+	for (auto texMapIter = texture2DMap.begin(); texMapIter != texture2DMap.end(); ++texMapIter)
+	{
+		texMapIter->second->Release();
+		//cout << "Deleting " << texMapIter->first << endl;
+	}
+
 	for (auto texMapIter = defaultTexturesMap.begin(); texMapIter != defaultTexturesMap.end(); ++texMapIter)
 	{
 		texMapIter->second->Release();
@@ -104,10 +110,15 @@ Mesh* SceneLoader::LoadMesh(string meshName, string meshPath, map<string, Mesh*>
 	return allocMesh;
 }
 
-ID3D11ShaderResourceView* SceneLoader::LoadTexture(string texName, string texPath, map<string, ID3D11ShaderResourceView*>& texMap)
+ID3D11ShaderResourceView* SceneLoader::LoadTexture(string texName, string texPath, map<string, ID3D11ShaderResourceView*>& texMap, bool keepTex2D)
 {
-	ID3D11ShaderResourceView* tex = Utility::LoadSRV(texPath);
+	ID3D11Resource* tex2D = nullptr;
+	ID3D11ShaderResourceView* tex = Utility::LoadSRV(texPath, keepTex2D ? &tex2D : nullptr);
 	texMap.insert({ texName, tex });
+	if (keepTex2D) {
+		ID3D11Texture2D* newTex2D = reinterpret_cast<ID3D11Texture2D*>(tex2D);
+		texture2DMap.insert({ texName, newTex2D });
+	}
 	return tex;
 }
 
@@ -283,7 +294,12 @@ void SceneLoader::LoadAssetPreloadFile()
 						if (regex_search(line, match, pathRegex)) {
 							string path = match[1];
 
-							LoadTexture(name, path, defaultTexturesMap);
+							bool saveTex = false;
+							if (regex_search(line, match, texArrayRegex)) {
+								saveTex = (match[1] == "true" || match[1] == "TRUE");
+							}
+
+							LoadTexture(name, path, defaultTexturesMap, saveTex);
 						}
 						else continue;
 						break;
@@ -843,17 +859,6 @@ void SceneLoader::LoadScene(string sceneName)
 				if (regex_search(line, match, layerNameRegex))
 					allocatedEntity->layer = match[1];
 
-				//check for scripts
-				if (regex_search(line, match, scriptNamesRegex)) {
-					string scripts = match[1].str();
-					std::sregex_iterator iter(scripts.begin(), scripts.end(), scriptNamesIteratorRegex);
-					for (; iter != std::sregex_iterator(); ++iter) {
-						match = *iter;
-						string script = match.str();
-						scriptCallback(allocatedEntity, script);
-					}
-				}
-
 				//check for transformation data associated with this entity
 				if (regex_search(line, match, transformationDataRegex)) {
 					string transformData = match[0];
@@ -943,6 +948,18 @@ void SceneLoader::LoadScene(string sceneName)
 								dl->GenerateCuboidVertexBuffer(colliderCorners, 8);
 							}
 						}
+					}
+				}
+
+				//check for scripts
+				if (regex_search(line, match, scriptNamesRegex)) {
+					string scripts = match[1].str();
+					std::sregex_iterator iter(scripts.begin(), scripts.end(), scriptNamesIteratorRegex);
+					for (; iter != std::sregex_iterator(); ++iter) {
+						match = *iter;
+						string script = match.str();
+						//scriptCallback(allocatedEntity, script);
+						scriptPairs.push_back({ allocatedEntity, script });
 					}
 				}
 			}

@@ -28,17 +28,11 @@
     <FxCompile Include="DefaultPS_SSAO.hlsl">
       <Filter>EEShaders\Pixel Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="DepthStencilVS.hlsl">
-      <Filter>EEShaders\Vertex Shaders</Filter>
-    </FxCompile>
     <FxCompile Include="DecalPS.hlsl">
       <Filter>EEShaders\Pixel Shaders</Filter>
     </FxCompile>
     <FxCompile Include="DecalVS.hlsl">
       <Filter>EEShaders\Vertex Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="DepthStencilPS.hlsl">
-      <Filter>EEShaders\Pixel Shaders</Filter>
     </FxCompile>
     <FxCompile Include="InitDeadListCS.hlsl">
       <Filter>EEShaders\Compute Shaders</Filter>
@@ -52,23 +46,41 @@
     <FxCompile Include="UpdateParticleCS.hlsl">
       <Filter>EEShaders\Compute Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="ParticlePS.hlsl">
-      <Filter>EEShaders\Pixel Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="ParticleVS.hlsl">
-      <Filter>EEShaders\Vertex Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="CPUParticleVS.hlsl">
-      <Filter>EEShaders\Vertex Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="CPUParticlePS.hlsl">
-      <Filter>EEShaders\Pixel Shaders</Filter>
-    </FxCompile>
     <FxCompile Include="FluidVS.hlsl">
       <Filter>EEShaders\Vertex Shaders</Filter>
     </FxCompile>
+    <FxCompile Include="DashBlurPS.hlsl">
+      <Filter>EEShaders\Pixel Shaders\Post Process</Filter>
+    </FxCompile>
+    <FxCompile Include="PostProcessVS.hlsl">
+      <Filter>EEShaders\Vertex Shaders\Post Process</Filter>
+    </FxCompile>
+    <FxCompile Include="DepthStencilVS.hlsl">
+      <Filter>EEShaders\Vertex Shaders\Render Prepass</Filter>
+    </FxCompile>
     <FxCompile Include="FluidPrepassVS.hlsl">
-      <Filter>EEShaders\Vertex Shaders</Filter>
+      <Filter>EEShaders\Vertex Shaders\Render Prepass</Filter>
+    </FxCompile>
+    <FxCompile Include="DepthStencilPS.hlsl">
+      <Filter>EEShaders\Pixel Shaders\Render Prepass</Filter>
+    </FxCompile>
+    <FxCompile Include="CPUParticlePS.hlsl">
+      <Filter>EEShaders\Pixel Shaders\Particle System</Filter>
+    </FxCompile>
+    <FxCompile Include="ParticlePS.hlsl">
+      <Filter>EEShaders\Pixel Shaders\Particle System</Filter>
+    </FxCompile>
+    <FxCompile Include="ParticleVS.hlsl">
+      <Filter>EEShaders\Vertex Shaders\Particle System</Filter>
+    </FxCompile>
+    <FxCompile Include="CPUParticleVS.hlsl">
+      <Filter>EEShaders\Vertex Shaders\Particle System</Filter>
+    </FxCompile>
+    <FxCompile Include="FluidPS.hlsl">
+      <Filter>EEShaders\Pixel Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="FluidPrepassPS.hlsl">
+      <Filter>EEShaders\Pixel Shaders\Render Prepass</Filter>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
@@ -155,6 +167,15 @@
     </ClCompile>
     <ClCompile Include="CPUParticleEmitter.cpp">
       <Filter>EECore\Source Files\Particle System</Filter>
+    </ClCompile>
+    <ClCompile Include="BloodOrb.cpp">
+      <Filter>EEScripts\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="AmbientParticles.cpp">
+      <Filter>EEScripts\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="LightHandler.cpp">
+      <Filter>EECore\Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -272,6 +293,15 @@
     <ClInclude Include="RendererStructs.h">
       <Filter>EECore\Utility\Structs</Filter>
     </ClInclude>
+    <ClInclude Include="BloodOrb.h">
+      <Filter>EEScripts\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="AmbientParticles.h">
+      <Filter>EEScripts\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="LightHandler.h">
+      <Filter>EECore\Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config">
@@ -353,6 +383,24 @@
     </Filter>
     <Filter Include="EECore\Header Files\BehaviorTree">
       <UniqueIdentifier>{7b3ba34d-b5cb-4d23-8da0-1e3cae118d2c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="EEShaders\Pixel Shaders\Post Process">
+      <UniqueIdentifier>{cf732fcd-48b9-4540-b758-601c9faf93c4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="EEShaders\Vertex Shaders\Post Process">
+      <UniqueIdentifier>{c1c0f0ef-ba73-4d78-a93b-16f782d6fd26}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="EEShaders\Vertex Shaders\Render Prepass">
+      <UniqueIdentifier>{fe053bd4-c651-4fac-8d50-a4a4a7b7c037}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="EEShaders\Pixel Shaders\Render Prepass">
+      <UniqueIdentifier>{ce4f6d2c-2ce7-4002-80a4-1d1e16bfabee}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="EEShaders\Pixel Shaders\Particle System">
+      <UniqueIdentifier>{d01444b4-8ceb-4880-88e3-ce935d3460d8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="EEShaders\Vertex Shaders\Particle System">
+      <UniqueIdentifier>{199272bf-d11b-4187-b0f9-e77493b049aa}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

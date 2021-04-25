@@ -31,6 +31,11 @@ struct EntityCreationParameters {
 	bool drawShadow = true;
 };
 
+struct ScriptPair {
+	Entity* e;
+	string script;
+};
+
 class SceneLoader
 {
 private:
@@ -80,6 +85,8 @@ private:
 	regex shaderTypeRegex = regex("shaderType=\"(\\w+)\""); //get shader type
 
 	regex pathRegex = regex("path=\"(.+)\""); //get path to thing
+
+	regex texArrayRegex = regex("array=\"(\\w+)\"");
 
 	regex vShaderRegex = regex("vShader=\"(\\w+)\"");
 	regex pShaderRegex = regex("pShader=\"(\\w+)\"");
@@ -145,12 +152,14 @@ private:
 
 	Mesh* LoadMesh(string meshName, string meshPath, map<string,Mesh*>& meshMap);
 
-	ID3D11ShaderResourceView* LoadTexture(string texName, string texPath, map<string, ID3D11ShaderResourceView*>& texMap);
+	ID3D11ShaderResourceView* LoadTexture(string texName, string texPath, map<string, ID3D11ShaderResourceView*>& texMap, bool keepTex2D = false);
 
 	Material* CreateMaterial(string name, MaterialData matData, string vertShaderName, string pixelShaderName, map<string, Material*>& matMap);
 public:
 	MemoryAllocator* EEMemoryAllocator = nullptr;
 	Renderer* EERenderer = nullptr;
+
+	vector<ScriptPair> scriptPairs;
 
 	map<string, SimpleVertexShader*> vertexShadersMap;
 	map<string, SimplePixelShader*> pixelShadersMap;
@@ -167,6 +176,7 @@ public:
 
 	map<string, ID3D11ShaderResourceView*> defaultTexturesMap;
 	map<string, ID3D11ShaderResourceView*> generatedTexturesMap;
+	map<string, ID3D11Texture2D*> texture2DMap;
 
 	map<string, Material*> defaultMaterialsMap;
 	map<string, Material*> generatedMaterialsMap;

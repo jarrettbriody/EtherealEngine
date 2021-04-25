@@ -11,6 +11,7 @@ struct RendererShaders {
 	SimplePixelShader* decalPS = nullptr;
 	SimpleVertexShader* skyVS = nullptr;
 	SimplePixelShader* skyPS = nullptr;
+	SimpleVertexShader* postProcessVS = nullptr;
 };
 
 struct RendererCallback {
@@ -33,28 +34,28 @@ struct RenderObject {
 	Entity* entity;
 	Mesh* mesh;
 	Material* material;
-	RendererCallback* callback;
+	RendererCallback* callback = nullptr;
 };
 
 struct ShadowCascade {
-	ID3D11DepthStencilView* shadowDSV = nullptr;
-	ID3D11ShaderResourceView* shadowSRV = nullptr;
-	unsigned int shadowMapResolution = 2048;
+	ID3D11DepthStencilView* DSV = nullptr;
+	ID3D11ShaderResourceView* SRV = nullptr;
+	unsigned int resolution = 2048;
 	float nearPlane = 0.1f;
 	float farPlane = 1000.0f;
 	float width = 250.f;
 	float height = 250.f;
 	//float maxRange = 1000.0f;
-	DirectX::XMFLOAT4X4 shadowProjectionMatrix;
-	DirectX::XMFLOAT4X4 shadowViewProj;
+	DirectX::XMFLOAT4X4 proj;
+	DirectX::XMFLOAT4X4 viewProj;
 };
 
 struct ShadowComponents {
 	ShadowCascade shadowCascades[MAX_SHADOW_CASCADES];
 	unsigned int cascadeCount = 1;
-	ID3D11SamplerState* shadowSampler = nullptr;
-	ID3D11RasterizerState* shadowRasterizer = nullptr;
-	DirectX::XMFLOAT4X4 shadowViewMatrix;
+	ID3D11SamplerState* Sampler = nullptr;
+	ID3D11RasterizerState* Rasterizer = nullptr;
+	DirectX::XMFLOAT4X4 view;
 	XMFLOAT3 sunPos;
 };
 
@@ -81,7 +82,14 @@ struct HBAOPlusComponents {
 };
 
 struct SkyboxComponents {
-	ID3D11ShaderResourceView* skySRV = nullptr;
-	ID3D11RasterizerState* skyRasterizer = nullptr;
-	ID3D11DepthStencilState* skyDepthStencilState = nullptr;
+	ID3D11ShaderResourceView* SRV = nullptr;
+	ID3D11RasterizerState* Rasterizer = nullptr;
+	ID3D11DepthStencilState* DepthStencilState = nullptr;
+};
+
+struct PostProcessComponents {
+	bool enabled = false;
+	ID3D11RenderTargetView* RTV = nullptr;
+	ID3D11ShaderResourceView* SRV = nullptr;
+	RendererCallback* callback = nullptr;
 };

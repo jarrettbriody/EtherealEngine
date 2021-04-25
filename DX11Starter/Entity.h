@@ -88,6 +88,7 @@ public:
 	void SetWorldMatrix(XMFLOAT4X4 matrix);
 	DirectX::XMFLOAT4X4 GetWorldMatrix();
 	DirectX::XMFLOAT4X4 GetInverseWorldMatrix();
+	XMFLOAT4X4* GetWorldMatrixPtr();
 	DirectX::XMFLOAT3 GetPosition();
 	DirectX::XMFLOAT3 GetScale();
 	DirectX::XMFLOAT3 GetEulerAngles();

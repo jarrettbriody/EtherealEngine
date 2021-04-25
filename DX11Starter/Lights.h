@@ -17,3 +17,12 @@ struct Light {
 	float SpotFalloff;
 	XMFLOAT3 Padding;
 };
+
+/*
+struct LightParentPair {
+	string lightName;
+	Light* light;
+	string parentName;
+	XMFLOAT4X4* parentWorld;
+};
+*/

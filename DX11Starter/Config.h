@@ -17,8 +17,10 @@
 #define MAX_KERNEL_SAMPLES 32
 #define MAX_DECALS_PER_ENTITY 128
 #define MAX_PARTICLE_COLORS 16
+#define MAX_PARTICLE_TEXTURES 8
 #define MAX_SHADOW_CASCADES 4
 #define MAX_LIGHTS 32
+#define MAX_RANDOM_NUMS 128
 
 enum class MESH_TYPE {
 	LOAD_FAILURE = -1,
@@ -32,6 +34,7 @@ enum class MEMORY_POOL {
 	MESH_POOL = 1,
 	MATERIAL_POOL = 2,
 	DECAL_POOL = 3,
+	LIGHT_POOL = 4,
 	//PARTICLE_POOL = 4,
 };
 
@@ -57,6 +60,7 @@ public:
 	static unsigned int MemoryAllocatorMeshPoolSize;
 	static unsigned int MemoryAllocatorMaterialPoolSize;
 	static unsigned int MemoryAllocatorDecalPoolSize;
+	static unsigned int MemoryAllocatorLightPoolSize;
 	//static unsigned int MemoryAllocatorParticlePoolSize;
 
 	static bool EtherealDebugLinesEnabled;

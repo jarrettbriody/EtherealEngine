@@ -81,6 +81,10 @@ void FPSController::Init()
 	collider = entity->GetCollider();
 
 	ps = PlayerState::Normal;
+
+	dashBlurCallback.vShader = EESceneLoader->vertexShadersMap["PostProcess"];
+	dashBlurCallback.pShader = EESceneLoader->pixelShadersMap["DashBlur"];
+	dashBlurCallback.active = true;
 }
 
 void FPSController::Update()
@@ -485,20 +489,33 @@ void FPSController::GroundCheck()
 	Config::DynamicsWorld->computeOverlappingPairs();
 
 	// Redefine our vectors using bullet's silly types
-	btVector3 from(entity->GetPosition().x, entity->GetPosition().y, entity->GetPosition().z);
-	btVector3 to(entity->GetPosition().x, entity->GetPosition().y - 1, entity->GetPosition().z); // check a little below the player for any surface to stand on 
+	XMFLOAT3 pos = entity->GetPosition();
+	//cout << pos.x << "|" << pos.y << "|" << pos.z << endl;
+	//XMFLOAT3 dir = entity->GetDirectionVector();
+	btVector3 from(pos.x, pos.y, pos.z);
+	btVector3 to(pos.x, pos.y - 3.05f, pos.z); // check a little below the player for any surface to stand on 
 
 	// Create variable to store the ray hit and set flags
 	btCollisionWorld::ClosestRayResultCallback closestResult(from, to);
-	closestResult.m_flags |= btTriangleRaycastCallback::kF_FilterBackfaces;
+	closestResult.m_flags &= btTriangleRaycastCallback::kF_FilterBackfaces;
 
 	Config::DynamicsWorld->rayTest(from, to, closestResult); // Raycast
 
 	if (closestResult.hasHit()) // if there is a surface to stand on
-	{	
-		midAir = false;
-		playerRBody->setGravity(btVector3(0.0f, 0.0f, 0.0f));
-		jumpCount = 0;
+	{
+		// Get the entity associated with the rigid body we hit
+		//Entity* hit = (Entity*)(closestResult.m_collisionObject->getUserPointer());
+		//printf("Hit: %s\n", hit->GetName().c_str());*/
+		PhysicsWrapper* wrapper = (PhysicsWrapper*)closestResult.m_collisionObject->getUserPointer();
+		if (wrapper->type == PHYSICS_WRAPPER_TYPE::ENTITY) {
+			Entity* e = (Entity*)wrapper->objectPointer;
+			if (e != entity) {
+				//cout << e->GetName() << endl;
+ 				midAir = false;
+				playerRBody->setGravity(btVector3(0.0f, 0.0f, 0.0f));
+				jumpCount = 0;
+			}
+		}
 	}
 	else
 	{
@@ -600,6 +617,8 @@ btVector3 FPSController::DashImpulseFromInput()
 		}
 
 		dashDampTimer = DASH_DAMP_TIMER_MAX;
+
+		EERenderer->SetPostProcess(true, &dashBlurCallback);
 	}
 
 	return dashImpulse;
@@ -609,6 +628,7 @@ void FPSController::DampForces()
 {
 	if (dashDampTimer <= 0) // always damp the impulse vec unless player is the player just initiated a dash
 	{
+		EERenderer->SetPostProcess(false);
 		impulseSumVec -= impulseSumVec * dampingScalar;
 
 		// return fov to normal when damping dash impulse

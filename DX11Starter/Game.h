@@ -16,13 +16,14 @@
 #include "SceneLoader.h"
 #include "DebugLines.h"
 #include "ScriptManager.h"
-#include "Scripts.h"
 #include "DebugLines.h"
 #include "DecalHandler.h"
 #include "TestBehavior.h"
 #include "ParticleEmitter.h"
 #include "GPUParticleEmitter.h"
 #include "CPUParticleEmitter.h"
+#include "Scripts.h"
+#include "LightHandler.h"
 
 using namespace std;
 
@@ -56,6 +57,7 @@ private:
 	SceneLoader* EESceneLoader = nullptr;
 	MemoryAllocator* EEMemoryAllocator = nullptr;
 	DecalHandler* EEDecalHandler = nullptr;
+	LightHandler* EELightHandler = nullptr;
 	
 	//testing
 	//Light* testLight = nullptr;
@@ -86,9 +88,6 @@ private:
 	//FMOD_VECTOR listener_vel; // If we want a doppler effect
 	FMOD_VECTOR listener_forward = FMOD_VECTOR();
 	FMOD_VECTOR listener_up = FMOD_VECTOR();
-
-	CPUParticleEmitter* cpuEmitter;
-	GPUParticleEmitter* gpuEmitter;
 
 	// AI
 	

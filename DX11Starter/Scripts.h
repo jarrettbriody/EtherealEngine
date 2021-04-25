@@ -3,12 +3,16 @@
 #include "FPSController.h"
 #include "BloodIcicle.h"
 #include "BloodSword.h"
+#include "BloodOrb.h"
+#include "AmbientParticles.h"
 
 namespace Scripts {
 	enum class SCRIPT_NAMES {
 		BARREL,
 		FPSCONTROLLER,
 		BLOODICICLE,
+		BLOODORB,
+		AMBIENTPARTICLES,
 		BLOODSWORD
 	};
 
@@ -16,6 +20,8 @@ namespace Scripts {
 		{"BARREL", SCRIPT_NAMES::BARREL},
 		{"FPSCONTROLLER", SCRIPT_NAMES::FPSCONTROLLER},
 		{"BLOODICICLE", SCRIPT_NAMES::BLOODICICLE},
+		{"BLOODORB", SCRIPT_NAMES::BLOODORB},
+		{"AMBIENTPARTICLES", SCRIPT_NAMES::AMBIENTPARTICLES},
 		{"BLOODSWORD", SCRIPT_NAMES::BLOODSWORD}
 	};
 
@@ -23,6 +29,8 @@ namespace Scripts {
 		{SCRIPT_NAMES::BARREL, "BARREL"},
 		{SCRIPT_NAMES::FPSCONTROLLER, "FPSCONTROLLER"},
 		{SCRIPT_NAMES::BLOODICICLE, "BLOODICICLE"},
+		{SCRIPT_NAMES::BLOODORB, "BLOODORB"},
+		{SCRIPT_NAMES::AMBIENTPARTICLES, "AMBIENTPARTICLES"},
 		{SCRIPT_NAMES::BLOODSWORD, "BLOODSWORD"}
 	};
 
@@ -40,6 +48,12 @@ namespace Scripts {
 				break;
 			case Scripts::SCRIPT_NAMES::BLOODICICLE:
 				script = new BloodIcicle();
+				break;
+			case Scripts::SCRIPT_NAMES::BLOODORB:
+				script = new BloodOrb();
+				break;
+			case Scripts::SCRIPT_NAMES::AMBIENTPARTICLES:
+				script = new AmbientParticles();
 				break;
 			case Scripts::SCRIPT_NAMES::BLOODSWORD:
 				script = new BloodSword();

@@ -1,0 +1,16 @@
+newmtl largemetalbuilding:OldMetal
+map_Kd largemetalbuilding.png
+map_Bump largemetalbuildingNormal.png
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.40 0.40 0.40
+Tf 1.00 1.00 1.00
+Ni 1.00
+newmtl largemetalbuilding:Window
+map_Kd largemetalbuilding.png
+map_Bump largemetalbuildingNormal.png
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.40 0.40 0.40
+Tf 1.00 1.00 1.00
+Ni 1.00

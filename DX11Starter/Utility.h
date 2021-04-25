@@ -51,12 +51,25 @@ namespace Utility {
 	}
 	*/
 
-	static ID3D11ShaderResourceView* LoadSRV(std::string texture){
+	static ID3D11ShaderResourceView* LoadSRV(std::string texture, ID3D11Resource** texturePtr = nullptr) {
 		ID3D11ShaderResourceView* srv;
 		wchar_t path[100] = L"../../Assets/Textures/";
 		wchar_t fileName[50];
 		::MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, &texture.c_str()[0], -1, &fileName[0], 50);
 		DirectX::CreateWICTextureFromFile(Config::Device, Config::Context, wcsncat(path, fileName, 100), 0, &srv);
+		if (texturePtr != nullptr) {
+			HRESULT hr = DirectX::CreateWICTextureFromFileEx(
+				Config::Device,
+				path,
+				INT_MAX,
+				D3D11_USAGE_STAGING,
+				0,
+				D3D11_CPU_ACCESS_WRITE | D3D11_CPU_ACCESS_READ,
+				0,
+				0,
+				texturePtr,
+				0);
+		}
 		return srv;
 	}
 
