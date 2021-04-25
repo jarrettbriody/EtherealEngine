@@ -43,6 +43,7 @@ void FPSController::Init()
 			false
 			// defaults work for the rest
 	};
+
 	sword = ScriptManager::CreateEntity(swordParams);
 	sword->collisionsEnabled = false;
 	
@@ -50,13 +51,13 @@ void FPSController::Init()
 			"Hookshot",					// name
 			"Hookshot",					// tag
 			"Hookshot",					// layer
-			"Cube",							// mesh
-			"Red",							// material
+			"bloodchain",							// mesh
+			"bloodchain",							// material
 			{""},				// script names
 			0,								// script count
 			XMFLOAT3(0.0f, 0.0f, 0.0f),		// position
 			XMFLOAT3(0.0f, 0.0f, 0.0f),		// rotation
-			XMFLOAT3(0.1f, 0.1f, hookshotZScale),		// scale
+			XMFLOAT3(1.0f, 1.0f, hookshotZScale),		// scale
 			0.0f							// mass
 											// defaults work for the rest
 	};

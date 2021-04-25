@@ -33,7 +33,8 @@ TYPE="MESH" name="Sphere" path="Default/sphere.obj"
 TYPE="MESH" name="Helix" path="Default/helix.obj"
 TYPE="MESH" name="Torus" path="Default/torus.obj"
 TYPE="MESH" name="bloodorb" path="City/bloodorb.obj"
-TYPE="MESH" name="bloodsword" path="City/sword.obj"
+TYPE="MESH" name="bloodsword" path="City/bloodsword.obj"
+TYPE="MESH" name="bloodchain" path="City/bloodchain.obj"
 
 TYPE="TEXTURE" name="GrassDiffuse" path="Default/Grass/DefaultGrassDiffuse.jpg"
 TYPE="TEXTURE" name="GrassNormal" path="Default/Grass/DefaultGrassNormal.jpg"
@@ -51,6 +52,7 @@ TYPE="TEXTURE" name="BLOOD5" path="Default/BLOOD/BLOOD5.png"
 TYPE="TEXTURE" name="BLOOD6" path="Default/BLOOD/BLOOD6.png"
 TYPE="TEXTURE" name="BLOOD7" path="Default/BLOOD/BLOOD7.png"
 TYPE="TEXTURE" name="BLOOD8" path="Default/BLOOD/BLOOD8.png"
+TYPE="TEXTURE" name="bloodchain" path="bloodchain.png"
 
 //TYPE="MATERIAL" name="" vShader="" pShader="" ambientTexture="" diffuseTexture="" specularColorTexture="" specularHighlightTexture="" alphaTexture="" normalTexture="" ambientColor(0,0,0) diffuseColor(0,0,0) specularColor(0,0,0) specularExponent="0.0" transparency="1.0" illumination="1" ssao="false" hbaoPlus="true"
 TYPE="MATERIAL" name="DEFAULT" vShader="DEFAULT" pShader="DEFAULT"
@@ -62,6 +64,7 @@ TYPE="MATERIAL" name="Grey" vShader="DEFAULT" pShader="DEFAULT" diffuseTexture="
 TYPE="MATERIAL" name="Grey4" vShader="DEFAULT" pShader="DEFAULT" diffuseTexture="Grey4" specularExponent="900"
 TYPE="MATERIAL" name="White" vShader="DEFAULT" pShader="DEFAULT" diffuseTexture="White" specularExponent="100"
 TYPE="MATERIAL" name="RedFluid" vShader="Fluid" pShader="DEFAULT" diffuseTexture="Red"
+TYPE="MATERIAL" name="bloodchain" vShader="DEFAULT" pShader="DEFAULT" diffuseTexture="bloodchain" 
 
 
 
