@@ -657,6 +657,7 @@ void SceneLoader::LoadScene(string sceneName)
 	}
 	sceneEntities.clear();
 	sceneEntitiesMap.clear();
+	sceneEntitiesTagMap.clear();
 	utilizedMeshesMap.clear();
 	utilizedMaterialsMap.clear();
 	utilizedTexturesMap.clear();
@@ -832,8 +833,11 @@ void SceneLoader::LoadScene(string sceneName)
 					allocatedEntity->SetRepeatTexture(std::stof(match[1].str()), std::stof(match[2].str()));
 
 				//check for entity tag
-				if (regex_search(line, match, tagNameRegex))
+				if (regex_search(line, match, tagNameRegex)) {
 					allocatedEntity->tag = match[1];
+					if (!sceneEntitiesTagMap.count(match[1])) sceneEntitiesTagMap.insert({ match[1],vector<Entity*>() });
+					sceneEntitiesTagMap[match[1]].push_back(allocatedEntity);
+				}
 
 				//check for entity layer
 				if (regex_search(line, match, layerNameRegex))
@@ -1072,11 +1076,11 @@ Entity* SceneLoader::CreateEntity(EntityCreationParameters& para)
 			sceneEntities.push_back(allocatedEntity);
 		}
 	}
-		
+
 	allocatedEntity->SetPosition(para.position);
 	allocatedEntity->SetRotation(para.rotationRadians);
 	allocatedEntity->SetScale(para.scale);
-	
+
 	allocatedEntity->CalcWorldMatrix();
 
 	if (para.collisionsEnabled) {
@@ -1086,7 +1090,7 @@ Entity* SceneLoader::CreateEntity(EntityCreationParameters& para)
 
 	if (para.drawShadow)
 		allocatedEntity->ToggleShadows(true);
-	
+
 	if (EERenderer != nullptr && para.drawEntity)
 		EERenderer->AddRenderObject(allocatedEntity, mesh, mat);
 
@@ -1110,6 +1114,11 @@ Entity* SceneLoader::CreateEntity(EntityCreationParameters& para)
 	}
 
 	allocatedEntity->tag = para.tagName;
+	if (para.tagName != "") {
+		if (!sceneEntitiesTagMap.count(para.tagName)) sceneEntitiesTagMap.insert({ para.tagName,vector<Entity*>() });
+		sceneEntitiesTagMap[para.tagName].push_back(allocatedEntity);
+	}
+
 	allocatedEntity->layer = para.layerName;
 
 	for (size_t i = 0; i < para.scriptCount; i++)

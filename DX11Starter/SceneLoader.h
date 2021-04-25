@@ -172,6 +172,7 @@ public:
 	map<string, Material*> generatedMaterialsMap;
 
 	map<string, Entity*> sceneEntitiesMap;
+	map<string, vector<Entity*>> sceneEntitiesTagMap;
 	vector<Entity*> sceneEntities;
 
 	static bool SetupInstance();
