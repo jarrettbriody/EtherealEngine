@@ -633,6 +633,7 @@ void Game::Draw(double deltaTime, double totalTime)
 	EERenderer->SendAllLightsToShader(EESceneLoader->pixelShadersMap["DEFAULT"]);
 	EERenderer->SendAllLightsToShader(EESceneLoader->pixelShadersMap["Normal"]);
 	EERenderer->SendAllLightsToShader(EESceneLoader->pixelShadersMap["Decal"]);
+	EERenderer->SendAllLightsToShader(EESceneLoader->pixelShadersMap["Fluid"]);
 	//EERenderer->SendAllLightsToShader(EESceneLoader->pixelShadersMap["Water"]);
 	//EERenderer->SendAllLightsToShader(EESceneLoader->pixelShadersMap["Terrain"]);
 

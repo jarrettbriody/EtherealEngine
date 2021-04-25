@@ -54,7 +54,7 @@ struct ParticleVertex {
 	int ID;
 	int TextureIndex;
 	float Transparency;
-	//int WorldMatBaked;
+	int WorldMatBaked;
 };
 
 struct ParticleDrawInfo

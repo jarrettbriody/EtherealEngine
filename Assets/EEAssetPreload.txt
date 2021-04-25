@@ -21,6 +21,8 @@ TYPE="PSHADER" name="DepthStencil" cso="DepthStencilPS" shaderType="DEFAULT"
 TYPE="PSHADER" name="Particle" cso="ParticlePS" shaderType="DEFAULT"
 TYPE="PSHADER" name="CPUParticle" cso="CPUParticlePS" shaderType="DEFAULT"
 TYPE="PSHADER" name="DashBlur" cso="DashBlurPS"
+TYPE="PSHADER" name="Fluid" cso="FluidPS"
+TYPE="PSHADER" name="FluidPrepass" cso="FluidPrepassPS"
 
 TYPE="CSHADER" name="InitDeadList" cso="InitDeadListCS"
 TYPE="CSHADER" name="ParticleDrawArgs" cso="ParticleDrawArgsCS"
@@ -70,7 +72,7 @@ TYPE="MATERIAL" name="Hedge" vShader="DEFAULT" pShader="DEFAULT" diffuseTexture=
 TYPE="MATERIAL" name="Grey" vShader="DEFAULT" pShader="DEFAULT" diffuseTexture="Grey" specularExponent="500"
 TYPE="MATERIAL" name="Grey4" vShader="DEFAULT" pShader="DEFAULT" diffuseTexture="Grey4" specularExponent="900"
 TYPE="MATERIAL" name="White" vShader="DEFAULT" pShader="DEFAULT" diffuseTexture="White" specularExponent="100"
-TYPE="MATERIAL" name="RedFluid" vShader="Fluid" pShader="DEFAULT" diffuseTexture="Red"
+TYPE="MATERIAL" name="RedFluid" vShader="Fluid" pShader="Fluid" diffuseTexture="Red"
 TYPE="MATERIAL" name="Glass" vShader="DEFAULT" pShader="DEFAULT" diffuseTexture="Marble" transparency="0.5"
 
 

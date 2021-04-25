@@ -38,7 +38,7 @@ VertexToPixel main(VertexShaderInput input)
 
 	float3 newPos = mul(input.position, worldNoTranslation);
 
-	float flux = (sin(newPos.x * 5.0f + counter / (150.0f * (1.0f - deltaTime)))) * waveHeight;//((sin(totalTime) - 0.5f) / 2.0f + (sin(newPos.x + counter / 50.0f) - 0.5f) / 2.0f) * waveHeight;
+	float flux = (sin(newPos.x * 5.0f + totalTime)) * waveHeight;//((sin(totalTime) - 0.5f) / 2.0f + (sin(newPos.x + counter / 50.0f) - 0.5f) / 2.0f) * waveHeight;
 
 	if (newPos.y > fillLineY) newPos.y = fillLineY + flux;
 

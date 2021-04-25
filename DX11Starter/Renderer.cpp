@@ -553,6 +553,9 @@ void Renderer::RenderFrame()
 			if (callback->active && callback->vShader) {
 				callback->PreVertexShaderCallback();
 			}
+			if (callback->active && callback->pShader) {
+				callback->PrePixelShaderCallback();
+			}
 		}
 		e->PrepareMaterialForDraw(mat->GetName(), camera->GetViewMatrix(), camera->GetProjMatrix());
 
@@ -841,6 +844,7 @@ void Renderer::RenderDepthStencil()
 	for (int i = renderObjectCount - 1; i >= 0; i--)
 	{
 		shaders.depthStencilVS->SetShader();
+		shaders.depthStencilPS->SetShader();
 
 		RenderObject renderObject = renderObjects[i];
 		Entity* e = renderObject.entity;
@@ -880,8 +884,23 @@ void Renderer::RenderDepthStencil()
 
 		entityInfo = 0;
 		entityInfo = Config::EntityLayers[e->layer.STDStr()];
-		shaders.depthStencilPS->SetInt("entityInfo", entityInfo);
-		shaders.depthStencilPS->CopyAllBufferData();
+		if (callback != nullptr) {
+			if (callback->active && callback->prepassPShader) {
+				callback->prepassPShader->SetShader();
+				callback->prepassPShader->SetInt("entityInfo", entityInfo);
+				callback->prepassPShader->SetFloat3("cameraPosition", camera->position);
+				callback->PrePrepassPixelShaderCallback();
+				callback->prepassPShader->CopyAllBufferData();
+			}
+			else {
+				shaders.depthStencilPS->SetInt("entityInfo", entityInfo);
+				shaders.depthStencilPS->CopyAllBufferData();
+			}
+		}
+		else {
+			shaders.depthStencilPS->SetInt("entityInfo", entityInfo);
+			shaders.depthStencilPS->CopyAllBufferData();
+		}
 
 		// Finally do the actual drawing
 		Config::Context->DrawIndexed(mesh->GetIndexCount(), 0, 0);
@@ -935,6 +954,7 @@ void Renderer::RenderTransparents()
 		Entity* e = renderObject.entity;
 		Mesh* mesh = renderObject.mesh;
 		Material* mat = renderObject.material;
+		RendererCallback* callback = renderObject.callback;
 
 		if (e->destroyed || e->isEmptyObj) {
 			if (i != transparentObjectCount - 1) {
@@ -977,6 +997,15 @@ void Renderer::RenderTransparents()
 		ID3D11Buffer* ind = mesh->GetIndexBuffer();
 		Config::Context->IASetVertexBuffers(0, 1, &vbo, &stride, &offset);
 		Config::Context->IASetIndexBuffer(ind, DXGI_FORMAT_R32_UINT, 0);
+
+		if (callback != nullptr) {
+			if (callback->active && callback->vShader) {
+				callback->PreVertexShaderCallback();
+			}
+			if (callback->active && callback->pShader) {
+				callback->PrePixelShaderCallback();
+			}
+		}
 
 		e->PrepareMaterialForDraw(mat->GetName(), camera->GetViewMatrix(), camera->GetProjMatrix());
 

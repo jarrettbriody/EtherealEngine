@@ -19,6 +19,7 @@ struct VertexShaderInput
 	int num				: ID;
 	int textureIndex	: TEXINDEX;
 	float transparency  : TRANSPARENCY;
+	int worldMatBaked   : WORLDBAKED;
 };
 
 struct VStoPS
@@ -48,7 +49,12 @@ VStoPS main(VertexShaderInput input)
 
 	// Calc position of this corner
 	float3 pos = input.position;
-	pos = mul(mul(float4(pos, 1.0f), world), view);
+	if (input.worldMatBaked == 0) {
+		pos = mul(mul(float4(pos, 1.0f), world), view);
+	}
+	else {
+		pos = mul(float4(pos, 1.0f), view);
+	}
 	pos.xy += offsets[input.num].xy * input.scale;
 
 	output.position = mul(float4(pos, 1.0f), projection);

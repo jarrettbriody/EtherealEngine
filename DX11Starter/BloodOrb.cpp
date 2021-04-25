@@ -6,8 +6,10 @@ void BloodOrb::Init()
 	fluidCallback = {};
 
 	fluidCallback.vShader = EESceneLoader->vertexShadersMap["Fluid"];
+	fluidCallback.pShader = EESceneLoader->pixelShadersMap["Fluid"];
 	fluidCallback.prepassVShader = EESceneLoader->vertexShadersMap["FluidPrepass"];
-	fluidCallback.fillLineY = 0.0f;
+	fluidCallback.prepassPShader = EESceneLoader->pixelShadersMap["FluidPrepass"];
+	fluidCallback.fillLineY = 0.2f;
 	fluidCallback.waveHeight = 0.02f;
 
 	EERenderer->SetRenderObjectCallback(entity, &fluidCallback);
@@ -61,6 +63,7 @@ void BloodOrb::Update()
 	fluidCallback.totalTime = totalTime;
 	fluidCallback.deltaTime = deltaTime;
 	fluidCallback.waveCounter = waveCounter;
+	fluidCallback.pos = newPos;
 
 	waveCounter+=5;
 	totalTime += deltaTime;

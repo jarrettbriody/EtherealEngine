@@ -76,6 +76,12 @@
     <FxCompile Include="CPUParticleVS.hlsl">
       <Filter>EEShaders\Vertex Shaders\Particle System</Filter>
     </FxCompile>
+    <FxCompile Include="FluidPS.hlsl">
+      <Filter>EEShaders\Pixel Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="FluidPrepassPS.hlsl">
+      <Filter>EEShaders\Pixel Shaders\Render Prepass</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Camera.cpp">

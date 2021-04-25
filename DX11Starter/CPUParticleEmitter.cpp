@@ -134,6 +134,7 @@ void CPUParticleEmitter::CalcVertex(Particle p, XMFLOAT4X4 view)
 	particleVertices[particleVertCount].TextureIndex = p.textureIndex;
 	particleVertices[particleVertCount].RotationRadians = p.rotationRadians;
 	particleVertices[particleVertCount].Transparency = p.transparency;
+	particleVertices[particleVertCount].WorldMatBaked = p.worldMatBaked;
 	particleVertCount++;
 
 	particleVertices[particleVertCount].Position = p.position;
@@ -144,6 +145,7 @@ void CPUParticleEmitter::CalcVertex(Particle p, XMFLOAT4X4 view)
 	particleVertices[particleVertCount].TextureIndex = p.textureIndex;
 	particleVertices[particleVertCount].RotationRadians = p.rotationRadians;
 	particleVertices[particleVertCount].Transparency = p.transparency;
+	particleVertices[particleVertCount].WorldMatBaked = p.worldMatBaked;
 	particleVertCount++;
 
 	particleVertices[particleVertCount].Position = p.position;
@@ -154,6 +156,7 @@ void CPUParticleEmitter::CalcVertex(Particle p, XMFLOAT4X4 view)
 	particleVertices[particleVertCount].TextureIndex = p.textureIndex;
 	particleVertices[particleVertCount].RotationRadians = p.rotationRadians;
 	particleVertices[particleVertCount].Transparency = p.transparency;
+	particleVertices[particleVertCount].WorldMatBaked = p.worldMatBaked;
 	particleVertCount++;
 
 	particleVertices[particleVertCount].Position = p.position;
@@ -164,6 +167,7 @@ void CPUParticleEmitter::CalcVertex(Particle p, XMFLOAT4X4 view)
 	particleVertices[particleVertCount].TextureIndex = p.textureIndex;
 	particleVertices[particleVertCount].RotationRadians = p.rotationRadians;
 	particleVertices[particleVertCount].Transparency = p.transparency;
+	particleVertices[particleVertCount].WorldMatBaked = p.worldMatBaked;
 	particleVertCount++;
 }
 
@@ -300,7 +304,7 @@ void CPUParticleEmitter::Update(double deltaTime, double totalTime, XMFLOAT4X4 v
 			{
 				if (randNum3 <= colors[j].weight) {
 					newParticle.color = colors[j].color;
-					newParticle.originalTransparency = colors[i].color.w;
+					newParticle.originalTransparency = colors[j].color.w;
 					isColor = true;
 					break;
 				}
@@ -332,6 +336,19 @@ void CPUParticleEmitter::Update(double deltaTime, double totalTime, XMFLOAT4X4 v
 			newParticle.rotationRadians = 0.0f;
 			newParticle.angularVelocity = particleInitMinAngularVelocity + (particleInitMaxAngularVelocity - particleInitMinAngularVelocity) * randNum;
 			newParticle.acceleration = particleAcceleration;
+
+			newParticle.worldMatBaked = (int)bakeWorldMatOnEmission;
+			if (bakeWorldMatOnEmission == true) {
+				XMVECTOR pos = XMLoadFloat3(&newParticle.position);
+				XMVECTOR vel = XMLoadFloat3(&newParticle.velocity);
+				XMVECTOR accel = XMLoadFloat3(&newParticle.acceleration);
+				pos.m128_f32[3] = 1.0f;
+				vel.m128_f32[3], accel.m128_f32[3] = 0.0f;
+				XMMATRIX world = XMMatrixTranspose(XMLoadFloat4x4(&worldMatrix));
+				XMStoreFloat3(&newParticle.position, XMVector4Transform(pos, world));
+				XMStoreFloat3(&newParticle.velocity, XMVector4Transform(vel, world));
+				XMStoreFloat3(&newParticle.acceleration, XMVector4Transform(accel, world));
+			}
 
 			// Put it back
 			particlePool[newParticleIndex] = newParticle;
