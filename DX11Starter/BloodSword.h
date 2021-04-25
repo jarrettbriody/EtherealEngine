@@ -38,10 +38,6 @@ class BloodSword : public ScriptManager
 	XMFLOAT3 slashRotation;
 	XMFLOAT3 raisedRotation;
 
-	/*TODO: Jitter Issue?
-	bool posLerpComplete = false;
-	bool rotLerpComplete = false;*/
-
 	void Init();
 
 	void Update();
@@ -57,6 +53,8 @@ class BloodSword : public ScriptManager
 	bool CheckTransformationsNearEqual(bool checkPos, bool checkRot);
 
 	void CalcLerp();
+
+	std::vector<XMFLOAT3> GenerateSlashPoints(XMFLOAT3 startingPos, XMFLOAT3 endingPos, float interval);
 
 	void OnCollision(btCollisionObject* other);
 

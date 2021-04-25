@@ -25,7 +25,7 @@ void BloodSword::Init()
 	entity->SetScale(0.4f, 0.4f, 0.4f);
 	entity->CalcWorldMatrix();
 
-	slashPointsRight = {
+	/*slashPointsRight = {
 		XMFLOAT3(5, 0, 3),
 		XMFLOAT3(4, 0.5, 4),
 		XMFLOAT3(3, -1.5, 4.25),
@@ -51,7 +51,10 @@ void BloodSword::Init()
 		XMFLOAT3(6, -4.5, 4),
 		XMFLOAT3(7, -5, 3),
 		XMFLOAT3(8, -6, 3)
-	};
+	};*/
+
+	slashPointsRight = GenerateSlashPoints(XMFLOAT3(5, 0, 3), XMFLOAT3(-8, -8, 3), 1/10.0f);
+	slashPointsLeft = GenerateSlashPoints(XMFLOAT3(-5, 0, 3), XMFLOAT3(8, -8, 3), 1/10.0f);
 }
 
 void BloodSword::Update()
@@ -214,6 +217,57 @@ void BloodSword::CalcLerp()
 
 	XMStoreFloat3(&finalLerpPos, XMVectorLerp(XMLoadFloat3(&lerpPositionFrom), XMLoadFloat3(&lerpPositionTo), deltaTime * posLerpScalar));
 	XMStoreFloat3(&finalLerpRot, XMVectorLerp(XMLoadFloat3(&lerpRotationFrom), XMLoadFloat3(&lerpRotationTo), deltaTime * rotLerpScalar));
+}
+
+std::vector<XMFLOAT3> BloodSword::GenerateSlashPoints(XMFLOAT3 startingPos, XMFLOAT3 endingPos, float interval)
+{
+	std::vector<XMFLOAT3> generatedSlashPoints;
+	XMFLOAT3 newPos = startingPos;
+	generatedSlashPoints.push_back(newPos);
+
+	bool leftSlash = newPos.x < 0;
+
+	// loop through and increment/decrement accordingly (x goes down (or up depending on the side), y goes down, z increases until x is line with camera and then goes down )
+	while (!XMVector3NearEqual(XMLoadFloat3(&XMFLOAT3(0, newPos.y, 0)), XMLoadFloat3((&XMFLOAT3(0, endingPos.y, 0))), XMLoadFloat3(&positionLerpTolerance))) // TODO: Only caring about the y works for now, but for future work would be better to connsider all coordinates
+	{
+		float x = newPos.x;
+		float y = newPos.y;
+		float z = newPos.z;
+
+		y -= interval;
+		
+		if (leftSlash)
+		{
+			x += interval;
+
+			if (newPos.x >= 0)
+			{
+				z -= interval;
+			}
+			else
+			{
+				z += interval;
+			}
+		}
+		else
+		{
+			x -= interval;
+
+			if (newPos.x <= 0)
+			{
+				z -= interval;
+			}
+			else
+			{
+				z += interval;
+			}
+		}										    
+
+		newPos = XMFLOAT3(x, y, z);
+		generatedSlashPoints.push_back(newPos);
+	}
+
+	return generatedSlashPoints;
 }
 
 

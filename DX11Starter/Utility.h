@@ -115,4 +115,9 @@ namespace Utility {
 	{
 		return a + f * (b - a);
 	}
+
+	static float ClipValue(float n, float lower, float upper)
+	{
+		return max(lower, min(n, upper));
+	}
 }
