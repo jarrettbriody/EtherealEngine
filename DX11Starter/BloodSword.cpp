@@ -53,8 +53,8 @@ void BloodSword::Init()
 		XMFLOAT3(8, -6, 3)
 	};*/
 
-	slashPointsRight = GenerateSlashPoints(XMFLOAT3(5, 0, 3), XMFLOAT3(-8, -8, 3), 1/10.0f);
-	slashPointsLeft = GenerateSlashPoints(XMFLOAT3(-5, 0, 3), XMFLOAT3(8, -8, 3), 1/10.0f);
+	slashPointsRight = GenerateSlashPoints(XMFLOAT3(5, 0, 3), XMFLOAT3(-8, -8, 3), 1.0f/5.0f, 6.0f);
+	slashPointsLeft = GenerateSlashPoints(XMFLOAT3(-5, 0, 3), XMFLOAT3(8, -8, 3), 1.0f/5.0f, 6.0f);
 }
 
 void BloodSword::Update()
@@ -219,26 +219,28 @@ void BloodSword::CalcLerp()
 	XMStoreFloat3(&finalLerpRot, XMVectorLerp(XMLoadFloat3(&lerpRotationFrom), XMLoadFloat3(&lerpRotationTo), deltaTime * rotLerpScalar));
 }
 
-std::vector<XMFLOAT3> BloodSword::GenerateSlashPoints(XMFLOAT3 startingPos, XMFLOAT3 endingPos, float interval)
+std::vector<XMFLOAT3> BloodSword::GenerateSlashPoints(XMFLOAT3 startingPos, XMFLOAT3 endingPos, float interval, float maxZ)
 {
 	std::vector<XMFLOAT3> generatedSlashPoints;
 	XMFLOAT3 newPos = startingPos;
 	generatedSlashPoints.push_back(newPos);
 
-	bool leftSlash = newPos.x < 0;
+	bool leftSlash = newPos.x < 0; // if the starting x position is less than zero then we are slashing from the left
 
-	// loop through and increment/decrement accordingly (x goes down (or up depending on the side), y goes down, z increases until x is line with camera and then goes down )
-	while (!XMVector3NearEqual(XMLoadFloat3(&XMFLOAT3(0, newPos.y, 0)), XMLoadFloat3((&XMFLOAT3(0, endingPos.y, 0))), XMLoadFloat3(&positionLerpTolerance))) // TODO: Only caring about the y works for now, but for future work would be better to connsider all coordinates
+	// loop through and increment/decrement new points accordingly (x goes down or up depending on the slash direction, y always goes down, z increases until x is line with camera and then goes down)
+	// TODO: Only caring about the x and y works for now, but for future work would be better to consider all coordinates (the problem is the z start and end position should be around the same because you are slashing out and in)
+	while (!XMVector3NearEqual(XMLoadFloat3(&XMFLOAT3(newPos.x, newPos.y, 0)), XMLoadFloat3((&XMFLOAT3(endingPos.x, endingPos.y, 0))), XMLoadFloat3(&positionLerpTolerance))) 
 	{
 		float x = newPos.x;
 		float y = newPos.y;
 		float z = newPos.z;
-
 		y -= interval;
+		y = max(y, endingPos.y); // don't go beyond ending y
 		
 		if (leftSlash)
 		{
 			x += interval;
+			x = min(x, endingPos.x); // don't go beyond ending x
 
 			if (newPos.x >= 0)
 			{
@@ -247,11 +249,14 @@ std::vector<XMFLOAT3> BloodSword::GenerateSlashPoints(XMFLOAT3 startingPos, XMFL
 			else
 			{
 				z += interval;
+
+				z = min(z, maxZ); // don't go beyond ending x
 			}
 		}
 		else
 		{
 			x -= interval;
+			x = max(x, endingPos.x); // don't go beyond ending x
 
 			if (newPos.x <= 0)
 			{
@@ -260,6 +265,8 @@ std::vector<XMFLOAT3> BloodSword::GenerateSlashPoints(XMFLOAT3 startingPos, XMFL
 			else
 			{
 				z += interval;
+
+				z = min(z, maxZ); 
 			}
 		}										    
 
@@ -268,6 +275,18 @@ std::vector<XMFLOAT3> BloodSword::GenerateSlashPoints(XMFLOAT3 startingPos, XMFL
 	}
 
 	return generatedSlashPoints;
+}
+
+void BloodSword::CheckSwordSlashHit()
+{
+	float currentAngle = atan2(cam->direction.z, cam->direction.z);
+	float halfViewAngle = XMConvertToRadians(viewAngle / 2);
+	float hypotenuse = viewDistance / cos(halfViewAngle);
+	XMFLOAT3 viewLeft = XMFLOAT3(cos(currentAngle + halfViewAngle) * hypotenuse, 0.0f, sin(currentAngle + halfViewAngle) * hypotenuse);
+	XMFLOAT3 viewRight = XMFLOAT3(cos(currentAngle - halfViewAngle) * hypotenuse, 0.0f, sin(currentAngle - halfViewAngle) * hypotenuse);
+
+	XMFLOAT3 viewFront;
+	XMStoreFloat3(&viewFront, XMVectorSubtract(XMLoadFloat3(&viewRight), XMLoadFloat3(&viewLeft)));
 }
 
 

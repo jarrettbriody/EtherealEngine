@@ -19,8 +19,8 @@ class BloodSword : public ScriptManager
 	XMFLOAT3 positionLerpTolerance = XMFLOAT3(0.1f, 0.1f, 0.1f);
 	XMFLOAT3 rotationLerpTolerance = XMFLOAT3(0.1f, 0.1f, 0.1f);
 
-	float positionLerpScalar = 150.0f;
-	float rotationLerpScalar = 150.0f;
+	float positionLerpScalar = 200.0f;
+	float rotationLerpScalar = 200.0f;
 
 	XMFLOAT3 lerpPositionFrom = XMFLOAT3(0, 0, 0);
 	XMFLOAT3 lerpPositionTo = XMFLOAT3(0, 0, 0);
@@ -38,6 +38,9 @@ class BloodSword : public ScriptManager
 	XMFLOAT3 slashRotation;
 	XMFLOAT3 raisedRotation;
 
+	float viewAngle = 90.0f;
+	float viewDistance = 10.0f;
+
 	void Init();
 
 	void Update();
@@ -54,7 +57,9 @@ class BloodSword : public ScriptManager
 
 	void CalcLerp();
 
-	std::vector<XMFLOAT3> GenerateSlashPoints(XMFLOAT3 startingPos, XMFLOAT3 endingPos, float interval);
+	std::vector<XMFLOAT3> GenerateSlashPoints(XMFLOAT3 startingPos, XMFLOAT3 endingPos, float interval, float maxZ);
+
+	void CheckSwordSlashHit();
 
 	void OnCollision(btCollisionObject* other);
 
