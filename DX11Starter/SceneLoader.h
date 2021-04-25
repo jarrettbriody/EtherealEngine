@@ -182,6 +182,7 @@ public:
 	map<string, Material*> generatedMaterialsMap;
 
 	map<string, Entity*> sceneEntitiesMap;
+	map<string, vector<Entity*>> sceneEntitiesTagMap;
 	vector<Entity*> sceneEntities;
 
 	static bool SetupInstance();
@@ -196,5 +197,5 @@ public:
 	void SetScriptLoader(void (*callback)(Entity* e, string script));
 
 	Entity* CreateEntity(EntityCreationParameters& para);
-	void SplitMeshIntoChildEntities(Entity* e, float componentMass);
+	std::vector<Entity*> SplitMeshIntoChildEntities(Entity* e, float componentMass);
 };

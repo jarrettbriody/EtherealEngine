@@ -108,6 +108,7 @@ void Entity::operator=(const Entity& e)
 	*colliders = vector<Collider*>(*e.colliders);
 	*materialMap = map<string, Material*>(*e.materialMap);
 	worldMatrix = e.worldMatrix;
+	parentWorld = e.parentWorld;
 	mesh = e.mesh;
 	quaternion = e.quaternion;
 	position = e.position;
@@ -159,18 +160,6 @@ void Entity::InitRigidBody(BulletColliderShape shape, float entityMass, bool zer
 		XMFLOAT3 res;
 		XMStoreFloat3(&res, centerLocalCalc);
 		float mag = res.x;
-
-		/*
-		if (*name == "FPSController") { // give the FPS controller a capsule collider shape
-			// btVector3(btScalar(span.x * scale.x), btScalar(span.y * scale.y), btScalar(span.z * scale.z)
-			this->collShape = new btCapsuleShape(btScalar(span.x), btScalar(span.y));
-		}
-
-		else {
-			//this->collShape = new btBoxShape(btVector3(btScalar(span.x * scale.x), btScalar(span.y * scale.y), btScalar(span.z * scale.z)));
-			this->collShape = new btBoxShape(btVector3(btScalar(span.x), btScalar(span.y), btScalar(span.z)));
-		}
-		*/
 
 		switch (shape)
 		{
@@ -273,6 +262,11 @@ void Entity::InitRigidBody(BulletColliderShape shape, float entityMass, bool zer
 	Config::DynamicsWorld->addRigidBody(rBody);
 }
 
+void Entity::SetWorldMatrix(XMFLOAT4X4 matrix)
+{
+	worldMatrix = matrix;
+}
+
 DirectX::XMFLOAT4X4 Entity::GetWorldMatrix()
 {
 	return worldMatrix;
@@ -318,6 +312,18 @@ void Entity::SetPosition(float x, float y, float z)
 void Entity::SetPosition(XMFLOAT3 p)
 {
 	position = p;
+}
+
+// TODO: Make sure this method works properly
+void Entity::SetRigidbodyPosition(btVector3 position, btVector3 orientation)
+{
+		btTransform initialTransform;
+
+		initialTransform.setOrigin(position);
+		initialTransform.setRotation(btQuaternion(orientation.getX(), orientation.getY(), orientation.getY()));
+
+		rBody->setWorldTransform(initialTransform);
+		rBody->getMotionState()->setWorldTransform(initialTransform);
 }
 
 void Entity::SetScale(float x, float y, float z)
@@ -551,6 +557,11 @@ void Entity::CalcWorldMatrix()
 		DirectX::XMMATRIX parentWorld = DirectX::XMMatrixTranspose(DirectX::XMLoadFloat4x4(&parent->worldMatrix));
 		world = DirectX::XMMatrixMultiply(world, parentWorld);
 	}
+	else if (parentWorld != nullptr) {
+		XMFLOAT4X4 parentW = *parentWorld;
+		DirectX::XMMATRIX parentWorld = DirectX::XMMatrixTranspose(DirectX::XMLoadFloat4x4(&parentW));
+		world = DirectX::XMMatrixMultiply(world, parentWorld);
+	}
 	DirectX::XMStoreFloat4x4(&worldMatrix, DirectX::XMMatrixTranspose(world));
 	for (size_t i = 0; i < children->size(); i++)
 	{
@@ -668,10 +679,24 @@ string Entity::GetName()
 	return name.STDStr();
 }
 
-void Entity::AddChildEntity(Entity* child)
+void Entity::AddChildEntity(Entity* child, XMFLOAT4X4 childWorldMatrix)
 {
 	children->push_back(child);
 	child->parent = this;
+
+	// add boolean to only copy the translation
+
+	
+
+	// Scaling
+	// child world matrix of body part multiplied by inverse world matrix of parent 
+	// may have to play around with ordering with multiplication
+	CalcWorldMatrix();
+	XMMATRIX parentInvWorldMatrixTranspose = XMMatrixTranspose(XMLoadFloat4x4(&invWorldMatrix));
+	XMMATRIX childWorldMatrixTranspose = XMMatrixTranspose(XMLoadFloat4x4(&childWorldMatrix)); // multiply this by the inverse scale matrix of the icicle
+	XMFLOAT4X4 scalingMatrix; 
+	XMStoreFloat4x4(&scalingMatrix, XMMatrixTranspose(XMMatrixMultiply(parentInvWorldMatrixTranspose, childWorldMatrixTranspose)));
+	child->SetWorldMatrix(scalingMatrix);
 }
 
 void Entity::AddAutoBoxCollider()
@@ -784,6 +809,15 @@ float Entity::GetMass()
 	return mass;
 }
 
+void Entity::RemoveFromPhysicsSimulation()
+{
+	if (Config::DynamicsWorld != nullptr) {
+		delete rBody->getMotionState(); 
+		rBody->setMotionState(nullptr); // set motion state to nullptr
+		Config::DynamicsWorld->removeRigidBody(rBody);
+	}
+}
+
 void Entity::EmptyEntity()
 {
 	if (Config::DynamicsWorld != nullptr) {
@@ -791,6 +825,11 @@ void Entity::EmptyEntity()
 	}
 		
 	this->isEmptyObj = true;
+}
+
+void Entity::SetParentWorldMatrix(XMFLOAT4X4* parentWorld)
+{
+	this->parentWorld = parentWorld;
 }
 
 void Entity::Destroy()

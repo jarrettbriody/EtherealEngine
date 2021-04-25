@@ -143,6 +143,7 @@
     <ClCompile Include="Barrel.cpp" />
     <ClCompile Include="BloodIcicle.cpp" />
     <ClCompile Include="BloodOrb.cpp" />
+    <ClCompile Include="BloodSword.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Collider.cpp" />
     <ClCompile Include="Config.cpp" />
@@ -180,6 +181,7 @@
     <ClInclude Include="BehaviorTreeBuilder.h" />
     <ClInclude Include="BloodIcicle.h" />
     <ClInclude Include="BloodOrb.h" />
+    <ClInclude Include="BloodSword.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Collider.h" />
     <ClInclude Include="Config.h" />

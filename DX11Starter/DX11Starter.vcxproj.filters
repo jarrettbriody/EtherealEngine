@@ -156,6 +156,9 @@
     <ClCompile Include="BloodIcicle.cpp">
       <Filter>EEScripts\Source</Filter>
     </ClCompile>
+    <ClCompile Include="BloodSword.cpp">
+      <Filter>EEScripts\Source</Filter>
+    </ClCompile>
     <ClCompile Include="ParticleEmitter.cpp">
       <Filter>EECore\Source Files\Particle System</Filter>
     </ClCompile>
@@ -273,6 +276,9 @@
       <Filter>EECore\Header Files\Mouse</Filter>
     </ClInclude>
     <ClInclude Include="BloodIcicle.h">
+      <Filter>EEScripts\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="BloodSword.h">
       <Filter>EEScripts\Headers</Filter>
     </ClInclude>
     <ClInclude Include="BehaviorTree.h">

@@ -113,4 +113,24 @@ namespace Utility {
 			DirectX::XMStoreFloat4(&currentSample, calculableVector);
 		}
 	}
+
+	static DirectX::XMFLOAT3 BulletVectorToFloat3(btVector3 vec)
+	{
+		return DirectX::XMFLOAT3(vec.getX(), vec.getY(), vec.getZ());
+	}
+
+	static btVector3 Float3ToBulletVector(DirectX::XMFLOAT3 vec)
+	{
+		return btVector3(vec.x, vec.y, vec.z);
+	}
+
+	static float FloatLerp(float a, float b, float f)
+	{
+		return a + f * (b - a);
+	}
+
+	static float ClipValue(float n, float lower, float upper)
+	{
+		return max(lower, min(n, upper));
+	}
 }

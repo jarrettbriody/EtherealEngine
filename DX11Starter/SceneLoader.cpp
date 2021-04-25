@@ -673,6 +673,7 @@ void SceneLoader::LoadScene(string sceneName)
 	}
 	sceneEntities.clear();
 	sceneEntitiesMap.clear();
+	sceneEntitiesTagMap.clear();
 	utilizedMeshesMap.clear();
 	utilizedMaterialsMap.clear();
 	utilizedTexturesMap.clear();
@@ -848,8 +849,11 @@ void SceneLoader::LoadScene(string sceneName)
 					allocatedEntity->SetRepeatTexture(std::stof(match[1].str()), std::stof(match[2].str()));
 
 				//check for entity tag
-				if (regex_search(line, match, tagNameRegex))
+				if (regex_search(line, match, tagNameRegex)) {
 					allocatedEntity->tag = match[1];
+					if (!sceneEntitiesTagMap.count(match[1])) sceneEntitiesTagMap.insert({ match[1],vector<Entity*>() });
+					sceneEntitiesTagMap[match[1]].push_back(allocatedEntity);
+				}
 
 				//check for entity layer
 				if (regex_search(line, match, layerNameRegex))
@@ -1090,21 +1094,20 @@ Entity* SceneLoader::CreateEntity(EntityCreationParameters& para)
 		}
 	}
 
+	allocatedEntity->SetPosition(para.position);
+	allocatedEntity->SetRotation(para.rotationRadians);
+	allocatedEntity->SetScale(para.scale);
+
+	allocatedEntity->CalcWorldMatrix();
+
 	if (para.collisionsEnabled) {
 		allocatedEntity->collisionsEnabled = true;
 		allocatedEntity->AddAutoBoxCollider();
 	}
-		
-
-	allocatedEntity->SetPosition(para.position);
-	allocatedEntity->SetRotation(para.rotationRadians);
-	allocatedEntity->SetScale(para.scale);
-	
-	allocatedEntity->CalcWorldMatrix();
 
 	if (para.drawShadow)
 		allocatedEntity->ToggleShadows(true);
-	
+
 	if (EERenderer != nullptr && para.drawEntity)
 		EERenderer->AddRenderObject(allocatedEntity, mesh, mat);
 
@@ -1127,23 +1130,31 @@ Entity* SceneLoader::CreateEntity(EntityCreationParameters& para)
 		}
 	}
 
+	allocatedEntity->tag = para.tagName;
+	if (para.tagName != "") {
+		if (!sceneEntitiesTagMap.count(para.tagName)) sceneEntitiesTagMap.insert({ para.tagName,vector<Entity*>() });
+		sceneEntitiesTagMap[para.tagName].push_back(allocatedEntity);
+	}
+
+	allocatedEntity->layer = para.layerName;
+
 	for (size_t i = 0; i < para.scriptCount; i++)
 	{
 		scriptCallback(allocatedEntity, para.scriptNames[i]);
 	}
 
-	allocatedEntity->tag = para.tagName;
-	allocatedEntity->layer = para.layerName;
-
 	return allocatedEntity;
 }
 
-void SceneLoader::SplitMeshIntoChildEntities(Entity* e, float componentMass)
+std::vector<Entity*> SceneLoader::SplitMeshIntoChildEntities(Entity* e, float componentMass)
 {
+	std::vector<Entity*> childEntities;
+
 	int meshChildCnt = e->GetMeshChildCount();
-	if (meshChildCnt == 0) return;
+	if (meshChildCnt == 0) return childEntities;
 	bool success;
 	Mesh** children = e->GetMesh()->GetChildren();
+	
 	for (size_t i = 0; i < meshChildCnt; i++)
 	{
 		Entity newE(children[i]->GetName(), children[i], e->GetMaterial(e->GetMeshMaterialName(i)));
@@ -1151,7 +1162,7 @@ void SceneLoader::SplitMeshIntoChildEntities(Entity* e, float componentMass)
 		*allocatedEntity = newE;
 		//e->AddChildEntity(allocatedEntity);
 		//e->CalcWorldMatrix();
-		allocatedEntity->SetPosition(e->GetPosition());
+		allocatedEntity->SetPosition(e->GetPosition()); // TODO: this informs the rigidbody creation, so is the cause of not having centered rotations? Could create offset in the Mesh class by creating a new mesh but this effects everything. 
 		XMFLOAT3 r = e->GetEulerAngles();
 		r.y += DirectX::XM_PI;
 		allocatedEntity->SetRotation(r);
@@ -1160,10 +1171,15 @@ void SceneLoader::SplitMeshIntoChildEntities(Entity* e, float componentMass)
 		allocatedEntity->CalcWorldMatrix();
 		allocatedEntity->AddAutoBoxCollider();
 		allocatedEntity->InitRigidBody(BulletColliderShape::BOX, componentMass, true);
+		// allocatedEntity->GetRBody()->getWorldTransform().setOrigin(allocatedEntity->GetRBody()->getCenterOfMassPosition());
 		sceneEntitiesMap.insert({ children[i]->GetName(), allocatedEntity });
 		sceneEntities.push_back(allocatedEntity);
 		EERenderer->AddRenderObject(allocatedEntity, children[i], e->GetMaterial(e->GetMeshMaterialName(i)));
+
+		childEntities.push_back(allocatedEntity);
 	}
 	//e->EmptyEntity();
 	e->Destroy();
+
+	return childEntities;
 }

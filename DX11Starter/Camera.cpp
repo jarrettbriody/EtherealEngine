@@ -9,6 +9,10 @@ Camera::Camera()
 	XMVECTOR dir = XMLoadFloat3(&direction);
 	dir = XMVector3Normalize(dir);
 	XMStoreFloat3(&direction, dir);
+	right = XMFLOAT3(1.0f, 0.0f, 0.0f);
+	XMVECTOR rightVec = XMLoadFloat3(&right);
+	rightVec = XMVector3Normalize(rightVec);
+	XMStoreFloat3(&right, rightVec);
 	xRotation = 0.0f;
 	yRotation = 0.0f;
 	zRotation = 0.0f;
@@ -39,6 +43,21 @@ XMFLOAT4X4 Camera::GetProjMatrix()
 XMFLOAT4X4 Camera::GetInverseProjMatrix()
 {
 	return invProjMatrix;
+}
+
+XMFLOAT4X4 Camera::GetWorldMatrix()
+{
+	return worldMatrix;
+}
+
+XMFLOAT4X4 Camera::GetInvWorldMatrix()
+{
+	return invWorldMatrix;
+}
+
+XMFLOAT4X4* Camera::GetWorldMatrixPtr()
+{
+	return &worldMatrix;
 }
 
 void Camera::SetProjMatrix(XMFLOAT4X4 pm)
@@ -89,6 +108,16 @@ void Camera::UpdateProjectionMatrix()
 	XMStoreFloat4x4(&invProjMatrix, XMMatrixTranspose(XMMatrixInverse(nullptr, P)));
 }
 
+void Camera::CalcWorldMatrix()
+{
+	XMVECTOR quat = XMQuaternionRotationRollPitchYaw(xRotation, yRotation, zRotation);
+	DirectX::XMMATRIX rot = DirectX::XMMatrixRotationQuaternion(quat);
+	DirectX::XMMATRIX trans = DirectX::XMMatrixTranslation(position.x, position.y, position.z);
+	DirectX::XMMATRIX world = rot * trans;
+	DirectX::XMStoreFloat4x4(&worldMatrix, DirectX::XMMatrixTranspose(world));
+	XMStoreFloat4x4(&invWorldMatrix, XMMatrixTranspose(XMMatrixInverse(nullptr, world)));
+}
+
 void Camera::Update()
 {
 	XMFLOAT3 zAxis(0.0f, 0.0f, 1.0f);
@@ -96,7 +125,7 @@ void Camera::Update()
 
 	XMVECTOR pos = XMLoadFloat3(&position);
 	XMVECTOR dir = XMLoadFloat3(&direction);
-	XMVECTOR right = XMVector3Cross(dir, XMLoadFloat3(&yAxis));
+	XMVECTOR rightVec = XMVector3Cross(dir, XMLoadFloat3(&yAxis));
 
 	float scalar = 30;
 
@@ -111,11 +140,11 @@ void Camera::Update()
 			XMStoreFloat3(&position, pos);
 		}
 		if (GetAsyncKeyState('A') & 0x8000) {
-			pos = XMVectorAdd(pos, XMVectorScale(right, 0.05f * scalar));
+			pos = XMVectorAdd(pos, XMVectorScale(rightVec, 0.05f * scalar));
 			XMStoreFloat3(&position, pos);
 		}
 		if (GetAsyncKeyState('D') & 0x8000) {
-			pos = XMVectorAdd(pos, XMVectorScale(right, -0.05f * scalar));
+			pos = XMVectorAdd(pos, XMVectorScale(rightVec, -0.05f * scalar));
 			XMStoreFloat3(&position, pos);
 		}
 
@@ -134,7 +163,7 @@ void Camera::Update()
 			RotateCamera(0, 0, -1);
 		}
 
-		if (mouse->OnLMBDown()) {
+		/*if (mouse->OnLMBDown()) {
 			prevMousePos.x = mouse->GetPosX();
 			prevMousePos.y = mouse->GetPosY();
 		}
@@ -143,7 +172,7 @@ void Camera::Update()
 			RotateCamera((float)(mouse->GetPosX() - (int)prevMousePos.x) / 100.0f, (float)(mouse->GetPosY() - (int)prevMousePos.y) / 100.0f);
 			prevMousePos.x = mouse->GetPosX();
 			prevMousePos.y = mouse->GetPosY();
-		}
+		}*/
 
 	}
 	
@@ -157,6 +186,9 @@ void Camera::Update()
 	XMStoreFloat4x4(&viewMatrix, XMMatrixTranspose(view));
 	XMStoreFloat4x4(&invViewMatrix, XMMatrixTranspose(inverseView));
 	XMStoreFloat3(&direction, newDir);
+	XMStoreFloat3(&right, rightVec);
+
+	CalcWorldMatrix();
 
 	//cout << "Pos: (" << position.x << ", " << position.y << ", " << position.z << ")" << endl;
 	//cout << "Dir: (" << direction.x << ", " << direction.y << ", " << direction.z << ")" << endl;

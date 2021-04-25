@@ -5,6 +5,12 @@ class BloodIcicle : public ScriptManager
 {
 	map<string, Entity*>* eMap;
 
+	btVector3 initialImpulse;
+
+	Entity* closestChild;
+
+	bool bodyPartPinned = false;
+
 	void Init();
 
 	void Update();

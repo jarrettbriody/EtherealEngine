@@ -43,6 +43,7 @@ private:
 	DirectX::XMFLOAT3 scale;
 	DirectX::XMFLOAT3 rotation;
 	DirectX::XMFLOAT3 rotationInDegrees;
+	XMFLOAT4X4* parentWorld = nullptr;
 
 	XMFLOAT3 direction;
 	XMFLOAT3 up;
@@ -84,6 +85,7 @@ public:
 	~Entity();
 	void operator= (const Entity& e);
 	void InitRigidBody(BulletColliderShape shape, float entityMass, bool zeroObjects = false);
+	void SetWorldMatrix(XMFLOAT4X4 matrix);
 	DirectX::XMFLOAT4X4 GetWorldMatrix();
 	DirectX::XMFLOAT4X4 GetInverseWorldMatrix();
 	XMFLOAT4X4* GetWorldMatrixPtr();
@@ -97,6 +99,7 @@ public:
 	XMFLOAT3 GetRightVector();
 	void SetPosition(float x, float y, float z);
 	void SetPosition(XMFLOAT3 p);
+	void SetRigidbodyPosition(btVector3 position, btVector3 orientation);
 	void SetScale(float x, float y, float z);
 	void SetScale(XMFLOAT3 s);
 	void SetRotation(float x, float y, float z);
@@ -118,6 +121,7 @@ public:
 	int GetMeshIndexCount(int childIndex = -1);
 	string GetMeshMaterialName(int childIndex = -1);
 	void CalcWorldMatrix();
+	void SetParentWorldMatrix(XMFLOAT4X4* parentWorld);
 	XMMATRIX CalcWorldToModelMatrix();
 	void PrepareMaterialForDraw(string n, DirectX::XMFLOAT4X4 view, DirectX::XMFLOAT4X4 proj);
 	Material* GetMaterial(string n);
@@ -127,7 +131,7 @@ public:
 	vector<string> GetMaterialNameList();
 	void AddMaterial(Material* mat, bool addToMesh = false);
 	string GetName();
-	void AddChildEntity(Entity* child);
+	void AddChildEntity(Entity* child, XMFLOAT4X4 childWorldMatrix);
 	void AddAutoBoxCollider();
 	bool CheckSATCollision(Entity* other);
 	bool CheckSATCollisionAndCorrect(Entity* other);
@@ -137,6 +141,7 @@ public:
 	btCollisionShape* GetBTCollisionShape(int index);
 	btCompoundShape* GetBTCompoundShape(int index);
 	float GetMass();
+	void RemoveFromPhysicsSimulation();
 	void EmptyEntity();
 	void Destroy();
 	void FreeMemory();

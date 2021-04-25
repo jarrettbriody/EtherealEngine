@@ -1,5 +1,6 @@
 #pragma once
 #include "ScriptManager.h"
+#include "BloodSword.h"
 #include <WinUser.h>
 #include "DXCore.h"
 #include "ParticleEmitter.h"
@@ -13,9 +14,9 @@ struct DashBlurCallback : RendererCallback {
 	}
 };
 
-enum PlayerState
+enum class PlayerState
 {
-	Intro, Normal, HookshotFlight, HookshotLeash, Paused, Death, Victory
+	Intro, Normal, HookshotThrow, HookshotFlight, HookshotLeash, Paused, Death, Victory
 };
 
 class FPSController : public ScriptManager
@@ -38,8 +39,8 @@ class FPSController : public ScriptManager
 	const float HEADBOB_OFFSET_MIN = 0.0f;
 	const float HEADBOB_OFFSET_MAX = 0.5f;
 	bool resetHeadbob = false;
-	const float NORMAL_FOV = 90.0f;
-	const float DASH_FOV = 110.0f;
+	const float NORMAL_FOV = 100.0f;
+	const float DASH_FOV = NORMAL_FOV + 20.0f;
 	float fov = NORMAL_FOV;
 	float fovNormalToDashSpeed = 180.0f;
 	float fovDashToNormalSpeed = 120.0f;
@@ -76,6 +77,10 @@ class FPSController : public ScriptManager
 	const float DASH_DAMP_TIMER_MAX = 0.3f;
 	float dashImpulseScalar = 80.0f;
 
+	// Sword
+	EntityCreationParameters swordParams;
+	Entity* sword; 
+
 	// Blood Icicle
 	EntityCreationParameters icicleParams;
 	float bloodIcicleScalar = 50.0f;
@@ -84,9 +89,15 @@ class FPSController : public ScriptManager
 	const float BLOOD_ICICLE_MAX_COOLDOWN_TIME = 1.0f;
 	
 	// Hookshot
+	EntityCreationParameters hookshotParams;
+	Entity* hookshot;
+	Entity* hookshotAttachedEntity;
+	float hookshotLength;
+	float hookshotZScale = 1.0f;
 	btVector3 hookshotPoint;
+	float hookshotThrowSpeed = 350.0f;
 	float hookshotRangeScalar = 100.0f;
-	const float EXIT_RANGE = 5.0f;
+	const float EXIT_RANGE = 2.5f;
 
 	// Leash
 	Entity* leashedEnemy;
@@ -106,15 +117,23 @@ class FPSController : public ScriptManager
 	
 	void CheckAllAbilities();
 
+	void CheckBloodSword();
+
 	void CheckBloodIcicle();
 	
 	void CheckBulletTime();
 
 	void CheckHookshot();
 
+	void HookshotThrow();
+
 	void HookshotFlight();
 
 	void HookshotLeash();
+
+	void UpdateHookShotTransform();
+
+	void ResetHookshotTransform();
 	
 	void Move();
 
@@ -133,3 +152,24 @@ class FPSController : public ScriptManager
 	void OnCollision(btCollisionObject* other);
 };
 
+/*
+* For reference
+* struct EntityCreationParameters {
+	string entityName = "";
+	string tagName = "";
+	string layerName = "";
+	string meshName = "";
+	string materialName = "";
+	string scriptNames[8];
+	unsigned int scriptCount = 0;
+	XMFLOAT3 position = ZERO_VECTOR3;
+	XMFLOAT3 rotationRadians = ZERO_VECTOR3;
+	XMFLOAT3 scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
+	float entityMass = 0.0f;
+	bool initRigidBody = true;
+	BulletColliderShape bulletColliderShape = BulletColliderShape::BOX;
+	bool collisionsEnabled = true;
+	bool drawEntity = true;
+	bool drawShadow = true;
+};
+*/

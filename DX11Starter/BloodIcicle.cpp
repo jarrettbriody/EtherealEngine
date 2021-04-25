@@ -4,17 +4,56 @@
 void BloodIcicle::Init()
 {
 	eMap = ScriptManager::sceneEntitiesMap;
-	cout << "init blood icicle" << endl;
+	
+	// Do not allow the icicle to receive reaction forces
+	entity->GetRBody()->setCollisionFlags(entity->GetRBody()->getCollisionFlags() | btRigidBody::CF_NO_CONTACT_RESPONSE); 
 }
 
 void BloodIcicle::Update()
 {
-	
+	if (bodyPartPinned)
+	{
+		closestChild->SetPosition(entity->GetPosition());
+	}
 }
 
 void BloodIcicle::OnCollision(btCollisionObject* other)
 {
-	Entity* otherE = (Entity*)((PhysicsWrapper*)other->getUserPointer())->objectPointer;
+	btRigidBody* icicleRb = entity->GetRBody();
+	PhysicsWrapper* wrapper = (PhysicsWrapper*)other->getUserPointer();
 
-	cout << "Blood Icicle Hit: " << otherE->GetName() << endl;
+	if (wrapper->type == PHYSICS_WRAPPER_TYPE::ENTITY)
+	{
+		Entity* otherE = (Entity*)wrapper->objectPointer;
+
+		// cout << "Blood Icicle Hit: " << otherE->GetName().c_str() << endl;
+
+		// pin icicle to environment
+		if (otherE->tag.STDStr() == std::string("Environment"))
+		{
+			icicleRb->clearForces();
+			icicleRb->setActivationState(0); 
+		}
+
+		// if this icicle hits an enemy and there is not already a body part pinned to the icicle then split the enemy mesh and give each of the child entities the tag "Body Part" to detect the next necessary collision to accurately pin a body part
+		if (otherE->tag.STDStr() == std::string("Enemy") && !bodyPartPinned)
+		{
+			std::vector<Entity*> childEntities = EESceneLoader->SplitMeshIntoChildEntities(otherE, 1.0f);  
+
+			for each (Entity* e in childEntities)
+			{
+				e->tag = std::string("Body Part");
+			}
+		}
+
+		// if this icicle hits a child entity of a recently split enemy and there is not already a body part pinned to the icicle then pin the collided body part
+		if (otherE->tag.STDStr() == std::string("Body Part") && !bodyPartPinned)
+		{
+			closestChild = otherE;
+
+			//closestChild->RemoveFromPhysicsSimulation(); ---> works better without this right now
+			bodyPartPinned = true;
+			closestChild->GetRBody()->setAngularFactor(btVector3(0, 0, 0)); // do not allow the child to rotate after pinned
+		}
+	}
 }

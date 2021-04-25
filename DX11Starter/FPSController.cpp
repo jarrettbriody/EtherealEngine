@@ -21,13 +21,51 @@ void FPSController::Init()
 			1,								// script count
 			XMFLOAT3(0.0f, 0.0f, 0.0f),		// position
 			XMFLOAT3(0.0f, 0.0f, 0.0f),		// rotation
-			XMFLOAT3(0.5f, 2.0f, 0.5f),		// scale
-			1.0f							// mass
+			XMFLOAT3(0.5f, 8.0f, 0.5f),		// scale
+			1.0f,							// mass
+			true,
+			BulletColliderShape::CAPSULE
 			// defaults work for the rest
 	};
 
-	// TODO: Easier setting of physics characteristics via Bullet (coll shape, mass, restitution, other properties)
+	swordParams = {
+			"Blood Sword",					// name
+			"Blood Sword",					// tag
+			"Blood Sword",					// layer
+			"bloodsword",							// mesh
+			"Red",							// material
+			{"BLOODSWORD"},				// script names
+			1,								// script count
+			XMFLOAT3(0.0f, 0.0f, 0.0f),		// position
+			XMFLOAT3(0.0f, XMConvertToRadians(-90.0f), 0.0f),		// rotation
+			XMFLOAT3(1.0f, 1.0f, 1.0f),		// scale
+			0.0f,							// mass
+			false
+			// defaults work for the rest
+	};
+
+	sword = ScriptManager::CreateEntity(swordParams);
+	sword->collisionsEnabled = false;
 	
+	hookshotParams = {
+			"Hookshot",					// name
+			"Hookshot",					// tag
+			"Hookshot",					// layer
+			"bloodchain",							// mesh
+			"bloodchain",							// material
+			{""},				// script names
+			0,								// script count
+			XMFLOAT3(0.0f, 0.0f, 0.0f),		// position
+			XMFLOAT3(0.0f, 0.0f, 0.0f),		// rotation
+			XMFLOAT3(1.0f, 1.0f, hookshotZScale),		// scale
+			0.0f							// mass
+											// defaults work for the rest
+	};
+
+	hookshot = ScriptManager::CreateEntity(hookshotParams);
+	hookshot->GetRBody()->setActivationState(DISABLE_SIMULATION);
+	hookshot->collisionsEnabled = false;
+
 	playerRBody = entity->GetRBody(); // Get the bullet rigidbody
 	playerRBody->setAngularFactor(btVector3(0, 1, 0)); // constrain rotations on x and z axes
 	// playerRBody->setRestitution(0.1f);
@@ -64,15 +102,24 @@ void FPSController::Update()
 			MouseLook();
 			cam->SetPosition(XMFLOAT3(entity->GetPosition().x, entity->GetPosition().y + entity->GetScale().y + headbobOffset, entity->GetPosition().z)); // after all updates make sure camera is following the affected entity
 			break;
+		
+		case PlayerState::HookshotThrow:
+			HookshotThrow();
+			UpdateHookShotTransform();
+			MouseLook();
+			cam->SetPosition(XMFLOAT3(entity->GetPosition().x, entity->GetPosition().y + entity->GetScale().y + headbobOffset, entity->GetPosition().z)); // after all updates make sure camera is following the affected entity
+			break;
 
 		case PlayerState::HookshotFlight:
 			HookshotFlight();
+			UpdateHookShotTransform();
 			MouseLook();
 			cam->SetPosition(XMFLOAT3(entity->GetPosition().x, entity->GetPosition().y + entity->GetScale().y + headbobOffset, entity->GetPosition().z)); // after all updates make sure camera is following the affected entity
 			break;
 
 		case PlayerState::HookshotLeash:
 			HookshotLeash();
+			UpdateHookShotTransform();
 			Move();
 			MouseLook();
 			cam->SetPosition(XMFLOAT3(entity->GetPosition().x, entity->GetPosition().y + entity->GetScale().y + headbobOffset, entity->GetPosition().z)); // after all updates make sure camera is following the affected entity
@@ -102,22 +149,33 @@ void FPSController::Update()
 
 void FPSController::CheckAllAbilities()
 {
+	CheckBloodSword(); 
 	CheckBloodIcicle();
 	CheckHookshot();
 	CheckBulletTime();
 }
+
+void FPSController::CheckBloodSword()
+{
+	if (mouse->OnLMBDown())
+	{
+		BloodSword* swordScript = (BloodSword*)scriptFunctionsMap[sword->GetName()]["BLOODSWORD"];
+		swordScript->StartSlash();
+	}
+}
+
 
 void FPSController::CheckBloodIcicle()
 {
 	if (mouse->OnRMBDown() && bloodIcicleCooldownTimer <= 0) 
 	{
 		// update position and rotation of the EntityCreationParams
-		icicleParams.position = XMFLOAT3(cam->position.x + direction.x, cam->position.y, cam->position.z + direction.z); 
+		icicleParams.position = XMFLOAT3(cam->position.x + direction.x * 2, cam->position.y, cam->position.z + direction.z * 2); 
 		icicleParams.rotationRadians = XMFLOAT3(cam->xRotation + 1.5708f /* 90 degress in radians */ , cam->yRotation, cam->zRotation);
 
 		Entity* bloodIcicle = ScriptManager::CreateEntity(icicleParams);
 
-		btVector3 shotImpulse = btVector3(direction.x, direction.y, direction.z);
+		btVector3 shotImpulse = Utility::Float3ToBulletVector(direction);
 
 		bloodIcicle->GetRBody()->setGravity(btVector3(0,0,0));
 		bloodIcicle->GetRBody()->activate();
@@ -165,18 +223,19 @@ void FPSController::CheckHookshot()
 		Config::DynamicsWorld->computeOverlappingPairs();
 
 		// Redefine our vectors using bullet's silly types
-		btVector3 from(entity->GetPosition().x, entity->GetPosition().y, entity->GetPosition().z);
-		btVector3 to(entity->GetPosition().x + direction.x * hookshotRangeScalar, entity->GetPosition().y + direction.y * hookshotRangeScalar, entity->GetPosition().z + direction.z * hookshotRangeScalar); // raycast direction the camera is looking
+		btVector3 from(Utility::Float3ToBulletVector(entity->GetPosition()));
+		btVector3 to(from.getX() + direction.x * hookshotRangeScalar, from.getY() + direction.y * hookshotRangeScalar, from.getZ() + direction.z * hookshotRangeScalar); // raycast direction the camera is looking
 
 		// debug line
+		/*
 		DebugLines* hookshotDebugLines = new DebugLines("hookshotDebugLines", 0, false); // cannot turn on the willUpdate paramater currently because not sure how to figure out which lines to update via the input Bullet gives 
 		XMFLOAT4X4 wm;
 		XMStoreFloat4x4(&wm, XMMatrixTranspose(DirectX::XMMatrixIdentity()));
 		hookshotDebugLines->worldMatrix = wm;
 		hookshotDebugLines->color = XMFLOAT3(0.0f, 0.0f, 1.0f);
 
-		XMFLOAT3 fromVec = XMFLOAT3(from.getX(), from.getY(), from.getZ());
-		XMFLOAT3 toVec = XMFLOAT3(to.getX(), to.getY(), to.getZ());
+		XMFLOAT3 fromVec = Utility::BulletVectorToFloat3(from);
+		XMFLOAT3 toVec = Utility::BulletVectorToFloat3(to);
 		XMFLOAT3* linePoints = new XMFLOAT3[8];
 		linePoints[0] = fromVec;
 		linePoints[1] = fromVec;
@@ -188,6 +247,7 @@ void FPSController::CheckHookshot()
 		linePoints[7] = toVec;
 		hookshotDebugLines->GenerateCuboidVertexBuffer(linePoints, 8);
 		delete[] linePoints;
+		*/
 
 		// Create variable to store the ray hit and set flags
 		btCollisionWorld::ClosestRayResultCallback closestResult(from, to);
@@ -198,30 +258,48 @@ void FPSController::CheckHookshot()
 		if (closestResult.hasHit()) // if there is a surface to grapple to
 		{
 			// Get the entity associated with the rigid body we hit
-			//Entity* hit = (Entity*)(closestResult.m_collisionObject->getUserPointer());
 			PhysicsWrapper* wrapper = (PhysicsWrapper*)closestResult.m_collisionObject->getUserPointer();
 
-			if (wrapper->type == PHYSICS_WRAPPER_TYPE::ENTITY) {
-				Entity* hit = (Entity*)wrapper->objectPointer;
-				// printf("Hookshot Hit: %s\n", hit->GetName().c_str());
+			hookshotPoint = closestResult.m_hitPointWorld;
 
-				hookshotPoint = closestResult.m_hitPointWorld;
+			if (wrapper->type == PHYSICS_WRAPPER_TYPE::ENTITY) 
+			{
+				// Entity* hit = (Entity*)wrapper->objectPointer;
+				hookshotAttachedEntity = (Entity*)wrapper->objectPointer;
 
-				if (hit->tag.STDStr() == std::string("Enemy"))
-				{
-					ps = PlayerState::HookshotLeash;
-					leashedEnemy = (Entity*)hit->GetRBody()->getUserPointer();
-					leashSize = playerRBody->getCenterOfMassPosition().distance(leashedEnemy->GetRBody()->getCenterOfMassPosition());
-					cout << leashSize << endl;
-				}
-				else
-				{
-					// playerRBody->clearForces(); --> don't know if needed
-					ps = PlayerState::HookshotFlight;
-				}
-
-				// cout << hookshotImpulseDir.getX() << " " << hookshotImpulseDir.getY() << " " << hookshotImpulseDir.getZ() << endl;
+				ps = PlayerState::HookshotThrow;
 			}
+		}
+	}
+}
+
+void FPSController::HookshotThrow()
+{
+	// TODO: Make model wiht pivot point at one side and use for hookshot so it only scales in that way
+
+	if (hookshotZScale < hookshotLength)
+	{
+		hookshotZScale += hookshotThrowSpeed * deltaTime;
+	}
+	else
+	{
+		if (hookshotAttachedEntity->tag.STDStr() == std::string("Enemy"))
+		{
+			leashedEnemy = hookshotAttachedEntity;
+			leashSize = playerRBody->getCenterOfMassPosition().distance(leashedEnemy->GetRBody()->getCenterOfMassPosition());
+			// cout << leashSize << endl;
+
+			ps = PlayerState::HookshotLeash;
+		}
+		else if (hookshotAttachedEntity->tag.STDStr() == std::string("Environment"))
+		{
+			// playerRBody->clearForces(); --> don't know if needed
+
+			ps = PlayerState::HookshotFlight;
+		}
+		else
+		{
+			ResetHookshotTransform();
 		}
 	}
 }
@@ -232,19 +310,28 @@ void FPSController::HookshotFlight()
 
 	if (keyboard->KeyIsPressed(0x45))
 	{
+		if (hookshotZScale < hookshotLength)
+		{
+			hookshotZScale += hookshotThrowSpeed * deltaTime;
+		}
+		else if(hookshotZScale > hookshotLength)
+		{
+			hookshotZScale -= hookshotThrowSpeed * deltaTime;
+		}
+
 		btScalar distanceToHitPoint = playerRBody->getCenterOfMassPosition().distance(hookshotPoint);
 
 		playerRBody->activate();
-		playerRBody->applyCentralForce((hookshotPoint - playerRBody->getCenterOfMassPosition()).normalized() * distanceToHitPoint * 2.0f); // adjust speed according to distance away with an added small scalar
+		playerRBody->applyCentralForce(controllerVelocity.normalized() + (hookshotPoint - playerRBody->getCenterOfMassPosition()).normalized() * distanceToHitPoint * 2.0f); // adjust speed according to distance away with an added small scalar
 
 		if (distanceToHitPoint < EXIT_RANGE)
 		{
-			ps = PlayerState::Normal;
+			ResetHookshotTransform();
 		}
 	}
 	else // cancel if not holding E
 	{
-		ps = PlayerState::Normal;
+		ResetHookshotTransform();
 	}
 }
 
@@ -252,7 +339,16 @@ void FPSController::HookshotLeash()
 {
 	if (keyboard->OnKeyDown(0x45)) // cancel after pressing E again
 	{
-		ps = PlayerState::Normal;
+		ResetHookshotTransform();
+	}
+
+	if (hookshotZScale < hookshotLength)
+	{
+		hookshotZScale += hookshotThrowSpeed * deltaTime;
+	}
+	else if (hookshotZScale > hookshotLength)
+	{
+		hookshotZScale -= hookshotThrowSpeed * deltaTime;
 	}
 
 	// pull enemy into range if they are "stretching" over the initial leash size
@@ -262,6 +358,44 @@ void FPSController::HookshotLeash()
 		leashedEnemy->GetRBody()->activate();
 		leashedEnemy->GetRBody()->applyCentralImpulse((playerRBody->getCenterOfMassPosition() - leashedEnemy->GetRBody()->getCenterOfMassPosition()).normalized() * (leashDistanceToEnemy/leashedScalar));
 	}
+}
+
+void FPSController::UpdateHookShotTransform()
+{
+	XMFLOAT3 hookshotPosOffset = XMFLOAT3(cam->position.x, cam->position.y - 2.0f, cam->position.z);
+	XMFLOAT3 hookshotPosTolerance = XMFLOAT3(0.01, 0.01, 0.01);
+
+	XMVECTOR hookPos = XMLoadFloat3(&hookshot->GetPosition());
+	XMVECTOR newHookPos = XMLoadFloat3(&hookshotPosOffset);
+	XMVECTOR hookTolerance = XMLoadFloat3(&hookshotPosTolerance);
+
+	hookshot->SetPosition(hookshotPosOffset);
+
+	XMFLOAT3 hookshotDirection;
+	XMVECTOR direction;
+	if (ps == PlayerState::HookshotLeash)
+	{
+		direction = XMVectorSubtract(XMLoadFloat3(&Utility::BulletVectorToFloat3(leashedEnemy->GetRBody()->getCenterOfMassPosition())), XMLoadFloat3(&hookshot->GetPosition()));
+	}
+	else
+	{
+		direction = XMVectorSubtract(XMLoadFloat3(&Utility::BulletVectorToFloat3(hookshotPoint)), XMLoadFloat3(&hookshot->GetPosition()));
+	}
+
+	XMStoreFloat3(&hookshotDirection, direction);
+	XMStoreFloat(&hookshotLength, XMVector3Length(direction));
+
+	hookshot->SetDirectionVector(hookshotDirection);
+	
+	XMFLOAT3 hookshotScale = hookshot->GetScale();
+	hookshotScale.z = hookshotZScale;
+	hookshot->SetScale(hookshotScale);
+}
+
+void FPSController::ResetHookshotTransform()
+{
+	hookshotZScale = 0.1;
+	ps = PlayerState::Normal;
 }
 
 void FPSController::Move()
@@ -279,6 +413,7 @@ void FPSController::Move()
 	// update the controller velocity vector based on input
 	GroundCheck();
 	UpdateHeadbob();
+
 	// base movement
 	if (keyboard->KeyIsPressed(0x57)) // w
 	{ 
@@ -327,7 +462,8 @@ void FPSController::Move()
 
 	// FORCES ADDED TO RIGIDBODY 
 	playerRBody->activate();
-	playerRBody->setLinearVelocity(controllerVelocity + jumpForce);
+	controllerVelocity += jumpForce;
+	playerRBody->setLinearVelocity(controllerVelocity);
 	playerRBody->applyCentralImpulse(impulseSumVec);
 
 	// cout << "Vel: (" << controllerVelocity.getX() << ", " << controllerVelocity.getY() << ", " << controllerVelocity.getZ() << ")" << endl;
@@ -499,7 +635,7 @@ void FPSController::DampForces()
 		}
 	}
 
-	if (!keyboard->CheckKeysPressed(baseMovementKeys, 4) && !midAir) // Only damp overall movement if none of the base movement keys are pressed while on the ground. Also return roll to normal
+	if (!keyboard->CheckKeysPressed(baseMovementKeys, 4) && !midAir) // Only damp overall movement if none of the base movement keys are pressed while on the ground. 
 	{
 		controllerVelocity -= controllerVelocity * dampingScalar;
 	}
@@ -551,6 +687,7 @@ void FPSController::MouseLook()
 
 	prevMousePos.x = mouse->GetPosX();
 	prevMousePos.y = mouse->GetPosY();
+
 }
 
 void FPSController::OnCollision(btCollisionObject* other)
