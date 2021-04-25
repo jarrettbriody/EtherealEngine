@@ -120,7 +120,7 @@ void Game::Init()
 	EELightHandler = LightHandler::GetInstance();
 
 	EECamera = new Camera();
-	EECamera->UpdateProjectionMatrix();
+	EECamera->CalcProjMatrix();
 
 	SceneLoader::SetupInstance();
 	EESceneLoader = SceneLoader::GetInstance();
@@ -382,7 +382,7 @@ void Game::Init()
 void Game::OnResize()
 {
 	DXCore::OnResize();
-	EECamera->UpdateProjectionMatrix();
+	EECamera->CalcProjMatrix();
 	EERenderer->InitDepthStencil();
 	EERenderer->InitHBAOPlus();
 	EERenderer->InitPostProcessRTV();
@@ -395,8 +395,6 @@ void Game::Update(double deltaTime, double totalTime)
 		Quit();
 	}
 
-	EECamera->Update();
-
 	for (size_t i = 0; i < ScriptManager::scriptFunctions.size(); i++)
 	{
 		ScriptManager* sf = ScriptManager::scriptFunctions[i];
@@ -405,6 +403,8 @@ void Game::Update(double deltaTime, double totalTime)
 	}
 
 	GarbageCollect();
+
+	EECamera->Update();
 
 	PhysicsStep(deltaTime);
 
@@ -486,6 +486,8 @@ void Game::Update(double deltaTime, double totalTime)
 			dbl->worldMatrix = EESceneLoader->sceneEntitiesMap[dbl->entityName]->GetCollider(dbl->colliderID)->GetWorldMatrix();
 		}
 	}
+
+	EECamera->Update();
 
 	//EEDecalHandler->UpdateDecals();
 

@@ -88,8 +88,10 @@ void BloodSword::Update()
 	
 
 	// Calc world matrix of the sword
+	cam->CalcViewMatrix();
+	cam->CalcWorldMatrix();
 	entity->CalcWorldMatrix();
-	cam->CalcWorldMatrix(); // Putting camera world matrix calc after the entity makes the sword jitter much less severe...not sure why?
+	//cam->CalcWorldMatrix(); // Putting camera world matrix calc after the entity makes the sword jitter much less severe...not sure why?
 }
 
 void BloodSword::StartSlash()

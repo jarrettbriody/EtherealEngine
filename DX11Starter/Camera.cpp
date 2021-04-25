@@ -90,10 +90,10 @@ void Camera::SetPosition(XMFLOAT3 pos)
 void Camera::SetFOV(float degrees)
 {
 	fov = (3.1415926535f / 180.0f) * degrees;
-	UpdateProjectionMatrix();
+	CalcProjMatrix();
 }
 
-void Camera::UpdateProjectionMatrix()
+void Camera::CalcProjMatrix()
 {
 	// Create the Projection matrix
 	// - This should match the window's aspect ratio, and also update anytime
@@ -116,6 +116,28 @@ void Camera::CalcWorldMatrix()
 	DirectX::XMMATRIX world = rot * trans;
 	DirectX::XMStoreFloat4x4(&worldMatrix, DirectX::XMMatrixTranspose(world));
 	XMStoreFloat4x4(&invWorldMatrix, XMMatrixTranspose(XMMatrixInverse(nullptr, world)));
+}
+
+void Camera::CalcViewMatrix()
+{
+	XMFLOAT3 zAxis(0.0f, 0.0f, 1.0f);
+	XMFLOAT3 yAxis(0.0f, 1.0f, 0.0f);
+
+	XMVECTOR pos = XMLoadFloat3(&position);
+	XMVECTOR dir = XMLoadFloat3(&direction);
+	XMVECTOR rightVec = XMVector3Cross(dir, XMLoadFloat3(&yAxis));
+
+	XMVECTOR quat = XMQuaternionRotationRollPitchYaw(xRotation, yRotation, zRotation);
+	XMVECTOR newDir = XMVector3Rotate(XMLoadFloat3(&zAxis), quat);
+	XMVECTOR newUp = XMVector3Rotate(XMLoadFloat3(&yAxis), quat);
+	XMMATRIX view = XMMatrixLookToLH(pos, dir, newUp);
+	XMMATRIX inverseView = XMMatrixInverse(nullptr, view);
+
+	XMStoreFloat4x4(&viewMatrix, XMMatrixTranspose(view));
+	XMStoreFloat4x4(&invViewMatrix, XMMatrixTranspose(inverseView));
+	XMStoreFloat3(&direction, newDir);
+	XMStoreFloat3(&right, rightVec);
+
 }
 
 void Camera::Update()
@@ -176,18 +198,7 @@ void Camera::Update()
 
 	}
 	
-
-	XMVECTOR quat = XMQuaternionRotationRollPitchYaw(xRotation, yRotation, zRotation);
-	XMVECTOR newDir = XMVector3Rotate(XMLoadFloat3(&zAxis), quat);
-	XMVECTOR newUp = XMVector3Rotate(XMLoadFloat3(&yAxis), quat);
-	XMMATRIX view = XMMatrixLookToLH(pos, dir, newUp);
-	XMMATRIX inverseView = XMMatrixInverse(nullptr, view);
-
-	XMStoreFloat4x4(&viewMatrix, XMMatrixTranspose(view));
-	XMStoreFloat4x4(&invViewMatrix, XMMatrixTranspose(inverseView));
-	XMStoreFloat3(&direction, newDir);
-	XMStoreFloat3(&right, rightVec);
-
+	CalcViewMatrix();
 	CalcWorldMatrix();
 
 	//cout << "Pos: (" << position.x << ", " << position.y << ", " << position.z << ")" << endl;

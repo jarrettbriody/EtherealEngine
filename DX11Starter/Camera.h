@@ -41,8 +41,9 @@ public:
 	void RotateCamera(float x, float y, float z = 0.0f);
 	void SetPosition(XMFLOAT3 pos);
 	void SetFOV(float degrees);
-	void UpdateProjectionMatrix();
 	void CalcWorldMatrix();
+	void CalcViewMatrix();
+	void CalcProjMatrix();
 	void Update();
 };
 
