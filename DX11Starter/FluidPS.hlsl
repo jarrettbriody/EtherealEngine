@@ -80,7 +80,7 @@ SamplerComparisonState ShadowSampler	: register(s1);
 float4 main(VertexToPixel input) : SV_TARGET
 {
 	float3 pixDist = input.worldPos - orbCenter;
-	if (length(pixDist) > 0.5f) discard;
+	if (length(pixDist) > 0.505f) discard;
 	//return float4(1.0f,0.0f,0.0f,1.0f);
 	input.uv = float2(input.uv.x * uvMult.x + uvOffset.x, input.uv.y * uvMult.y + uvOffset.y);
 

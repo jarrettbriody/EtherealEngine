@@ -403,6 +403,7 @@ void CPUParticleEmitter::Update(double deltaTime, double totalTime, XMFLOAT4X4 v
 				float totalLifetime = particle.originalRemainingLife - particle.remainingLife;
 				if (fadeInEndTime > 0.0f && (totalLifetime < fadeInEndTime)) {
 					particle.transparency = min((totalLifetime / fadeInEndTime), 1.0f) * particle.originalTransparency;
+					particle.color.w = particle.transparency;
 				}
 			}
 
@@ -412,6 +413,7 @@ void CPUParticleEmitter::Update(double deltaTime, double totalTime, XMFLOAT4X4 v
 				}
 				else if (fadeOutStartTime <= 0.0f) {
 					particle.transparency = (particle.remainingLife / particleAvgLifetime) * particle.originalTransparency;
+					particle.color.w = particle.transparency;
 				}
 			}
 

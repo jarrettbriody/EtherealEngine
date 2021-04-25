@@ -27,5 +27,6 @@ float4 main(VStoPS input) : SV_TARGET
 		float fade = saturate(distance(float2(0, 0), input.uv));
 		color = lerp(input.color.rgba, float4(0, 0, 0, 0), fade * fade);
 	}
+
 	return color;
 }

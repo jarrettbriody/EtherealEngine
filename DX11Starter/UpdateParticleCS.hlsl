@@ -42,15 +42,18 @@ void main(uint3 id : SV_DispatchThreadID)
 		float totalLifetime = particle.originalRemainingLife - particle.remainingLife;
 		if (fadeInEndTime > 0.0f && (totalLifetime < fadeInEndTime)) {
 			particle.transparency = min((totalLifetime / fadeInEndTime), 1.0f) * particle.originalTransparency;
+			particle.color.a = particle.transparency;
 		}
 	}
 
 	if (fadeOut == 1) {
 		if (fadeOutStartTime > 0.0f && (particle.remainingLife < fadeOutStartTime)) {
 			particle.transparency = (particle.remainingLife / fadeOutStartTime) * particle.originalTransparency;
+			particle.color.a = particle.transparency;
 		}
 		else if(fadeOutStartTime <= 0.0f){
 			particle.transparency = (particle.remainingLife / particleAvgLifetime) * particle.originalTransparency;
+			particle.color.a = particle.transparency;
 		}
 	}
 

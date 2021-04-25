@@ -171,6 +171,9 @@
     <ClCompile Include="AmbientParticles.cpp">
       <Filter>EEScripts\Source</Filter>
     </ClCompile>
+    <ClCompile Include="LightHandler.cpp">
+      <Filter>EECore\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h">
@@ -289,6 +292,9 @@
     </ClInclude>
     <ClInclude Include="AmbientParticles.h">
       <Filter>EEScripts\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="LightHandler.h">
+      <Filter>EECore\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

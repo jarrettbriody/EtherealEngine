@@ -20,7 +20,7 @@ struct GBuffer
 GBuffer main(VertexToPixel input)
 {
 	float3 pixDist = input.worldPosition - orbCenter;
-	if (length(pixDist) > 0.5f) discard;
+	if (length(pixDist) > 0.505f) discard;
 	GBuffer output;
 	output.depth = length(input.worldPosition - cameraPosition);
 	output.entityInfo = entityInfo;

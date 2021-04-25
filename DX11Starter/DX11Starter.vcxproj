@@ -156,6 +156,7 @@
     <ClCompile Include="GPUParticleEmitter.cpp" />
     <ClCompile Include="Keyboard.cpp" />
     <ClCompile Include="KeyboardEvent.cpp" />
+    <ClCompile Include="LightHandler.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Material.cpp" />
     <ClCompile Include="MemoryAllocator.cpp" />
@@ -193,6 +194,7 @@
     <ClInclude Include="GPUParticleEmitter.h" />
     <ClInclude Include="Keyboard.h" />
     <ClInclude Include="KeyboardEvent.h" />
+    <ClInclude Include="LightHandler.h" />
     <ClInclude Include="Lights.h" />
     <ClInclude Include="Material.h" />
     <ClInclude Include="MemoryAllocator.h" />

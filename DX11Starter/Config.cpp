@@ -20,6 +20,7 @@ unsigned int Config::MemoryAllocatorEntityPoolSize = MEGABYTE * 32; //128 MB
 unsigned int Config::MemoryAllocatorMeshPoolSize = MEGABYTE * 128; //256 MB
 unsigned int Config::MemoryAllocatorMaterialPoolSize = MEGABYTE * 32; //320 MB
 unsigned int Config::MemoryAllocatorDecalPoolSize = MEGABYTE * 64; //384 MB
+unsigned int Config::MemoryAllocatorLightPoolSize = MEGABYTE * 8;
 //unsigned int Config::MemoryAllocatorParticlePoolSize = MEGABYTE * 64; //448 MB
 
 bool Config::EtherealDebugLinesEnabled = false;

@@ -1,7 +1,6 @@
 
 #include "ParticleStructs.hlsli"
 
-
 struct VStoPS
 {
 	float4 position : SV_POSITION;

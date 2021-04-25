@@ -113,7 +113,11 @@ void Game::Init()
 	EEMemoryAllocator->CreatePool((unsigned int)MEMORY_POOL::MESH_POOL, Config::MemoryAllocatorMeshPoolSize, sizeof(Mesh));
 	EEMemoryAllocator->CreatePool((unsigned int)MEMORY_POOL::MATERIAL_POOL, Config::MemoryAllocatorMaterialPoolSize, sizeof(Material));
 	EEMemoryAllocator->CreatePool((unsigned int)MEMORY_POOL::DECAL_POOL, Config::MemoryAllocatorDecalPoolSize, sizeof(DecalBucket));
+	EEMemoryAllocator->CreatePool((unsigned int)MEMORY_POOL::LIGHT_POOL, Config::MemoryAllocatorLightPoolSize, sizeof(Light));
 	//EEMemoryAllocator->CreatePool((unsigned int)MEMORY_POOL::PARTICLE_POOL, Config::MemoryAllocatorParticlePoolSize, sizeof(Particle));
+
+	LightHandler::SetupInstance();
+	EELightHandler = LightHandler::GetInstance();
 
 	EECamera = new Camera();
 	EECamera->UpdateProjectionMatrix();
@@ -213,9 +217,9 @@ void Game::Init()
 	emitDesc.emitterPosition = XMFLOAT3(-30, 0.1f, 0);
 	
 	ParticleColor partColors[3] = {
-		{XMFLOAT4(0.5f,0,0,1.0f),5.0f},
-		{XMFLOAT4(0.25f,0,0,1.0f),5.0f},
-		{XMFLOAT4(0.75f,0,0,1.0f),5.0f},
+		{XMFLOAT4(1.0f,0,0,0.5f),5.0f},
+		{XMFLOAT4(1.0f,0,0,0.5f),5.0f},
+		{XMFLOAT4(1.0f,0,0,0.2f),5.0f},
 	};
 	emitDesc.colors = partColors;
 	emitDesc.colorCount = 3;
@@ -723,6 +727,8 @@ void Game::GarbageCollect()
 			delete e;
 		}
 	}
+
+	EELightHandler->GarbageCollect();
 }
 
 /*

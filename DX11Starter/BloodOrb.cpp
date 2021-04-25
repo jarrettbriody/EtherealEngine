@@ -9,7 +9,7 @@ void BloodOrb::Init()
 	fluidCallback.pShader = EESceneLoader->pixelShadersMap["Fluid"];
 	fluidCallback.prepassVShader = EESceneLoader->vertexShadersMap["FluidPrepass"];
 	fluidCallback.prepassPShader = EESceneLoader->pixelShadersMap["FluidPrepass"];
-	fluidCallback.fillLineY = 0.2f;
+	fluidCallback.fillLineY = -0.4f;
 	fluidCallback.waveHeight = 0.02f;
 
 	EERenderer->SetRenderObjectCallback(entity, &fluidCallback);
@@ -30,7 +30,7 @@ void BloodOrb::Init()
 	orbEmitDesc.colors = partColors;
 	orbEmitDesc.colorCount = 3;
 	orbEmitDesc.maxParticles = 100;
-	orbEmitDesc.emissionRate = 10.0f;
+	orbEmitDesc.emissionRate = 15.0f;
 	//emitDesc.emissionRotation = XMFLOAT3(-XM_PIDIV2,0.0f,0.0f);
 	orbEmitDesc.emitterDirection = Y_AXIS;
 	orbEmitDesc.particleInitMinSpeed = 0.5f;
@@ -40,12 +40,17 @@ void BloodOrb::Init()
 	//emitDesc.particleInitMinScale = 0.1f;
 	//emitDesc.particleInitMaxScale = 0.2f;
 	orbEmitDesc.particleInitMinScale = 0.005f;
-	orbEmitDesc.particleInitMaxScale = 0.02f;
+	orbEmitDesc.particleInitMaxScale = 0.01f;
 	orbEmitDesc.particleInitMinAngularVelocity = -1.0f;
 	orbEmitDesc.particleInitMaxAngularVelocity = 1.0f;
 	//emitDesc.particleAcceleration = XMFLOAT3(0.0f, 0.0f, -20.0f);
+	orbEmitDesc.fadeIn = true;
+	orbEmitDesc.fadeOut = true;
+	orbEmitDesc.fadeInEndTime = 0.2f;
+	orbEmitDesc.fadeOutStartTime = 0.25f;
 
 	orbEmitter = new GPUParticleEmitter(orbEmitDesc);
+	orbEmitter->SetBlendingEnabled(true);
 }
 
 void BloodOrb::Update()

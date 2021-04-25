@@ -34,6 +34,7 @@ void AmbientParticles::Init()
 	emitDesc.particleAcceleration = XMFLOAT3(-0.1f, -0.0005f, 0.2f);
 
 	ambientAsh = new GPUParticleEmitter(emitDesc);
+	//ambientAsh->SetBlendingEnabled(true);
 	//----------------------------------------------------------------------------
 
 	//-----------------------FIRE-------------------------------------------------

@@ -23,6 +23,7 @@
 #include "GPUParticleEmitter.h"
 #include "CPUParticleEmitter.h"
 #include "Scripts.h"
+#include "LightHandler.h"
 
 using namespace std;
 
@@ -56,6 +57,7 @@ private:
 	SceneLoader* EESceneLoader = nullptr;
 	MemoryAllocator* EEMemoryAllocator = nullptr;
 	DecalHandler* EEDecalHandler = nullptr;
+	LightHandler* EELightHandler = nullptr;
 	
 	//testing
 	//Light* testLight = nullptr;
