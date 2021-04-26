@@ -105,22 +105,22 @@ void FPSController::Update()
 			break;
 		
 		case PlayerState::HookshotThrow:
-			HookshotThrow();
 			UpdateHookShotTransform();
+			HookshotThrow();
 			MouseLook();
 			cam->SetPosition(XMFLOAT3(entity->GetPosition().x, entity->GetPosition().y + entity->GetScale().y + headbobOffset, entity->GetPosition().z)); // after all updates make sure camera is following the affected entity
 			break;
 
 		case PlayerState::HookshotFlight:
-			HookshotFlight();
 			UpdateHookShotTransform();
+			HookshotFlight();
 			MouseLook();
 			cam->SetPosition(XMFLOAT3(entity->GetPosition().x, entity->GetPosition().y + entity->GetScale().y + headbobOffset, entity->GetPosition().z)); // after all updates make sure camera is following the affected entity
 			break;
 
 		case PlayerState::HookshotLeash:
-			HookshotLeash();
 			UpdateHookShotTransform();
+			HookshotLeash();
 			Move();
 			MouseLook();
 			cam->SetPosition(XMFLOAT3(entity->GetPosition().x, entity->GetPosition().y + entity->GetScale().y + headbobOffset, entity->GetPosition().z)); // after all updates make sure camera is following the affected entity
