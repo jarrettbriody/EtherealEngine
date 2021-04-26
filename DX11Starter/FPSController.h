@@ -89,6 +89,7 @@ class FPSController : public ScriptManager
 	const float BLOOD_ICICLE_MAX_COOLDOWN_TIME = 1.0f;
 	
 	// Hookshot
+	Entity* bloodOrb;
 	EntityCreationParameters hookshotParams;
 	Entity* hookshot;
 	Entity* hookshotAttachedEntity;
