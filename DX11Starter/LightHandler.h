@@ -20,6 +20,8 @@ private:
 	map<string, Light*> lightsMap;
 	map<Light*, bool> lightIsDeadMap;
 	map<string, vector<Light*>> entityLightMap;
+	map<string, XMFLOAT4X4*> entityWorldsMap;
+	//map<string, string>
 	//vector<LightParentPair>
 
 public:
