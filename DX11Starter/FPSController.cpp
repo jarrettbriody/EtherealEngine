@@ -65,7 +65,7 @@ void FPSController::Init()
 	};
 
 	hookshot = ScriptManager::CreateEntity(hookshotParams);
-	hookshot->collisionsEnabled = false;
+	//hookshot->collisionsEnabled = false;
 
 	playerRBody = entity->GetRBody(); // Get the bullet rigidbody
 	playerRBody->setAngularFactor(btVector3(0, 1, 0)); // constrain rotations on x and z axes
@@ -228,7 +228,7 @@ void FPSController::CheckHookshot()
 		btVector3 to(from.getX() + direction.x * hookshotRangeScalar, from.getY() + direction.y * hookshotRangeScalar, from.getZ() + direction.z * hookshotRangeScalar); // raycast direction the camera is looking
 
 		// debug line
-		
+		/*
 		DebugLines* hookshotDebugLines = new DebugLines("hookshotDebugLines", 0, false); // cannot turn on the willUpdate paramater currently because not sure how to figure out which lines to update via the input Bullet gives 
 		XMFLOAT4X4 wm;
 		XMStoreFloat4x4(&wm, XMMatrixTranspose(DirectX::XMMatrixIdentity()));
@@ -248,6 +248,7 @@ void FPSController::CheckHookshot()
 		linePoints[7] = toVec;
 		hookshotDebugLines->GenerateCuboidVertexBuffer(linePoints, 8);
 		delete[] linePoints;
+		*/
 		
 
 		// Create variable to store the ray hit and set flags
@@ -386,12 +387,15 @@ void FPSController::UpdateHookShotTransform()
 	XMFLOAT3 hookshotScale = hookshot->GetScale();
 	hookshotScale.z = hookshotZScale;
 	hookshot->SetScale(hookshotScale);
+	hookshot->CalcWorldMatrix();
 }
 
 void FPSController::ResetHookshotTransform()
 {
 	hookshot->SetPosition(bloodOrb->GetPosition());
-	hookshotZScale = 0.1;
+	hookshotZScale = 0.0;
+	hookshot->SetScale(1, 1, hookshotZScale);
+	hookshot->CalcWorldMatrix();
 	ps = PlayerState::Normal;
 }
 
