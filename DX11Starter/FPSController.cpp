@@ -363,17 +363,19 @@ void FPSController::UpdateHookShotTransform()
 {
 	hookshot->SetRepeatTexture(1.0f, hookshotZScale);
 
-	hookshot->SetPosition(bloodOrb->GetPosition());
+	XMFLOAT3 bloodOrbPos = bloodOrb->GetPosition();
+
+	hookshot->SetPosition(bloodOrbPos);
 
 	XMFLOAT3 hookshotDirection;
 	XMVECTOR direction;
 	if (ps == PlayerState::HookshotLeash)
 	{
-		direction = XMVectorSubtract(XMLoadFloat3(&Utility::BulletVectorToFloat3(leashedEnemy->GetRBody()->getCenterOfMassPosition())), XMLoadFloat3(&bloodOrb->GetPosition()));
+		direction = XMVectorSubtract(XMLoadFloat3(&Utility::BulletVectorToFloat3(leashedEnemy->GetRBody()->getCenterOfMassPosition())), XMLoadFloat3(&bloodOrbPos));
 	}
 	else
 	{
-		direction = XMVectorSubtract(XMLoadFloat3(&Utility::BulletVectorToFloat3(hookshotPoint)), XMLoadFloat3(&bloodOrb->GetPosition()));
+		direction = XMVectorSubtract(XMLoadFloat3(&Utility::BulletVectorToFloat3(hookshotPoint)), XMLoadFloat3(&bloodOrbPos));
 	}
 
 	XMStoreFloat3(&hookshotDirection, direction);
