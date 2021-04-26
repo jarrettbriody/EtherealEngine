@@ -47,6 +47,8 @@ void FPSController::Init()
 	sword = ScriptManager::CreateEntity(swordParams);
 	sword->collisionsEnabled = false;
 	
+	bloodOrb = eMap->find("Blood_Orb")->second;
+
 	hookshotParams = {
 			"Hookshot",					// name
 			"Hookshot",					// tag
@@ -58,12 +60,11 @@ void FPSController::Init()
 			XMFLOAT3(0.0f, 0.0f, 0.0f),		// position
 			XMFLOAT3(0.0f, 0.0f, 0.0f),		// rotation
 			XMFLOAT3(1.0f, 1.0f, hookshotZScale),		// scale
-			0.0f							// mass
-											// defaults work for the rest
+			0.0f,							// mass
+			false								// defaults work for the rest
 	};
 
 	hookshot = ScriptManager::CreateEntity(hookshotParams);
-	hookshot->GetRBody()->setActivationState(DISABLE_SIMULATION);
 	hookshot->collisionsEnabled = false;
 
 	playerRBody = entity->GetRBody(); // Get the bullet rigidbody
@@ -170,7 +171,7 @@ void FPSController::CheckBloodIcicle()
 	if (mouse->OnRMBDown() && bloodIcicleCooldownTimer <= 0) 
 	{
 		// update position and rotation of the EntityCreationParams
-		icicleParams.position = XMFLOAT3(cam->position.x + direction.x * 2, cam->position.y, cam->position.z + direction.z * 2); 
+		icicleParams.position = bloodOrb->GetPosition();
 		icicleParams.rotationRadians = XMFLOAT3(cam->xRotation + 1.5708f /* 90 degress in radians */ , cam->yRotation, cam->zRotation);
 
 		Entity* bloodIcicle = ScriptManager::CreateEntity(icicleParams);
@@ -222,12 +223,12 @@ void FPSController::CheckHookshot()
 		Config::DynamicsWorld->updateAabbs();
 		Config::DynamicsWorld->computeOverlappingPairs();
 
-		// Redefine our vectors using bullet's silly types
-		btVector3 from(Utility::Float3ToBulletVector(entity->GetPosition()));
+		// Redefine our vectors using bullet's types
+		btVector3 from(Utility::Float3ToBulletVector(bloodOrb->GetPosition()));
 		btVector3 to(from.getX() + direction.x * hookshotRangeScalar, from.getY() + direction.y * hookshotRangeScalar, from.getZ() + direction.z * hookshotRangeScalar); // raycast direction the camera is looking
 
 		// debug line
-		/*
+		
 		DebugLines* hookshotDebugLines = new DebugLines("hookshotDebugLines", 0, false); // cannot turn on the willUpdate paramater currently because not sure how to figure out which lines to update via the input Bullet gives 
 		XMFLOAT4X4 wm;
 		XMStoreFloat4x4(&wm, XMMatrixTranspose(DirectX::XMMatrixIdentity()));
@@ -247,7 +248,7 @@ void FPSController::CheckHookshot()
 		linePoints[7] = toVec;
 		hookshotDebugLines->GenerateCuboidVertexBuffer(linePoints, 8);
 		delete[] linePoints;
-		*/
+		
 
 		// Create variable to store the ray hit and set flags
 		btCollisionWorld::ClosestRayResultCallback closestResult(from, to);
@@ -275,8 +276,6 @@ void FPSController::CheckHookshot()
 
 void FPSController::HookshotThrow()
 {
-	// TODO: Make model wiht pivot point at one side and use for hookshot so it only scales in that way
-
 	if (hookshotZScale < hookshotLength)
 	{
 		hookshotZScale += hookshotThrowSpeed * deltaTime;
@@ -286,7 +285,7 @@ void FPSController::HookshotThrow()
 		if (hookshotAttachedEntity->tag.STDStr() == std::string("Enemy"))
 		{
 			leashedEnemy = hookshotAttachedEntity;
-			leashSize = playerRBody->getCenterOfMassPosition().distance(leashedEnemy->GetRBody()->getCenterOfMassPosition());
+			leashSize = playerRBody->getCenterOfMassPosition().distance(leashedEnemy->GetRBody()->getCenterOfMassPosition()); // TODO: Change this to blood orb position instead of player?
 			// cout << leashSize << endl;
 
 			ps = PlayerState::HookshotLeash;
@@ -319,7 +318,7 @@ void FPSController::HookshotFlight()
 			hookshotZScale -= hookshotThrowSpeed * deltaTime;
 		}
 
-		btScalar distanceToHitPoint = playerRBody->getCenterOfMassPosition().distance(hookshotPoint);
+		btScalar distanceToHitPoint = Utility::Float3ToBulletVector(bloodOrb->GetPosition()).distance(hookshotPoint);
 
 		playerRBody->activate();
 		playerRBody->applyCentralForce(controllerVelocity.normalized() + (hookshotPoint - playerRBody->getCenterOfMassPosition()).normalized() * distanceToHitPoint * 2.0f); // adjust speed according to distance away with an added small scalar
@@ -352,11 +351,11 @@ void FPSController::HookshotLeash()
 	}
 
 	// pull enemy into range if they are "stretching" over the initial leash size
-	float leashDistanceToEnemy = playerRBody->getCenterOfMassPosition().distance(leashedEnemy->GetRBody()->getCenterOfMassPosition());
+	float leashDistanceToEnemy = playerRBody->getCenterOfMassPosition().distance(leashedEnemy->GetRBody()->getCenterOfMassPosition()); // TODO: Change this to blood orb position instead of player?
 	if (leashDistanceToEnemy >= leashSize)
 	{
 		leashedEnemy->GetRBody()->activate();
-		leashedEnemy->GetRBody()->applyCentralImpulse((playerRBody->getCenterOfMassPosition() - leashedEnemy->GetRBody()->getCenterOfMassPosition()).normalized() * (leashDistanceToEnemy/leashedScalar));
+		leashedEnemy->GetRBody()->applyCentralImpulse((playerRBody->getCenterOfMassPosition() - leashedEnemy->GetRBody()->getCenterOfMassPosition()).normalized() * (leashDistanceToEnemy/leashedScalar)); // TODO: Change this to blood orb position instead of player?
 	}
 }
 
@@ -364,24 +363,17 @@ void FPSController::UpdateHookShotTransform()
 {
 	hookshot->SetRepeatTexture(1.0f, hookshotZScale);
 
-	XMFLOAT3 hookshotPosOffset = XMFLOAT3(cam->position.x, cam->position.y - 2.0f, cam->position.z);
-	XMFLOAT3 hookshotPosTolerance = XMFLOAT3(0.01, 0.01, 0.01);
-
-	XMVECTOR hookPos = XMLoadFloat3(&hookshot->GetPosition());
-	XMVECTOR newHookPos = XMLoadFloat3(&hookshotPosOffset);
-	XMVECTOR hookTolerance = XMLoadFloat3(&hookshotPosTolerance);
-
-	hookshot->SetPosition(hookshotPosOffset);
+	hookshot->SetPosition(bloodOrb->GetPosition());
 
 	XMFLOAT3 hookshotDirection;
 	XMVECTOR direction;
 	if (ps == PlayerState::HookshotLeash)
 	{
-		direction = XMVectorSubtract(XMLoadFloat3(&Utility::BulletVectorToFloat3(leashedEnemy->GetRBody()->getCenterOfMassPosition())), XMLoadFloat3(&hookshot->GetPosition()));
+		direction = XMVectorSubtract(XMLoadFloat3(&Utility::BulletVectorToFloat3(leashedEnemy->GetRBody()->getCenterOfMassPosition())), XMLoadFloat3(&bloodOrb->GetPosition()));
 	}
 	else
 	{
-		direction = XMVectorSubtract(XMLoadFloat3(&Utility::BulletVectorToFloat3(hookshotPoint)), XMLoadFloat3(&hookshot->GetPosition()));
+		direction = XMVectorSubtract(XMLoadFloat3(&Utility::BulletVectorToFloat3(hookshotPoint)), XMLoadFloat3(&bloodOrb->GetPosition()));
 	}
 
 	XMStoreFloat3(&hookshotDirection, direction);
@@ -396,10 +388,8 @@ void FPSController::UpdateHookShotTransform()
 
 void FPSController::ResetHookshotTransform()
 {
-	XMFLOAT3 restingPos = entity->GetPosition();
-	restingPos.y += 5;
-	hookshot->SetPosition(restingPos);
-	hookshotZScale = 0.01;
+	hookshot->SetPosition(bloodOrb->GetPosition());
+	hookshotZScale = 0.1;
 	ps = PlayerState::Normal;
 }
 
