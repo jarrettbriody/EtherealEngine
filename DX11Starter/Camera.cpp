@@ -125,7 +125,7 @@ void Camera::CalcViewMatrix()
 
 	XMVECTOR pos = XMLoadFloat3(&position);
 	XMVECTOR dir = XMLoadFloat3(&direction);
-	XMVECTOR rightVec = XMVector3Cross(dir, XMLoadFloat3(&yAxis));
+	XMVECTOR rightVec = XMVector3Cross(XMLoadFloat3(&yAxis), dir);
 
 	XMVECTOR quat = XMQuaternionRotationRollPitchYaw(xRotation, yRotation, zRotation);
 	XMVECTOR newDir = XMVector3Rotate(XMLoadFloat3(&zAxis), quat);
@@ -147,7 +147,7 @@ void Camera::Update()
 
 	XMVECTOR pos = XMLoadFloat3(&position);
 	XMVECTOR dir = XMLoadFloat3(&direction);
-	XMVECTOR rightVec = XMVector3Cross(dir, XMLoadFloat3(&yAxis));
+	XMVECTOR rightVec = XMVector3Cross(XMLoadFloat3(&yAxis), dir);
 
 	float scalar = 30;
 

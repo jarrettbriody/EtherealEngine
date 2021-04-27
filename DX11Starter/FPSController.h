@@ -101,7 +101,7 @@ class FPSController : public ScriptManager
 	btVector3 hookshotPoint;
 	float hookshotThrowSpeed = 350.0f;
 	float hookshotRangeScalar = 100.0f;
-	const float EXIT_RANGE = 2.5f;
+	const float EXIT_RANGE = 3.5f;
 
 	// Leash
 	Entity* leashedEnemy;

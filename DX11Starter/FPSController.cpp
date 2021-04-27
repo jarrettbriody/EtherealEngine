@@ -93,37 +93,51 @@ void FPSController::Update()
 	// player state machine
 	switch (ps)
 	{
+		/*
+		* A - Move FPS controller
+		* B - Rotate Camera
+		* C - Everything else
+		*/
 		case PlayerState::Intro:
 
 			break;
 
 		case PlayerState::Normal:
-			CheckAllAbilities();
 			Move();
 			MouseLook();
 			cam->SetPosition(XMFLOAT3(entity->GetPosition().x, entity->GetPosition().y + entity->GetScale().y + headbobOffset, entity->GetPosition().z)); // after all updates make sure camera is following the affected entity
+			CheckAllAbilities();
 			break;
 		
 		case PlayerState::HookshotThrow:
-			UpdateHookShotTransform();
 			HookshotThrow();
 			MouseLook();
 			cam->SetPosition(XMFLOAT3(entity->GetPosition().x, entity->GetPosition().y + entity->GetScale().y + headbobOffset, entity->GetPosition().z)); // after all updates make sure camera is following the affected entity
+			UpdateHookShotTransform();
+			CheckBloodSword();
+			CheckBloodIcicle();
+			CheckBulletTime();
 			break;
 
 		case PlayerState::HookshotFlight:
-			UpdateHookShotTransform();
 			HookshotFlight();
 			MouseLook();
 			cam->SetPosition(XMFLOAT3(entity->GetPosition().x, entity->GetPosition().y + entity->GetScale().y + headbobOffset, entity->GetPosition().z)); // after all updates make sure camera is following the affected entity
+			UpdateHookShotTransform();
+			CheckBloodSword();
+			CheckBloodIcicle();
+			CheckBulletTime();
 			break;
 
 		case PlayerState::HookshotLeash:
-			UpdateHookShotTransform();
 			HookshotLeash();
 			Move();
 			MouseLook();
 			cam->SetPosition(XMFLOAT3(entity->GetPosition().x, entity->GetPosition().y + entity->GetScale().y + headbobOffset, entity->GetPosition().z)); // after all updates make sure camera is following the affected entity
+			UpdateHookShotTransform();
+			CheckBloodSword();
+			CheckBloodIcicle();
+			CheckBulletTime();
 			break;
 
 		case PlayerState::Paused:
@@ -286,7 +300,7 @@ void FPSController::HookshotThrow()
 		if (hookshotAttachedEntity->tag.STDStr() == std::string("Enemy"))
 		{
 			leashedEnemy = hookshotAttachedEntity;
-			leashSize = playerRBody->getCenterOfMassPosition().distance(leashedEnemy->GetRBody()->getCenterOfMassPosition()); // TODO: Change this to blood orb position instead of player?
+			leashSize = playerRBody->getCenterOfMassPosition().distance(leashedEnemy->GetRBody()->getCenterOfMassPosition()); 
 			// cout << leashSize << endl;
 
 			ps = PlayerState::HookshotLeash;
@@ -319,10 +333,12 @@ void FPSController::HookshotFlight()
 			hookshotZScale -= hookshotThrowSpeed * deltaTime;
 		}
 
-		btScalar distanceToHitPoint = Utility::Float3ToBulletVector(bloodOrb->GetPosition()).distance(hookshotPoint);
+		btVector3 playerCenterOfMassPos = playerRBody->getCenterOfMassPosition();
+
+		btScalar distanceToHitPoint = playerCenterOfMassPos.distance(hookshotPoint);
 
 		playerRBody->activate();
-		playerRBody->applyCentralForce(controllerVelocity.normalized() + (hookshotPoint - playerRBody->getCenterOfMassPosition()).normalized() * distanceToHitPoint * 2.0f); // adjust speed according to distance away with an added small scalar
+		playerRBody->applyCentralForce(controllerVelocity.normalized() + (hookshotPoint - playerCenterOfMassPos).normalized() * distanceToHitPoint * 2.0f); // adjust speed according to distance away with an added small scalar
 
 		if (distanceToHitPoint < EXIT_RANGE)
 		{
@@ -352,38 +368,42 @@ void FPSController::HookshotLeash()
 	}
 
 	// pull enemy into range if they are "stretching" over the initial leash size
-	float leashDistanceToEnemy = playerRBody->getCenterOfMassPosition().distance(leashedEnemy->GetRBody()->getCenterOfMassPosition()); // TODO: Change this to blood orb position instead of player?
+	btVector3 playerCenterOfMassPos = playerRBody->getCenterOfMassPosition();
+	float leashDistanceToEnemy = playerCenterOfMassPos.distance(leashedEnemy->GetRBody()->getCenterOfMassPosition()); 
 	if (leashDistanceToEnemy >= leashSize)
 	{
 		leashedEnemy->GetRBody()->activate();
-		leashedEnemy->GetRBody()->applyCentralImpulse((playerRBody->getCenterOfMassPosition() - leashedEnemy->GetRBody()->getCenterOfMassPosition()).normalized() * (leashDistanceToEnemy/leashedScalar)); // TODO: Change this to blood orb position instead of player?
+		leashedEnemy->GetRBody()->applyCentralImpulse((playerCenterOfMassPos - leashedEnemy->GetRBody()->getCenterOfMassPosition()).normalized() * (leashDistanceToEnemy/leashedScalar)); 
 	}
 }
 
 void FPSController::UpdateHookShotTransform()
 {
-	hookshot->SetRepeatTexture(1.0f, hookshotZScale);
-
-	XMFLOAT3 bloodOrbPos = bloodOrb->GetPosition();
-
-	hookshot->SetPosition(bloodOrbPos);
+	cam->CalcViewMatrix();
+	cam->CalcWorldMatrix();
+	XMFLOAT3 camPos = cam->position;
+	XMFLOAT3 camDir = cam->direction;
+	XMFLOAT3 camRight = cam->right;
+	XMFLOAT3 newPos = XMFLOAT3(camPos.x + -camRight.x, camPos.y + camDir.y - 0.65f, camPos.z + -camRight.z);
 
 	XMFLOAT3 hookshotDirection;
 	XMVECTOR direction;
 	if (ps == PlayerState::HookshotLeash)
 	{
-		direction = XMVectorSubtract(XMLoadFloat3(&Utility::BulletVectorToFloat3(leashedEnemy->GetRBody()->getCenterOfMassPosition())), XMLoadFloat3(&bloodOrbPos));
+		direction = XMVectorSubtract(XMLoadFloat3(&Utility::BulletVectorToFloat3(leashedEnemy->GetRBody()->getCenterOfMassPosition())), XMLoadFloat3(&newPos));
 	}
 	else
 	{
-		direction = XMVectorSubtract(XMLoadFloat3(&Utility::BulletVectorToFloat3(hookshotPoint)), XMLoadFloat3(&bloodOrbPos));
+		direction = XMVectorSubtract(XMLoadFloat3(&Utility::BulletVectorToFloat3(hookshotPoint)), XMLoadFloat3(&newPos));
 	}
 
 	XMStoreFloat3(&hookshotDirection, direction);
 	XMStoreFloat(&hookshotLength, XMVector3Length(direction));
 
+	hookshot->SetPosition(newPos);
 	hookshot->SetDirectionVector(hookshotDirection);
 	
+	hookshot->SetRepeatTexture(1.0f, hookshotZScale);
 	XMFLOAT3 hookshotScale = hookshot->GetScale();
 	hookshotScale.z = hookshotZScale;
 	hookshot->SetScale(hookshotScale);
@@ -392,7 +412,6 @@ void FPSController::UpdateHookShotTransform()
 
 void FPSController::ResetHookshotTransform()
 {
-	hookshot->SetPosition(bloodOrb->GetPosition());
 	hookshotZScale = 0.0;
 	hookshot->SetScale(1, 1, hookshotZScale);
 	hookshot->CalcWorldMatrix();
