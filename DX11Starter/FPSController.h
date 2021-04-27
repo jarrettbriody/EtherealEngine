@@ -72,10 +72,13 @@ class FPSController : public ScriptManager
 	float jumpForceScalar = 3.0f;
 
 	// Dashing
-	int dashCount = 5;
+	const int MAX_DASHES = 5;
+	int dashCount = MAX_DASHES;
 	float dashDampTimer = 0.0f;
 	const float DASH_DAMP_TIMER_MAX = 0.3f;
 	float dashImpulseScalar = 80.0f;
+	float dashRegenerationTimer = 0.0f;
+	const float DASH_MAX_REGENERATION_TIME = 1.5f;
 
 	// Sword
 	EntityCreationParameters swordParams;
@@ -83,8 +86,8 @@ class FPSController : public ScriptManager
 
 	// Blood Icicle
 	EntityCreationParameters icicleParams;
-	float bloodIcicleScalar = 50.0f;
-	float bloodIcicleRecoilScalar = 30.0f;
+	float bloodIcicleScalar = 60.0f;
+	float bloodIcicleRecoilScalar = 45.0f;
 	float bloodIcicleCooldownTimer = 0.0f;
 	const float BLOOD_ICICLE_MAX_COOLDOWN_TIME = 1.0f;
 	

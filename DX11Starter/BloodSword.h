@@ -16,11 +16,14 @@ class BloodSword : public ScriptManager
 
 	SwordState ss;
 
-	XMFLOAT3 positionLerpTolerance = XMFLOAT3(0.1f, 0.1f, 0.1f);
+	XMFLOAT3 positionLerpTolerance = XMFLOAT3(0.5f, 0.5f, 0.5f);
 	XMFLOAT3 rotationLerpTolerance = XMFLOAT3(0.1f, 0.1f, 0.1f);
 
-	float positionLerpScalar = 200.0f;
-	float rotationLerpScalar = 200.0f;
+	float slashPositionLerpScalar = 200.0f;
+	float slashRotationLerpScalar = 50.0f;
+
+	float readyingPositionLerpScalar = 15.0f;
+	float readyingRotationLerpScalar = 10.0f;
 
 	XMFLOAT3 lerpPositionFrom = XMFLOAT3(0, 0, 0);
 	XMFLOAT3 lerpPositionTo = XMFLOAT3(0, 0, 0);

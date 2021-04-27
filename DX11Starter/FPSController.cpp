@@ -176,7 +176,7 @@ void FPSController::CheckBloodIcicle()
 
 		Entity* bloodIcicle = ScriptManager::CreateEntity(icicleParams);
 
-		btVector3 shotImpulse = Utility::Float3ToBulletVector(direction);
+		btVector3 shotImpulse = Utility::Float3ToBulletVector(cam->direction);
 
 		bloodIcicle->GetRBody()->setGravity(btVector3(0,0,0));
 		bloodIcicle->GetRBody()->activate();
@@ -418,15 +418,47 @@ void FPSController::Move()
 	// base movement
 	if (keyboard->KeyIsPressed(0x57)) // w
 	{ 
-		controllerVelocity += btVector3(direction.x, 0, direction.z) * spd;
+		btVector3 forwardForce;
+		if (midAir)
+		{
+			forwardForce = btVector3(direction.x, 0, direction.z);
+		}
+		else
+		{
+			forwardForce = btVector3(direction.x, 0, direction.z) * spd;
+		}
+
+		controllerVelocity += forwardForce;
 	}
 	if (keyboard->KeyIsPressed(0x53)) // s
 	{ 
-		controllerVelocity += btVector3(direction.x, 0, direction.z) * -spd;
+		btVector3 backwardForce;
+
+		if (midAir)
+		{
+			backwardForce = btVector3(direction.x, 0, direction.z) * -1;
+		}
+		else
+		{
+			backwardForce = btVector3(direction.x, 0, direction.z) * -spd;
+		}
+
+		controllerVelocity += backwardForce;
 	}
 	if (keyboard->KeyIsPressed(0x41)) // a
 	{ 
-		controllerVelocity += btVector3(right.x, 0, right.z) * spd;
+		btVector3 leftwardForce;
+
+		if (midAir)
+		{
+			leftwardForce = btVector3(right.x, 0, right.z);
+		}
+		else
+		{
+			leftwardForce = btVector3(right.x, 0, right.z) * spd;
+		}
+
+		controllerVelocity += leftwardForce;
 		rollRight = true;
 	}
 	else
@@ -435,7 +467,18 @@ void FPSController::Move()
 	}
 	if (keyboard->KeyIsPressed(0x44)) // d
 	{ 
-		controllerVelocity += btVector3(right.x, 0, right.z) * -spd;
+		btVector3 rightwardForce;
+
+		if (midAir)
+		{
+			rightwardForce = btVector3(right.x, 0, right.z) * -1;
+		}
+		else
+		{
+			rightwardForce = btVector3(right.x, 0, right.z) * -spd;
+		}
+
+		controllerVelocity += rightwardForce;
 		rollLeft = true;
 	}
 	else
@@ -458,8 +501,6 @@ void FPSController::Move()
 	// Sum of impulse forces (for now just dash)
 	impulseSumVec += dashImpulse;
 
-	// Damping
-	DampForces();
 
 	// FORCES ADDED TO RIGIDBODY 
 	playerRBody->activate();
@@ -467,6 +508,9 @@ void FPSController::Move()
 	playerRBody->setLinearVelocity(controllerVelocity);
 	playerRBody->applyCentralImpulse(impulseSumVec);
 
+	// Damping
+	DampForces();
+	
 	// cout << "Vel: (" << controllerVelocity.getX() << ", " << controllerVelocity.getY() << ", " << controllerVelocity.getZ() << ")" << endl;
 
 	// set Ethereal Engine rotations
@@ -591,8 +635,18 @@ btVector3 FPSController::DashImpulseFromInput()
 		}
 	}
 
+	if (dashRegenerationTimer > 0)
+	{
+		dashRegenerationTimer -= deltaTime;
+	}
+	else if(dashCount < MAX_DASHES)
+	{
+		dashCount++;
+		dashRegenerationTimer = DASH_MAX_REGENERATION_TIME;
+	}
+
 	btVector3 dashImpulse = btVector3(0, 0, 0);
-	if (/*dashCount > 0 &&*/ keyboard->OnKeyDown(VK_SHIFT))
+	if (dashCount > 0 && keyboard->OnKeyDown(VK_SHIFT))
 	{
 		dashCount--;
 		// cout << dashCount << endl;

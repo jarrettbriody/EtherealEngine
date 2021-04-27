@@ -53,8 +53,8 @@ void BloodSword::Init()
 		XMFLOAT3(8, -6, 3)
 	};*/
 
-	slashPointsRight = GenerateSlashPoints(XMFLOAT3(5, 0, 3), XMFLOAT3(-8, -8, 3), 1.0f/5.0f, 4.0f);
-	slashPointsLeft = GenerateSlashPoints(XMFLOAT3(-5, 0, 3), XMFLOAT3(8, -8, 3), 1.0f/5.0f, 4.0f);
+	slashPointsRight = GenerateSlashPoints(XMFLOAT3(5, 0, 3), XMFLOAT3(-8, -4, 3), 0.5, 5.0f);
+	slashPointsLeft = GenerateSlashPoints(XMFLOAT3(-5, 0, 3), XMFLOAT3(8, -4, 3), 0.5, 5.0f);
 }
 
 void BloodSword::Update()
@@ -209,13 +209,13 @@ void BloodSword::CalcLerp()
 
 	if (ss == SwordState::Raised || ss == SwordState::Reset)
 	{
-		posLerpScalar = positionLerpScalar * 0.15;
-		rotLerpScalar = rotationLerpScalar * 0.15;
+		posLerpScalar = readyingPositionLerpScalar;
+		rotLerpScalar = readyingRotationLerpScalar;
 	}
 	else
 	{
-		posLerpScalar = positionLerpScalar;
-		rotLerpScalar = rotationLerpScalar;
+		posLerpScalar = slashPositionLerpScalar;
+		rotLerpScalar = slashRotationLerpScalar;
 	}
 
 	XMStoreFloat3(&finalLerpPos, XMVectorLerp(XMLoadFloat3(&lerpPositionFrom), XMLoadFloat3(&lerpPositionTo), deltaTime * posLerpScalar));
@@ -245,7 +245,7 @@ std::vector<XMFLOAT3> BloodSword::GenerateSlashPoints(XMFLOAT3 startingPos, XMFL
 			x += interval;
 			x = min(x, endingPos.x); // don't go beyond ending x
 
-			if (newPos.x >= 0)
+			if (newPos.x >= 1) // we want to make sure that the max z is kept for a couple lerp points so this is >= 1 rather than >= 0
 			{
 				z -= interval;
 			}
@@ -261,7 +261,7 @@ std::vector<XMFLOAT3> BloodSword::GenerateSlashPoints(XMFLOAT3 startingPos, XMFL
 			x -= interval;
 			x = max(x, endingPos.x); // don't go beyond ending x
 
-			if (newPos.x <= 0)
+			if (newPos.x <= -1) // we want to make sure that the max z is kept for a couple lerp points so this is <= -1 rather than <= 0
 			{
 				z -= interval;
 			}
@@ -269,7 +269,7 @@ std::vector<XMFLOAT3> BloodSword::GenerateSlashPoints(XMFLOAT3 startingPos, XMFL
 			{
 				z += interval;
 
-				z = min(z, maxZ); 
+				z = min(z, maxZ); // don't go beyond max z
 			}
 		}										    
 
