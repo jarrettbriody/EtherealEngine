@@ -38,7 +38,6 @@ TYPE="MESH" name="Cone" path="Default/cone.obj"
 TYPE="MESH" name="Sphere" path="Default/sphere.obj"
 TYPE="MESH" name="Helix" path="Default/helix.obj"
 TYPE="MESH" name="Torus" path="Default/torus.obj"
-TYPE="MESH" name="bloodsword" path="City/bloodsword.obj"
 TYPE="MESH" name="bloodchain" path="City/bloodchain.obj"
 
 TYPE="TEXTURE" name="GrassDiffuse" path="Default/Grass/DefaultGrassDiffuse.jpg"

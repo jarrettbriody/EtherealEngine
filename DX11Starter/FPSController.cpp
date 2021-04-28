@@ -28,6 +28,7 @@ void FPSController::Init()
 			// defaults work for the rest
 	};
 
+	/*
 	swordParams = {
 			"Blood Sword",					// name
 			"Blood Sword",					// tag
@@ -46,6 +47,8 @@ void FPSController::Init()
 
 	sword = ScriptManager::CreateEntity(swordParams);
 	sword->collisionsEnabled = false;
+	*/
+	sword = (*eMap)["Blood Sword"];
 	
 	bloodOrb = eMap->find("Blood_Orb")->second;
 
