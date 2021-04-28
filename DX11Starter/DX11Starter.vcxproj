@@ -150,6 +150,7 @@
     <ClCompile Include="FPSController.cpp" />
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="GPUParticleEmitter.cpp" />
+    <ClCompile Include="Grid.cpp" />
     <ClCompile Include="Keyboard.cpp" />
     <ClCompile Include="KeyboardEvent.cpp" />
     <ClCompile Include="Main.cpp" />
@@ -158,6 +159,7 @@
     <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="Mouse.cpp" />
     <ClCompile Include="MouseEvent.cpp" />
+    <ClCompile Include="Node.cpp" />
     <ClCompile Include="ParticleEmitter.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -187,6 +189,7 @@
     <ClInclude Include="FPSController.h" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="GPUParticleEmitter.h" />
+    <ClInclude Include="Grid.h" />
     <ClInclude Include="Keyboard.h" />
     <ClInclude Include="KeyboardEvent.h" />
     <ClInclude Include="Lights.h" />
@@ -195,6 +198,7 @@
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="Mouse.h" />
     <ClInclude Include="MouseEvent.h" />
+    <ClInclude Include="Node.h" />
     <ClInclude Include="ParticleEmitter.h" />
     <ClInclude Include="Particles.h" />
     <ClInclude Include="pch.h" />

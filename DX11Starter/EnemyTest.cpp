@@ -9,7 +9,7 @@ void EnemyTest::Init()
 	Entity* player = eMap->find("FPSController")->second;
 
 	bt = BehaviorTreeBuilder()
-			.Leaf<EnemySeesPlayer>(entity, player, 30.0f, 20.0f).End()
+			.Leaf<EnemySeesPlayer>(entity, player, 30.0f, 30.0f).End()
 		.End();
 
 	bt->Run();

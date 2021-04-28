@@ -159,6 +159,12 @@
     <ClCompile Include="EnemyTest.cpp">
       <Filter>EEScripts\Source</Filter>
     </ClCompile>
+    <ClCompile Include="Grid.cpp">
+      <Filter>EECore\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Node.cpp">
+      <Filter>EECore\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h">
@@ -277,6 +283,12 @@
     </ClInclude>
     <ClInclude Include="RendererStructs.h">
       <Filter>EECore\Utility\Structs</Filter>
+    </ClInclude>
+    <ClInclude Include="Grid.h">
+      <Filter>EECore\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Node.h">
+      <Filter>EECore\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

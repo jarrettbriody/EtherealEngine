@@ -360,19 +360,13 @@ void Game::Init()
 	}
 
 	//-------------------------------------------------------
-	// Behavior tree tests
+	// AI Tests
 	//-------------------------------------------------------
 
-	/*TestBehavior tb;
-	if (tb.initializeCalled == 0)
-		cout << "TEST 1 - SUCCESS" << endl;
-	else
-		cout << "TEST 1 - FAILURE" << endl;
-	tb.Tick();
-	if (tb.initializeCalled == 1)
-		cout << "TEST 2 - SUCCESS" << endl;
-	else
-		cout << "TEST 2 - FAILURE" << endl;*/
+	XMFLOAT3 gridStart(-444.0f, 100.0f, -150.f);
+	XMFLOAT2 gridSize(60.0f, 150.0f);
+	grid = Grid(gridStart, gridSize, 1.0f);
+	grid.CreateGrid();
 }
 
 void Game::OnResize()

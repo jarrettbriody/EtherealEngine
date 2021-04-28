@@ -13,6 +13,8 @@ void EnemySeesPlayer::OnTerminate(Status s)
 
 Status EnemySeesPlayer::Update()
 {
+	//cout << "Player Position= X: " << player->GetPosition().x << " | Y: " << player->GetPosition().y << " | Z: " << player->GetPosition().z << endl;
+
 	// TODO: Add check that returns FAILURE if the player status stops them from being seen (i.e. Death)
 
 	//enemy->RotateAroundAxis(Y_AXIS, 0.05f);
@@ -90,7 +92,7 @@ Status EnemySeesPlayer::Update()
 			// If we pass this next check then the player is in all sides of the vision cone
 			if (XMVectorGetX(XMVector3Dot(triVertToPlayer, perpendicular)) > 0.0f)
 			{
-				// Use a raycast to see if there is anything obstructing the enemie's view of the player
+				// Use a raycast to see if there is anything obstructing the enemy's view of the player
 
 				// Update physics
 				Config::DynamicsWorld->updateAabbs();

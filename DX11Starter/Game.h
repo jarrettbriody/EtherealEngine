@@ -19,11 +19,10 @@
 #include "Scripts.h"
 #include "DebugLines.h"
 #include "DecalHandler.h"
-#include "TestBehavior.h"
-#include "EnemySeesPlayer.h"
 #include "ParticleEmitter.h"
 #include "GPUParticleEmitter.h"
 #include "CPUParticleEmitter.h"
+#include "Grid.h"
 
 using namespace std;
 
@@ -92,5 +91,5 @@ private:
 	GPUParticleEmitter* gpuEmitter;
 
 	// AI
-	
+	Grid grid;
 };

@@ -3,7 +3,6 @@
 #include "BehaviorTree.h"
 #include "Entity.h"
 #include "DebugLines.h"
-#include <math.h>
 
 class EnemySeesPlayer : public Behavior
 {
