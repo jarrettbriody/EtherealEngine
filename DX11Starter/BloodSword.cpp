@@ -326,7 +326,7 @@ void BloodSword::CheckSwordSlashHit()
 				if (dotProduct > 0)
 				{
 					// enemy is in the triangle, split it apart
-					std::vector<Entity*> childEntities = EESceneLoader->SplitMeshIntoChildEntities(enemies[i], 1.0f);
+					std::vector<Entity*> childEntities = EESceneLoader->SplitMeshIntoChildEntities(enemy, 10.0f);
 
 					for each (Entity * e in childEntities)
 					{

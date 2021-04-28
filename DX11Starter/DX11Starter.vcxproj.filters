@@ -82,6 +82,9 @@
     <FxCompile Include="FluidPrepassPS.hlsl">
       <Filter>EEShaders\Pixel Shaders\Render Prepass</Filter>
     </FxCompile>
+    <FxCompile Include="OutlinePS.hlsl">
+      <Filter>EEShaders\Pixel Shaders\Post Process</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Camera.cpp">

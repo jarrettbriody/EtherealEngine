@@ -28,6 +28,7 @@ void FPSController::Init()
 			// defaults work for the rest
 	};
 
+	/*
 	swordParams = {
 			"Blood Sword",					// name
 			"Blood Sword",					// tag
@@ -46,6 +47,8 @@ void FPSController::Init()
 
 	sword = ScriptManager::CreateEntity(swordParams);
 	sword->collisionsEnabled = false;
+	*/
+	sword = (*eMap)["Blood Sword"];
 	
 	bloodOrb = eMap->find("Blood_Orb")->second;
 
@@ -85,7 +88,7 @@ void FPSController::Init()
 
 	dashBlurCallback.vShader = EESceneLoader->vertexShadersMap["PostProcess"];
 	dashBlurCallback.pShader = EESceneLoader->pixelShadersMap["DashBlur"];
-	dashBlurCallback.active = true;
+	EERenderer->SetPostProcess(true, &dashBlurCallback, 1);
 }
 
 void FPSController::Update()
@@ -687,7 +690,7 @@ btVector3 FPSController::DashImpulseFromInput()
 
 		dashDampTimer = DASH_DAMP_TIMER_MAX;
 
-		EERenderer->SetPostProcess(true, &dashBlurCallback);
+		dashBlurCallback.active = true;
 	}
 
 	return dashImpulse;
@@ -697,7 +700,7 @@ void FPSController::DampForces()
 {
 	if (dashDampTimer <= 0) // always damp the impulse vec unless player is the player just initiated a dash
 	{
-		EERenderer->SetPostProcess(false);
+		dashBlurCallback.active = false;
 		impulseSumVec -= impulseSumVec * dampingScalar;
 
 		// return fov to normal when damping dash impulse

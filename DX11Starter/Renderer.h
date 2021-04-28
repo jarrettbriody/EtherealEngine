@@ -8,6 +8,7 @@
 #include "DebugLines.h"
 #include "DecalHandler.h"
 #include "RendererStructs.h"
+#include "LightHandler.h"
 
 using namespace std;
 
@@ -16,6 +17,8 @@ class Renderer
 private:
 	static Renderer* instance;
 
+	LightHandler* EELightHandler = nullptr;
+
 	vector<Entity*>* entities = nullptr;
 	RenderObject* renderObjects;
 	RenderObject* transparentObjects;
@@ -23,20 +26,23 @@ private:
 	int transparentObjectCount = 0;
 	int maxRenderObjects = 0;
 	int maxTransparentObjects = 0;
-	//map<string, vector<RenderObject*>> renderObjectsMap;
+
+	map<SimplePixelShader*, bool> lightsSentToShader;
 
 	RendererShaders shaders;
 
 	Mesh* cube = nullptr;
 	Mesh* invCube = nullptr;
+	Mesh* sphere = nullptr;
+	Mesh* cone = nullptr;
 
 	Camera* camera = nullptr;
 	map<string, Camera*> cameras;
 	unsigned int cameraCount = 0;
 
-	map<string, Light*> lights;
+	//map<string, Light*> lights;
 	//map<string, Shadow> shadows;
-	unsigned int lightCount = 0;
+	//unsigned int lightCount = 0;
 
 	ID3D11ShaderResourceView* decals[8];
 
@@ -59,7 +65,7 @@ public:
 	void SetEntities(vector<Entity*>* entities);
 	void SetRendererShaders(RendererShaders rShaders);
 	void SetDecals(ID3D11ShaderResourceView* decals[8]);
-	void SetMeshes(Mesh* cube, Mesh* invCube);
+	void SetMeshes(Mesh* cube, Mesh* invCube, Mesh* sphere, Mesh* cone);
 
 	void InitDepthStencil();
 	void InitHBAOPlus();
@@ -87,16 +93,11 @@ public:
 	Camera* GetCamera(string name);
 	bool EnableCamera(string name);
 
-	bool AddLight(std::string name, Light* newLight);
-	bool RemoveLight(std::string name);
-	void SendAllLightsToShader(SimplePixelShader* pixelShader);
-	Light* GetLight(string name);
-
 	void SendSSAOKernelToShader(SimplePixelShader* pixelShader);
 
 	void AddRenderObject(Entity* e, Mesh* mesh, Material* mat = nullptr);
 	void AddTransparentObject(Entity* e, Mesh* mesh, Material* mat = nullptr);
 
 	void SetRenderObjectCallback(Entity* e, RendererCallback* callback);
-	void SetPostProcess(bool toggle, RendererCallback* callback = nullptr);
+	void SetPostProcess(bool toggle, RendererCallback* callback = nullptr, unsigned int index = 0);
 };

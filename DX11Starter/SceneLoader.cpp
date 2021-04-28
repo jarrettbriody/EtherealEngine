@@ -6,6 +6,7 @@ SceneLoader* SceneLoader::instance = nullptr;
 SceneLoader::SceneLoader()
 {
 	this->EEMemoryAllocator = MemoryAllocator::GetInstance();
+	this->EELightHandler = LightHandler::GetInstance();
 }
 
 SceneLoader::~SceneLoader()
@@ -734,28 +735,29 @@ void SceneLoader::LoadScene(string sceneName)
 						{
 							//directional light
 							string lightName;
-							Light * dLight = new Light;
-							dLight->Type = LIGHT_TYPE_DIR;
+							Light dLight;
+							dLight.Type = LIGHT_TYPE_DIR;
 							if (regex_search(line, match, entityNameRegex)) {
 								lightName = match[1];
 							}
 							if (regex_search(line, match, lightPosRegex)) {
 								string transformData = match[0];
-								dLight->Position = Float3FromString(transformData);
+								dLight.Position = Float3FromString(transformData);
 							}
 							if (regex_search(line, match, lightDirRegex)) {
 								string transformData = match[0];
-								dLight->Direction = Float3FromString(transformData);
+								dLight.Direction = Float3FromString(transformData);
 							}
 							if (regex_search(line, match, lightColorRegex)) {
 								string transformData = match[0];
-								dLight->Color = Float3FromString(transformData);
+								dLight.Color = Float3FromString(transformData);
 							}
 							if (regex_search(line, match, lightIntensityRegex)) {
 								string transformData = match[1];
-								dLight->Intensity = std::stof(transformData);
+								dLight.Intensity = std::stof(transformData);
 							}
-							EERenderer->AddLight(lightName, dLight);
+							LightContainer newLight = { dLight, lightName };
+							EELightHandler->AddLight(newLight);
 							continue;
 						}
 					default:

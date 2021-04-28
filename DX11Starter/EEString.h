@@ -8,15 +8,17 @@ private:
 	unsigned int bufferSize = N;
 	unsigned int count = 0;
 public:
-	EEString() { bufferSize = N; count = 0; };
+	EEString() { bufferSize = N; count = 0; ZeroMemory(buffer, N); };
 	EEString(const EEString& other) {
 		bufferSize = N;
+		ZeroMemory(buffer, N);
 		unsigned int size = (other.count > bufferSize) ? bufferSize : other.count;
 		memcpy(buffer, other.buffer, other.count);
 		count = other.count;
 	};
 	EEString(std::string str) {
 		bufferSize = N;
+		ZeroMemory(buffer, N);
 		unsigned int size = (str.size() > bufferSize) ? bufferSize : str.size();
 		memcpy(buffer, str.c_str(), size);
 		count = size;
@@ -26,12 +28,14 @@ public:
 	};
 	void operator= (const EEString& other) {
 		bufferSize = N;
+		ZeroMemory(buffer, N);
 		unsigned int size = (other.count > bufferSize) ? bufferSize : other.count;
 		memcpy(buffer, other.buffer, other.count);
 		count = other.count;
 	};
 	void operator= (const std::string& other) {
 		bufferSize = N;
+		ZeroMemory(buffer, N);
 		unsigned int size = (other.size() > bufferSize) ? bufferSize : other.size();
 		memcpy(buffer, other.c_str(), size);
 		count = size;

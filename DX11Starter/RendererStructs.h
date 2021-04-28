@@ -70,6 +70,9 @@ struct DepthStencilComponents {
 	ID3D11RenderTargetView* entityInfoRTV = nullptr;
 	ID3D11ShaderResourceView* entityInfoSRV = nullptr;
 
+	ID3D11RenderTargetView* normalRTV = nullptr;
+	ID3D11ShaderResourceView* normalSRV = nullptr;
+
 	ID3D11BlendState* decalBlendState = nullptr;
 };
 
@@ -91,5 +94,7 @@ struct PostProcessComponents {
 	bool enabled = false;
 	ID3D11RenderTargetView* RTV = nullptr;
 	ID3D11ShaderResourceView* SRV = nullptr;
-	RendererCallback* callback = nullptr;
+	ID3D11RenderTargetView* tempRTV[MAX_POST_PROCESS_EFFECTS] = { nullptr,nullptr,nullptr,nullptr,nullptr,nullptr,nullptr,nullptr };
+	ID3D11ShaderResourceView* tempSRV[MAX_POST_PROCESS_EFFECTS] = { nullptr,nullptr,nullptr,nullptr,nullptr,nullptr,nullptr,nullptr };
+	RendererCallback* callbacks[MAX_POST_PROCESS_EFFECTS] = { nullptr,nullptr,nullptr,nullptr,nullptr,nullptr,nullptr,nullptr };
 };

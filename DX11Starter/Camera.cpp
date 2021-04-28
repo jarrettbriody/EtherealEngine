@@ -80,6 +80,9 @@ void Camera::RotateCamera(float x, float y, float z)
 	if (xRotation < (-89.0f * XM_PI) / 180.0f) xRotation = (-89.0f * XM_PI) / 180.0f;
 	if (yRotation > XM_2PI) yRotation = yRotation - XM_2PI;
 	if (yRotation < -XM_2PI) yRotation = yRotation + XM_2PI;
+
+	CalcViewMatrix();
+	CalcWorldMatrix();
 }
 
 void Camera::SetPosition(XMFLOAT3 pos)
