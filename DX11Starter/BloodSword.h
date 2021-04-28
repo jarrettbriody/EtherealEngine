@@ -22,8 +22,8 @@ class BloodSword : public ScriptManager
 	float slashPositionLerpScalar = 200.0f;
 	float slashRotationLerpScalar = 50.0f;
 
-	float readyingPositionLerpScalar = 15.0f;
-	float readyingRotationLerpScalar = 10.0f;
+	float readyingPositionLerpScalar = 13.0f;
+	float readyingRotationLerpScalar = 13.0f;
 
 	XMFLOAT3 lerpPositionFrom = XMFLOAT3(0, 0, 0);
 	XMFLOAT3 lerpPositionTo = XMFLOAT3(0, 0, 0);
@@ -42,7 +42,7 @@ class BloodSword : public ScriptManager
 	XMFLOAT3 raisedRotation;
 
 	float viewAngle = 90.0f;
-	float viewDistance = 7.0f;
+	float viewDistance = 10.0f;
 
 	void Init();
 
