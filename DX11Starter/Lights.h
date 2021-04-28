@@ -19,11 +19,16 @@ struct Light {
 	XMFLOAT3 Padding;
 };
 
-/*
-struct LightParentPair {
-	string lightName;
-	Light* light;
-	string parentName;
-	XMFLOAT4X4* parentWorld;
+struct LightShaders {
+	SimpleVertexShader* VS = nullptr;
+	SimplePixelShader* PS = nullptr;
 };
-*/
+
+struct LightContainer {
+	Light light;
+	EEString<64> lightName = "";
+	EEString<64> parentName = ""; //Optional
+	XMFLOAT4X4* parentWorld = nullptr; //Optional
+	XMFLOAT4X4 world;
+	//LightShaders shaders; //Optional
+};

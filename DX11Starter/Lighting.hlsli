@@ -18,7 +18,8 @@ struct Light {
 float GetSpecularity(float3 normal, float3 negatedLightDir, float3 toCameraVector, float specularValue) 
 {
 	float3 halfwayVector = normalize(negatedLightDir + toCameraVector);
-	return pow(max(dot(halfwayVector, normal), 0), specularValue);
+	//return pow(max(dot(halfwayVector, normal), 0), specularValue);
+	return specularValue == 0 ? 0.0f : pow(max(dot(halfwayVector, normal), 0), specularValue);
 }
 
 float Attenuate(Light light, float3 worldPos) 
@@ -46,29 +47,23 @@ float3 CalcDirectionalLight(float4 surfaceColor, float3 normal, Light light, flo
 
 	finalColor *= light.Intensity * light.Color;
 
-	return (finalColor * shadowAmount) + (surfaceColor * 0.01f);
+	return (finalColor * shadowAmount) + (surfaceColor * 0.05f);
 }
 
-float3 CalcPointLight(float4 surfaceColor, float normal, Light light, float3 toCameraVector, float specularValue, float3 worldPos) 
+float3 CalcPointLight(float4 surfaceColor, float3 normal, Light light, float3 toCameraVector, float specularValue, float3 worldPos) 
 {
 	float3 toLight = normalize(light.Position - worldPos);
 
 	float atten = Attenuate(light, worldPos);
 	float diffuse = saturate(dot(normal, toLight));
-	
-	float3 finalColor = diffuse * surfaceColor;
 
-	if (specularValue > 0)
-	{
-		//finalColor += GetSpecularity(normal, toLight, toCameraVector, specularValue);
-	}
-	finalColor *= atten * light.Intensity * light.Color;
-
+	float specularity = GetSpecularity(normal, toLight, toCameraVector, specularValue);
+	float3 finalColor = (diffuse * surfaceColor + specularity) * atten * light.Intensity * light.Color;
 	
-	return finalColor + (surfaceColor * 0.01f);
+	return float4(finalColor,0.0f) + (surfaceColor * 0.05f);
 }
 
-float3 CalcSpotLight(float4 surfaceColor, float normal, Light light, float3 toCameraVector, float specularValue, float3 worldPos)
+float3 CalcSpotLight(float4 surfaceColor, float3 normal, Light light, float3 toCameraVector, float specularValue, float3 worldPos)
 {
 	float3 toLight = normalize(light.Position - worldPos);
 	float penumbra = pow(saturate(dot(-toLight, light.Direction)), light.SpotFalloff);

@@ -5,6 +5,7 @@ Renderer* Renderer::instance = nullptr;
 
 Renderer::Renderer()
 {
+	EELightHandler = LightHandler::GetInstance();
 }
 
 Renderer::~Renderer()
@@ -26,6 +27,9 @@ Renderer::~Renderer()
 	if (depthStencilComponents.entityInfoSRV) depthStencilComponents.entityInfoSRV->Release();
 	if (depthStencilComponents.entityInfoRTV) depthStencilComponents.entityInfoRTV->Release();
 
+	if (depthStencilComponents.normalSRV) depthStencilComponents.normalSRV->Release();
+	if (depthStencilComponents.normalRTV) depthStencilComponents.normalRTV->Release();
+
 	if(depthStencilComponents.depthStencilState) depthStencilComponents.depthStencilState->Release();
 	if(depthStencilComponents.decalBlendState) depthStencilComponents.decalBlendState->Release();
 
@@ -35,19 +39,13 @@ Renderer::~Renderer()
 	if (postProcessComponents.RTV) postProcessComponents.RTV->Release();
 	if (postProcessComponents.SRV) postProcessComponents.SRV->Release();
 
-	blendState->Release();
-
-	map<string, Light*>::iterator lightMapIterator;
-	for (int i = 0; i < lightCount; i++)
+	for (size_t i = 0; i < MAX_POST_PROCESS_EFFECTS; i++)
 	{
-		lightMapIterator = lights.begin();
-		std::advance(lightMapIterator, i);
-
-		if (lightMapIterator->second != nullptr)
-		{
-			delete lightMapIterator->second;
-		}
+		if (postProcessComponents.tempRTV[i]) postProcessComponents.tempRTV[i]->Release();
+		if (postProcessComponents.tempSRV[i]) postProcessComponents.tempSRV[i]->Release();
 	}
+
+	blendState->Release();
 
 	map<string, Camera*>::iterator cameraMapIterator;
 	for (int i = 0; i < cameraCount; i++)
@@ -77,10 +75,11 @@ void Renderer::CalcShadowMatrices(unsigned int cascadeIndex)
 {
 	// Create the matrices that represent seeing the scene from
 	// the light's point of view
-	XMFLOAT3 dir = lights["Sun"]->Direction;
+	LightContainer* sun = EELightHandler->GetLight("Sun");
+	XMFLOAT3 dir = sun->light.Direction;
 	XMFLOAT3 pos = camera->position;
 	pos.y = 0.0f;
-	XMStoreFloat3(&pos, XMVectorAdd(XMLoadFloat3(&lights["Sun"]->Position), XMLoadFloat3(&pos)));
+	XMStoreFloat3(&pos, XMVectorAdd(XMLoadFloat3(&sun->light.Position), XMLoadFloat3(&pos)));
 	XMMATRIX shadowView = XMMatrixTranspose(XMMatrixLookToLH(
 		XMVectorSet(pos.x,pos.y,pos.z, 0),
 		XMVectorSet(dir.x, dir.y, dir.z, 0),
@@ -143,10 +142,12 @@ void Renderer::SetDecals(ID3D11ShaderResourceView* decals[8])
 	}
 }
 
-void Renderer::SetMeshes(Mesh* cube, Mesh* invCube)
+void Renderer::SetMeshes(Mesh* cube, Mesh* invCube, Mesh* sphere, Mesh* cone)
 {
 	this->cube = cube;
 	this->invCube = invCube;
+	this->sphere = sphere;
+	this->cone = cone;
 }
 
 void Renderer::InitDepthStencil()
@@ -160,6 +161,8 @@ void Renderer::InitDepthStencil()
 	if (depthStencilComponents.entityInfoRTV) depthStencilComponents.entityInfoRTV->Release();
 	if (depthStencilComponents.depthStencilState) depthStencilComponents.depthStencilState->Release();
 	if (depthStencilComponents.decalBlendState) depthStencilComponents.decalBlendState->Release();
+	if (depthStencilComponents.normalSRV) depthStencilComponents.normalSRV->Release();
+	if (depthStencilComponents.normalRTV) depthStencilComponents.normalRTV->Release();
 
 	// Set up the texture itself
 	D3D11_TEXTURE2D_DESC texDesc = {};
@@ -272,6 +275,39 @@ void Renderer::InitDepthStencil()
 	Config::Device->CreateBlendState(&BlendState, &decalBlendState);
 
 	depthStencilComponents.decalBlendState = decalBlendState;
+
+	//DXGI_FORMAT_R16G16B16A16_UNORM
+	// Set up the texture itself
+	D3D11_TEXTURE2D_DESC normTexDesc = {};
+	normTexDesc.ArraySize = 1;
+	normTexDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
+	normTexDesc.Format = DXGI_FORMAT_R16G16B16A16_UNORM;
+	normTexDesc.MipLevels = 1;
+	normTexDesc.Height = Config::ViewPortHeight;
+	normTexDesc.Width = Config::ViewPortWidth;
+	normTexDesc.SampleDesc.Count = 1;
+
+	// Actually create the texture
+	ID3D11Texture2D* normTexture;
+	Config::Device->CreateTexture2D(&normTexDesc, 0, &normTexture);
+
+	// Create the shader resource view for this texture
+	D3D11_SHADER_RESOURCE_VIEW_DESC normSRVDesc = {};
+	normSRVDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+	normSRVDesc.Format = DXGI_FORMAT_R16G16B16A16_UNORM;
+	normSRVDesc.Texture2D.MipLevels = 1;
+	normSRVDesc.Texture2D.MostDetailedMip = 0;
+	Config::Device->CreateShaderResourceView(normTexture, &normSRVDesc, &depthStencilComponents.normalSRV);
+
+	// Make a render target view desc and RTV
+	D3D11_RENDER_TARGET_VIEW_DESC normRTVDesc = {};
+	normRTVDesc.Format = DXGI_FORMAT_R16G16B16A16_UNORM;
+	normRTVDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+	normRTVDesc.Texture2D.MipSlice = 0;
+	Config::Device->CreateRenderTargetView(normTexture, &normRTVDesc, &depthStencilComponents.normalRTV);
+
+	// Clean up extra texture ref
+	normTexture->Release();
 }
 
 void Renderer::InitHBAOPlus()
@@ -296,7 +332,7 @@ void Renderer::InitHBAOPlus()
 	memcpy(mat, proj.m, sizeof(float) * 16);
 	hbaoPlusComponents.Input.DepthData.ProjectionMatrix.Data = GFSDK_SSAO_Float4x4(mat);
 	hbaoPlusComponents.Input.DepthData.ProjectionMatrix.Layout = GFSDK_SSAO_COLUMN_MAJOR_ORDER;
-	hbaoPlusComponents.Input.DepthData.MetersToViewSpaceUnits = 1.0f;
+	hbaoPlusComponents.Input.DepthData.MetersToViewSpaceUnits = 3.0f;
 
 	//(3.) SET AO PARAMETERS
 
@@ -304,8 +340,8 @@ void Renderer::InitHBAOPlus()
 	hbaoPlusComponents.Params.Bias = 0.1f;
 	hbaoPlusComponents.Params.PowerExponent = 2.f;
 	hbaoPlusComponents.Params.Blur.Enable = true;
-	//hbaoPlusComponents.Params.Blur.Radius = GFSDK_SSAO_BLUR_RADIUS_8;
-	hbaoPlusComponents.Params.Blur.Radius = GFSDK_SSAO_BLUR_RADIUS_2;
+	hbaoPlusComponents.Params.Blur.Radius = GFSDK_SSAO_BLUR_RADIUS_8;
+	//hbaoPlusComponents.Params.Blur.Radius = GFSDK_SSAO_BLUR_RADIUS_2;
 	hbaoPlusComponents.Params.Blur.Sharpness = 8.f; //4
 	hbaoPlusComponents.Params.Output.BlendMode = GFSDK_SSAO_MULTIPLY_RGB;
 	hbaoPlusComponents.Params.DetailAO = 1.0f;
@@ -398,42 +434,50 @@ void Renderer::InitPostProcessRTV()
 {
 	if (postProcessComponents.RTV) postProcessComponents.RTV->Release();
 	if (postProcessComponents.SRV) postProcessComponents.SRV->Release();
+	for (size_t i = 0; i < MAX_POST_PROCESS_EFFECTS; i++)
+	{
+		if (postProcessComponents.tempRTV[i]) postProcessComponents.tempRTV[i]->Release();
+		if (postProcessComponents.tempSRV[i]) postProcessComponents.tempSRV[i]->Release();
+	}
 
-	D3D11_TEXTURE2D_DESC textureDesc = {};
-	textureDesc.Width = Config::ViewPortWidth;
-	textureDesc.Height = Config::ViewPortHeight;
-	textureDesc.ArraySize = 1;
-	textureDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
-	textureDesc.CPUAccessFlags = 0;
-	textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-	textureDesc.MipLevels = 1;
-	textureDesc.MiscFlags = 0;
-	textureDesc.SampleDesc.Count = 1;
-	textureDesc.SampleDesc.Quality = 0;
-	textureDesc.Usage = D3D11_USAGE_DEFAULT;
+	for (int i = -1; i < MAX_POST_PROCESS_EFFECTS; i++)
+	{
+		D3D11_TEXTURE2D_DESC textureDesc = {};
+		textureDesc.Width = Config::ViewPortWidth;
+		textureDesc.Height = Config::ViewPortHeight;
+		textureDesc.ArraySize = 1;
+		textureDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+		textureDesc.CPUAccessFlags = 0;
+		textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+		textureDesc.MipLevels = 1;
+		textureDesc.MiscFlags = 0;
+		textureDesc.SampleDesc.Count = 1;
+		textureDesc.SampleDesc.Quality = 0;
+		textureDesc.Usage = D3D11_USAGE_DEFAULT;
 
-	ID3D11Texture2D* ppTexture;
-	Config::Device->CreateTexture2D(&textureDesc, 0, &ppTexture);
+		ID3D11Texture2D* ppTexture;
+		Config::Device->CreateTexture2D(&textureDesc, 0, &ppTexture);
 
-	// Create the Render Target View
-	D3D11_RENDER_TARGET_VIEW_DESC rtvDesc = {};
-	rtvDesc.Format = textureDesc.Format;
-	rtvDesc.Texture2D.MipSlice = 0;
-	rtvDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+		// Create the Render Target View
+		D3D11_RENDER_TARGET_VIEW_DESC rtvDesc = {};
+		rtvDesc.Format = textureDesc.Format;
+		rtvDesc.Texture2D.MipSlice = 0;
+		rtvDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
 
-	Config::Device->CreateRenderTargetView(ppTexture, &rtvDesc, &postProcessComponents.RTV);
+		Config::Device->CreateRenderTargetView(ppTexture, &rtvDesc, (i == -1) ? &postProcessComponents.RTV : &postProcessComponents.tempRTV[i]);
 
-	// Create the Shader Resource View
-	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-	srvDesc.Format = textureDesc.Format;
-	srvDesc.Texture2D.MipLevels = 1;
-	srvDesc.Texture2D.MostDetailedMip = 0;
-	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+		// Create the Shader Resource View
+		D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+		srvDesc.Format = textureDesc.Format;
+		srvDesc.Texture2D.MipLevels = 1;
+		srvDesc.Texture2D.MostDetailedMip = 0;
+		srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
 
-	Config::Device->CreateShaderResourceView(ppTexture, &srvDesc, &postProcessComponents.SRV);
+		Config::Device->CreateShaderResourceView(ppTexture, &srvDesc, (i == -1) ? &postProcessComponents.SRV : &postProcessComponents.tempSRV[i]);
 
-	// We don't need the texture reference itself no mo'
-	ppTexture->Release();
+		// We don't need the texture reference itself no mo'
+		ppTexture->Release();
+	}
 }
 
 void Renderer::SetSkybox(ID3D11ShaderResourceView* srv)
@@ -509,6 +553,8 @@ void Renderer::RenderFrame()
 
 	ToggleBlendState(false);
 
+	lightsSentToShader.clear();
+
 	for (int i = renderObjectCount - 1; i >= 0; i--)
 	{
 		RenderObject renderObject = renderObjects[i];
@@ -542,6 +588,22 @@ void Renderer::RenderFrame()
 			d.depthStencilSRV = depthStencilComponents.depthStencilSRV;
 			d.depthStencilSampler = depthStencilComponents.depthStencilSampler;
 			e->SetDepthStencilData(d);
+		}
+
+		SimplePixelShader* ps = mat->GetPixelShader();
+		if (!lightsSentToShader.count(ps)) {
+			ps->SetData(
+				"lights",
+				&EELightHandler->DrawList,
+				sizeof(EELightHandler->DrawList)
+			);
+			ps->SetData(
+				"lightCount",
+				&EELightHandler->DrawCount,
+				sizeof(EELightHandler->DrawCount)
+			);
+			ps->SetFloat3("cameraPosition", camera->position);
+			lightsSentToShader.insert({ ps, true });
 		}
 
 		ID3D11Buffer* vbo = mesh->GetVertexBuffer();
@@ -814,6 +876,7 @@ void Renderer::RenderDepthStencil()
 	ID3D11RenderTargetView* targets[2] = {
 		depthStencilComponents.depthStencilRTV,
 		depthStencilComponents.entityInfoRTV,
+		//depthStencilComponents.normalRTV,
 	};
 	Config::Context->OMSetRenderTargets(2, targets, Config::DepthStencilView);
 
@@ -823,6 +886,7 @@ void Renderer::RenderDepthStencil()
 	const float color[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
 	Config::Context->ClearRenderTargetView(depthStencilComponents.depthStencilRTV, color);
 	Config::Context->ClearRenderTargetView(depthStencilComponents.entityInfoRTV, color);
+	Config::Context->ClearRenderTargetView(depthStencilComponents.normalRTV, color);
 
 	//Config::Context->RSSetState(depthStencilComponents.depthStencilRasterizer);
 
@@ -1029,31 +1093,53 @@ void Renderer::RenderPostProcess()
 	UINT stride = sizeof(Vertex);
 	UINT offset = 0;
 
-	Config::Context->OMSetRenderTargets(1, &Config::BackBufferRTV, 0);
+	unsigned int finalPostProcess = 0;
+	for (size_t i = 0; i < MAX_POST_PROCESS_EFFECTS; i++)
+	{
+		RendererCallback* callback = postProcessComponents.callbacks[i];
+		if (callback == nullptr) continue;
+		if (!callback->active) continue;
+		finalPostProcess = i;
+	}
 
-	postProcessComponents.callback->vShader->SetShader();
-	postProcessComponents.callback->PreVertexShaderCallback();
-	postProcessComponents.callback->vShader->CopyAllBufferData();
+	unsigned int lastPostProcess = 0;
+	for (size_t i = 0; i < MAX_POST_PROCESS_EFFECTS; i++)
+	{
+		RendererCallback* callback = postProcessComponents.callbacks[i];
+		if (callback == nullptr) continue;
+		if (!callback->active) continue;
 
-	postProcessComponents.callback->pShader->SetShader();
-	postProcessComponents.callback->PrePixelShaderCallback();
-	postProcessComponents.callback->pShader->SetShaderResourceView("Pixels", postProcessComponents.SRV);
-	postProcessComponents.callback->pShader->SetSamplerState("Sampler", Config::Sampler);
-	postProcessComponents.callback->pShader->SetFloat("pixelWidth", 1.0f / Config::ViewPortWidth);
-	postProcessComponents.callback->pShader->SetFloat("pixelHeight", 1.0f / Config::ViewPortHeight);
-	postProcessComponents.callback->pShader->CopyAllBufferData();
-	
-	// Deactivate vertex and index buffers
-	ID3D11Buffer* nothing = 0;
-	Config::Context->IASetVertexBuffers(0, 1, &nothing, &stride, &offset);
-	Config::Context->IASetIndexBuffer(0, DXGI_FORMAT_R32_UINT, 0);
+		if(i == finalPostProcess)
+			Config::Context->OMSetRenderTargets(1, &Config::BackBufferRTV, 0);
+		else
+			Config::Context->OMSetRenderTargets(1, &postProcessComponents.tempRTV[i], 0);
 
-	// Draw a set number of vertices
-	Config::Context->Draw(3, 0);
+		callback->vShader->SetShader();
+		callback->PreVertexShaderCallback();
+		callback->vShader->CopyAllBufferData();
+		
+		callback->pShader->SetShader();
+		callback->PrePixelShaderCallback();
+		callback->pShader->SetShaderResourceView("Pixels", (i==0) ? postProcessComponents.SRV : postProcessComponents.tempSRV[lastPostProcess]);
+		callback->pShader->SetSamplerState("Sampler", Config::Sampler);
+		callback->pShader->SetFloat("pixelWidth", 1.0f / Config::ViewPortWidth);
+		callback->pShader->SetFloat("pixelHeight", 1.0f / Config::ViewPortHeight);
+		callback->pShader->CopyAllBufferData();
 
-	// Unbind all pixel shader SRVs
-	ID3D11ShaderResourceView* nullSRVs[16] = {};
-	Config::Context->PSSetShaderResources(0, 16, nullSRVs);
+		// Deactivate vertex and index buffers
+		ID3D11Buffer* nothing = 0;
+		Config::Context->IASetVertexBuffers(0, 1, &nothing, &stride, &offset);
+		Config::Context->IASetIndexBuffer(0, DXGI_FORMAT_R32_UINT, 0);
+
+		// Draw a set number of vertices
+		Config::Context->Draw(3, 0);
+
+		// Unbind all pixel shader SRVs
+		ID3D11ShaderResourceView* nullSRVs[16] = {};
+		Config::Context->PSSetShaderResources(0, 16, nullSRVs);
+
+		lastPostProcess = i;
+	}
 }
 
 bool Renderer::AddCamera(string name, Camera* newCamera)
@@ -1091,57 +1177,6 @@ bool Renderer::EnableCamera(string name)
 	}
 	camera = cameras[name];
 	return true;
-}
-
-bool Renderer::AddLight(std::string name, Light* newLight)
-{
-	if (lights.count(name) || lightCount >= MAX_LIGHTS) {
-		return false;
-	}
-	lights.insert({ name, newLight });
-	lightCount++;
-	return true;
-}
-
-bool Renderer::RemoveLight(std::string name)
-{
-	if (!lights.count(name)) {
-		return false;
-	}
-	lights.erase(name);
-	lightCount--;
-	return true;
-}
-
-void Renderer::SendAllLightsToShader(SimplePixelShader* pixelShader)
-{
-	Light lightArray[MAX_LIGHTS];
-	map<string, Light*>::iterator lightMapIterator;
-	for (int i = 0; i < lightCount; i++)
-	{
-		lightMapIterator = lights.begin();
-		std::advance(lightMapIterator, i);
-		lightArray[i] = *lightMapIterator->second;
-	}
-	pixelShader->SetData(
-		"lights",
-		&lightArray,
-		sizeof(lightArray)
-	);
-	pixelShader->SetData(
-		"lightCount",
-		&lightCount,
-		sizeof(lightCount)
-	);
-	pixelShader->SetFloat3("cameraPosition", camera->position);
-}
-
-Light* Renderer::GetLight(string name)
-{
-	if (lights.count(name)) {
-		return lights[name];
-	}
-	return {};
 }
 
 void Renderer::SendSSAOKernelToShader(SimplePixelShader* pixelShader)
@@ -1229,9 +1264,9 @@ void Renderer::SetRenderObjectCallback(Entity* e, RendererCallback* callback)
 	}
 }
 
-void Renderer::SetPostProcess(bool toggle, RendererCallback* callback)
+void Renderer::SetPostProcess(bool toggle, RendererCallback* callback, unsigned int index)
 {
 	postProcessComponents.enabled = toggle;
-	if (!toggle || (toggle && callback == nullptr)) return;
-	postProcessComponents.callback = callback;
+	if (!toggle || (toggle && callback == nullptr) || index >= MAX_POST_PROCESS_EFFECTS) return;
+	postProcessComponents.callbacks[index] = callback;
 }

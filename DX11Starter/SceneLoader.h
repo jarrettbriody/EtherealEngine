@@ -158,6 +158,7 @@ private:
 public:
 	MemoryAllocator* EEMemoryAllocator = nullptr;
 	Renderer* EERenderer = nullptr;
+	LightHandler* EELightHandler = nullptr;
 
 	vector<ScriptPair> scriptPairs;
 

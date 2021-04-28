@@ -45,4 +45,5 @@ std::map<std::string, unsigned int> Config::EntityTags = {
 
 std::map<std::string, unsigned int> Config::EntityLayers = {
 	{ "decal", 1 },
+	{ "outline", 2 },
 };

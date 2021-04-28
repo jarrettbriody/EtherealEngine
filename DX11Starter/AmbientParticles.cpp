@@ -122,9 +122,9 @@ void AmbientParticles::Init()
 	emitDesc.emissionEndRadius = 30.0f;
 	emitDesc.textureCount = 0;
 	emitDesc.colorCount = 3;
-	particleColors[0] = { XMFLOAT4(1.0f, 0.313725f, 0, 1.0f), 0.5f };
+	particleColors[0] = { XMFLOAT4(1.0f, 0.313725f, 0, 0.6f), 0.5f };
 	particleColors[1] = { XMFLOAT4(1.0f, 0.4823529f, 0, 0.75f), 0.5f };
-	particleColors[2] = { XMFLOAT4(0.5f, 0.5f, 0.5f, 0.5f), 5.0f };
+	particleColors[2] = { XMFLOAT4(0.5f, 0.5f, 0.5f, 0.8f), 5.0f };
 	emitDesc.colors = particleColors;
 	emitDesc.emissionRate = 1000.0f;
 	emitDesc.maxParticles = 10000;
@@ -132,8 +132,8 @@ void AmbientParticles::Init()
 	emitDesc.particleInitMaxSpeed = 2.0f;
 	emitDesc.particleMinLifetime = 7.0f;
 	emitDesc.particleMaxLifetime = 10.0f;
-	emitDesc.particleInitMinScale = 0.02f;
-	emitDesc.particleInitMaxScale = 0.03f;
+	emitDesc.particleInitMinScale = 0.05f;
+	emitDesc.particleInitMaxScale = 0.06f;
 	emitDesc.fadeOutStartTime = -1.0f;
 	emitDesc.fadeInEndTime = 0.1f;
 	emitDesc.particleAcceleration = XMFLOAT3(-0.2f, 0.2f, 0.5f);
@@ -141,6 +141,22 @@ void AmbientParticles::Init()
 	gpuEmitter = new GPUParticleEmitter(emitDesc);
 	//gpuEmitter->SetBlendingEnabled(true);
 	//---------------------------------------------------------------------------------------------
+
+	LightContainer testLight;
+	testLight.light.Type = LIGHT_TYPE_POINT;
+	//testLight->Direction = EECamera->direction;
+	testLight.light.Intensity = 30.f;
+	testLight.light.Position = XMFLOAT3(-60, 4.0f, 0);
+	testLight.light.Color = XMFLOAT3(1.f, 0.f, 0.f);
+	testLight.light.Range = 10.f;
+	//testLight->SpotFalloff = 20.f;
+	testLight.lightName = "fire";
+	LightHandler::GetInstance()->AddLight(testLight);
+
+	callback.active = true;
+	callback.vShader = EESceneLoader->vertexShadersMap["PostProcess"];
+	callback.pShader = EESceneLoader->pixelShadersMap["Outline"];
+	EERenderer->SetPostProcess(true, &callback, 0);
 }
 
 void AmbientParticles::Update()

@@ -56,6 +56,8 @@ Game::~Game()
 
 	DecalHandler::DestroyInstance();
 
+	LightHandler::DestroyInstance();
+
 	// FMOD
 	sound[0]->release(); // For now just release the one sound we have assigned
 	backgroundMusic->release();
@@ -113,7 +115,7 @@ void Game::Init()
 	EEMemoryAllocator->CreatePool((unsigned int)MEMORY_POOL::MESH_POOL, Config::MemoryAllocatorMeshPoolSize, sizeof(Mesh));
 	EEMemoryAllocator->CreatePool((unsigned int)MEMORY_POOL::MATERIAL_POOL, Config::MemoryAllocatorMaterialPoolSize, sizeof(Material));
 	EEMemoryAllocator->CreatePool((unsigned int)MEMORY_POOL::DECAL_POOL, Config::MemoryAllocatorDecalPoolSize, sizeof(DecalBucket));
-	EEMemoryAllocator->CreatePool((unsigned int)MEMORY_POOL::LIGHT_POOL, Config::MemoryAllocatorLightPoolSize, sizeof(Light));
+	EEMemoryAllocator->CreatePool((unsigned int)MEMORY_POOL::LIGHT_POOL, Config::MemoryAllocatorLightPoolSize, sizeof(LightContainer));
 	//EEMemoryAllocator->CreatePool((unsigned int)MEMORY_POOL::PARTICLE_POOL, Config::MemoryAllocatorParticlePoolSize, sizeof(Particle));
 
 	LightHandler::SetupInstance();
@@ -136,18 +138,6 @@ void Game::Init()
 	EERenderer = Renderer::GetInstance();
 	EERenderer->AddCamera("main", EECamera);
 	EERenderer->EnableCamera("main");
-
-	/*
-	Light* testLight = new Light;
-	testLight->Type = LIGHT_TYPE_POINT;
-	//testLight->Direction = EECamera->direction;
-	testLight->Intensity = 5.f;
-	testLight->Position = XMFLOAT3(-5, 3.0f, 0);
-	testLight->Color = XMFLOAT3(1.f, 0.f, 0.f);
-	testLight->Range = 10.f;
-	//testLight->SpotFalloff = 20.f;
-	EERenderer->AddLight("fire", testLight);
-	*/
 
 	RendererShaders rShaders;
 	rShaders.depthStencilVS = EESceneLoader->vertexShadersMap["DepthStencil"];
@@ -179,10 +169,6 @@ void Game::Init()
 	EERenderer->InitSkybox();
 
 	EERenderer->SetEntities(&(EESceneLoader->sceneEntities));
-	
-	EERenderer->SendAllLightsToShader(EESceneLoader->pixelShadersMap["DEFAULT"]);
-	EERenderer->SendAllLightsToShader(EESceneLoader->pixelShadersMap["Normal"]);
-	EERenderer->SendAllLightsToShader(EESceneLoader->pixelShadersMap["Decal"]);
 
 	ID3D11ShaderResourceView* decals[8];
 	decals[0] = EESceneLoader->defaultTexturesMap["BLOOD1"];
@@ -195,7 +181,11 @@ void Game::Init()
 	decals[7] = EESceneLoader->defaultTexturesMap["BLOOD8"];
 	EERenderer->SetDecals(decals);
 
-	EERenderer->SetMeshes(EESceneLoader->defaultMeshesMap["Cube"], EESceneLoader->defaultMeshesMap["InverseCube"]);
+	EERenderer->SetMeshes(
+		EESceneLoader->defaultMeshesMap["Cube"], 
+		EESceneLoader->defaultMeshesMap["InverseCube"],
+		EESceneLoader->defaultMeshesMap["Sphere"], 
+		EESceneLoader->defaultMeshesMap["Cone"]);
 
 	DefaultGPUParticleShaders gpuParticleShaders;
 	gpuParticleShaders.copyDrawCountCS = EESceneLoader->computeShadersMap["ParticleDrawArgs"];
@@ -491,6 +481,8 @@ void Game::Update(double deltaTime, double totalTime)
 
 	//EEDecalHandler->UpdateDecals();
 
+	EELightHandler->Update(EECamera->GetViewMatrix());
+
 	AudioStep();
 
 	/*if (!GetAsyncKeyState(VK_CONTROL))
@@ -636,10 +628,10 @@ void Game::Draw(double deltaTime, double totalTime)
 {
 	EERenderer->ClearFrame();
 
-	EERenderer->SendAllLightsToShader(EESceneLoader->pixelShadersMap["DEFAULT"]);
-	EERenderer->SendAllLightsToShader(EESceneLoader->pixelShadersMap["Normal"]);
-	EERenderer->SendAllLightsToShader(EESceneLoader->pixelShadersMap["Decal"]);
-	EERenderer->SendAllLightsToShader(EESceneLoader->pixelShadersMap["Fluid"]);
+	//EERenderer->SendAllLightsToShader(EESceneLoader->pixelShadersMap["DEFAULT"]);
+	//EERenderer->SendAllLightsToShader(EESceneLoader->pixelShadersMap["Normal"]);
+	//EERenderer->SendAllLightsToShader(EESceneLoader->pixelShadersMap["Decal"]);
+	//EERenderer->SendAllLightsToShader(EESceneLoader->pixelShadersMap["Fluid"]);
 	//EERenderer->SendAllLightsToShader(EESceneLoader->pixelShadersMap["Water"]);
 	//EERenderer->SendAllLightsToShader(EESceneLoader->pixelShadersMap["Terrain"]);
 

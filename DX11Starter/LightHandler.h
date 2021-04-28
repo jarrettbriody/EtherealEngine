@@ -11,33 +11,37 @@ class LightHandler
 private:
 	static LightHandler* instance;
 
+	static LightShaders defaultShaders;
+
 	MemoryAllocator* memAlloc = nullptr;
 
 	LightHandler();
 	~LightHandler();
-	Light* dirLight = nullptr;
-	vector<Light*> lightsVec;
-	map<string, Light*> lightsMap;
-	map<Light*, bool> lightIsDeadMap;
-	map<string, vector<Light*>> entityLightMap;
-	map<string, XMFLOAT4X4*> entityWorldsMap;
-	//map<string, string>
-	//vector<LightParentPair>
+
+	map<LightContainer*, bool> lightIsDeadMap;
+	LightContainer* dirLight;
+	vector<LightContainer*> lightsVec;
+	map<string, LightContainer*> lightsMap;
+	map<string, map<string, LightContainer*>> entityLightMap;
 
 public:
+	Light DrawList[MAX_LIGHTS];
+	unsigned int DrawCount = 0;
+
 	static bool SetupInstance();
 	static LightHandler* GetInstance();
 	static bool DestroyInstance();
 
+	static void SetDefaultShaders(LightShaders shaders);
+
 	void GarbageCollect();
 
-	void Update();
-	void Draw();
+	void Update(XMFLOAT4X4 camView);
 
-	Light* AddLight(string name, Light newLight, string parentEntityName = "", XMFLOAT4X4* parentWorld = nullptr);
-	bool RemoveLight(string name);
-	bool RemoveLightsByOwner(string name);
-	Light* GetLight(string name);
-	bool SetLightPairing();
+	LightContainer* AddLight(LightContainer newLight);
+	bool RemoveLight(string lightName);
+	bool RemoveLightsByOwner(string entityName);
+	LightContainer* GetLight(string lightName);
+	map<string, LightContainer*> GetLights(string entityName);
 };
 
