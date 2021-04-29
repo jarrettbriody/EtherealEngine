@@ -370,13 +370,19 @@ void FPSController::HookshotLeash()
 		hookshotZScale -= hookshotThrowSpeed * deltaTime;
 	}
 
+	if (leashPullCooldownTimer > 0)
+	{
+		leashPullCooldownTimer -= deltaTime;
+	}
+
 	// pull enemy into range if they are "stretching" over the initial leash size
 	btVector3 playerCenterOfMassPos = playerRBody->getCenterOfMassPosition();
 	float leashDistanceToEnemy = playerCenterOfMassPos.distance(leashedEnemy->GetRBody()->getCenterOfMassPosition()); 
-	if (leashDistanceToEnemy >= leashSize)
+	if (leashDistanceToEnemy > leashSize && leashPullCooldownTimer <= 0)
 	{
 		leashedEnemy->GetRBody()->activate();
-		leashedEnemy->GetRBody()->applyCentralImpulse((playerCenterOfMassPos - leashedEnemy->GetRBody()->getCenterOfMassPosition()).normalized() * (leashDistanceToEnemy/leashedScalar)); 
+		leashedEnemy->GetRBody()->applyCentralImpulse((playerCenterOfMassPos - leashedEnemy->GetRBody()->getCenterOfMassPosition()).normalized() * (leashDistanceToEnemy/leashedScalar));
+		leashPullCooldownTimer = LEASH_PULL_MAX_COOLDOWN_TIME; // we don't want to contiually apply impulses all the time because that makes the leashed enemy go beserk. The timer allows us to manage how often the impulse is applied
 	}
 }
 
