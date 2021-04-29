@@ -1159,7 +1159,8 @@ std::vector<Entity*> SceneLoader::SplitMeshIntoChildEntities(Entity* e, float co
 	
 	for (size_t i = 0; i < meshChildCnt; i++)
 	{
-		Entity newE(children[i]->GetName(), children[i], e->GetMaterial(e->GetMeshMaterialName(i)));
+		Material* mat = e->GetMaterial(e->GetMeshMaterialName(i));
+		Entity newE(children[i]->GetName(), children[i], mat);
 		Entity* allocatedEntity = (Entity*)EEMemoryAllocator->AllocateToPool((unsigned int)MEMORY_POOL::ENTITY_POOL, sizeof(Entity), success);
 		*allocatedEntity = newE;
 		//e->AddChildEntity(allocatedEntity);
@@ -1176,7 +1177,7 @@ std::vector<Entity*> SceneLoader::SplitMeshIntoChildEntities(Entity* e, float co
 		// allocatedEntity->GetRBody()->getWorldTransform().setOrigin(allocatedEntity->GetRBody()->getCenterOfMassPosition());
 		sceneEntitiesMap.insert({ children[i]->GetName(), allocatedEntity });
 		sceneEntities.push_back(allocatedEntity);
-		EERenderer->AddRenderObject(allocatedEntity, children[i], e->GetMaterial(e->GetMeshMaterialName(i)));
+		EERenderer->AddRenderObject(allocatedEntity, children[i], mat);
 
 		childEntities.push_back(allocatedEntity);
 	}

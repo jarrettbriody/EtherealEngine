@@ -60,7 +60,7 @@ Entity::~Entity()
 		{
 			delete (*colliders)[i];
 		}
-		colliders->empty();
+		colliders->clear();
 	}
 
 	if(Config::DynamicsWorld != nullptr && rBody != nullptr)
@@ -82,12 +82,12 @@ Entity::~Entity()
 		delete compoundShape;
 
 	if (materialMap != nullptr) {
-		materialMap->empty();
+		materialMap->clear();
 		delete materialMap;
 	}
 		
 	if (children != nullptr) {
-		children->empty();
+		children->clear();
 		delete children;
 	}
 	if (colliders != nullptr)
@@ -848,7 +848,7 @@ void Entity::FreeMemory()
 		{
 			delete (*colliders)[i];
 		}
-		colliders->empty();
+		colliders->clear();
 	}
 
 	if (Config::DynamicsWorld != nullptr && rBody != nullptr)
@@ -870,12 +870,12 @@ void Entity::FreeMemory()
 		delete compoundShape;
 
 	if (materialMap != nullptr) {
-		materialMap->empty();
+		materialMap->clear();
 		delete materialMap;
 	}
 
 	if (children != nullptr) {
-		children->empty();
+		children->clear();
 		delete children;
 	}
 	if (colliders != nullptr)
