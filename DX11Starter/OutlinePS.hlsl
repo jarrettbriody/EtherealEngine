@@ -15,6 +15,7 @@ struct VertexToPixel
 
 Texture2D Pixels		: register(t0);
 Texture2D<uint> LayerMap		: register(t1);
+//Texture2D<float> DepthMap		: register(t2);
 SamplerState Sampler	: register(s0);
 
 float4 main(VertexToPixel input) : SV_TARGET
@@ -22,6 +23,7 @@ float4 main(VertexToPixel input) : SV_TARGET
 	float3 pixelIndex = float3(input.position.xy, 0);
 	float4 color = float4(1,1,1,1);
 	float4 originalColor;
+	float blackAmount = 0;
 	uint numSamples = 0;
 	uint samplesNotInLayer = 0;
 	uint samplesInLayer = 0;
@@ -40,12 +42,15 @@ float4 main(VertexToPixel input) : SV_TARGET
 
 	originalColor = Pixels.Sample(Sampler, input.uv);
 
+	blackAmount = (samplesInLayer < samplesNotInLayer) ? ((float)samplesInLayer / (float)numSamples) : ((float)samplesNotInLayer / (float)numSamples);
+	blackAmount *= 0.2f;
+
 	//if (samplesInLayer > 0 && samplesInLayer != numSamples) {
 	//	color.rgba *= (samplesInLayer < samplesNotInLayer) ? (1.0f - samplesInLayer / numSamples) : (1.0f - samplesNotInLayer / numSamples);
 	//}
 	//if (samplesInLayer == samplesNotInLayer) color = float4(0, 0, 0, 1.0f);
 
-	bool isBlack = (samplesInLayer > 0 && samplesInLayer != numSamples);
-	return float4(originalColor.xyz * (1 - (int)isBlack), 1.0f);
-	//return float4(originalColor.r * color.r, originalColor.g * color.g, originalColor.b * color.b, originalColor.a * color.a);
+	//bool isBlack = (samplesInLayer > 0 && samplesInLayer != numSamples);
+	//return float4(originalColor.xyz * (1 - (int)isBlack), 1.0f);
+	return float4(originalColor.r - blackAmount, originalColor.g - blackAmount, originalColor.b - blackAmount, originalColor.a - originalColor.a * blackAmount);
 }

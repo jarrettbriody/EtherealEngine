@@ -9,7 +9,7 @@ void BloodOrb::Init()
 	fluidCallback.pShader = EESceneLoader->pixelShadersMap["Fluid"];
 	fluidCallback.prepassVShader = EESceneLoader->vertexShadersMap["FluidPrepass"];
 	fluidCallback.prepassPShader = EESceneLoader->pixelShadersMap["FluidPrepass"];
-	fluidCallback.fillLineY = -0.4f;
+	fluidCallback.fillLineY = 0.0f;
 	fluidCallback.waveHeight = 0.02f;
 
 	EERenderer->SetRenderObjectCallback(entity, &fluidCallback);

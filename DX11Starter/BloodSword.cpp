@@ -14,7 +14,7 @@ void BloodSword::Init()
 	// starting positioning
 	entity->SetParentWorldMatrix(cam->GetWorldMatrixPtr());
 	
-	finalLerpPos = XMFLOAT3(3, -3, 3);
+	finalLerpPos = XMFLOAT3(3, 0, 3);
 	lerpPositionFrom = finalLerpPos; 
 
 	finalLerpRot = XMFLOAT3(0.0f, XMConvertToRadians(-90.0f), 0.0f);
@@ -118,7 +118,7 @@ void BloodSword::StartSlash()
 void BloodSword::IdleState()
 {
 	// not doing any lerping in the idle state
-	finalLerpPos = XMFLOAT3(3, -3, 3); // starting pos
+	finalLerpPos = XMFLOAT3(3, 0, 3); // starting pos
 	finalLerpRot = XMFLOAT3(0.0f, XMConvertToRadians(-90.0f), 0.0f);
 }
 
@@ -163,7 +163,7 @@ void BloodSword::SlashingState()
 
 void BloodSword::ResetState()
 {
-	lerpPositionTo = XMFLOAT3(3, -3, 3);
+	lerpPositionTo = XMFLOAT3(3, 0, 3);
 	lerpRotationTo = XMFLOAT3(0, XMConvertToRadians(-90.0f), 0.0f);
 
 	CalcLerp();

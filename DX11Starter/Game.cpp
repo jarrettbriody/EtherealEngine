@@ -665,6 +665,15 @@ void Game::GarbageCollect()
 		Entity* e = EESceneLoader->sceneEntities[i - 1];
 		if (e->destroyed) {
 			string name = e->GetName();
+
+			if (EESceneLoader->sceneEntitiesTagMap.count(e->tag.STDStr())) {
+				vector<Entity*>& tagVec = EESceneLoader->sceneEntitiesTagMap[e->tag.STDStr()];
+				for (int j = tagVec.size() - 1; j >= 0; j--)
+				{
+					if (tagVec[j] == e) tagVec.erase(tagVec.begin() + j);
+				}
+			}
+
 			EESceneLoader->sceneEntitiesMap.erase(name);
 			EESceneLoader->sceneEntities.erase(EESceneLoader->sceneEntities.begin() + i - 1);
 

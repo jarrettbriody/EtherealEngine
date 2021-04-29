@@ -82,10 +82,7 @@ void Material::Prepare()
 		pixelShader->SetShaderResourceView("NormalTexture", materialData.NormalTextureMapSRV);
 	}
 
-	if (materialData.SpecularExponent != 0)
-	{
-		pixelShader->SetInt("specularValue", materialData.SpecularExponent);
-	}
+	pixelShader->SetInt("specularValue", materialData.SpecularExponent);
 		
 	pixelShader->SetInt("illumination", materialData.Illumination);
 

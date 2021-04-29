@@ -40,10 +40,7 @@ float3 CalcDirectionalLight(float4 surfaceColor, float3 normal, Light light, flo
 	
 	float3 finalColor = diffuse * surfaceColor;
 
-	if (specularValue > 0)
-	{
-		finalColor += GetSpecularity(normal, toLight, toCameraVector, specularValue);
-	}
+	finalColor += GetSpecularity(normal, toLight, toCameraVector, specularValue);
 
 	finalColor *= light.Intensity * light.Color;
 
