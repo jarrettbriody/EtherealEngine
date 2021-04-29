@@ -5,6 +5,8 @@ void BloodSword::Init()
 {
 	eMap = ScriptManager::sceneEntitiesMap;
 
+	gameManager = (*eMap)["GameManager"];
+
 	cam = ScriptManager::EERenderer->GetCamera("main");
 
 	keyboard = Keyboard::GetInstance();
@@ -325,6 +327,10 @@ void BloodSword::CheckSwordSlashHit()
 
 				if (dotProduct > 0)
 				{
+					// Update the game manager attribute for enemies alive
+					GameManager* gameManagerScript = (GameManager*)scriptFunctionsMap[gameManager->GetName()]["GAMEMANAGER"];
+					gameManagerScript->DecrementEnemiesAlive();
+
 					// enemy is in the triangle, split it apart
 					std::vector<Entity*> childEntities = EESceneLoader->SplitMeshIntoChildEntities(enemy, 10.0f);
 

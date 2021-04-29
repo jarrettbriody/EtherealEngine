@@ -4,6 +4,7 @@
 #include "BloodIcicle.h"
 #include "BloodSword.h"
 #include "BloodOrb.h"
+#include "GameManager.h"
 #include "AmbientParticles.h"
 
 namespace Scripts {
@@ -13,7 +14,8 @@ namespace Scripts {
 		BLOODICICLE,
 		BLOODORB,
 		AMBIENTPARTICLES,
-		BLOODSWORD
+		BLOODSWORD,
+		GAMEMANAGER
 	};
 
 	static map<string, SCRIPT_NAMES> scriptNameMap = {
@@ -22,7 +24,8 @@ namespace Scripts {
 		{"BLOODICICLE", SCRIPT_NAMES::BLOODICICLE},
 		{"BLOODORB", SCRIPT_NAMES::BLOODORB},
 		{"AMBIENTPARTICLES", SCRIPT_NAMES::AMBIENTPARTICLES},
-		{"BLOODSWORD", SCRIPT_NAMES::BLOODSWORD}
+		{"BLOODSWORD", SCRIPT_NAMES::BLOODSWORD},
+		{"GAMEMANAGER", SCRIPT_NAMES::GAMEMANAGER}
 	};
 
 	static map<SCRIPT_NAMES, string> scriptStringNameMap = {
@@ -31,7 +34,8 @@ namespace Scripts {
 		{SCRIPT_NAMES::BLOODICICLE, "BLOODICICLE"},
 		{SCRIPT_NAMES::BLOODORB, "BLOODORB"},
 		{SCRIPT_NAMES::AMBIENTPARTICLES, "AMBIENTPARTICLES"},
-		{SCRIPT_NAMES::BLOODSWORD, "BLOODSWORD"}
+		{SCRIPT_NAMES::BLOODSWORD, "BLOODSWORD"},
+		{SCRIPT_NAMES::GAMEMANAGER, "GAMEMANAGER"}
 	};
 
 	namespace {
@@ -57,6 +61,9 @@ namespace Scripts {
 				break;
 			case Scripts::SCRIPT_NAMES::BLOODSWORD:
 				script = new BloodSword();
+				break;
+			case Scripts::SCRIPT_NAMES::GAMEMANAGER:
+				script = new GameManager();
 				break;
 			default:
 				break;

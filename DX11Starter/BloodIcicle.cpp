@@ -5,6 +5,8 @@ void BloodIcicle::Init()
 {
 	eMap = ScriptManager::sceneEntitiesMap;
 	
+	gameManager = (*eMap)["GameManager"];
+
 	// Do not allow the icicle to receive reaction forces
 	entity->GetRBody()->setCollisionFlags(entity->GetRBody()->getCollisionFlags() | btRigidBody::CF_NO_CONTACT_RESPONSE); 
 }
@@ -38,6 +40,10 @@ void BloodIcicle::OnCollision(btCollisionObject* other)
 		// if this icicle hits an enemy and there is not already a body part pinned to the icicle then split the enemy mesh and give each of the child entities the tag "Body Part" to detect the next necessary collision to accurately pin a body part
 		if (otherE->tag.STDStr() == std::string("Enemy") && !bodyPartPinned)
 		{
+			// Update the game manager attribute for enemies alive
+			GameManager* gameManagerScript = (GameManager*)scriptFunctionsMap[gameManager->GetName()]["GAMEMANAGER"];
+			gameManagerScript->DecrementEnemiesAlive();
+
 			std::vector<Entity*> childEntities = EESceneLoader->SplitMeshIntoChildEntities(otherE, 1.0f);  
 
 			for each (Entity* e in childEntities)

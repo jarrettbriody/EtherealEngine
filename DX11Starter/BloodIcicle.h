@@ -1,13 +1,14 @@
 #pragma once
 #include "ScriptManager.h"
+#include "GameManager.h"
 
 class BloodIcicle : public ScriptManager
 {
 	map<string, Entity*>* eMap;
 
-	btVector3 initialImpulse;
-
 	Entity* closestChild;
+
+	Entity* gameManager;
 
 	bool bodyPartPinned = false;
 

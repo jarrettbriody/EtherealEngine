@@ -1,5 +1,6 @@
 #pragma once
 #include "ScriptManager.h"
+#include "GameManager.h"
 
 enum class SwordState
 {
@@ -9,6 +10,8 @@ enum class SwordState
 class BloodSword : public ScriptManager
 {
 	map<string, Entity*>* eMap;
+
+	Entity* gameManager;
 
 	Camera* cam;
 

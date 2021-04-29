@@ -1,9 +1,11 @@
 TYPE="DIRLIGHT" name="Sun" intensity="0.25" P(-50,200,-50)D(0.2357,-0.9428,0.2357)C(1.0,0.98823,0.87058)
 TYPE="SKYBOX" dds="night4"
 
+name="GameManager" colliders="false" scripts="GAMEMANAGER" P(0, 0, 0)R(0,0,0)S(0.0, 0.0, 0.0)
 name="FPSController" colliders="true" mass="1.0" colliderType="CAPSULE" scripts="FPSCONTROLLER" P(-416.809, 25.0704, 59.4958)R(0,0,0)S(0.25, 1.0, 0.25)
 name="Blood_Orb" obj="bloodorb" material="RedFluid" scripts="BLOODORB,AMBIENTPARTICLES" P(-15,5,0)R(0,0,0)S(0.5,0.5,0.5)
 name="Blood_Orb_Glass" obj="Sphere" material="Glass" P(-15,5,0)R(0,0,0)S(1.05,1.05,1.05)
+name="Blood Sword" tag="Blood Sword" layer="Blood Sword" scripts="BLOODSWORD" obj="bloodswordNEW" P(0,0,0)R(0,-90.0,0)S(1,1,1)
 
 //name="Wall" obj="Cube" layer="decal" material="White" colliders="true" P(0,0,0)R(0,0,0)S(50,50,50)
 //name="Blood_Button" obj="Cube" layer="decal" colliders="true" P(-13,8,-20)R(0,270,0)S(17,13,0.1)
