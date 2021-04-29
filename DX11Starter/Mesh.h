@@ -7,6 +7,7 @@
 #include "EEString.h"
 
 using namespace std;
+using namespace DirectX;
 
 class Mesh
 {
@@ -22,6 +23,9 @@ protected:
 	EEString<64> meshName;
 	EEString<64> mtlPath;
 	int childCount = 0;
+	Mesh* centeredMesh = nullptr;
+	vector<Vertex>* verts = nullptr;
+	vector<unsigned int>* indices = nullptr;
 public:
 	Mesh();
 	Mesh(Vertex* vertexObjects, int vertexCount, unsigned int* indices, int indexCnt, string meshN, string matName = "DEFAULT_MATERIAL");
@@ -47,5 +51,7 @@ public:
 	void ReleaseBuffers();
 	void AllocateChildren();
 	string GetName();
+	void GenerateCenteredMesh(XMFLOAT3 offset);
+	Mesh* GetCenteredMesh();
 };
 

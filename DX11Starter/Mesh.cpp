@@ -14,9 +14,16 @@ Mesh::Mesh(Vertex * vertexObjects, int vertexCount, unsigned int * indices, int 
 	vertices = new vector<DirectX::XMFLOAT3>();
 	childrenVec = new vector<Mesh*>();
 	materialNameList = new vector<string>();
+	verts = new vector<Vertex>();
+	this->indices = new vector<unsigned int>();
 	for (size_t i = 0; i < vertexCount; i++)
 	{
 		vertices->push_back(vertexObjects[i].Position);
+		verts->push_back(vertexObjects[i]);
+	}
+	for (size_t i = 0; i < indexCnt; i++)
+	{
+		this->indices->push_back(indices[i]);
 	}
 	meshName = meshN;
 	materialNameList->push_back(matName);
@@ -29,6 +36,8 @@ Mesh::Mesh(string meshN, char * objFile, bool* success)
 	vertices = new vector<DirectX::XMFLOAT3>();
 	childrenVec = new vector<Mesh*>();
 	materialNameList = new vector<string>();
+	verts = new vector<Vertex>();
+	this->indices = new vector<unsigned int>();
 
 	meshName = meshN;
 	// File input object
@@ -45,8 +54,8 @@ Mesh::Mesh(string meshN, char * objFile, bool* success)
 	std::vector<XMFLOAT3> positions;     // Positions from the file
 	std::vector<XMFLOAT3> normals;       // Normals from the file
 	std::vector<XMFLOAT2> uvs;           // UVs from the file
-	std::vector<Vertex> verts;           // Verts we're assembling
-	std::vector<UINT> indices;           // Indices of these verts
+	//std::vector<Vertex> verts;           // Verts we're assembling
+	//std::vector<UINT> indices;           // Indices of these verts
 	unsigned int vertCounter = 0;        // Count of vertices/indices
 	char chars[200];                     // String for line reading
 	string line;
@@ -74,13 +83,13 @@ Mesh::Mesh(string meshN, char * objFile, bool* success)
 			else if (isGroup && line != "g default") {
 				materialNameList->push_back(matName);
 				groupName = line.substr(2);
-				Mesh* newChild = new Mesh(&verts[0], vertCounter, &indices[0], vertCounter, groupName, matName);
+				Mesh* newChild = new Mesh(&(*verts)[0], vertCounter, &(*indices)[0], vertCounter, groupName, matName);
 				childrenVec->push_back(newChild);
 				childCount++;
 				//reset everything
 				matName = "";
-				verts.clear();
-				indices.clear();
+				verts->clear();
+				indices->clear();
 				vertCounter = 0;
 				isGroup = true;
 				groupName = line.substr(2);
@@ -180,14 +189,14 @@ Mesh::Mesh(string meshN, char * objFile, bool* success)
 			v3.Normal.z *= -1.0f;
 
 			// Add the verts to the vector (flipping the winding order)
-			verts.push_back(v1);
-			verts.push_back(v3);
-			verts.push_back(v2);
+			verts->push_back(v1);
+			verts->push_back(v3);
+			verts->push_back(v2);
 
 			// Add three more indices
-			indices.push_back(vertCounter); vertCounter += 1;
-			indices.push_back(vertCounter); vertCounter += 1;
-			indices.push_back(vertCounter); vertCounter += 1;
+			indices->push_back(vertCounter); vertCounter += 1;
+			indices->push_back(vertCounter); vertCounter += 1;
+			indices->push_back(vertCounter); vertCounter += 1;
 
 			// Was there a 4th face?
 			if (facesRead == 12)
@@ -204,14 +213,14 @@ Mesh::Mesh(string meshN, char * objFile, bool* success)
 				v4.Normal.z *= -1.0f;
 
 				// Add a whole triangle (flipping the winding order)
-				verts.push_back(v1);
-				verts.push_back(v4);
-				verts.push_back(v3);
+				verts->push_back(v1);
+				verts->push_back(v4);
+				verts->push_back(v3);
 
 				// Add three more indices
-				indices.push_back(vertCounter); vertCounter += 1;
-				indices.push_back(vertCounter); vertCounter += 1;
-				indices.push_back(vertCounter); vertCounter += 1;
+				indices->push_back(vertCounter); vertCounter += 1;
+				indices->push_back(vertCounter); vertCounter += 1;
+				indices->push_back(vertCounter); vertCounter += 1;
 			}
 		}
 		else if (regex_search(line, match, useMatRgx)) {
@@ -228,16 +237,16 @@ Mesh::Mesh(string meshN, char * objFile, bool* success)
 
 	if (isGroup && groupName != "" && matName != "" && childCount > 0 && groupName != "default") {
 		materialNameList->push_back(matName);
-		Mesh* newChild = new Mesh(&verts[0], vertCounter, &indices[0], vertCounter, groupName, matName);
+		Mesh* newChild = new Mesh(&(*verts)[0], vertCounter, &(*indices)[0], vertCounter, groupName, matName);
 		childrenVec->push_back(newChild);
 		childCount++;
 	}
 	else if (childCount == 0) {
-		for (size_t i = 0; i < verts.size(); i++)
+		for (size_t i = 0; i < verts->size(); i++)
 		{
-			vertices->push_back(verts[i].Position);
+			vertices->push_back((*verts)[i].Position);
 		}
-		CreateBuffers(&verts[0], vertCounter, &indices[0], vertCounter);
+		CreateBuffers(&(*verts)[0], vertCounter, &(*indices)[0], vertCounter);
 	}
 	if (success != nullptr)
 		*success = true;
@@ -265,7 +274,16 @@ Mesh::~Mesh()
 		delete materialNameList;
 		materialNameList = nullptr;
 	}
+
+	if (verts != nullptr) {
+		delete verts;
+		verts = nullptr;
+	}
 		
+	if (indices != nullptr) {
+		delete indices;
+		indices = nullptr;
+	}
 }
 
 void Mesh::operator=(const Mesh& m)
@@ -273,6 +291,8 @@ void Mesh::operator=(const Mesh& m)
 	vertices = new vector<DirectX::XMFLOAT3>();
 	childrenVec = new vector<Mesh*>();
 	materialNameList = new vector<string>();
+	verts = new vector<Vertex>();
+	indices = new vector<unsigned int>();
 
 	*vertices = vector<DirectX::XMFLOAT3>(*m.vertices);
 	vertexBuffer = m.vertexBuffer;
@@ -281,9 +301,12 @@ void Mesh::operator=(const Mesh& m)
 	*childrenVec = vector<Mesh*>(*m.childrenVec);
 	mtlPath = m.mtlPath;
 	*materialNameList = vector<string>(*m.materialNameList);
+	*verts = vector<Vertex>(*m.verts);
+	*indices = vector<unsigned int>(*m.indices);
 	meshName = m.meshName;
 	childCount = m.childCount;
 	children = nullptr;
+	centeredMesh = m.centeredMesh;
 
 	if (m.children != nullptr && childCount > 0) {
 		children = new Mesh*[childCount];
@@ -493,6 +516,10 @@ void Mesh::FreeMemory()
 	delete vertices;
 	delete childrenVec;
 	delete materialNameList;
+	delete verts;
+	verts = nullptr;
+	delete indices;
+	indices = nullptr;
 }
 
 void Mesh::ReleaseBuffers()
@@ -525,4 +552,28 @@ void Mesh::AllocateChildren()
 string Mesh::GetName()
 {
 	return meshName.STDStr();
+}
+
+void Mesh::GenerateCenteredMesh(XMFLOAT3 offset)
+{
+	MemoryAllocator* mem = MemoryAllocator::GetInstance();
+	bool success = false;
+	vector<Vertex> newVerts;
+	//vector<unsigned int> newIndices = vector<unsigned int>(*(this->indices));
+	for (size_t i = 0; i < verts->size(); i++)
+	{
+		newVerts.push_back((*verts)[i]);
+		XMStoreFloat3(&newVerts[i].Position, XMVectorAdd(XMLoadFloat3(&newVerts[i].Position), XMLoadFloat3(&offset)));
+	}
+	centeredMesh = (Mesh*)mem->AllocateToPool((unsigned int)MEMORY_POOL::MESH_POOL, sizeof(Mesh), success);
+	if (success) {
+		Mesh* newMesh = new Mesh(&newVerts[0], newVerts.size(), &(*this->indices)[0], indices->size(), meshName.STDStr(), (*materialNameList)[0]);
+		*centeredMesh = *newMesh;
+		delete newMesh;
+	}
+}
+
+Mesh* Mesh::GetCenteredMesh()
+{
+	return centeredMesh;
 }

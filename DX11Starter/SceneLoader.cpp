@@ -34,6 +34,7 @@ SceneLoader::~SceneLoader()
 	{
 		try
 		{
+			if (meshMapIter->second->GetCenteredMesh() != nullptr) meshMapIter->second->GetCenteredMesh()->FreeMemory();
 			meshMapIter->second->FreeMemory();
 		}
 		catch (const std::exception&)
@@ -59,6 +60,7 @@ SceneLoader::~SceneLoader()
 	for (auto meshMapIter = generatedMeshesMap.begin(); meshMapIter != generatedMeshesMap.end(); ++meshMapIter)
 	{
 		//delete meshMapIter->second;
+		if (meshMapIter->second->GetCenteredMesh() != nullptr) meshMapIter->second->GetCenteredMesh()->FreeMemory();
 		meshMapIter->second->FreeMemory();
 		//cout << "Deleting " << meshMapIter->first << endl;
 	}
@@ -106,6 +108,8 @@ Mesh* SceneLoader::LoadMesh(string meshName, string meshPath, map<string, Mesh*>
 	Mesh* allocMesh = (Mesh*)EEMemoryAllocator->AllocateToPool((unsigned int)MEMORY_POOL::MESH_POOL, sizeof(Mesh), success);
 	Mesh mesh = Mesh(meshName, (char*)(("../../Assets/Models/" + meshPath).c_str()));
 	*allocMesh = mesh;
+	if (allocMesh->GetChildCount() > 0)
+		allocMesh->AllocateChildren();
 	meshMap.insert({ meshName, allocMesh });
 
 	return allocMesh;
@@ -930,6 +934,31 @@ void SceneLoader::LoadScene(string sceneName)
 						}
 						allocatedEntity->isCollisionStatic = (mass == 0.0f);
 						allocatedEntity->InitRigidBody(collShape, mass);
+
+						vector<Collider*> colls = allocatedEntity->GetColliders();
+						Mesh* mesh = allocatedEntity->GetMesh();
+						if (colls.size() > 0 && mesh != nullptr) {
+							UINT childCnt = mesh->GetChildCount();
+							XMFLOAT3 offset;
+							if (childCnt == 0) {
+								if (mesh->GetCenteredMesh() == nullptr) {
+									offset = colls[0]->GetCenterLocal();
+									XMStoreFloat3(&offset, XMVectorScale(XMLoadFloat3(&offset), -1.0f));
+									mesh->GenerateCenteredMesh(offset);
+								}
+							}
+							else {
+								Mesh** children = mesh->GetChildren();
+								for (size_t i = 0; i < colls.size(); i++)
+								{
+									if (children[i]->GetCenteredMesh() == nullptr) {
+										offset = colls[i]->GetCenterLocal();
+										XMStoreFloat3(&offset, XMVectorScale(XMLoadFloat3(&offset), -1.0f));
+										children[i]->GenerateCenteredMesh(offset);
+									}
+								}
+							}
+						}
 					}
 				}
 				
@@ -1119,6 +1148,30 @@ Entity* SceneLoader::CreateEntity(EntityCreationParameters& para)
 		allocatedEntity->InitRigidBody(para.bulletColliderShape, para.entityMass);
 	}
 
+	vector<Collider*> colls = allocatedEntity->GetColliders();
+	if (colls.size() > 0 && mesh != nullptr) {
+		UINT childCnt = mesh->GetChildCount();
+		XMFLOAT3 offset;
+		if (childCnt == 0) {
+			if (mesh->GetCenteredMesh() == nullptr) {
+				offset = colls[0]->GetCenterLocal();
+				XMStoreFloat3(&offset, XMVectorScale(XMLoadFloat3(&offset), -1.0f));
+				mesh->GenerateCenteredMesh(offset);
+			}
+		}
+		else {
+			Mesh** children = mesh->GetChildren();
+			for (size_t i = 0; i < colls.size(); i++)
+			{
+				if (children[i]->GetCenteredMesh() == nullptr) {
+					offset = colls[i]->GetCenterLocal();
+					XMStoreFloat3(&offset, XMVectorScale(XMLoadFloat3(&offset), -1.0f));
+					children[i]->GenerateCenteredMesh(offset);
+				}
+			}
+		}
+	}
+
 	if (Config::EtherealDebugLinesEnabled && allocatedEntity->colliderDebugLinesEnabled) {
 		vector<Collider*> colliders = allocatedEntity->GetColliders();
 		for (size_t d = 0; d < colliders.size(); d++)
@@ -1156,16 +1209,21 @@ std::vector<Entity*> SceneLoader::SplitMeshIntoChildEntities(Entity* e, float co
 	if (meshChildCnt == 0) return childEntities;
 	bool success;
 	Mesh** children = e->GetMesh()->GetChildren();
+	vector<Collider*> colls = e->GetColliders();
 	
 	for (size_t i = 0; i < meshChildCnt; i++)
 	{
+		Mesh* newCenteredMesh = children[i]->GetCenteredMesh();
 		Material* mat = e->GetMaterial(e->GetMeshMaterialName(i));
-		Entity newE(children[i]->GetName(), children[i], mat);
+		Entity newE(children[i]->GetName(), newCenteredMesh, mat);
 		Entity* allocatedEntity = (Entity*)EEMemoryAllocator->AllocateToPool((unsigned int)MEMORY_POOL::ENTITY_POOL, sizeof(Entity), success);
 		*allocatedEntity = newE;
 		//e->AddChildEntity(allocatedEntity);
 		//e->CalcWorldMatrix();
-		allocatedEntity->SetPosition(e->GetPosition()); // TODO: this informs the rigidbody creation, so is the cause of not having centered rotations? Could create offset in the Mesh class by creating a new mesh but this effects everything. 
+		XMFLOAT3 newPos = e->GetPosition();
+		XMFLOAT3 collCenter = colls[i]->GetCenterGlobal();
+		XMStoreFloat3(&newPos, XMVectorAdd(XMLoadFloat3(&newPos), XMLoadFloat3(&collCenter)));
+		allocatedEntity->SetPosition(newPos); // TODO: this informs the rigidbody creation, so is the cause of not having centered rotations? Could create offset in the Mesh class by creating a new mesh but this effects everything. 
 		XMFLOAT3 r = e->GetEulerAngles();
 		r.y += DirectX::XM_PI;
 		allocatedEntity->SetRotation(r);
