@@ -1222,10 +1222,9 @@ std::vector<Entity*> SceneLoader::SplitMeshIntoChildEntities(Entity* e, float co
 		//e->CalcWorldMatrix();
 		XMFLOAT3 newPos = e->GetPosition();
 		XMFLOAT3 collCenter = colls[i]->GetCenterGlobal();
-		XMStoreFloat3(&newPos, XMVectorAdd(XMLoadFloat3(&newPos), XMLoadFloat3(&collCenter)));
+		XMStoreFloat3(&newPos, XMVectorAdd(XMLoadFloat3(&newPos), XMVectorScale(XMLoadFloat3(&collCenter), 1.0f)));
 		allocatedEntity->SetPosition(newPos); // TODO: this informs the rigidbody creation, so is the cause of not having centered rotations? Could create offset in the Mesh class by creating a new mesh but this effects everything. 
-		XMFLOAT3 r = e->GetEulerAngles();
-		r.y += DirectX::XM_PI;
+		XMFLOAT4 r = e->GetRotationQuaternion();
 		allocatedEntity->SetRotation(r);
 		//allocatedEntity->SetRotation(e->GetRotationQuaternion());
 		allocatedEntity->SetScale(e->GetScale());
@@ -1238,6 +1237,8 @@ std::vector<Entity*> SceneLoader::SplitMeshIntoChildEntities(Entity* e, float co
 		EERenderer->AddRenderObject(allocatedEntity, newCenteredMesh, mat);
 
 		childEntities.push_back(allocatedEntity);
+
+		allocatedEntity->GetRBody()->applyCentralImpulse(Utility::Float3ToBulletVector(collCenter) * 15.0f);
 	}
 	//e->EmptyEntity();
 	e->Destroy();

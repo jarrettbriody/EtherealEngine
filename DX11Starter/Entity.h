@@ -108,6 +108,7 @@ public:
 	void RotateAroundAxis(XMFLOAT3 axis, float scalar);
 	void CalcEulerAngles();
 	void SetDirectionVector(XMFLOAT3 direction);
+	void SetDirectionVector(XMFLOAT3 direction, XMFLOAT3 up, XMFLOAT3 right = ZERO_VECTOR3);
 	void CalcDirectionVector();
 	void SetRepeatTexture(float x, float y);
 	void SetShadowData(ShadowData shadowData);

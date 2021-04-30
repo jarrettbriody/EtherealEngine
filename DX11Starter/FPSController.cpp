@@ -52,19 +52,19 @@ void FPSController::Init()
 	
 	bloodOrb = eMap->find("Blood_Orb")->second;
 
-	hookshotParams = {
-			"Hookshot",					// name
-			"Hookshot",					// tag
-			"Hookshot",					// layer
-			"bloodchain",							// mesh
-			"bloodchain",							// material
-			{""},				// script names
+	hookshotParams = {	
+			"Hookshot",						// name
+			"Hookshot",						// tag
+			"Hookshot",						// layer
+			"bloodchain",					// mesh
+			"bloodchain",					// material
+			{""},							// script names
 			0,								// script count
 			XMFLOAT3(0.0f, 0.0f, 0.0f),		// position
 			XMFLOAT3(0.0f, 0.0f, 0.0f),		// rotation
-			XMFLOAT3(1.0f, 1.0f, hookshotZScale),		// scale
+			XMFLOAT3(1.0f, 1.0f, 0.0f),		// scale
 			0.0f,							// mass
-			false								// defaults work for the rest
+			false							// defaults work for the rest
 	};
 
 	hookshot = ScriptManager::CreateEntity(hookshotParams);

@@ -474,10 +474,11 @@ void Entity::Move(float x, float y, float z)
 
 void Entity::SetDirectionVector(XMFLOAT3 direction)
 {
-	this->direction = direction;
-
 	XMVECTOR dir = XMLoadFloat3(&direction);
 	dir = XMVector3Normalize(dir);
+
+	XMStoreFloat3(&this->direction, dir);
+
 	XMFLOAT3 y = Y_AXIS;
 	XMVECTOR up = XMLoadFloat3(&y);
 	XMVECTOR right = XMVector3Cross(up, dir);
@@ -672,6 +673,30 @@ void Entity::AddMaterial(Material * mat, bool addToMesh)
 	materialMap->insert({ nm, mat });
 	if(addToMesh)
 		meshMaterialIndex = mesh->AddMaterialName(nm);
+}
+
+void Entity::SetDirectionVector(XMFLOAT3 direction, XMFLOAT3 up, XMFLOAT3 right)
+{
+	XMVECTOR dir = XMLoadFloat3(&direction);
+	dir = XMVector3Normalize(dir);
+
+	XMStoreFloat3(&this->direction, dir);
+
+	XMFLOAT3 y = Y_AXIS;
+	XMVECTOR upC = XMLoadFloat3(&y);
+	XMVECTOR rightC = XMVector3Cross(upC, dir);
+	rightC = XMVector3Normalize(rightC);
+	upC = XMVector3Cross(dir, rightC);
+	upC = XMVector3Normalize(upC);
+	XMFLOAT4 botRow(0.0f, 0.0f, 0.0f, 1.0f);
+	XMVECTOR trans = XMLoadFloat4(&botRow);
+	XMMATRIX rotation = XMMATRIX(rightC, upC, dir, trans);
+
+	XMVECTOR quat = XMQuaternionRotationMatrix(rotation);
+
+	XMStoreFloat4(&quaternion, XMQuaternionNormalize(quat));
+
+	CalcEulerAngles();
 }
 
 string Entity::GetName()
