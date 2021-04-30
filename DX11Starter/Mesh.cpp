@@ -259,6 +259,10 @@ Mesh::~Mesh()
 		delete[] children;
 		children = nullptr;
 	}
+
+	if (centeredMesh != nullptr) {
+		centeredMesh->FreeMemory();
+	}
 		
 	if (vertices != nullptr) {
 		delete vertices;
@@ -506,6 +510,10 @@ void Mesh::FreeMemory()
 			(children[i])->FreeMemory();
 		}
 		delete[] children;
+	}
+
+	if (centeredMesh != nullptr) {
+		centeredMesh->FreeMemory();
 	}
 
 	if (vertexBuffer)

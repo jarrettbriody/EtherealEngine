@@ -34,7 +34,7 @@ SceneLoader::~SceneLoader()
 	{
 		try
 		{
-			if (meshMapIter->second->GetCenteredMesh() != nullptr) meshMapIter->second->GetCenteredMesh()->FreeMemory();
+			//if (meshMapIter->second->GetCenteredMesh() != nullptr) meshMapIter->second->GetCenteredMesh()->FreeMemory();
 			meshMapIter->second->FreeMemory();
 		}
 		catch (const std::exception&)
@@ -60,7 +60,7 @@ SceneLoader::~SceneLoader()
 	for (auto meshMapIter = generatedMeshesMap.begin(); meshMapIter != generatedMeshesMap.end(); ++meshMapIter)
 	{
 		//delete meshMapIter->second;
-		if (meshMapIter->second->GetCenteredMesh() != nullptr) meshMapIter->second->GetCenteredMesh()->FreeMemory();
+		//if (meshMapIter->second->GetCenteredMesh() != nullptr) meshMapIter->second->GetCenteredMesh()->FreeMemory();
 		meshMapIter->second->FreeMemory();
 		//cout << "Deleting " << meshMapIter->first << endl;
 	}
@@ -1235,7 +1235,7 @@ std::vector<Entity*> SceneLoader::SplitMeshIntoChildEntities(Entity* e, float co
 		// allocatedEntity->GetRBody()->getWorldTransform().setOrigin(allocatedEntity->GetRBody()->getCenterOfMassPosition());
 		sceneEntitiesMap.insert({ children[i]->GetName(), allocatedEntity });
 		sceneEntities.push_back(allocatedEntity);
-		EERenderer->AddRenderObject(allocatedEntity, children[i], mat);
+		EERenderer->AddRenderObject(allocatedEntity, newCenteredMesh, mat);
 
 		childEntities.push_back(allocatedEntity);
 	}
