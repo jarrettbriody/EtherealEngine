@@ -1,9 +1,13 @@
 #include "pch.h"
 #include "BloodSword.h" 
+#include "FPSController.h"
 
 void BloodSword::Init()
 {
 	eMap = ScriptManager::sceneEntitiesMap;
+
+	gameManagerScript = (GameManager*)scriptFunctionsMap[(*eMap)["GameManager"]->GetName()]["GAMEMANAGER"];
+	fpsControllerScript = (FPSController*)scriptFunctionsMap[(*eMap)["FPSController"]->GetName()]["FPSCONTROLLER"];
 
 	cam = ScriptManager::EERenderer->GetCamera("main");
 
@@ -14,7 +18,7 @@ void BloodSword::Init()
 	// starting positioning
 	entity->SetParentWorldMatrix(cam->GetWorldMatrixPtr());
 	
-	finalLerpPos = XMFLOAT3(3, 0, 3);
+	finalLerpPos = XMFLOAT3(3, -1, 3);
 	lerpPositionFrom = finalLerpPos; 
 
 	finalLerpRot = XMFLOAT3(0.0f, XMConvertToRadians(-90.0f), 0.0f);
@@ -53,8 +57,8 @@ void BloodSword::Init()
 		XMFLOAT3(8, -6, 3)
 	};*/
 
-	slashPointsRight = GenerateSlashPoints(XMFLOAT3(5, 0, 3), XMFLOAT3(-8, -8, 3), 1.0f/5.0f, 4.0f);
-	slashPointsLeft = GenerateSlashPoints(XMFLOAT3(-5, 0, 3), XMFLOAT3(8, -8, 3), 1.0f/5.0f, 4.0f);
+	slashPointsRight = GenerateSlashPoints(XMFLOAT3(5, 3, 3), XMFLOAT3(-8, -4, 3), 0.5, 5.0f);
+	slashPointsLeft = GenerateSlashPoints(XMFLOAT3(-5, 3, 3), XMFLOAT3(8, -4, 3), 0.5, 5.0f);
 }
 
 void BloodSword::Update()
@@ -94,6 +98,7 @@ void BloodSword::Update()
 	//cam->CalcWorldMatrix(); // Putting camera world matrix calc after the entity makes the sword jitter much less severe...not sure why?
 }
 
+
 void BloodSword::StartSlash()
 {
 	if (ss == SwordState::Idle) // Only allow slash if it is idle state
@@ -118,7 +123,7 @@ void BloodSword::StartSlash()
 void BloodSword::IdleState()
 {
 	// not doing any lerping in the idle state
-	finalLerpPos = XMFLOAT3(3, 0, 3); // starting pos
+	finalLerpPos = XMFLOAT3(3, -1, 3); // starting pos
 	finalLerpRot = XMFLOAT3(0.0f, XMConvertToRadians(-90.0f), 0.0f);
 }
 
@@ -163,7 +168,7 @@ void BloodSword::SlashingState()
 
 void BloodSword::ResetState()
 {
-	lerpPositionTo = XMFLOAT3(3, 0, 3);
+	lerpPositionTo = XMFLOAT3(3, -1, 3);
 	lerpRotationTo = XMFLOAT3(0, XMConvertToRadians(-90.0f), 0.0f);
 
 	CalcLerp();
@@ -209,13 +214,13 @@ void BloodSword::CalcLerp()
 
 	if (ss == SwordState::Raised || ss == SwordState::Reset)
 	{
-		posLerpScalar = positionLerpScalar * 0.15;
-		rotLerpScalar = rotationLerpScalar * 0.15;
+		posLerpScalar = readyingPositionLerpScalar;
+		rotLerpScalar = readyingRotationLerpScalar;
 	}
 	else
 	{
-		posLerpScalar = positionLerpScalar;
-		rotLerpScalar = rotationLerpScalar;
+		posLerpScalar = slashPositionLerpScalar;
+		rotLerpScalar = slashRotationLerpScalar;
 	}
 
 	XMStoreFloat3(&finalLerpPos, XMVectorLerp(XMLoadFloat3(&lerpPositionFrom), XMLoadFloat3(&lerpPositionTo), deltaTime * posLerpScalar));
@@ -245,7 +250,7 @@ std::vector<XMFLOAT3> BloodSword::GenerateSlashPoints(XMFLOAT3 startingPos, XMFL
 			x += interval;
 			x = min(x, endingPos.x); // don't go beyond ending x
 
-			if (newPos.x >= 0)
+			if (newPos.x >= 1) // we want to make sure that the max z is kept for a couple lerp points so this is >= 1 rather than >= 0
 			{
 				z -= interval;
 			}
@@ -261,7 +266,7 @@ std::vector<XMFLOAT3> BloodSword::GenerateSlashPoints(XMFLOAT3 startingPos, XMFL
 			x -= interval;
 			x = max(x, endingPos.x); // don't go beyond ending x
 
-			if (newPos.x <= 0)
+			if (newPos.x <= -1) // we want to make sure that the max z is kept for a couple lerp points so this is <= -1 rather than <= 0
 			{
 				z -= interval;
 			}
@@ -269,7 +274,7 @@ std::vector<XMFLOAT3> BloodSword::GenerateSlashPoints(XMFLOAT3 startingPos, XMFL
 			{
 				z += interval;
 
-				z = min(z, maxZ); 
+				z = min(z, maxZ); // don't go beyond max z
 			}
 		}										    
 
@@ -282,6 +287,58 @@ std::vector<XMFLOAT3> BloodSword::GenerateSlashPoints(XMFLOAT3 startingPos, XMFL
 
 void BloodSword::CheckSwordSlashHit()
 {
+	std::vector<Entity*> enemies = EESceneLoader->sceneEntitiesTagMap["Enemy"];
+
+	for each (Entity* enemy in enemies)
+	{
+		if (EntityInSlashDetectionField(enemy))
+		{
+			// Store the old enemy position for later use in case the enemy was killed while leashed
+			btVector3 oldEnemyPos = enemy->GetRBody()->getCenterOfMassPosition();
+
+			// Check if this enemy in the detection field is the leashed enemy when it is hit
+			bool leashedWhenKilled = fpsControllerScript->GetPlayerState() == PlayerState::HookshotLeash && fpsControllerScript->GetLeashedEntity() == enemy;
+
+			// enemy is in the triangle, split it apart
+			std::vector<Entity*> childEntities = EESceneLoader->SplitMeshIntoChildEntities(enemy, 10.0f);
+
+			// Update the game manager attribute for enemies alive
+			gameManagerScript->DecrementEnemiesAlive();
+
+			Entity* newLeashedEntity = childEntities[0];
+			for each (Entity * e in childEntities)
+			{
+				e->tag = std::string("Body Part");
+
+				if (leashedWhenKilled) // if the enemy is leashed while they are killed transfer the leash to the next closest body part
+				{
+					if (e->GetRBody()->getCenterOfMassPosition().distance(oldEnemyPos) < newLeashedEntity->GetRBody()->getCenterOfMassPosition().distance(oldEnemyPos))
+					{
+						newLeashedEntity = e;
+					}
+				}
+			}
+
+			if (leashedWhenKilled)
+			{
+				fpsControllerScript->SetLeashedEntity(newLeashedEntity);
+			}
+		}
+	}
+
+	/*std::vector<Entity*> bodyParts = EESceneLoader->sceneEntitiesTagMap["Body Part"];
+
+	for each (Entity* bodyPart in bodyParts)
+	{
+		if (EntityInSlashDetectionField(bodyPart))
+		{
+			bodyPart->GetRBody()->applyCentralImpulse(Utility::Float3ToBulletVector(cam->direction).normalized() * 100.0f);
+		}
+	}*/
+}
+
+bool BloodSword::EntityInSlashDetectionField(Entity* e)
+{
 	float currentAngle = atan2(cam->direction.z, cam->direction.x);
 	float halfViewAngle = XMConvertToRadians(viewAngle / 2);
 	float hypotenuse = viewDistance / cos(halfViewAngle);
@@ -291,54 +348,43 @@ void BloodSword::CheckSwordSlashHit()
 	XMFLOAT3 viewFront;
 	XMStoreFloat3(&viewFront, XMVectorSubtract(XMLoadFloat3(&viewRight), XMLoadFloat3(&viewLeft)));
 
-	std::vector<Entity*> enemies = EESceneLoader->sceneEntitiesTagMap["Enemy"];
+	XMFLOAT3 playerPos = Utility::BulletVectorToFloat3(eMap->find("FPSController")->second->GetRBody()->getCenterOfMassPosition());
+	XMFLOAT3 entityPos = Utility::BulletVectorToFloat3(e->GetRBody()->getCenterOfMassPosition());
 
-	for each (Entity* enemy in enemies)
+	XMFLOAT3 flooredPos = XMFLOAT3(playerPos.x, 0, playerPos.z);
+	XMFLOAT3 flooredEnemyPos = XMFLOAT3(entityPos.x, 0, entityPos.z);
+
+	XMFLOAT3 triVertToEnemy;
+	XMStoreFloat3(&triVertToEnemy, XMVectorSubtract(XMLoadFloat3(&flooredEnemyPos), XMLoadFloat3(&flooredPos)));
+
+	XMFLOAT3 perpendicular = XMFLOAT3(viewLeft.z, viewLeft.y, -viewLeft.x);
+
+	float dotProduct = 0;
+	XMStoreFloat(&dotProduct, XMVector3Dot(XMLoadFloat3(&triVertToEnemy), XMLoadFloat3(&perpendicular)));
+
+	if (dotProduct > 0)
 	{
-		XMFLOAT3 playerPos =  Utility::BulletVectorToFloat3(eMap->find("FPSController")->second->GetRBody()->getCenterOfMassPosition());
-		XMFLOAT3 enemyPos = Utility::BulletVectorToFloat3(enemy->GetRBody()->getCenterOfMassPosition());
+		XMStoreFloat3(&triVertToEnemy, XMVectorSubtract(XMLoadFloat3(&flooredEnemyPos), XMVectorAdd(XMLoadFloat3(&flooredPos), XMLoadFloat3(&viewLeft))));
+		perpendicular = XMFLOAT3(viewFront.z, viewFront.y, -viewFront.x);
 
-		XMFLOAT3 flooredPos = XMFLOAT3(playerPos.x, 0, playerPos.z);
-		XMFLOAT3 flooredEnemyPos = XMFLOAT3(enemyPos.x, 0, enemyPos.z);
-
-		XMFLOAT3 triVertToEnemy;
-		XMStoreFloat3(&triVertToEnemy, XMVectorSubtract(XMLoadFloat3(&flooredEnemyPos), XMLoadFloat3(&flooredPos)));
-
-		XMFLOAT3 perpendicular = XMFLOAT3(viewLeft.z, viewLeft.y, -viewLeft.x);
-
-		float dotProduct = 0;
 		XMStoreFloat(&dotProduct, XMVector3Dot(XMLoadFloat3(&triVertToEnemy), XMLoadFloat3(&perpendicular)));
 
 		if (dotProduct > 0)
 		{
-			XMStoreFloat3(&triVertToEnemy,XMVectorSubtract(XMLoadFloat3(&flooredEnemyPos), XMVectorAdd(XMLoadFloat3(&flooredPos), XMLoadFloat3(&viewLeft))));
-			perpendicular = XMFLOAT3(viewFront.z, viewFront.y, -viewFront.x);
+			XMStoreFloat3(&triVertToEnemy, XMVectorSubtract(XMLoadFloat3(&flooredEnemyPos), XMVectorAdd(XMLoadFloat3(&flooredPos), XMLoadFloat3(&viewRight))));
+			perpendicular = XMFLOAT3(-viewRight.z, -viewRight.y, viewRight.x);
 
 			XMStoreFloat(&dotProduct, XMVector3Dot(XMLoadFloat3(&triVertToEnemy), XMLoadFloat3(&perpendicular)));
 
 			if (dotProduct > 0)
 			{
-				XMStoreFloat3(&triVertToEnemy, XMVectorSubtract(XMLoadFloat3(&flooredEnemyPos), XMVectorAdd(XMLoadFloat3(&flooredPos), XMLoadFloat3(&viewRight))));
-				perpendicular = XMFLOAT3(-viewRight.z, -viewRight.y, viewRight.x);
-
-				XMStoreFloat(&dotProduct, XMVector3Dot(XMLoadFloat3(&triVertToEnemy), XMLoadFloat3(&perpendicular)));
-
-				if (dotProduct > 0)
-				{
-					// enemy is in the triangle, split it apart
-					std::vector<Entity*> childEntities = EESceneLoader->SplitMeshIntoChildEntities(enemy, 10.0f);
-
-					for each (Entity * e in childEntities)
-					{
-						e->tag = std::string("Body Part");
-					}
-				}
-
+				return true;
 			}
 		}
 	}
-}
 
+	return false;
+}
 
 void BloodSword::OnCollision(btCollisionObject* other)
 {

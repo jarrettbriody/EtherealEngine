@@ -1,14 +1,20 @@
 #pragma once
 #include "ScriptManager.h"
+#include "GameManager.h"
 
 enum class SwordState
 {
 	Raised, Slashing, Idle, Reset
 };
 
+class FPSController; // Forward declaration to avoid circular dependency
+
 class BloodSword : public ScriptManager
 {
 	map<string, Entity*>* eMap;
+
+	GameManager* gameManagerScript;
+	FPSController* fpsControllerScript;
 
 	Camera* cam;
 
@@ -16,11 +22,14 @@ class BloodSword : public ScriptManager
 
 	SwordState ss;
 
-	XMFLOAT3 positionLerpTolerance = XMFLOAT3(0.1f, 0.1f, 0.1f);
+	XMFLOAT3 positionLerpTolerance = XMFLOAT3(0.5f, 0.5f, 0.5f);
 	XMFLOAT3 rotationLerpTolerance = XMFLOAT3(0.1f, 0.1f, 0.1f);
 
-	float positionLerpScalar = 200.0f;
-	float rotationLerpScalar = 200.0f;
+	float slashPositionLerpScalar = 200.0f;
+	float slashRotationLerpScalar = 50.0f;
+
+	float readyingPositionLerpScalar = 13.0f;
+	float readyingRotationLerpScalar = 13.0f;
 
 	XMFLOAT3 lerpPositionFrom = XMFLOAT3(0, 0, 0);
 	XMFLOAT3 lerpPositionTo = XMFLOAT3(0, 0, 0);
@@ -61,10 +70,11 @@ class BloodSword : public ScriptManager
 
 	void CheckSwordSlashHit();
 
+	bool EntityInSlashDetectionField(Entity* e);
+
 	void OnCollision(btCollisionObject* other);
 
 public:
 	void StartSlash();
-
 };
 

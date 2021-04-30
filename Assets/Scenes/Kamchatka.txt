@@ -1,6 +1,7 @@
 TYPE="DIRLIGHT" name="Sun" intensity="0.4" P(200,500,25)D(-0.37099,-0.92748,-0.046374)C(1.0,1.0,1.0)
 TYPE="SKYBOX" dds="nightred"
 
+name="GameManager" colliders="false" scripts="GAMEMANAGER" P(0, 0, 0)R(0,0,0)S(0.0, 0.0, 0.0)
 name="FPSController" colliders="true" mass="1.0" colliderType="CAPSULE" scripts="FPSCONTROLLER" P(8, 1.0, 0)R(0,0,0)S(3.0, 3.0, 3.0)
 
 name="Blood_Orb" obj="bloodorb" material="RedFluid" scripts="BLOODORB,AMBIENTPARTICLES" P(-15,5,0)R(0,0,0)S(0.5,0.5,0.5)
@@ -8,9 +9,9 @@ name="Blood_Orb_Glass" obj="Sphere" material="Glass" P(-15,5,0)R(0,0,0)S(1.05,1.
 name="Blood Sword" tag="Blood Sword" layer="Blood Sword" scripts="BLOODSWORD" obj="bloodswordNEW" P(0,0,0)R(0,-90.0,0)S(1,1,1)
 
 name="Antler Demon" obj="antlerdemon_separatedhead" layer="outline" tag="Boss" mass="0.0" colliders="true" P(-108.7,15,-30)R(0,180,0)S(0.8,0.8,0.8)
-obj="sneklad" layer="outline" tag="Enemy" colliders="true" P(-108.7,1,50)R(0,502.239,0)S(0.2,0.2,0.2)
-obj="horneddemon1" layer="outline" tag="Enemy" colliders="true" P(-108.7,2.5,70)R(0,403.3411,0)S(0.3,0.3,0.3)
-obj="horneddemon2" layer="outline" tag="Enemy" colliders="true" P(-108.7,2.5,25)R(0,180.2974,0)S(0.3,0.3,0.3)
+obj="sneklad" layer="outline" tag="Enemy" colliders="true" mass="1.0" P(-108.7,1,50)R(0,502.239,0)S(0.2,0.2,0.2)
+obj="horneddemon1" layer="outline" tag="Enemy" colliders="true" mass="1.0" P(-108.7,2.5,70)R(0,403.3411,0)S(0.3,0.3,0.3)
+obj="horneddemon2" layer="outline" tag="Enemy" colliders="true" mass="1.0" P(-108.7,2.5,25)R(0,180.2974,0)S(0.3,0.3,0.3)
 //obj="burningcommieblocv2" P(500,240,0)R(0,90,0)S(25,25,25)
 obj="grave" tag="Environment" layer="decal" colliders="true" repeatTexture="0.025,0.025" P(0,-0.8,0)R(0,180,0)S(1,1,1)
 obj="graveyard" tag="Environment" layer="decal" colliders="true" P(0,0,0)R(0,180,0)S(1,1,1)

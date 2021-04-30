@@ -180,6 +180,9 @@
     <ClCompile Include="LightHandler.cpp">
       <Filter>EECore\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="GameManager.cpp">
+      <Filter>EEScripts\Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h">
@@ -304,6 +307,9 @@
     </ClInclude>
     <ClInclude Include="LightHandler.h">
       <Filter>EECore\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GameManager.h">
+      <Filter>EEScripts\Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -72,10 +72,13 @@ class FPSController : public ScriptManager
 	float jumpForceScalar = 3.0f;
 
 	// Dashing
-	int dashCount = 5;
+	const int MAX_DASHES = 5;
+	int dashCount = MAX_DASHES;
 	float dashDampTimer = 0.0f;
 	const float DASH_DAMP_TIMER_MAX = 0.3f;
 	float dashImpulseScalar = 80.0f;
+	float dashRegenerationTimer = 0.0f;
+	const float DASH_MAX_REGENERATION_TIME = 1.5f;
 
 	// Sword
 	EntityCreationParameters swordParams;
@@ -83,8 +86,8 @@ class FPSController : public ScriptManager
 
 	// Blood Icicle
 	EntityCreationParameters icicleParams;
-	float bloodIcicleScalar = 50.0f;
-	float bloodIcicleRecoilScalar = 30.0f;
+	float bloodIcicleScalar = 60.0f;
+	float bloodIcicleRecoilScalar = 45.0f;
 	float bloodIcicleCooldownTimer = 0.0f;
 	const float BLOOD_ICICLE_MAX_COOLDOWN_TIME = 1.0f;
 	
@@ -98,12 +101,18 @@ class FPSController : public ScriptManager
 	btVector3 hookshotPoint;
 	float hookshotThrowSpeed = 350.0f;
 	float hookshotRangeScalar = 100.0f;
-	const float EXIT_RANGE = 2.5f;
+	const float EXIT_RANGE = 3.5f;
 
 	// Leash
 	Entity* leashedEnemy;
 	float leashSize = 0.0f; 
 	float leashedScalar = 10.0f;
+	float leashCancelScalar = 50.0f;
+	float leashJumpCancelScalar = 150.0f;
+	float leashJumpCancelDampTimer = 0.0f;
+	const float LEASH_JUMP_DAMP_TIMER_MAX = 0.5f;
+	float leashPullCooldownTimer = 0;
+	const float LEASH_PULL_MAX_COOLDOWN_TIME = 0.15f;
 
 	// Bullet Time
 	const float BULLET_TIME_SCALAR = 0.5f;
@@ -134,7 +143,6 @@ class FPSController : public ScriptManager
 
 	void UpdateHookShotTransform();
 
-	void ResetHookshotTransform();
 	
 	void Move();
 
@@ -151,6 +159,15 @@ class FPSController : public ScriptManager
 	void MouseLook();
 
 	void OnCollision(btCollisionObject* other);
+
+public: 
+	PlayerState GetPlayerState();
+	
+	Entity* GetLeashedEntity();
+
+	void SetLeashedEntity(Entity* e);
+
+	void ResetHookshotTransform();
 };
 
 /*

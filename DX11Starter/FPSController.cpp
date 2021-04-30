@@ -96,37 +96,51 @@ void FPSController::Update()
 	// player state machine
 	switch (ps)
 	{
+		/*
+		* A - Move FPS controller
+		* B - Rotate Camera
+		* C - Everything else
+		*/
 		case PlayerState::Intro:
 
 			break;
 
 		case PlayerState::Normal:
-			CheckAllAbilities();
 			Move();
 			MouseLook();
 			cam->SetPosition(XMFLOAT3(entity->GetPosition().x, entity->GetPosition().y + entity->GetScale().y + headbobOffset, entity->GetPosition().z)); // after all updates make sure camera is following the affected entity
+			CheckAllAbilities();
 			break;
 		
 		case PlayerState::HookshotThrow:
-			UpdateHookShotTransform();
 			HookshotThrow();
 			MouseLook();
 			cam->SetPosition(XMFLOAT3(entity->GetPosition().x, entity->GetPosition().y + entity->GetScale().y + headbobOffset, entity->GetPosition().z)); // after all updates make sure camera is following the affected entity
+			UpdateHookShotTransform();
+			CheckBloodSword();
+			CheckBloodIcicle();
+			CheckBulletTime();
 			break;
 
 		case PlayerState::HookshotFlight:
-			UpdateHookShotTransform();
 			HookshotFlight();
 			MouseLook();
 			cam->SetPosition(XMFLOAT3(entity->GetPosition().x, entity->GetPosition().y + entity->GetScale().y + headbobOffset, entity->GetPosition().z)); // after all updates make sure camera is following the affected entity
+			UpdateHookShotTransform();
+			CheckBloodSword();
+			CheckBloodIcicle();
+			CheckBulletTime();
 			break;
 
 		case PlayerState::HookshotLeash:
-			UpdateHookShotTransform();
 			HookshotLeash();
 			Move();
 			MouseLook();
 			cam->SetPosition(XMFLOAT3(entity->GetPosition().x, entity->GetPosition().y + entity->GetScale().y + headbobOffset, entity->GetPosition().z)); // after all updates make sure camera is following the affected entity
+			UpdateHookShotTransform();
+			CheckBloodSword();
+			CheckBloodIcicle();
+			CheckBulletTime();
 			break;
 
 		case PlayerState::Paused:
@@ -179,7 +193,7 @@ void FPSController::CheckBloodIcicle()
 
 		Entity* bloodIcicle = ScriptManager::CreateEntity(icicleParams);
 
-		btVector3 shotImpulse = Utility::Float3ToBulletVector(direction);
+		btVector3 shotImpulse = Utility::Float3ToBulletVector(cam->direction);
 
 		bloodIcicle->GetRBody()->setGravity(btVector3(0,0,0));
 		bloodIcicle->GetRBody()->activate();
@@ -286,10 +300,10 @@ void FPSController::HookshotThrow()
 	}
 	else
 	{
-		if (hookshotAttachedEntity->tag.STDStr() == std::string("Enemy"))
+		if (hookshotAttachedEntity->tag.STDStr() == std::string("Enemy") || hookshotAttachedEntity->tag.STDStr() == std::string("Body Part"))
 		{
 			leashedEnemy = hookshotAttachedEntity;
-			leashSize = playerRBody->getCenterOfMassPosition().distance(leashedEnemy->GetRBody()->getCenterOfMassPosition()); // TODO: Change this to blood orb position instead of player?
+			leashSize = playerRBody->getCenterOfMassPosition().distance(leashedEnemy->GetRBody()->getCenterOfMassPosition()); 
 			// cout << leashSize << endl;
 
 			ps = PlayerState::HookshotLeash;
@@ -322,10 +336,12 @@ void FPSController::HookshotFlight()
 			hookshotZScale -= hookshotThrowSpeed * deltaTime;
 		}
 
-		btScalar distanceToHitPoint = Utility::Float3ToBulletVector(bloodOrb->GetPosition()).distance(hookshotPoint);
+		btVector3 playerCenterOfMassPos = playerRBody->getCenterOfMassPosition();
+
+		btScalar distanceToHitPoint = playerCenterOfMassPos.distance(hookshotPoint);
 
 		playerRBody->activate();
-		playerRBody->applyCentralForce(controllerVelocity.normalized() + (hookshotPoint - playerRBody->getCenterOfMassPosition()).normalized() * distanceToHitPoint * 2.0f); // adjust speed according to distance away with an added small scalar
+		playerRBody->applyCentralForce(controllerVelocity.normalized() + (hookshotPoint - playerCenterOfMassPos).normalized() * distanceToHitPoint * 2.0f); // adjust speed according to distance away with an added small scalar
 
 		if (distanceToHitPoint < EXIT_RANGE)
 		{
@@ -340,11 +356,6 @@ void FPSController::HookshotFlight()
 
 void FPSController::HookshotLeash()
 {
-	if (keyboard->OnKeyDown(0x45)) // cancel after pressing E again
-	{
-		ResetHookshotTransform();
-	}
-
 	if (hookshotZScale < hookshotLength)
 	{
 		hookshotZScale += hookshotThrowSpeed * deltaTime;
@@ -354,39 +365,66 @@ void FPSController::HookshotLeash()
 		hookshotZScale -= hookshotThrowSpeed * deltaTime;
 	}
 
+	if (leashPullCooldownTimer > 0)
+	{
+		leashPullCooldownTimer -= deltaTime;
+	}
+
 	// pull enemy into range if they are "stretching" over the initial leash size
-	float leashDistanceToEnemy = playerRBody->getCenterOfMassPosition().distance(leashedEnemy->GetRBody()->getCenterOfMassPosition()); // TODO: Change this to blood orb position instead of player?
-	if (leashDistanceToEnemy >= leashSize)
+	btVector3 playerCenterOfMassPos = playerRBody->getCenterOfMassPosition();
+	float leashDistanceToEnemy = playerCenterOfMassPos.distance(leashedEnemy->GetRBody()->getCenterOfMassPosition()); 
+	if (leashDistanceToEnemy > leashSize && leashPullCooldownTimer <= 0)
 	{
 		leashedEnemy->GetRBody()->activate();
-		leashedEnemy->GetRBody()->applyCentralImpulse((playerRBody->getCenterOfMassPosition() - leashedEnemy->GetRBody()->getCenterOfMassPosition()).normalized() * (leashDistanceToEnemy/leashedScalar)); // TODO: Change this to blood orb position instead of player?
+		leashedEnemy->GetRBody()->applyCentralImpulse((playerCenterOfMassPos - leashedEnemy->GetRBody()->getCenterOfMassPosition()).normalized() * leashedScalar * (1/leashedEnemy->GetRBody()->getInvMass())); // scale the force of the impulse in ratio to the mass of the leashed object
+		leashPullCooldownTimer = LEASH_PULL_MAX_COOLDOWN_TIME; // we don't want to contiually apply impulses all the time because that makes the leashed enemy go beserk. The timer allows us to manage how often the impulse is applied
+	}
+
+	if (keyboard->OnKeyDown(0x45)) // enemy pull cancel after pressing E again
+	{
+		ResetHookshotTransform();
+
+		// Pull enemy towards player when canceling the leash
+		leashedEnemy->GetRBody()->applyCentralImpulse((playerCenterOfMassPos - leashedEnemy->GetRBody()->getCenterOfMassPosition()).normalized() * leashCancelScalar * (1 / leashedEnemy->GetRBody()->getInvMass()));
+	}
+
+	if (keyboard->OnKeyDown(VK_SPACE)) // pull player to enemy cancel after press space 
+	{
+		ResetHookshotTransform();
+
+		// Pull player towards enemy when canceling the leash
+		impulseSumVec += (leashedEnemy->GetRBody()->getCenterOfMassPosition() - playerCenterOfMassPos).normalized() * leashJumpCancelScalar;
+		leashJumpCancelDampTimer = LEASH_JUMP_DAMP_TIMER_MAX;
 	}
 }
 
 void FPSController::UpdateHookShotTransform()
 {
-	hookshot->SetRepeatTexture(1.0f, hookshotZScale);
-
-	XMFLOAT3 bloodOrbPos = bloodOrb->GetPosition();
-
-	hookshot->SetPosition(bloodOrbPos);
+	cam->CalcViewMatrix();
+	cam->CalcWorldMatrix();
+	XMFLOAT3 camPos = cam->position;
+	XMFLOAT3 camDir = cam->direction;
+	XMFLOAT3 camRight = cam->right;
+	XMFLOAT3 newPos = XMFLOAT3(camPos.x + -camRight.x, camPos.y + camDir.y - 0.65f, camPos.z + -camRight.z);
 
 	XMFLOAT3 hookshotDirection;
 	XMVECTOR direction;
 	if (ps == PlayerState::HookshotLeash)
 	{
-		direction = XMVectorSubtract(XMLoadFloat3(&Utility::BulletVectorToFloat3(leashedEnemy->GetRBody()->getCenterOfMassPosition())), XMLoadFloat3(&bloodOrbPos));
+		direction = XMVectorSubtract(XMLoadFloat3(&Utility::BulletVectorToFloat3(leashedEnemy->GetRBody()->getCenterOfMassPosition())), XMLoadFloat3(&newPos));
 	}
 	else
 	{
-		direction = XMVectorSubtract(XMLoadFloat3(&Utility::BulletVectorToFloat3(hookshotPoint)), XMLoadFloat3(&bloodOrbPos));
+		direction = XMVectorSubtract(XMLoadFloat3(&Utility::BulletVectorToFloat3(hookshotPoint)), XMLoadFloat3(&newPos));
 	}
 
 	XMStoreFloat3(&hookshotDirection, direction);
 	XMStoreFloat(&hookshotLength, XMVector3Length(direction));
 
+	hookshot->SetPosition(newPos);
 	hookshot->SetDirectionVector(hookshotDirection);
 	
+	hookshot->SetRepeatTexture(1.0f, hookshotZScale);
 	XMFLOAT3 hookshotScale = hookshot->GetScale();
 	hookshotScale.z = hookshotZScale;
 	hookshot->SetScale(hookshotScale);
@@ -395,11 +433,25 @@ void FPSController::UpdateHookShotTransform()
 
 void FPSController::ResetHookshotTransform()
 {
-	hookshot->SetPosition(bloodOrb->GetPosition());
 	hookshotZScale = 0.0;
 	hookshot->SetScale(1, 1, hookshotZScale);
 	hookshot->CalcWorldMatrix();
 	ps = PlayerState::Normal;
+}
+
+PlayerState FPSController::GetPlayerState()
+{
+	return ps;
+}
+
+Entity* FPSController::GetLeashedEntity()
+{
+	return leashedEnemy;
+}
+
+void FPSController::SetLeashedEntity(Entity* e)
+{
+	leashedEnemy = e;
 }
 
 void FPSController::Move()
@@ -421,15 +473,47 @@ void FPSController::Move()
 	// base movement
 	if (keyboard->KeyIsPressed(0x57)) // w
 	{ 
-		controllerVelocity += btVector3(direction.x, 0, direction.z) * spd;
+		btVector3 forwardForce;
+		if (midAir)
+		{
+			forwardForce = btVector3(direction.x, 0, direction.z);
+		}
+		else
+		{
+			forwardForce = btVector3(direction.x, 0, direction.z) * spd;
+		}
+
+		controllerVelocity += forwardForce;
 	}
 	if (keyboard->KeyIsPressed(0x53)) // s
 	{ 
-		controllerVelocity += btVector3(direction.x, 0, direction.z) * -spd;
+		btVector3 backwardForce;
+
+		if (midAir)
+		{
+			backwardForce = btVector3(direction.x, 0, direction.z) * -1;
+		}
+		else
+		{
+			backwardForce = btVector3(direction.x, 0, direction.z) * -spd;
+		}
+
+		controllerVelocity += backwardForce;
 	}
 	if (keyboard->KeyIsPressed(0x41)) // a
 	{ 
-		controllerVelocity += btVector3(right.x, 0, right.z) * spd;
+		btVector3 leftwardForce;
+
+		if (midAir)
+		{
+			leftwardForce = btVector3(right.x, 0, right.z);
+		}
+		else
+		{
+			leftwardForce = btVector3(right.x, 0, right.z) * spd;
+		}
+
+		controllerVelocity += leftwardForce;
 		rollRight = true;
 	}
 	else
@@ -438,7 +522,18 @@ void FPSController::Move()
 	}
 	if (keyboard->KeyIsPressed(0x44)) // d
 	{ 
-		controllerVelocity += btVector3(right.x, 0, right.z) * -spd;
+		btVector3 rightwardForce;
+
+		if (midAir)
+		{
+			rightwardForce = btVector3(right.x, 0, right.z) * -1;
+		}
+		else
+		{
+			rightwardForce = btVector3(right.x, 0, right.z) * -spd;
+		}
+
+		controllerVelocity += rightwardForce;
 		rollLeft = true;
 	}
 	else
@@ -461,8 +556,6 @@ void FPSController::Move()
 	// Sum of impulse forces (for now just dash)
 	impulseSumVec += dashImpulse;
 
-	// Damping
-	DampForces();
 
 	// FORCES ADDED TO RIGIDBODY 
 	playerRBody->activate();
@@ -470,6 +563,9 @@ void FPSController::Move()
 	playerRBody->setLinearVelocity(controllerVelocity);
 	playerRBody->applyCentralImpulse(impulseSumVec);
 
+	// Damping
+	DampForces();
+	
 	// cout << "Vel: (" << controllerVelocity.getX() << ", " << controllerVelocity.getY() << ", " << controllerVelocity.getZ() << ")" << endl;
 
 	// set Ethereal Engine rotations
@@ -594,8 +690,18 @@ btVector3 FPSController::DashImpulseFromInput()
 		}
 	}
 
+	if (dashRegenerationTimer > 0)
+	{
+		dashRegenerationTimer -= deltaTime;
+	}
+	else if(dashCount < MAX_DASHES)
+	{
+		dashCount++;
+		dashRegenerationTimer = DASH_MAX_REGENERATION_TIME;
+	}
+
 	btVector3 dashImpulse = btVector3(0, 0, 0);
-	if (/*dashCount > 0 &&*/ keyboard->OnKeyDown(VK_SHIFT))
+	if (dashCount > 0 && keyboard->OnKeyDown(VK_SHIFT))
 	{
 		dashCount--;
 		// cout << dashCount << endl;
@@ -625,7 +731,7 @@ btVector3 FPSController::DashImpulseFromInput()
 
 void FPSController::DampForces()
 {
-	if (dashDampTimer <= 0) // always damp the impulse vec unless player is the player just initiated a dash
+	if (dashDampTimer <= 0 && leashJumpCancelDampTimer <= 0) // always damp the impulse vec unless player is the player just initiated a dash or a leash jump cancel
 	{
 		dashBlurCallback.active = false;
 		impulseSumVec -= impulseSumVec * dampingScalar;
@@ -637,6 +743,10 @@ void FPSController::DampForces()
 			fov -= fovDashToNormalSpeed * deltaTime;
 			cam->SetFOV(fov);
 		}
+	}
+	else if(leashJumpCancelDampTimer > 0) // Putting this here for now since its from another state and would not be able to follow the same format as the dashDampTimer
+	{
+		leashJumpCancelDampTimer -= deltaTime;
 	}
 
 	if (!keyboard->CheckKeysPressed(baseMovementKeys, 4) && !midAir) // Only damp overall movement if none of the base movement keys are pressed while on the ground. 

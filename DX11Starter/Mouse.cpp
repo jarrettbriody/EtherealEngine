@@ -77,6 +77,7 @@ void Mouse::RegisterMouseMove(int x, int y)
 {
 	this->x = x;
 	this->y = y;
+
 	this->eventBuffer.insert({ MouseEvent::EventType::Move, MouseEvent(MouseEvent::EventType::Move, x, y) }); // TODO: How useful is this/is it needed?
 }
 
