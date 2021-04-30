@@ -107,6 +107,10 @@ class FPSController : public ScriptManager
 	Entity* leashedEnemy;
 	float leashSize = 0.0f; 
 	float leashedScalar = 10.0f;
+	float leashCancelScalar = 50.0f;
+	float leashJumpCancelScalar = 150.0f;
+	float leashJumpCancelDampTimer = 0.0f;
+	const float LEASH_JUMP_DAMP_TIMER_MAX = 0.5f;
 	float leashPullCooldownTimer = 0;
 	const float LEASH_PULL_MAX_COOLDOWN_TIME = 0.15f;
 

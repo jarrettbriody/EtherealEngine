@@ -380,9 +380,21 @@ void FPSController::HookshotLeash()
 		leashPullCooldownTimer = LEASH_PULL_MAX_COOLDOWN_TIME; // we don't want to contiually apply impulses all the time because that makes the leashed enemy go beserk. The timer allows us to manage how often the impulse is applied
 	}
 
-	if (keyboard->OnKeyDown(0x45)) // cancel after pressing E again
+	if (keyboard->OnKeyDown(0x45)) // enemy pull cancel after pressing E again
 	{
 		ResetHookshotTransform();
+
+		// Pull enemy towards player when canceling the leash
+		leashedEnemy->GetRBody()->applyCentralImpulse((playerCenterOfMassPos - leashedEnemy->GetRBody()->getCenterOfMassPosition()).normalized() * leashCancelScalar * (1 / leashedEnemy->GetRBody()->getInvMass()));
+	}
+
+	if (keyboard->OnKeyDown(VK_SPACE)) // pull player to enemy cancel after press space 
+	{
+		ResetHookshotTransform();
+
+		// Pull player towards enemy when canceling the leash
+		impulseSumVec += (leashedEnemy->GetRBody()->getCenterOfMassPosition() - playerCenterOfMassPos).normalized() * leashJumpCancelScalar;
+		leashJumpCancelDampTimer = LEASH_JUMP_DAMP_TIMER_MAX;
 	}
 }
 
@@ -719,7 +731,7 @@ btVector3 FPSController::DashImpulseFromInput()
 
 void FPSController::DampForces()
 {
-	if (dashDampTimer <= 0) // always damp the impulse vec unless player is the player just initiated a dash
+	if (dashDampTimer <= 0 && leashJumpCancelDampTimer <= 0) // always damp the impulse vec unless player is the player just initiated a dash or a leash jump cancel
 	{
 		dashBlurCallback.active = false;
 		impulseSumVec -= impulseSumVec * dampingScalar;
@@ -731,6 +743,10 @@ void FPSController::DampForces()
 			fov -= fovDashToNormalSpeed * deltaTime;
 			cam->SetFOV(fov);
 		}
+	}
+	else if(leashJumpCancelDampTimer > 0) // Putting this here for now since its from another state and would not be able to follow the same format as the dashDampTimer
+	{
+		leashJumpCancelDampTimer -= deltaTime;
 	}
 
 	if (!keyboard->CheckKeysPressed(baseMovementKeys, 4) && !midAir) // Only damp overall movement if none of the base movement keys are pressed while on the ground. 
