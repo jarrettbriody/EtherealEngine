@@ -471,10 +471,10 @@ void FPSController::UpdateDashOrbsTransforms()
 	XMFLOAT3 camDir = cam->direction;
 	XMFLOAT3 camRight = cam->right;
 
-	dashOrbs[0]->SetPosition(XMFLOAT3(camPos.x + camDir.x * camRight.x, camPos.y + camDir.y + 0.25f, camPos.z + camDir.z * 1.25f));
-	dashOrbs[1]->SetPosition(XMFLOAT3(camPos.x + camDir.x * camRight.x, camPos.y + camDir.y - 0.25f, camPos.z + camDir.z * 1.25f));
-	dashOrbs[2]->SetPosition(XMFLOAT3(camPos.x + camDir.x * -camRight.x, camPos.y + camDir.y + 0.25f, camPos.z + camDir.z * 1.25f));
-	dashOrbs[3]->SetPosition(XMFLOAT3(camPos.x + camDir.x * -camRight.x, camPos.y + camDir.y - 0.25f, camPos.z + camDir.z * 1.25f));
+	dashOrbs[0]->SetPosition(XMFLOAT3(camPos.x + camDir.x + 0.25, camPos.y + camDir.y, camPos.z + camDir.z * 1.38f));
+	dashOrbs[1]->SetPosition(XMFLOAT3(camPos.x + camDir.x - 0.25, camPos.y + camDir.y, camPos.z + camDir.z * 1.38f));
+	dashOrbs[2]->SetPosition(XMFLOAT3(camPos.x + camDir.x + 0.45, camPos.y + camDir.y, camPos.z + camDir.z * 1.38f));
+	dashOrbs[3]->SetPosition(XMFLOAT3(camPos.x + camDir.x - 0.45, camPos.y + camDir.y, camPos.z + camDir.z * 1.38f));
 
 	for each (Entity* orb in dashOrbs)
 	{
