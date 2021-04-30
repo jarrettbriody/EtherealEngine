@@ -45,7 +45,7 @@ void BloodIcicle::OnCollision(btCollisionObject* other)
 			gameManagerScript->DecrementEnemiesAlive();
 
 			// if an enemy is currently leashed when hit by a blood icicle reset the hookshot
-			if(fpsControllerScript->GetPlayerState() == PlayerState::HookshotLeash) fpsControllerScript->ResetHookshotTransform(); 
+			if(fpsControllerScript->GetPlayerState() == PlayerState::HookshotLeash && fpsControllerScript->GetLeashedEntity() == otherE) fpsControllerScript->ResetHookshotTransform();
 
 			std::vector<Entity*> childEntities = EESceneLoader->SplitMeshIntoChildEntities(otherE, 1.0f);  
 
