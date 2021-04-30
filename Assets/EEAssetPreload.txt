@@ -10,6 +10,8 @@ TYPE="VSHADER" name="CPUParticle" cso="CPUParticleVS" shaderType="DEFAULT"
 TYPE="VSHADER" name="Fluid" cso="FluidVS" shaderType="MODIFY_VERTS"
 TYPE="VSHADER" name="FluidPrepass" cso="FluidPrepassVS" shaderType="MODIFY_VERTS"
 TYPE="VSHADER" name="PostProcess" cso="PostProcessVS"
+TYPE="VSHADER" name="BloodSword" cso="BloodSwordVS" shaderType="MODIFY_VERTS"
+TYPE="VSHADER" name="BloodSwordPrepass" cso="BloodSwordPrepassVS" shaderType="MODIFY_VERTS"
 
 TYPE="PSHADER" name="DEFAULT" cso="DefaultPS" shaderType="DEFAULT"
 TYPE="PSHADER" name="Sky" cso="SkyPS" shaderType="DEFAULT"
@@ -39,6 +41,7 @@ TYPE="MESH" name="Sphere" path="Default/sphere.obj"
 TYPE="MESH" name="Helix" path="Default/helix.obj"
 TYPE="MESH" name="Torus" path="Default/torus.obj"
 TYPE="MESH" name="bloodchain" path="City/bloodchain.obj"
+TYPE="MESH" name="bloodsword" path="Kamchatka/bloodswordNEW.obj"
 
 TYPE="TEXTURE" name="GrassDiffuse" path="Default/Grass/DefaultGrassDiffuse.jpg"
 TYPE="TEXTURE" name="GrassNormal" path="Default/Grass/DefaultGrassNormal.jpg"
@@ -68,6 +71,8 @@ TYPE="TEXTURE" array="true" name="smoke3" path="Default/Fire/smoke3.png"
 TYPE="TEXTURE" name="Blood" path="Blood.png"
 TYPE="TEXTURE" name="Blud" path="blud.jpeg"
 TYPE="TEXTURE" name="BloodRed" path="Default/bloodred.png"
+TYPE="TEXTURE" name="bloodsword" path="bloodsword.png"
+TYPE="TEXTURE" name="bloodsword_N" path="bloodsword_N.png"
 
 //TYPE="MATERIAL" name="" vShader="" pShader="" ambientTexture="" diffuseTexture="" specularColorTexture="" specularHighlightTexture="" alphaTexture="" normalTexture="" ambientColor(0,0,0) diffuseColor(0,0,0) specularColor(0,0,0) specularExponent="0.0" transparency="1.0" illumination="1" ssao="false" hbaoPlus="true"
 TYPE="MATERIAL" name="DEFAULT" vShader="DEFAULT" pShader="DEFAULT"
@@ -80,7 +85,8 @@ TYPE="MATERIAL" name="Grey4" vShader="DEFAULT" pShader="DEFAULT" diffuseTexture=
 TYPE="MATERIAL" name="White" vShader="DEFAULT" pShader="DEFAULT" diffuseTexture="White" specularExponent="100"
 TYPE="MATERIAL" name="RedFluid" vShader="Fluid" pShader="Fluid" diffuseTexture="Red"
 TYPE="MATERIAL" name="Glass" vShader="DEFAULT" pShader="DEFAULT" diffuseTexture="Marble" transparency="0.5" specularExponent="100"
-TYPE="MATERIAL" name="bloodchain" vShader="DEFAULT" pShader="DEFAULT" diffuseTexture="bloodchain" 
+TYPE="MATERIAL" name="bloodchain" vShader="DEFAULT" pShader="DEFAULT" diffuseTexture="bloodchain"
+TYPE="MATERIAL" name="bloodsword" vShader="BloodSword" pShader="Normal" diffuseTexture="bloodsword" normalTexture="bloodsword_N"
 
 
 

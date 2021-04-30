@@ -18,10 +18,10 @@ void BloodSword::Init()
 	// starting positioning
 	entity->SetParentWorldMatrix(cam->GetWorldMatrixPtr());
 	
-	finalLerpPos = XMFLOAT3(3, -1, 3);
+	finalLerpPos = originalLerpPos;
 	lerpPositionFrom = finalLerpPos; 
 
-	finalLerpRot = XMFLOAT3(0.0f, XMConvertToRadians(-90.0f), 0.0f);
+	finalLerpRot = originalLerpRot;
 	lerpRotationFrom = finalLerpRot;
 
 	entity->SetPosition(lerpPositionFrom); 
@@ -59,10 +59,27 @@ void BloodSword::Init()
 
 	slashPointsRight = GenerateSlashPoints(XMFLOAT3(5, 3, 3), XMFLOAT3(-8, -4, 3), 0.5, 5.0f);
 	slashPointsLeft = GenerateSlashPoints(XMFLOAT3(-5, 3, 3), XMFLOAT3(8, -4, 3), 0.5, 5.0f);
+
+	callback = {};
+
+	callback.vShader = EESceneLoader->vertexShadersMap["BloodSword"];
+	callback.prepassVShader = EESceneLoader->vertexShadersMap["BloodSwordPrepass"];
+	callback.waveHeightX = 0.01f;
+	callback.waveHeightY = 0.3f;
+	callback.waveHeightZ = 0.02f;
+	callback.waveRateX = 5.0f;
+	callback.waveRateY = 1.0f;
+	callback.waveRateZ = 5.0f;
+
+	EERenderer->SetRenderObjectCallback(entity, &callback);
+	callback.active = true;
 }
 
 void BloodSword::Update()
 {
+	callback.totalTime = totalTime;
+	callback.deltaTime = deltaTime;
+	originalLerpPos.y = originalLerpPos.y + sin(totalTime) * bobMagnitude;
 	// Get the current lerp in relative to the local space of the camera
 	switch (ss)
 	{
@@ -87,7 +104,9 @@ void BloodSword::Update()
 	lerpRotationFrom = finalLerpRot;
 	
 	// Update blood sword position with local coordinate lerping data relative to camera 
-	entity->SetRotation(finalLerpRot);
+	//if(XMVector3Length(XMVectorSubtract(XMLoadFloat3(&originalLerpRot), XMLoadFloat3(&finalLerpRot))).m128_f32[0] > 0.05f) 
+	if (ss != SwordState::Idle)
+		entity->SetRotation(finalLerpRot);
 	entity->SetPosition(finalLerpPos);
 	
 
@@ -96,6 +115,8 @@ void BloodSword::Update()
 	cam->CalcWorldMatrix();
 	entity->CalcWorldMatrix();
 	//cam->CalcWorldMatrix(); // Putting camera world matrix calc after the entity makes the sword jitter much less severe...not sure why?
+
+	totalTime += deltaTime;
 }
 
 
@@ -123,8 +144,8 @@ void BloodSword::StartSlash()
 void BloodSword::IdleState()
 {
 	// not doing any lerping in the idle state
-	finalLerpPos = XMFLOAT3(3, -1, 3); // starting pos
-	finalLerpRot = XMFLOAT3(0.0f, XMConvertToRadians(-90.0f), 0.0f);
+	finalLerpPos = originalLerpPos; // starting pos
+	finalLerpRot = originalLerpRot;
 }
 
 void BloodSword::RaisedState()
@@ -168,16 +189,43 @@ void BloodSword::SlashingState()
 
 void BloodSword::ResetState()
 {
-	lerpPositionTo = XMFLOAT3(3, -1, 3);
-	lerpRotationTo = XMFLOAT3(0, XMConvertToRadians(-90.0f), 0.0f);
+	lerpPositionTo = originalLerpPos;
+	lerpRotationTo = originalLerpRot;
 
 	CalcLerp();
 
 	cout << "Resetting" << endl;
 
+	animReset = true;
+
 	if (CheckTransformationsNearEqual(true, true))
 	{
-		ss = SwordState::Idle;
+		if (!approachingReset) {
+			slashPositionLerpScalar = 400.0f;
+			slashRotationLerpScalar = 100.0f;
+
+			readyingPositionLerpScalar = 26.0f;
+			readyingRotationLerpScalar = 26.0f;
+
+			positionLerpTolerance = XMFLOAT3(0.01f, 0.01f, 0.01f);
+			rotationLerpTolerance = XMFLOAT3(0.01f, 0.01f, 0.01f);
+
+			approachingReset = true;
+		}
+		else {
+			slashPositionLerpScalar = 200.0f;
+			slashRotationLerpScalar = 50.0f;
+
+			readyingPositionLerpScalar = 13.0f;
+			readyingRotationLerpScalar = 13.0f;
+
+			positionLerpTolerance = XMFLOAT3(0.5f, 0.5f, 0.5f);
+			rotationLerpTolerance = XMFLOAT3(0.1f, 0.1f, 0.1f);
+
+			approachingReset = false; 
+			ss = SwordState::Idle;
+			animReset = false;
+		}
 	}
 }
 
