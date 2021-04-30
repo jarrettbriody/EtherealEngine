@@ -77,6 +77,7 @@ public:
 	bool collisionsEnabled = false;
 	bool colliderDebugLinesEnabled = false;
 	bool isEmptyObj = false;
+	bool renderObject = true;
 	EEString<64> tag;
 	EEString<64> layer;
 	Entity();

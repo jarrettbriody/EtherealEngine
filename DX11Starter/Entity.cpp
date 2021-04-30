@@ -133,6 +133,7 @@ void Entity::operator=(const Entity& e)
 	isEmptyObj = e.isEmptyObj;
 	meshMaterialIndex = e.meshMaterialIndex;
 	colliderCnt = e.colliderCnt;
+	renderObject = e.renderObject;
 }
 
 void Entity::InitRigidBody(BulletColliderShape shape, float entityMass, bool zeroObjects)
