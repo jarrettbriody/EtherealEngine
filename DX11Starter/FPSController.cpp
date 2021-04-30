@@ -133,6 +133,7 @@ void FPSController::Update()
 			cam->SetPosition(XMFLOAT3(entity->GetPosition().x, entity->GetPosition().y + entity->GetScale().y + headbobOffset, entity->GetPosition().z)); // after all updates make sure camera is following the affected entity
 			UpdateDashOrbsTransforms();
 			CheckAllAbilities();
+			UpdateSwordSway();
 			break;
 		
 		case PlayerState::HookshotThrow:
@@ -144,6 +145,7 @@ void FPSController::Update()
 			CheckBloodSword();
 			CheckBloodIcicle();
 			CheckBulletTime();
+			UpdateSwordSway();
 			break;
 
 		case PlayerState::HookshotFlight:
@@ -155,6 +157,7 @@ void FPSController::Update()
 			CheckBloodSword();
 			CheckBloodIcicle();
 			CheckBulletTime();
+			UpdateSwordSway();
 			break;
 
 		case PlayerState::HookshotLeash:
@@ -167,6 +170,7 @@ void FPSController::Update()
 			CheckBloodSword();
 			CheckBloodIcicle();
 			CheckBulletTime();
+			UpdateSwordSway();
 			break;
 
 		case PlayerState::Paused:
@@ -454,7 +458,11 @@ void FPSController::UpdateHookShotTransform()
 	XMStoreFloat(&hookshotLength, XMVector3Length(direction));
 
 	hookshot->SetPosition(newPos);
+	//XMFLOAT3 up;
+	//XMStoreFloat3(&up, XMVectorSubtract(XMLoadFloat3(&camPos), XMLoadFloat3(&newPos)));
+	//hookshot->SetDirectionVectorU(hookshotDirection, up);
 	hookshot->SetDirectionVector(hookshotDirection);
+	hookshot->RotateAroundAxis(Z_AXIS, XMConvertToRadians(-45.0f));
 	
 	hookshot->SetRepeatTexture(1.0f, hookshotZScale);
 	XMFLOAT3 hookshotScale = hookshot->GetScale();
@@ -536,6 +544,11 @@ void FPSController::Move()
 		}
 
 		controllerVelocity += forwardForce;
+
+		swordRollForwards = true;
+	}
+	else {
+		swordRollForwards = false;
 	}
 	if (keyboard->KeyIsPressed(0x53)) // s
 	{ 
@@ -551,6 +564,11 @@ void FPSController::Move()
 		}
 
 		controllerVelocity += backwardForce;
+
+		swordRollBackwards = true;
+	}
+	else {
+		swordRollBackwards = false;
 	}
 	if (keyboard->KeyIsPressed(0x41)) // a
 	{ 
@@ -566,11 +584,14 @@ void FPSController::Move()
 		}
 
 		controllerVelocity += leftwardForce;
+
 		rollRight = true;
+		swordRollRight = true;
 	}
 	else
 	{
 		rollRight = false;
+		swordRollRight = false;
 	}
 	if (keyboard->KeyIsPressed(0x44)) // d
 	{ 
@@ -586,11 +607,14 @@ void FPSController::Move()
 		}
 
 		controllerVelocity += rightwardForce;
+
 		rollLeft = true;
+		swordRollLeft = true;
 	}
 	else
 	{
 		rollLeft = false;
+		swordRollLeft = false;
 	}
 
 	// jump/double jump
@@ -703,6 +727,52 @@ void FPSController::UpdateHeadbob()
 	}
 
 	// cout << headbobOffset << endl;
+}
+
+void FPSController::UpdateSwordSway()
+{
+	BloodSword* swordScript = (BloodSword*)(scriptFunctionsMap["Blood Sword"]["BLOODSWORD"]);
+
+	if (swordScript->animReset) {
+		swordRoll = 0.0f;
+		swordTilt = 0.0f;
+	}
+
+	if (swordRollRight && swordRoll < MAX_SWORD_ROT) {
+		swordRoll += swordRotationSpeed * deltaTime;
+		if (swordRoll > MAX_SWORD_ROT) swordRoll = MAX_SWORD_ROT;
+	}
+	if (swordRollLeft && swordRoll > -MAX_SWORD_ROT) {
+		swordRoll -= swordRotationSpeed * deltaTime;
+		if (swordRoll < -MAX_SWORD_ROT) swordRoll = -MAX_SWORD_ROT;
+	}
+	if (swordRollForwards && swordTilt < MAX_SWORD_ROT) {
+		swordTilt += swordRotationSpeed * deltaTime;
+		if (swordTilt > MAX_SWORD_ROT) swordTilt = MAX_SWORD_ROT;
+	}
+	if (swordRollBackwards && swordTilt > -MAX_SWORD_ROT) {
+		swordTilt -= swordRotationSpeed * deltaTime;
+		if (swordTilt < -MAX_SWORD_ROT) swordTilt = -MAX_SWORD_ROT;
+	}
+	if (!swordRollRight && !swordRollLeft) {
+		swordRoll *= 0.95f;
+	}
+	if (!swordRollBackwards && !swordRollForwards) {
+		swordTilt *= 0.95f;
+	}
+
+	XMFLOAT3 x = X_AXIS;
+	XMFLOAT3 y = Y_AXIS;
+	XMFLOAT3 z = Z_AXIS;
+	//XMVECTOR quat = XMQuaternionRotationRollPitchYaw(swordRoll, )
+	XMVECTOR rollQuat = XMQuaternionRotationAxis(XMLoadFloat3(&z), swordRoll);
+	XMVECTOR yawQuat = XMQuaternionRotationAxis(XMLoadFloat3(&y), XMConvertToRadians(-90.0f));
+	XMVECTOR tiltQuat = XMQuaternionRotationAxis(XMLoadFloat3(&x), swordTilt);
+	XMVECTOR resultQuat = XMVector4Normalize(XMQuaternionMultiply(XMQuaternionMultiply(yawQuat, tiltQuat), rollQuat));
+	XMFLOAT4 quat;
+	XMStoreFloat4(&quat, resultQuat);
+	sword->SetRotation(quat);
+	sword->CalcWorldMatrix();
 }
 
 btVector3 FPSController::JumpForceFromInput()

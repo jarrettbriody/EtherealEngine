@@ -45,6 +45,8 @@ class BloodOrb : public ScriptManager
 	float totalTime = 0.0f;
 	int waveCounter = 0;
 
+	float bobMagnitude = 0.03f;
+
 	void Init();
 
 	void Update();

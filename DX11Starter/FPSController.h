@@ -122,6 +122,16 @@ class FPSController : public ScriptManager
 	const float NORMAL_TIME_SCALAR = 1.0f;
 	float bulletTimeRampDown = 0.25f;
 
+	//sword rotation
+	const float MAX_SWORD_ROT = XMConvertToRadians(5.0f);
+	float swordTilt = 0.0f;
+	float swordRoll = 0.0f;
+	float swordRotationSpeed = 0.25f;
+	bool swordRollLeft = false;
+	bool swordRollRight = false;
+	bool swordRollForwards = false;
+	bool swordRollBackwards = false;
+
 	PlayerState ps;
 
 	void Init();
@@ -153,6 +163,8 @@ class FPSController : public ScriptManager
 	void GroundCheck();
 
 	void UpdateHeadbob();
+
+	void UpdateSwordSway();
 	
 	btVector3 JumpForceFromInput();
 

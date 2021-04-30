@@ -62,6 +62,7 @@ void BloodOrb::Update()
 	XMFLOAT3 camPos = cam->position;
 	XMFLOAT3 camDir = cam->direction;
 	XMFLOAT3 newPos = XMFLOAT3(camPos.x + camDir.x * 1.3f, camPos.y + camDir.y - 0.65f, camPos.z + camDir.z * 1.3f);
+	newPos.y = newPos.y + sin(totalTime) * bobMagnitude;
 	entity->SetPosition(newPos);
 	glass->SetPosition(newPos);
 	entity->CalcWorldMatrix();

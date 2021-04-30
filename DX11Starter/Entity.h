@@ -30,7 +30,7 @@ enum class BulletColliderShape {
 };
 
 using namespace std;
-//using namespace DirectX;
+using namespace DirectX;
 
 class Entity
 {
@@ -77,6 +77,7 @@ public:
 	bool collisionsEnabled = false;
 	bool colliderDebugLinesEnabled = false;
 	bool isEmptyObj = false;
+	bool renderObject = true;
 	EEString<64> tag;
 	EEString<64> layer;
 	Entity();
@@ -108,7 +109,11 @@ public:
 	void RotateAroundAxis(XMFLOAT3 axis, float scalar);
 	void CalcEulerAngles();
 	void SetDirectionVector(XMFLOAT3 direction);
-	void SetDirectionVector(XMFLOAT3 direction, XMFLOAT3 up, XMFLOAT3 right = ZERO_VECTOR3);
+	void SetDirectionVectorU(XMFLOAT3 direction, XMFLOAT3 up);
+	void SetDirectionVectorR(XMFLOAT3 direction, XMFLOAT3 right);
+	void SetDirectionVectorUR(XMFLOAT3 direction, XMFLOAT3 up, XMFLOAT3 right);
+	void SetUpVector(XMFLOAT3 up);
+	void SetRightVector(XMFLOAT3 right);
 	void CalcDirectionVector();
 	void SetRepeatTexture(float x, float y);
 	void SetShadowData(ShadowData shadowData);

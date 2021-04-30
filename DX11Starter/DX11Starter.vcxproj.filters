@@ -85,6 +85,12 @@
     <FxCompile Include="OutlinePS.hlsl">
       <Filter>EEShaders\Pixel Shaders\Post Process</Filter>
     </FxCompile>
+    <FxCompile Include="BloodSwordVS.hlsl">
+      <Filter>EEShaders\Vertex Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="BloodSwordPrepassVS.hlsl">
+      <Filter>EEShaders\Vertex Shaders\Render Prepass</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Camera.cpp">

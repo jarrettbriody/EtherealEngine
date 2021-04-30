@@ -336,7 +336,7 @@ void Renderer::InitHBAOPlus()
 
 	//(3.) SET AO PARAMETERS
 
-	hbaoPlusComponents.Params.Radius = 2.f; // 2
+	hbaoPlusComponents.Params.Radius = 1.f; // 2
 	hbaoPlusComponents.Params.Bias = 0.1f;
 	hbaoPlusComponents.Params.PowerExponent = 4.f; //2
 	hbaoPlusComponents.Params.Blur.Enable = true;
@@ -563,6 +563,7 @@ void Renderer::RenderFrame()
 		RendererCallback* callback = renderObject.callback;
 
 		if (e->isEmptyObj) continue;
+		if (!e->renderObject) continue;
 		e->ToggleShadows(Config::ShadowsEnabled);
 		if (Config::ShadowsEnabled) {
 			ShadowData d;
@@ -819,9 +820,8 @@ void Renderer::RenderShadowMap()
 				continue;
 			}
 
-			if (e->isEmptyObj) {
-				continue;
-			}
+			if (e->isEmptyObj) continue;
+			if (!e->renderObject) continue;
 
 			//if (mat->GetVertexShader()->GetShaderType() == ShaderType::MODIFY_VERTS) {}
 
@@ -916,6 +916,8 @@ void Renderer::RenderDepthStencil()
 		RendererCallback* callback = renderObject.callback;
 
 		if (e->isEmptyObj || !renderObject.material->GetMaterialData().hbaoPlusEnabled) continue;
+
+		if (!e->renderObject) continue;
 
 		//if (mat->GetVertexShader()->GetShaderType() == ShaderType::MODIFY_VERTS) {}
 
@@ -1029,6 +1031,7 @@ void Renderer::RenderTransparents()
 		}
 
 		if (e->isEmptyObj) continue;
+		if (!e->renderObject) continue;
 
 		e->ToggleShadows(Config::ShadowsEnabled);
 		if (Config::ShadowsEnabled) {
