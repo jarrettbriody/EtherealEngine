@@ -108,7 +108,7 @@ class FPSController : public ScriptManager
 	float leashSize = 0.0f; 
 	float leashedScalar = 10.0f;
 	float leashPullCooldownTimer = 0;
-	const float LEASH_PULL_MAX_COOLDOWN_TIME = 0.1f;
+	const float LEASH_PULL_MAX_COOLDOWN_TIME = 0.15f;
 
 	// Bullet Time
 	const float BULLET_TIME_SCALAR = 0.5f;
@@ -139,7 +139,6 @@ class FPSController : public ScriptManager
 
 	void UpdateHookShotTransform();
 
-	void ResetHookshotTransform();
 	
 	void Move();
 
@@ -156,6 +155,15 @@ class FPSController : public ScriptManager
 	void MouseLook();
 
 	void OnCollision(btCollisionObject* other);
+
+public: 
+	PlayerState GetPlayerState();
+	
+	Entity* GetLeashedEntity();
+
+	void SetLeashedEntity(Entity* e);
+
+	void ResetHookshotTransform();
 };
 
 /*

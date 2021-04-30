@@ -7,11 +7,14 @@ enum class SwordState
 	Raised, Slashing, Idle, Reset
 };
 
+class FPSController; // Forward declaration to avoid circular dependency
+
 class BloodSword : public ScriptManager
 {
 	map<string, Entity*>* eMap;
 
-	Entity* gameManager;
+	GameManager* gameManagerScript;
+	FPSController* fpsControllerScript;
 
 	Camera* cam;
 
@@ -67,10 +70,11 @@ class BloodSword : public ScriptManager
 
 	void CheckSwordSlashHit();
 
+	bool EntityInSlashDetectionField(Entity* e);
+
 	void OnCollision(btCollisionObject* other);
 
 public:
 	void StartSlash();
-
 };
 

@@ -4,8 +4,9 @@
 void BloodIcicle::Init()
 {
 	eMap = ScriptManager::sceneEntitiesMap;
-	
-	gameManager = (*eMap)["GameManager"];
+
+	gameManagerScript = (GameManager*)scriptFunctionsMap[(*eMap)["GameManager"]->GetName()]["GAMEMANAGER"];
+	fpsControllerScript = (FPSController*)scriptFunctionsMap[(*eMap)["FPSController"]->GetName()]["FPSCONTROLLER"];
 
 	// Do not allow the icicle to receive reaction forces
 	entity->GetRBody()->setCollisionFlags(entity->GetRBody()->getCollisionFlags() | btRigidBody::CF_NO_CONTACT_RESPONSE); 
@@ -41,8 +42,10 @@ void BloodIcicle::OnCollision(btCollisionObject* other)
 		if (otherE->tag.STDStr() == std::string("Enemy") && !bodyPartPinned)
 		{
 			// Update the game manager attribute for enemies alive
-			GameManager* gameManagerScript = (GameManager*)scriptFunctionsMap[gameManager->GetName()]["GAMEMANAGER"];
 			gameManagerScript->DecrementEnemiesAlive();
+
+			// if an enemy is currently leashed when hit by a blood icicle reset the hookshot
+			if(fpsControllerScript->GetPlayerState() == PlayerState::HookshotLeash) fpsControllerScript->ResetHookshotTransform(); 
 
 			std::vector<Entity*> childEntities = EESceneLoader->SplitMeshIntoChildEntities(otherE, 1.0f);  
 

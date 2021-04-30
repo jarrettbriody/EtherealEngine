@@ -300,7 +300,7 @@ void FPSController::HookshotThrow()
 	}
 	else
 	{
-		if (hookshotAttachedEntity->tag.STDStr() == std::string("Enemy"))
+		if (hookshotAttachedEntity->tag.STDStr() == std::string("Enemy") || hookshotAttachedEntity->tag.STDStr() == std::string("Body Part"))
 		{
 			leashedEnemy = hookshotAttachedEntity;
 			leashSize = playerRBody->getCenterOfMassPosition().distance(leashedEnemy->GetRBody()->getCenterOfMassPosition()); 
@@ -356,11 +356,6 @@ void FPSController::HookshotFlight()
 
 void FPSController::HookshotLeash()
 {
-	if (keyboard->OnKeyDown(0x45)) // cancel after pressing E again
-	{
-		ResetHookshotTransform();
-	}
-
 	if (hookshotZScale < hookshotLength)
 	{
 		hookshotZScale += hookshotThrowSpeed * deltaTime;
@@ -381,8 +376,13 @@ void FPSController::HookshotLeash()
 	if (leashDistanceToEnemy > leashSize && leashPullCooldownTimer <= 0)
 	{
 		leashedEnemy->GetRBody()->activate();
-		leashedEnemy->GetRBody()->applyCentralImpulse((playerCenterOfMassPos - leashedEnemy->GetRBody()->getCenterOfMassPosition()).normalized() * (leashDistanceToEnemy/leashedScalar));
+		leashedEnemy->GetRBody()->applyCentralImpulse((playerCenterOfMassPos - leashedEnemy->GetRBody()->getCenterOfMassPosition()).normalized() * leashedScalar * (1/leashedEnemy->GetRBody()->getInvMass())); // scale the force of the impulse in ratio to the mass of the leashed object
 		leashPullCooldownTimer = LEASH_PULL_MAX_COOLDOWN_TIME; // we don't want to contiually apply impulses all the time because that makes the leashed enemy go beserk. The timer allows us to manage how often the impulse is applied
+	}
+
+	if (keyboard->OnKeyDown(0x45)) // cancel after pressing E again
+	{
+		ResetHookshotTransform();
 	}
 }
 
@@ -425,6 +425,21 @@ void FPSController::ResetHookshotTransform()
 	hookshot->SetScale(1, 1, hookshotZScale);
 	hookshot->CalcWorldMatrix();
 	ps = PlayerState::Normal;
+}
+
+PlayerState FPSController::GetPlayerState()
+{
+	return ps;
+}
+
+Entity* FPSController::GetLeashedEntity()
+{
+	return leashedEnemy;
+}
+
+void FPSController::SetLeashedEntity(Entity* e)
+{
+	leashedEnemy = e;
 }
 
 void FPSController::Move()

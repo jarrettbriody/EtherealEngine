@@ -1,6 +1,7 @@
 #pragma once
 #include "ScriptManager.h"
 #include "GameManager.h"
+#include "FPSController.h"
 
 class BloodIcicle : public ScriptManager
 {
@@ -8,7 +9,8 @@ class BloodIcicle : public ScriptManager
 
 	Entity* closestChild;
 
-	Entity* gameManager;
+	GameManager* gameManagerScript;
+	FPSController* fpsControllerScript;
 
 	bool bodyPartPinned = false;
 

@@ -1,11 +1,13 @@
 #include "pch.h"
 #include "BloodSword.h" 
+#include "FPSController.h"
 
 void BloodSword::Init()
 {
 	eMap = ScriptManager::sceneEntitiesMap;
 
-	gameManager = (*eMap)["GameManager"];
+	gameManagerScript = (GameManager*)scriptFunctionsMap[(*eMap)["GameManager"]->GetName()]["GAMEMANAGER"];
+	fpsControllerScript = (FPSController*)scriptFunctionsMap[(*eMap)["FPSController"]->GetName()]["FPSCONTROLLER"];
 
 	cam = ScriptManager::EERenderer->GetCamera("main");
 
@@ -95,6 +97,7 @@ void BloodSword::Update()
 	entity->CalcWorldMatrix();
 	//cam->CalcWorldMatrix(); // Putting camera world matrix calc after the entity makes the sword jitter much less severe...not sure why?
 }
+
 
 void BloodSword::StartSlash()
 {
@@ -284,6 +287,58 @@ std::vector<XMFLOAT3> BloodSword::GenerateSlashPoints(XMFLOAT3 startingPos, XMFL
 
 void BloodSword::CheckSwordSlashHit()
 {
+	std::vector<Entity*> enemies = EESceneLoader->sceneEntitiesTagMap["Enemy"];
+
+	for each (Entity* enemy in enemies)
+	{
+		if (EntityInSlashDetectionField(enemy))
+		{
+			// Store the old enemy position for later use in case the enemy was killed while leashed
+			btVector3 oldEnemyPos = enemy->GetRBody()->getCenterOfMassPosition();
+
+			// Check if this enemy in the detection field is the leashed enemy when it is hit
+			bool leashedWhenKilled = fpsControllerScript->GetPlayerState() == PlayerState::HookshotLeash && fpsControllerScript->GetLeashedEntity() == enemy;
+
+			// enemy is in the triangle, split it apart
+			std::vector<Entity*> childEntities = EESceneLoader->SplitMeshIntoChildEntities(enemy, 10.0f);
+
+			// Update the game manager attribute for enemies alive
+			gameManagerScript->DecrementEnemiesAlive();
+
+			Entity* newLeashedEntity = childEntities[0];
+			for each (Entity * e in childEntities)
+			{
+				e->tag = std::string("Body Part");
+
+				if (leashedWhenKilled) // if the enemy is leashed while they are killed transfer the leash to the next closest body part
+				{
+					if (e->GetRBody()->getCenterOfMassPosition().distance(oldEnemyPos) < newLeashedEntity->GetRBody()->getCenterOfMassPosition().distance(oldEnemyPos))
+					{
+						newLeashedEntity = e;
+					}
+				}
+			}
+
+			if (leashedWhenKilled)
+			{
+				fpsControllerScript->SetLeashedEntity(newLeashedEntity);
+			}
+		}
+	}
+
+	/*std::vector<Entity*> bodyParts = EESceneLoader->sceneEntitiesTagMap["Body Part"];
+
+	for each (Entity* bodyPart in bodyParts)
+	{
+		if (EntityInSlashDetectionField(bodyPart))
+		{
+			bodyPart->GetRBody()->applyCentralImpulse(Utility::Float3ToBulletVector(cam->direction).normalized() * 100.0f);
+		}
+	}*/
+}
+
+bool BloodSword::EntityInSlashDetectionField(Entity* e)
+{
 	float currentAngle = atan2(cam->direction.z, cam->direction.x);
 	float halfViewAngle = XMConvertToRadians(viewAngle / 2);
 	float hypotenuse = viewDistance / cos(halfViewAngle);
@@ -293,65 +348,43 @@ void BloodSword::CheckSwordSlashHit()
 	XMFLOAT3 viewFront;
 	XMStoreFloat3(&viewFront, XMVectorSubtract(XMLoadFloat3(&viewRight), XMLoadFloat3(&viewLeft)));
 
-	std::vector<Entity*> enemies = EESceneLoader->sceneEntitiesTagMap["Enemy"];
+	XMFLOAT3 playerPos = Utility::BulletVectorToFloat3(eMap->find("FPSController")->second->GetRBody()->getCenterOfMassPosition());
+	XMFLOAT3 entityPos = Utility::BulletVectorToFloat3(e->GetRBody()->getCenterOfMassPosition());
 
-	for each (Entity* enemy in enemies)
+	XMFLOAT3 flooredPos = XMFLOAT3(playerPos.x, 0, playerPos.z);
+	XMFLOAT3 flooredEnemyPos = XMFLOAT3(entityPos.x, 0, entityPos.z);
+
+	XMFLOAT3 triVertToEnemy;
+	XMStoreFloat3(&triVertToEnemy, XMVectorSubtract(XMLoadFloat3(&flooredEnemyPos), XMLoadFloat3(&flooredPos)));
+
+	XMFLOAT3 perpendicular = XMFLOAT3(viewLeft.z, viewLeft.y, -viewLeft.x);
+
+	float dotProduct = 0;
+	XMStoreFloat(&dotProduct, XMVector3Dot(XMLoadFloat3(&triVertToEnemy), XMLoadFloat3(&perpendicular)));
+
+	if (dotProduct > 0)
 	{
-		XMFLOAT3 playerPos =  Utility::BulletVectorToFloat3(eMap->find("FPSController")->second->GetRBody()->getCenterOfMassPosition());
-		XMFLOAT3 enemyPos = Utility::BulletVectorToFloat3(enemy->GetRBody()->getCenterOfMassPosition());
+		XMStoreFloat3(&triVertToEnemy, XMVectorSubtract(XMLoadFloat3(&flooredEnemyPos), XMVectorAdd(XMLoadFloat3(&flooredPos), XMLoadFloat3(&viewLeft))));
+		perpendicular = XMFLOAT3(viewFront.z, viewFront.y, -viewFront.x);
 
-		XMFLOAT3 flooredPos = XMFLOAT3(playerPos.x, 0, playerPos.z);
-		XMFLOAT3 flooredEnemyPos = XMFLOAT3(enemyPos.x, 0, enemyPos.z);
-
-		XMFLOAT3 triVertToEnemy;
-		XMStoreFloat3(&triVertToEnemy, XMVectorSubtract(XMLoadFloat3(&flooredEnemyPos), XMLoadFloat3(&flooredPos)));
-
-		XMFLOAT3 perpendicular = XMFLOAT3(viewLeft.z, viewLeft.y, -viewLeft.x);
-
-		float dotProduct = 0;
 		XMStoreFloat(&dotProduct, XMVector3Dot(XMLoadFloat3(&triVertToEnemy), XMLoadFloat3(&perpendicular)));
 
 		if (dotProduct > 0)
 		{
-			XMStoreFloat3(&triVertToEnemy,XMVectorSubtract(XMLoadFloat3(&flooredEnemyPos), XMVectorAdd(XMLoadFloat3(&flooredPos), XMLoadFloat3(&viewLeft))));
-			perpendicular = XMFLOAT3(viewFront.z, viewFront.y, -viewFront.x);
+			XMStoreFloat3(&triVertToEnemy, XMVectorSubtract(XMLoadFloat3(&flooredEnemyPos), XMVectorAdd(XMLoadFloat3(&flooredPos), XMLoadFloat3(&viewRight))));
+			perpendicular = XMFLOAT3(-viewRight.z, -viewRight.y, viewRight.x);
 
 			XMStoreFloat(&dotProduct, XMVector3Dot(XMLoadFloat3(&triVertToEnemy), XMLoadFloat3(&perpendicular)));
 
 			if (dotProduct > 0)
 			{
-				XMStoreFloat3(&triVertToEnemy, XMVectorSubtract(XMLoadFloat3(&flooredEnemyPos), XMVectorAdd(XMLoadFloat3(&flooredPos), XMLoadFloat3(&viewRight))));
-				perpendicular = XMFLOAT3(-viewRight.z, -viewRight.y, viewRight.x);
-
-				XMStoreFloat(&dotProduct, XMVector3Dot(XMLoadFloat3(&triVertToEnemy), XMLoadFloat3(&perpendicular)));
-
-				if (dotProduct > 0)
-				{
-					// Update the game manager attribute for enemies alive
-					GameManager* gameManagerScript = (GameManager*)scriptFunctionsMap[gameManager->GetName()]["GAMEMANAGER"];
-					gameManagerScript->DecrementEnemiesAlive();
-
-					// enemy is in the triangle, split it apart
-					std::vector<Entity*> childEntities = EESceneLoader->SplitMeshIntoChildEntities(enemy, 10.0f);
-
-					for each (Entity * e in childEntities)
-					{
-						e->tag = std::string("Body Part");
-
-						/*std::vector<Entity*>::iterator itr = std::find(enemies.begin(), enemies.end(), e);
-
-						if (itr != enemies.cend())
-						{
-							enemies.erase(enemies.begin() + std::distance(enemies.begin(), itr));
-						}*/
-					}
-				}
-
+				return true;
 			}
 		}
 	}
-}
 
+	return false;
+}
 
 void BloodSword::OnCollision(btCollisionObject* other)
 {
