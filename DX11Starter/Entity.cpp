@@ -241,7 +241,7 @@ void Entity::InitRigidBody(BulletColliderShape shape, float entityMass, bool zer
 	}
 
 
-	rBody->setFriction(0.9f);
+	rBody->setFriction(0.5f);
 
 	/*rBody->setActivationState(DISABLE_DEACTIVATION);
 	rBody->setMassProps(mass, localInertia);*/
@@ -249,7 +249,7 @@ void Entity::InitRigidBody(BulletColliderShape shape, float entityMass, bool zer
 	//rBody->setLinearFactor(btVector3(1, 1, 0));
 	//rBody->setAngularFactor(btVector3(0, 1, 1));
 
-	rBody->setAnisotropicFriction(btVector3(2.0f, 0.0f, 0.0f));
+	//rBody->setAnisotropicFriction(btVector3(2.0f, 0.0f, 0.0f));
 
 	if(mass == 0.0f)
 		rBody->setCollisionFlags(rBody->getCollisionFlags() & btCollisionObject::CF_NO_CONTACT_RESPONSE);

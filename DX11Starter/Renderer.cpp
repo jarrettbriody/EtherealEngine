@@ -336,11 +336,11 @@ void Renderer::InitHBAOPlus()
 
 	//(3.) SET AO PARAMETERS
 
-	hbaoPlusComponents.Params.Radius = 5.f; // 2
+	hbaoPlusComponents.Params.Radius = 2.f; // 2
 	hbaoPlusComponents.Params.Bias = 0.1f;
-	hbaoPlusComponents.Params.PowerExponent = 2.f;
+	hbaoPlusComponents.Params.PowerExponent = 4.f; //2
 	hbaoPlusComponents.Params.Blur.Enable = true;
-	hbaoPlusComponents.Params.Blur.Radius = GFSDK_SSAO_BLUR_RADIUS_2;
+	hbaoPlusComponents.Params.Blur.Radius = GFSDK_SSAO_BLUR_RADIUS_2; //2
 	hbaoPlusComponents.Params.Blur.Sharpness = 8.f; //4
 	hbaoPlusComponents.Params.Output.BlendMode = GFSDK_SSAO_MULTIPLY_RGB;
 	hbaoPlusComponents.Params.DetailAO = 1.0f;
