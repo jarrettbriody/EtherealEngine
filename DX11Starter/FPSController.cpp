@@ -15,18 +15,39 @@ void FPSController::Init()
 			"Blood Icicle",					// name
 			"Blood Icicle",					// tag
 			"Blood Icicle",					// layer
-			"Cone",							// mesh
-			"Red",							// material
+			"bloodicicle",							// mesh
+			"swordgradient",							// material
 			{"BLOODICICLE"},				// script names
 			1,								// script count
 			XMFLOAT3(0.0f, 0.0f, 0.0f),		// position
 			XMFLOAT3(0.0f, 0.0f, 0.0f),		// rotation
-			XMFLOAT3(0.5f, 8.0f, 0.5f),		// scale
+			XMFLOAT3(0.5f, 1.0f, 0.5f),		// scale
 			1.0f,							// mass
 			true,
-			BulletColliderShape::CAPSULE
+			BulletColliderShape::BOX
 			// defaults work for the rest
 	};
+
+	EntityCreationParameters dashOrbParams = {
+			"Dash Orb",					// name
+			"Dash Orb",					// tag
+			"Dash Orb",					// layer
+			"dashorb",							// mesh
+			"swordgradient",							// material
+			{""},				// script names
+			0,								// script count
+			XMFLOAT3(0.0f, 0.0f, 0.0f),		// position
+			XMFLOAT3(0.0f, 0.0f, 0.0f),		// rotation
+			XMFLOAT3(0.25f, 0.25f, 0.25f),		// scale
+			0.0f,							// mass
+			false
+			// defaults work for the rest
+	};
+
+	for (int i = 0; i < MAX_DASHES; i++)
+	{
+		dashOrbs.push_back(ScriptManager::CreateEntity(dashOrbParams));
+	}
 
 	/*
 	swordParams = {
@@ -72,6 +93,7 @@ void FPSController::Init()
 
 	playerRBody = entity->GetRBody(); // Get the bullet rigidbody
 	playerRBody->setAngularFactor(btVector3(0, 1, 0)); // constrain rotations on x and z axes
+	// playerRBody->setLinearFactor(btVector3(1, 0, 1));
 	// playerRBody->setRestitution(0.1f);
 	// playerRBody->setFriction(1.0f); --> debating using friction because it would probably result in weird interations with other level gemoetry, would rather just use pure velocity dampening
 
@@ -109,6 +131,7 @@ void FPSController::Update()
 			Move();
 			MouseLook();
 			cam->SetPosition(XMFLOAT3(entity->GetPosition().x, entity->GetPosition().y + entity->GetScale().y + headbobOffset, entity->GetPosition().z)); // after all updates make sure camera is following the affected entity
+			UpdateDashOrbsTransforms();
 			CheckAllAbilities();
 			break;
 		
@@ -117,6 +140,7 @@ void FPSController::Update()
 			MouseLook();
 			cam->SetPosition(XMFLOAT3(entity->GetPosition().x, entity->GetPosition().y + entity->GetScale().y + headbobOffset, entity->GetPosition().z)); // after all updates make sure camera is following the affected entity
 			UpdateHookShotTransform();
+			UpdateDashOrbsTransforms();
 			CheckBloodSword();
 			CheckBloodIcicle();
 			CheckBulletTime();
@@ -127,6 +151,7 @@ void FPSController::Update()
 			MouseLook();
 			cam->SetPosition(XMFLOAT3(entity->GetPosition().x, entity->GetPosition().y + entity->GetScale().y + headbobOffset, entity->GetPosition().z)); // after all updates make sure camera is following the affected entity
 			UpdateHookShotTransform();
+			UpdateDashOrbsTransforms();
 			CheckBloodSword();
 			CheckBloodIcicle();
 			CheckBulletTime();
@@ -138,6 +163,7 @@ void FPSController::Update()
 			MouseLook();
 			cam->SetPosition(XMFLOAT3(entity->GetPosition().x, entity->GetPosition().y + entity->GetScale().y + headbobOffset, entity->GetPosition().z)); // after all updates make sure camera is following the affected entity
 			UpdateHookShotTransform();
+			UpdateDashOrbsTransforms();
 			CheckBloodSword();
 			CheckBloodIcicle();
 			CheckBulletTime();
@@ -201,6 +227,8 @@ void FPSController::CheckBloodIcicle()
 
 		// backwards recoil impulse on player
 		impulseSumVec += btVector3(-direction.x, 0, -direction.z).normalized() * bloodIcicleRecoilScalar;
+
+		bloodIcicleRecoilDampTimer = BLOOD_ICICLE_RECOIL_DAMP_TIMER_MAX;
 
 		bloodIcicleCooldownTimer = BLOOD_ICICLE_MAX_COOLDOWN_TIME;
 	}
@@ -393,7 +421,11 @@ void FPSController::HookshotLeash()
 		ResetHookshotTransform();
 
 		// Pull player towards enemy when canceling the leash
-		impulseSumVec += (leashedEnemy->GetRBody()->getCenterOfMassPosition() - playerCenterOfMassPos).normalized() * leashJumpCancelScalar;
+		// Not scaling Y for now because the upwards force makes you shoot into the sky and damping doesn't take care of it quick enough, think it hwas to do with the change from zero gravity when grounded to gravity after grouned is false
+		btVector3 jumpCancelImpulse = (leashedEnemy->GetRBody()->getCenterOfMassPosition() - playerCenterOfMassPos).normalized();
+		jumpCancelImpulse.setX(jumpCancelImpulse.getX() * leashJumpCancelScalar);
+		jumpCancelImpulse.setZ(jumpCancelImpulse.getZ() * leashJumpCancelScalar);
+		impulseSumVec += jumpCancelImpulse;
 		leashJumpCancelDampTimer = LEASH_JUMP_DAMP_TIMER_MAX;
 	}
 }
@@ -431,6 +463,25 @@ void FPSController::UpdateHookShotTransform()
 	hookshot->CalcWorldMatrix();
 }
 
+void FPSController::UpdateDashOrbsTransforms()
+{
+	cam->CalcViewMatrix();
+	cam->CalcWorldMatrix();
+	XMFLOAT3 camPos = cam->position;
+	XMFLOAT3 camDir = cam->direction;
+	XMFLOAT3 camRight = cam->right;
+
+	dashOrbs[0]->SetPosition(XMFLOAT3(camPos.x + camDir.x * camRight.x, camPos.y + camDir.y + 0.25f, camPos.z + camDir.z * 1.25f));
+	dashOrbs[1]->SetPosition(XMFLOAT3(camPos.x + camDir.x * camRight.x, camPos.y + camDir.y - 0.25f, camPos.z + camDir.z * 1.25f));
+	dashOrbs[2]->SetPosition(XMFLOAT3(camPos.x + camDir.x * -camRight.x, camPos.y + camDir.y + 0.25f, camPos.z + camDir.z * 1.25f));
+	dashOrbs[3]->SetPosition(XMFLOAT3(camPos.x + camDir.x * -camRight.x, camPos.y + camDir.y - 0.25f, camPos.z + camDir.z * 1.25f));
+
+	for each (Entity* orb in dashOrbs)
+	{
+		orb->CalcWorldMatrix();
+	}
+}
+
 void FPSController::ResetHookshotTransform()
 {
 	hookshotZScale = 0.0;
@@ -438,6 +489,7 @@ void FPSController::ResetHookshotTransform()
 	hookshot->CalcWorldMatrix();
 	ps = PlayerState::Normal;
 }
+
 
 PlayerState FPSController::GetPlayerState()
 {
@@ -678,18 +730,7 @@ btVector3 FPSController::JumpForceFromInput()
 
 btVector3 FPSController::DashImpulseFromInput()
 {
-	if (dashDampTimer > 0)
-	{
-		dashDampTimer -= deltaTime;
-
-		// before the timer runs out to begin damping, interpolate fov up to dash fov
-		if (fov < DASH_FOV)
-		{
-			fov += fovNormalToDashSpeed * deltaTime;
-			cam->SetFOV(fov);
-		}
-	}
-
+	// dash regeneration
 	if (dashRegenerationTimer > 0)
 	{
 		dashRegenerationTimer -= deltaTime;
@@ -700,6 +741,7 @@ btVector3 FPSController::DashImpulseFromInput()
 		dashRegenerationTimer = DASH_MAX_REGENERATION_TIME;
 	}
 
+	// dash force
 	btVector3 dashImpulse = btVector3(0, 0, 0);
 	if (dashCount > 0 && keyboard->OnKeyDown(VK_SHIFT))
 	{
@@ -731,7 +773,7 @@ btVector3 FPSController::DashImpulseFromInput()
 
 void FPSController::DampForces()
 {
-	if (dashDampTimer <= 0 && leashJumpCancelDampTimer <= 0) // always damp the impulse vec unless player is the player just initiated a dash or a leash jump cancel
+	if (dashDampTimer <= 0 && leashJumpCancelDampTimer <= 0 && bloodIcicleRecoilDampTimer <= 0) // always damp the impulse vec unless player is the player just initiated a dash or a leash jump cancel or blood icicle shot
 	{
 		dashBlurCallback.active = false;
 		impulseSumVec -= impulseSumVec * dampingScalar;
@@ -744,10 +786,23 @@ void FPSController::DampForces()
 			cam->SetFOV(fov);
 		}
 	}
-	else if(leashJumpCancelDampTimer > 0) // Putting this here for now since its from another state and would not be able to follow the same format as the dashDampTimer
+	else  
 	{
-		leashJumpCancelDampTimer -= deltaTime;
+		if (leashJumpCancelDampTimer > 0) leashJumpCancelDampTimer -= deltaTime;
+		if (bloodIcicleRecoilDampTimer > 0) bloodIcicleRecoilDampTimer -= deltaTime;
+		if (dashDampTimer > 0)
+		{
+			dashDampTimer -= deltaTime;
+
+			// before the timer runs out to begin damping, interpolate fov up to dash fov
+			if (fov < DASH_FOV)
+			{
+				fov += fovNormalToDashSpeed * deltaTime;
+				cam->SetFOV(fov);
+			}
+		}
 	}
+
 
 	if (!keyboard->CheckKeysPressed(baseMovementKeys, 4) && !midAir) // Only damp overall movement if none of the base movement keys are pressed while on the ground. 
 	{

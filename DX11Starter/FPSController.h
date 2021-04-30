@@ -72,13 +72,14 @@ class FPSController : public ScriptManager
 	float jumpForceScalar = 3.0f;
 
 	// Dashing
-	const int MAX_DASHES = 5;
+	const int MAX_DASHES = 4;
 	int dashCount = MAX_DASHES;
 	float dashDampTimer = 0.0f;
 	const float DASH_DAMP_TIMER_MAX = 0.3f;
 	float dashImpulseScalar = 80.0f;
 	float dashRegenerationTimer = 0.0f;
 	const float DASH_MAX_REGENERATION_TIME = 1.5f;
+	std::vector<Entity*> dashOrbs;
 
 	// Sword
 	EntityCreationParameters swordParams;
@@ -90,6 +91,8 @@ class FPSController : public ScriptManager
 	float bloodIcicleRecoilScalar = 45.0f;
 	float bloodIcicleCooldownTimer = 0.0f;
 	const float BLOOD_ICICLE_MAX_COOLDOWN_TIME = 1.0f;
+	float bloodIcicleRecoilDampTimer = 0.0f;
+	const float BLOOD_ICICLE_RECOIL_DAMP_TIMER_MAX = 0.3f;
 	
 	// Hookshot
 	Entity* bloodOrb;
@@ -143,7 +146,8 @@ class FPSController : public ScriptManager
 
 	void UpdateHookShotTransform();
 
-	
+	void UpdateDashOrbsTransforms();
+
 	void Move();
 
 	void GroundCheck();

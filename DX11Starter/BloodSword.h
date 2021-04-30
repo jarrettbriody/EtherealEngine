@@ -48,7 +48,7 @@ class BloodSword : public ScriptManager
 	XMFLOAT3 raisedRotation;
 
 	float viewAngle = 90.0f;
-	float viewDistance = 10.0f;
+	float viewDistance = 15.0f;
 
 	void Init();
 
