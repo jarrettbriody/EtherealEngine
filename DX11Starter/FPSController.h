@@ -158,6 +158,8 @@ class FPSController : public ScriptManager
 
 	void UpdateDashOrbsTransforms();
 
+	void UpdateDashOrbsActive(bool setActive);
+
 	void Move();
 
 	void GroundCheck();

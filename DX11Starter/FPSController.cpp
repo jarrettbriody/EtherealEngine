@@ -38,7 +38,7 @@ void FPSController::Init()
 			0,								// script count
 			XMFLOAT3(0.0f, 0.0f, 0.0f),		// position
 			XMFLOAT3(0.0f, 0.0f, 0.0f),		// rotation
-			XMFLOAT3(0.25f, 0.25f, 0.25f),		// scale
+			XMFLOAT3(0.12f, 0.12f, 0.12f),		// scale
 			0.0f,							// mass
 			false
 			// defaults work for the rest
@@ -504,6 +504,29 @@ PlayerState FPSController::GetPlayerState()
 	return ps;
 }
 
+void FPSController::UpdateDashOrbsActive(bool setActive)
+{
+	for each (Entity* orb in dashOrbs)
+	{
+		if (setActive) // if true we want to set the first non-rendered dash orb we find to display
+		{
+			if (!orb->renderObject)
+			{
+				orb->renderObject = true;
+				return;
+			}
+		}
+		else // otherwise find the first rendered dash orb to hide
+		{
+			if (orb->renderObject)
+			{
+				orb->renderObject = false;
+				return;
+			}
+		}
+	}
+}
+
 Entity* FPSController::GetLeashedEntity()
 {
 	return leashedEnemy;
@@ -801,13 +824,22 @@ btVector3 FPSController::JumpForceFromInput()
 btVector3 FPSController::DashImpulseFromInput()
 {
 	// dash regeneration
-	if (dashRegenerationTimer > 0)
+	if (dashCount < MAX_DASHES)
 	{
-		dashRegenerationTimer -= deltaTime;
+		if (dashRegenerationTimer > 0)
+		{
+			dashRegenerationTimer -= deltaTime;
+		}
+		else
+		{
+			dashCount++;
+			UpdateDashOrbsActive(true);
+			dashRegenerationTimer = DASH_MAX_REGENERATION_TIME;
+			// cout << "Dash Count: " << dashCount << endl;
+		}
 	}
-	else if(dashCount < MAX_DASHES)
+	else
 	{
-		dashCount++;
 		dashRegenerationTimer = DASH_MAX_REGENERATION_TIME;
 	}
 
@@ -816,6 +848,8 @@ btVector3 FPSController::DashImpulseFromInput()
 	if (dashCount > 0 && keyboard->OnKeyDown(VK_SHIFT))
 	{
 		dashCount--;
+		UpdateDashOrbsActive(false);
+
 		// cout << dashCount << endl;
 		// default dash to forwards
 		dashImpulse = btVector3(direction.x, 0, direction.z) * dashImpulseScalar;
