@@ -25,9 +25,8 @@ Status FollowPath::Update()
 
 		if (path->size() == 0)
 			return SUCCESS;
-			
 		
-		//targetPos = path->front()->GetPos();
+		targetPos = path->front()->GetPos();
 	}
 
 	movementDirection = btVector3(targetPos.x - pos.x, 0.0f, targetPos.z - pos.z);

@@ -167,9 +167,6 @@ Node* Grid::FindNearestNode(DirectX::XMFLOAT3 position)
 		zIndex = numberOfColumns - 1;
 	}
 
-	//cout << "Indices- X: " << xIndex << " | Z: " << zIndex << endl;
-	//cout << "Grid size- X: " << numberOfRows << " | Z: " << numberOfColumns << endl;
-
 	return &grid[xIndex][zIndex];
 }
 
