@@ -71,7 +71,7 @@ void Grid::CreateGrid()
 			//------
 			// Debug line shit
 			//------
-			
+			/*
 			// Create the world matrix for the debug line
 			XMFLOAT4X4 wm;
 			XMStoreFloat4x4(&wm, XMMatrixTranspose(DirectX::XMMatrixIdentity()));
@@ -84,23 +84,26 @@ void Grid::CreateGrid()
 			else
 				c = XMFLOAT3(0.0f, 1.0f, 0.0f);
 			
-			dl->color = c;
-			dl->worldMatrix = wm;
+			if (obstruction)
+			{
+				dl->color = c;
+				dl->worldMatrix = wm;
 
-			XMFLOAT3 start = XMFLOAT3(nodePos.x, gridStartPosition.y, nodePos.z);
+				XMFLOAT3 start = XMFLOAT3(nodePos.x, gridStartPosition.y, nodePos.z);
 
-			// Draw the debug line to show the raycast
-			XMFLOAT3* rayPoints = new XMFLOAT3[8];
-			rayPoints[0] = start;
-			rayPoints[1] = start;
-			rayPoints[2] = start;
-			rayPoints[3] = start;
-			rayPoints[4] = nodePos;
-			rayPoints[5] = nodePos;
-			rayPoints[6] = nodePos;
-			rayPoints[7] = nodePos;
-			dl->GenerateCuboidVertexBuffer(rayPoints, 8);
-			delete[] rayPoints;
+				// Draw the debug line to show the raycast
+				XMFLOAT3* rayPoints = new XMFLOAT3[8];
+				rayPoints[0] = start;
+				rayPoints[1] = start;
+				rayPoints[2] = start;
+				rayPoints[3] = start;
+				rayPoints[4] = nodePos;
+				rayPoints[5] = nodePos;
+				rayPoints[6] = nodePos;
+				rayPoints[7] = nodePos;
+				dl->GenerateCuboidVertexBuffer(rayPoints, 8);
+				delete[] rayPoints;
+			}*/
 		}
 	}
 	gridSize = XMFLOAT2(gridEndPosition.x - gridStartPosition.x, gridEndPosition.z - gridStartPosition.x);
@@ -158,11 +161,14 @@ Node* Grid::FindNearestNode(DirectX::XMFLOAT3 position)
 	}
 
 	if (position.z < gridStartPosition.z) {
-		xIndex = 0;
+		zIndex = 0;
 	}
 	else if (position.z > gridEndPosition.z) {
-		xIndex = numberOfColumns - 1;
+		zIndex = numberOfColumns - 1;
 	}
+
+	//cout << "Indices- X: " << xIndex << " | Z: " << zIndex << endl;
+	//cout << "Grid size- X: " << numberOfRows << " | Z: " << numberOfColumns << endl;
 
 	return &grid[xIndex][zIndex];
 }
@@ -261,6 +267,7 @@ std::list<Node*> Grid::ReconstructPath(std::map<Node*, Node*> cameFrom, Node* in
 
 std::list<Node*> Grid::FindPath(DirectX::XMFLOAT3 start, DirectX::XMFLOAT3 end)
 {
+	ResetAStar();
 	std::vector<Node*> closedNodes;
 	PriorityQueue openNodes;
 	std::map<Node*, Node*> cameFrom;
@@ -277,7 +284,7 @@ std::list<Node*> Grid::FindPath(DirectX::XMFLOAT3 start, DirectX::XMFLOAT3 end)
 	{
 		Node* currentNode = openNodes.Pop();
 
-		if (currentNode->Equals(*target))
+		if (currentNode == target)
 		{
 			return ReconstructPath(cameFrom, currentNode);
 		}
@@ -288,7 +295,7 @@ std::list<Node*> Grid::FindPath(DirectX::XMFLOAT3 start, DirectX::XMFLOAT3 end)
 
 		for (auto& move : possibleMoves)
 		{
-			if (std::find(possibleMoves.begin(), possibleMoves.end(), move) != possibleMoves.end())
+			if (std::find(closedNodes.begin(), closedNodes.end(), move) != closedNodes.end())
 				continue;
 
 			float costToMove = currentNode->GetCostSoFar() + GetActualCost(currentNode, move);

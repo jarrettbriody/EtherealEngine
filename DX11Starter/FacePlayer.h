@@ -17,5 +17,4 @@ public:
 	void OnInitialize();
 	void OnTerminate(Status s);
 	Status Update();
-	float AngleBetween();
 };

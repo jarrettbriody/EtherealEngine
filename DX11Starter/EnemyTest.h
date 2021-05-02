@@ -6,6 +6,9 @@
 #include "PlayerVisible.h"
 #include "FacePlayer.h"
 #include "SeekPlayer.h"
+#include "FindPlayer.h"
+#include "FollowPath.h"
+#include "Idle.h"
 #include "FPSController.h"
 
 class EnemyTest : public ScriptManager
@@ -16,6 +19,7 @@ class EnemyTest : public ScriptManager
 	map<string, vector<ScriptManager*>> sMap;
 
 	Grid* grid;
+	std::list<Node*> path;
 
 	XMFLOAT3 pos;
 	bool inCombat = false;
@@ -23,10 +27,10 @@ class EnemyTest : public ScriptManager
 	float maxSpeed = 25.0f;
 	float dampingScalar = 0.09f;
 	float turnSpeed = 1.0f;
-	float minimumDistance = 10.0f;
+	float minimumDistance = 5.0f;
 	float visionConeAngle = 30.0f;
 	float visionConeDistance = 30.0f;
-	float oscillationMagnitude = 0.001f;
+	float oscillationMagnitude = 0.01f;
 	float totalTime = 0.0f;
 
 	BehaviorTree* bt;

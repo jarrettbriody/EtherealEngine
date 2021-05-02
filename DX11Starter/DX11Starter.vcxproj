@@ -148,10 +148,13 @@
     <ClCompile Include="EnemyTest.cpp" />
     <ClCompile Include="Entity.cpp" />
     <ClCompile Include="FacePlayer.cpp" />
+    <ClCompile Include="FindPlayer.cpp" />
+    <ClCompile Include="FollowPath.cpp" />
     <ClCompile Include="FPSController.cpp" />
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="GPUParticleEmitter.cpp" />
     <ClCompile Include="Grid.cpp" />
+    <ClCompile Include="Idle.cpp" />
     <ClCompile Include="InCombat.cpp" />
     <ClCompile Include="Keyboard.cpp" />
     <ClCompile Include="KeyboardEvent.cpp" />
@@ -192,10 +195,13 @@
     <ClInclude Include="EnemyTest.h" />
     <ClInclude Include="Entity.h" />
     <ClInclude Include="FacePlayer.h" />
+    <ClInclude Include="FindPlayer.h" />
+    <ClInclude Include="FollowPath.h" />
     <ClInclude Include="FPSController.h" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="GPUParticleEmitter.h" />
     <ClInclude Include="Grid.h" />
+    <ClInclude Include="Idle.h" />
     <ClInclude Include="InCombat.h" />
     <ClInclude Include="Keyboard.h" />
     <ClInclude Include="KeyboardEvent.h" />
