@@ -18,8 +18,8 @@ Grid::~Grid()
 
 void Grid::CreateGrid()
 {
-	numberOfRows = round(gridSize.x / (nodeSpacing * 2));
-	numberOfColumns = round(gridSize.y / (nodeSpacing * 2));
+	numberOfRows = (int)(gridSize.x / nodeSpacing);
+	numberOfColumns = (int)(gridSize.y / nodeSpacing);
 
 	grid = std::vector<std::vector<Node>>(numberOfRows, std::vector<Node>(numberOfColumns));
 	bool obstruction;
@@ -28,7 +28,7 @@ void Grid::CreateGrid()
 	{
 		for (int x = 0; x < numberOfRows; x++)
 		{
-			XMFLOAT3 nodePos = XMFLOAT3(gridStartPosition.x + (x * nodeSpacing * 2), gridStartPosition.y, gridStartPosition.z + (z * nodeSpacing * 2));
+			XMFLOAT3 nodePos = XMFLOAT3(gridStartPosition.x + (x * nodeSpacing), gridStartPosition.y, gridStartPosition.z + (z * nodeSpacing));
 			obstruction = false;
 
 			// Update physics
@@ -66,6 +66,7 @@ void Grid::CreateGrid()
 			}
 
 			grid[x][z] = Node(x, z, nodePos, obstruction);
+			gridEndPosition = nodePos;
 
 			//------
 			// Debug line shit
@@ -102,10 +103,12 @@ void Grid::CreateGrid()
 			delete[] rayPoints;
 		}
 	}
+	gridSize = XMFLOAT2(gridEndPosition.x - gridStartPosition.x, gridEndPosition.z - gridStartPosition.x);
 }
 
 Node* Grid::FindNearestNode(DirectX::XMFLOAT3 position)
 {
+	/*
 	int x;
 	int z;
 	float diffx;
@@ -121,8 +124,8 @@ Node* Grid::FindNearestNode(DirectX::XMFLOAT3 position)
 	else
 		diffz = fabs(position.z) - fabs(gridStartPosition.z);
 
-	x = round(diffx / (nodeSpacing * 2.0f));
-	z = round(diffz / (nodeSpacing * 2.0f));
+	x = round(diffx / (nodeSpacing));
+	z = round(diffz / (nodeSpacing));
 
 	if (x < 0)
 		x = 0;
@@ -135,6 +138,33 @@ Node* Grid::FindNearestNode(DirectX::XMFLOAT3 position)
 		z = numberOfColumns - 1;
 
 	return &grid[x][z];
+	*/
+
+	unsigned int xIndex = 0;
+	unsigned int zIndex = 0;
+
+	if (position.x >= gridStartPosition.x && position.x <= gridEndPosition.x) {
+		xIndex = (unsigned int)((position.x - gridStartPosition.x) / nodeSpacing);
+	}
+	if (position.z >= gridStartPosition.z && position.z <= gridEndPosition.z) {
+		zIndex = (unsigned int)((position.z - gridStartPosition.z) / nodeSpacing);
+	}
+
+	if (position.x < gridStartPosition.x) {
+		xIndex = 0;
+	}
+	else if (position.x > gridEndPosition.x) {
+		xIndex = numberOfRows - 1;
+	}
+
+	if (position.z < gridStartPosition.z) {
+		xIndex = 0;
+	}
+	else if (position.z > gridEndPosition.z) {
+		xIndex = numberOfColumns - 1;
+	}
+
+	return &grid[xIndex][zIndex];
 }
 
 Node* Grid::GetNode(int row, int col)

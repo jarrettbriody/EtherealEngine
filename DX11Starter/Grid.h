@@ -9,6 +9,7 @@ class Grid
 {
 private:
 	DirectX::XMFLOAT3 gridStartPosition;
+	DirectX::XMFLOAT3 gridEndPosition;
 	DirectX::XMFLOAT2 gridSize;
 	float nodeSpacing;
 	int numberOfRows;

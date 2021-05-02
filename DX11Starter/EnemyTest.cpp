@@ -26,7 +26,7 @@ void EnemyTest::Init()
 					.Composite<Sequence>() // Seek the player
 						.Leaf<InCombat>(&inCombat).End()
 						.Leaf<PlayerVisible>(entity, player).End()
-						.Leaf<FacePlayer>(entity, player, deltaTime).End()
+						.Leaf<FacePlayer>(entity, player, turnSpeed, &deltaTime).End()
 						//.Leaf<SeekPlayer>(entity, player, movementSpeed, maxSpeed, minimumDistance).End()
 					.End()
 					.Leaf<EnemySeesPlayer>(entity, player, visionConeAngle, visionConeDistance, &inCombat).End() // Search for player

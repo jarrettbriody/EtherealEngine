@@ -20,11 +20,11 @@ class EnemyTest : public ScriptManager
 	float movementSpeed = 7.5f;
 	float maxSpeed = 25.0f;
 	float dampingScalar = 0.09f;
-	float turnSpeed = 0.05f;
+	float turnSpeed = 1.0f;
 	float minimumDistance = 10.0f;
 	float visionConeAngle = 30.0f;
 	float visionConeDistance = 30.0f;
-	float oscillationMagnitude = 0.01f;
+	float oscillationMagnitude = 0.001f;
 	float totalTime = 0.0f;
 
 	BehaviorTree* bt;

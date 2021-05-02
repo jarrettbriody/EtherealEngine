@@ -8,9 +8,10 @@ class FacePlayer : public Behavior
 private:
 	Entity* enemy;
 	Entity* player;
-	float turnSpeed;
+	float speed;
+	float* deltaTime;
 public:
-	FacePlayer(Entity* e, Entity* p, float turn) : enemy(e), player(p), turnSpeed(turn) {}
+	FacePlayer(Entity* e, Entity* p, float speed, float* deltaTime) : enemy(e), player(p), speed(speed), deltaTime(deltaTime) {}
 	~FacePlayer() {}
 
 	void OnInitialize();
