@@ -11,14 +11,12 @@ private:
     Entity* player;
     float viewAngle;
     float viewDistance;
+    bool* inCombat;
 public:
-    EnemySeesPlayer(Entity* e, Entity* p, float angle, float distance) : enemy(e), player(p), viewAngle(angle), viewDistance(distance) {}
-
+    EnemySeesPlayer(Entity* e, Entity* p, float angle, float distance, bool* combat) : enemy(e), player(p), viewAngle(angle), viewDistance(distance), inCombat(combat) {}
     ~EnemySeesPlayer() {}
 
     void OnInitialize();
-
     void OnTerminate(Status s);
-
     Status Update();
 };

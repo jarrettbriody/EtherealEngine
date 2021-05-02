@@ -358,15 +358,6 @@ void Game::Init()
 		Config::DynamicsWorld->setDebugDrawer(physicsDraw);
 		Config::DynamicsWorld->debugDrawWorld(); // Use this to draw physics world once on start 
 	}
-
-	//-------------------------------------------------------
-	// AI Tests
-	//-------------------------------------------------------
-
-	XMFLOAT3 gridStart(-444.0f, 100.0f, -150.f);
-	XMFLOAT2 gridSize(60.0f, 150.0f);
-	grid = Grid(gridStart, gridSize, 1.0f);
-	grid.CreateGrid();
 }
 
 void Game::OnResize()

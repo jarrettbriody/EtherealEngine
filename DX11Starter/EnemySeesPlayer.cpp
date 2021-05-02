@@ -3,12 +3,10 @@
 
 void EnemySeesPlayer::OnInitialize()
 {
-	//cout << "Enemy: " << enemy->GetName() << " | View Angle: " << viewAngle << " | View Distance: " << viewDistance << endl;
 }
 
 void EnemySeesPlayer::OnTerminate(Status s)
 {
-
 }
 
 Status EnemySeesPlayer::Update()
@@ -116,7 +114,11 @@ Status EnemySeesPlayer::Update()
 						//printf("Raycast Hit: %s\n", hit->GetName().c_str());
 
 						if (hit->GetName().c_str() == std::string("FPSController"))
+						{
+							*inCombat = true;
 							return SUCCESS;
+						}
+							
 					}
 				}
 			}

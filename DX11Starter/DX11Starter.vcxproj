@@ -147,10 +147,12 @@
     <ClCompile Include="EnemySeesPlayer.cpp" />
     <ClCompile Include="EnemyTest.cpp" />
     <ClCompile Include="Entity.cpp" />
+    <ClCompile Include="FacePlayer.cpp" />
     <ClCompile Include="FPSController.cpp" />
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="GPUParticleEmitter.cpp" />
     <ClCompile Include="Grid.cpp" />
+    <ClCompile Include="InCombat.cpp" />
     <ClCompile Include="Keyboard.cpp" />
     <ClCompile Include="KeyboardEvent.cpp" />
     <ClCompile Include="Main.cpp" />
@@ -165,9 +167,12 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="PlayerVisible.cpp" />
+    <ClCompile Include="PriorityQueue.cpp" />
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="SceneLoader.cpp" />
     <ClCompile Include="ScriptManager.cpp" />
+    <ClCompile Include="SeekPlayer.cpp" />
     <ClCompile Include="SimpleShader.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -186,10 +191,12 @@
     <ClInclude Include="EnemySeesPlayer.h" />
     <ClInclude Include="EnemyTest.h" />
     <ClInclude Include="Entity.h" />
+    <ClInclude Include="FacePlayer.h" />
     <ClInclude Include="FPSController.h" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="GPUParticleEmitter.h" />
     <ClInclude Include="Grid.h" />
+    <ClInclude Include="InCombat.h" />
     <ClInclude Include="Keyboard.h" />
     <ClInclude Include="KeyboardEvent.h" />
     <ClInclude Include="Lights.h" />
@@ -203,11 +210,14 @@
     <ClInclude Include="Particles.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="PhysicsWrapper.h" />
+    <ClInclude Include="PlayerVisible.h" />
+    <ClInclude Include="PriorityQueue.h" />
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="SceneLoader.h" />
     <ClInclude Include="ScriptManager.h" />
     <ClInclude Include="Scripts.h" />
     <ClInclude Include="RendererStructs.h" />
+    <ClInclude Include="SeekPlayer.h" />
     <ClInclude Include="SimpleShader.h" />
     <ClInclude Include="TestBehavior.h" />
     <ClInclude Include="Utility.h" />

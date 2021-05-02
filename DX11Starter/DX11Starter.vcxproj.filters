@@ -165,6 +165,21 @@
     <ClCompile Include="Node.cpp">
       <Filter>EECore\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="PriorityQueue.cpp">
+      <Filter>EECore\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="InCombat.cpp">
+      <Filter>EEBehaviors\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="PlayerVisible.cpp">
+      <Filter>EEBehaviors\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="SeekPlayer.cpp">
+      <Filter>EEBehaviors\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="FacePlayer.cpp">
+      <Filter>EEBehaviors\Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h">
@@ -289,6 +304,21 @@
     </ClInclude>
     <ClInclude Include="Node.h">
       <Filter>EECore\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PriorityQueue.h">
+      <Filter>EECore\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="InCombat.h">
+      <Filter>EEBehaviors\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="PlayerVisible.h">
+      <Filter>EEBehaviors\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="SeekPlayer.h">
+      <Filter>EEBehaviors\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="FacePlayer.h">
+      <Filter>EEBehaviors\Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

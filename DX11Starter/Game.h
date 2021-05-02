@@ -22,7 +22,6 @@
 #include "ParticleEmitter.h"
 #include "GPUParticleEmitter.h"
 #include "CPUParticleEmitter.h"
-#include "Grid.h"
 
 using namespace std;
 
@@ -89,7 +88,4 @@ private:
 
 	CPUParticleEmitter* cpuEmitter;
 	GPUParticleEmitter* gpuEmitter;
-
-	// AI
-	Grid grid;
 };

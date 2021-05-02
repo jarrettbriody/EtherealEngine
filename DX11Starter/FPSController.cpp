@@ -43,6 +43,15 @@ void FPSController::Init()
 	collider = entity->GetCollider();
 
 	ps = PlayerState::Normal;
+
+	//-------------------------------------------------------
+	// AI Tests
+	//-------------------------------------------------------
+
+	XMFLOAT3 gridStart(-444.0f, 100.0f, -150.f);
+	XMFLOAT2 gridSize(60.0f, 150.0f);
+	grid = Grid(gridStart, gridSize, 2.0f);
+	grid.CreateGrid();
 }
 
 void FPSController::Update()

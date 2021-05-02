@@ -28,7 +28,7 @@ void Grid::CreateGrid()
 	{
 		for (int x = 0; x < numberOfRows; x++)
 		{
-			XMFLOAT3 nodePos = XMFLOAT3(gridStartPosition.x + (x * nodeSpacing * 2 + nodeSpacing), gridStartPosition.y, gridStartPosition.z + (z * nodeSpacing * 2 + nodeSpacing));
+			XMFLOAT3 nodePos = XMFLOAT3(gridStartPosition.x + (x * nodeSpacing * 2), gridStartPosition.y, gridStartPosition.z + (z * nodeSpacing * 2));
 			obstruction = false;
 
 			// Update physics
@@ -70,7 +70,7 @@ void Grid::CreateGrid()
 			//------
 			// Debug line shit
 			//------
-			/*
+			
 			// Create the world matrix for the debug line
 			XMFLOAT4X4 wm;
 			XMStoreFloat4x4(&wm, XMMatrixTranspose(DirectX::XMMatrixIdentity()));
@@ -99,7 +99,7 @@ void Grid::CreateGrid()
 			rayPoints[6] = nodePos;
 			rayPoints[7] = nodePos;
 			dl->GenerateCuboidVertexBuffer(rayPoints, 8);
-			delete[] rayPoints;*/
+			delete[] rayPoints;
 		}
 	}
 }
@@ -121,8 +121,8 @@ Node* Grid::FindNearestNode(DirectX::XMFLOAT3 position)
 	else
 		diffz = fabs(position.z) - fabs(gridStartPosition.z);
 
-	x = round(diffx / (nodeSpacing * 2));
-	z = round(diffz / (nodeSpacing * 2));
+	x = round(diffx / (nodeSpacing * 2.0f));
+	z = round(diffz / (nodeSpacing * 2.0f));
 
 	if (x < 0)
 		x = 0;
@@ -203,5 +203,95 @@ std::vector<Node*> Grid::GetUnobstructedMoves(Node* node)
 
 void Grid::ResetAStar()
 {
-	// TODO: Have Grid keep track of the "touched" nodes so we only need to reset those instead of looping through everything.
+	for (auto& node : touchedNodes)
+	{
+		node->SetCostSoFar(0.0f);
+		node->SetEstimatedTotalCost(0.0f);
+	}
+
+	touchedNodes.clear();
+}
+
+std::list<Node*> Grid::ReconstructPath(std::map<Node*, Node*> cameFrom, Node* initialNode)
+{
+	Node* current = initialNode;
+	std::list<Node*> finalPath;
+	finalPath.push_back(current);
+
+	while (cameFrom.find(current) != cameFrom.end())
+	{
+		current = cameFrom[current];
+		finalPath.push_back(current);
+	}
+
+	finalPath.reverse();
+
+	return finalPath;
+}
+
+std::list<Node*> Grid::FindPath(DirectX::XMFLOAT3 start, DirectX::XMFLOAT3 end)
+{
+	std::vector<Node*> closedNodes;
+	PriorityQueue openNodes;
+	std::map<Node*, Node*> cameFrom;
+
+	Node* firstNode = FindNearestNode(start);
+	Node* target = FindNearestNode(end);
+	
+	firstNode->SetEstimatedTotalCost(GetEstimatedCost(firstNode, target));
+	touchedNodes.push_back(firstNode);
+
+	openNodes.Add(firstNode);
+
+	while (!openNodes.IsEmpty())
+	{
+		Node* currentNode = openNodes.Pop();
+
+		if (currentNode->Equals(*target))
+		{
+			return ReconstructPath(cameFrom, currentNode);
+		}
+
+		closedNodes.push_back(currentNode);
+
+		std::vector<Node*> possibleMoves = GetUnobstructedMoves(currentNode);
+
+		for (auto& move : possibleMoves)
+		{
+			if (std::find(possibleMoves.begin(), possibleMoves.end(), move) != possibleMoves.end())
+				continue;
+
+			float costToMove = currentNode->GetCostSoFar() + GetActualCost(currentNode, move);
+
+			if (move->GetCostSoFar() == 0 || move->GetCostSoFar() > costToMove)
+			{
+				cameFrom[move] = currentNode;
+
+				move->SetCostSoFar(costToMove);
+				move->SetEstimatedTotalCost(move->GetCostSoFar() + GetEstimatedCost(move, target));
+				touchedNodes.push_back(move);
+
+				if (!openNodes.Contains(move))
+				{
+					openNodes.Add(move);
+				}
+			}
+		}
+	}
+
+	return std::list<Node*>();
+}
+
+float Grid::GetEstimatedCost(Node* source, Node* destination)
+{
+	return abs(destination->GetRow() - source->GetRow()) + abs(destination->GetCol() - source->GetCol());
+}
+
+float Grid::GetActualCost(Node* source, Node* destination)
+{
+	float xDiff = source->GetPos().x - destination->GetPos().x;
+	float yDiff = source->GetPos().y - destination->GetPos().y;
+	float zDiff = source->GetPos().z - destination->GetPos().z;
+
+	return sqrt(xDiff * xDiff + yDiff * yDiff + zDiff * zDiff);
 }

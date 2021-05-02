@@ -119,5 +119,9 @@ class FPSController : public ScriptManager
 	void MouseLook();
 
 	void OnCollision(btCollisionObject* other);
+
+public:
+	// AI
+	Grid grid;
 };
 

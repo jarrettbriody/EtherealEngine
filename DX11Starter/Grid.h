@@ -3,7 +3,7 @@
 #include "Node.h"
 #include "Entity.h"
 #include "DebugLines.h"
-#include <vector>
+#include "PriorityQueue.h"
 
 class Grid
 {
@@ -13,6 +13,7 @@ private:
 	float nodeSpacing;
 	int numberOfRows;
 	int numberOfColumns;
+	std::vector<Node*> touchedNodes;
 	std::vector<std::vector<Node>> grid;
 public:
 	Grid();
@@ -25,4 +26,8 @@ public:
 	std::vector<Node*> GetAdjacentNodes(Node* node);
 	std::vector<Node*> GetUnobstructedMoves(Node* node);
 	void ResetAStar();
+	std::list<Node*> ReconstructPath(std::map<Node*, Node*> path, Node* current);
+	std::list<Node*> FindPath(DirectX::XMFLOAT3 start, DirectX::XMFLOAT3 end);
+	float GetEstimatedCost(Node* source, Node* destination);
+	float GetActualCost(Node* source, Node* destination);
 };
