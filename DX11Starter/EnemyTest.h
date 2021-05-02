@@ -10,6 +10,8 @@
 
 class EnemyTest : public ScriptManager
 {
+	~EnemyTest();
+
 	map<string, Entity*>* eMap;
 	map<string, vector<ScriptManager*>> sMap;
 

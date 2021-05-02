@@ -1,6 +1,11 @@
 #include "pch.h"
 #include "EnemyTest.h"
 
+EnemyTest::~EnemyTest()
+{
+	delete bt;
+}
+
 void EnemyTest::Init()
 {
 	eMap = ScriptManager::sceneEntitiesMap;

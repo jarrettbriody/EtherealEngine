@@ -73,7 +73,7 @@ protected:
 
 public:
     Decorator(Behavior* childBehavior) : child(childBehavior) {}
-
+    ~Decorator() { delete child; }
     void SetChild(Behavior* behavior)
     {
         child = behavior;
@@ -123,6 +123,12 @@ protected:
     typedef std::vector<Behavior*> Behaviors;
     Behaviors children;
 public:
+    ~Composite() {
+        for (size_t i = 0; i < children.size(); i++)
+        {
+            delete children[i];
+        }
+    }
     void AddChild(Behavior* child)
     {
         children.push_back(child);
@@ -309,7 +315,7 @@ private:
     Behavior* root;
 public:
     BehaviorTree(Behavior* rootBehavior) : root(rootBehavior) {}
-    ~BehaviorTree() {}
+    ~BehaviorTree() { delete root; }
 
     Status Run()
     {
