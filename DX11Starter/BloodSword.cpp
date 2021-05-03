@@ -111,7 +111,7 @@ void BloodSword::Init()
 	emitDesc.emitterDirection = Z_AXIS;
 	emitDesc.colorCount = 1;
 	ParticleColor particleColors[1] = {
-		{XMFLOAT4(0.7f, 0.0f, 0.0f, 0.5f), 1.0f},
+		{XMFLOAT4(0.5f, 0.0f, 0.0f, 0.6f), 1.0f},
 	};
 	emitDesc.colors = particleColors;
 	emitDesc.bakeWorldMatOnEmission = true;
@@ -125,9 +125,9 @@ void BloodSword::Init()
 	emitDesc.particleMaxLifetime = 2.0f;
 	emitDesc.particleInitMinScale = 0.05f;
 	emitDesc.particleInitMaxScale = 0.1f;
-	emitDesc.fadeInEndTime = 0.1f;
-	emitDesc.fadeIn = true;
-	emitDesc.fadeOutStartTime = 1.0f;
+	//emitDesc.fadeInEndTime = 0.1f;
+	//emitDesc.fadeIn = true;
+	emitDesc.fadeOutStartTime = 0.5f;
 	emitDesc.fadeOut = true;
 	emitDesc.particleAcceleration = XMFLOAT3(0, -10.0f, 0);
 

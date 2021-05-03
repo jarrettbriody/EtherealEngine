@@ -619,7 +619,7 @@ void FPSController::GroundCheck()
 	//cout << pos.x << "|" << pos.y << "|" << pos.z << endl;
 	//XMFLOAT3 dir = entity->GetDirectionVector();
 	btVector3 from(pos.x, pos.y, pos.z);
-	btVector3 to(pos.x, pos.y - 3.0f, pos.z); // check a little below the player for any surface to stand on 
+	btVector3 to(pos.x, pos.y - 3.01f, pos.z); // check a little below the player for any surface to stand on 
 
 	// Create variable to store the ray hit and set flags
 	btCollisionWorld::ClosestRayResultCallback closestResult(from, to);
