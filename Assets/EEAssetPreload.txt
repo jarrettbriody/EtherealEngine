@@ -84,7 +84,7 @@ TYPE="MATERIAL" name="Grey" vShader="DEFAULT" pShader="DEFAULT" diffuseTexture="
 TYPE="MATERIAL" name="Grey4" vShader="DEFAULT" pShader="DEFAULT" diffuseTexture="Grey4" specularExponent="900"
 TYPE="MATERIAL" name="White" vShader="DEFAULT" pShader="DEFAULT" diffuseTexture="White" specularExponent="100"
 TYPE="MATERIAL" name="RedFluid" vShader="Fluid" pShader="Fluid" diffuseTexture="Red"
-TYPE="MATERIAL" name="Glass" vShader="DEFAULT" pShader="DEFAULT" diffuseTexture="Marble" transparency="0.5" specularExponent="100"
+TYPE="MATERIAL" name="Glass" vShader="DEFAULT" pShader="DEFAULT" diffuseTexture="Marble" transparency="0.3" specularExponent="1000"
 TYPE="MATERIAL" name="bloodchain" vShader="DEFAULT" pShader="DEFAULT" diffuseTexture="bloodchain"
 TYPE="MATERIAL" name="bloodsword" vShader="BloodSword" pShader="Normal" diffuseTexture="bloodsword" normalTexture="bloodsword_N"
 

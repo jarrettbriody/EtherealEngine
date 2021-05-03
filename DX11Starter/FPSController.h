@@ -120,10 +120,10 @@ class FPSController : public ScriptManager
 	float bulletTimeRampDown = 0.25f;
 
 	//sword rotation
-	const float MAX_SWORD_ROT = XMConvertToRadians(5.0f);
+	const float MAX_SWORD_ROT = XMConvertToRadians(3.0f);
 	float swordTilt = 0.0f;
 	float swordRoll = 0.0f;
-	float swordRotationSpeed = 0.25f;
+	float swordRotationSpeed = 0.5f;
 	bool swordRollLeft = false;
 	bool swordRollRight = false;
 	bool swordRollForwards = false;

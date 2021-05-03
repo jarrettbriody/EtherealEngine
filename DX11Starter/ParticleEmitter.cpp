@@ -324,9 +324,9 @@ void ParticleEmitter::CalcColorTextureWeights()
 	}
 }
 
-void ParticleEmitter::SetEmissionRate(float emissionRate)
+void ParticleEmitter::SetEmissionRate(double emissionRate)
 {
-	this->emissionRate = 1.0f / emissionRate;
+	this->emissionRate = 1.0 / emissionRate;
 }
 
 void ParticleEmitter::SetParticleLifetime(float min, float max)

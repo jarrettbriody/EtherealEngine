@@ -2,6 +2,9 @@
 #include "ScriptManager.h"
 #include "GameManager.h"
 #include "GPUParticleEmitter.h"
+#include "CPUParticleEmitter.h"
+
+#define SWORD_EMITTERS 16
 
 enum class SwordState
 {
@@ -47,7 +50,7 @@ class BloodSword : public ScriptManager
 {
 	map<string, Entity*>* eMap;
 
-	GPUParticleEmitter* emitter;
+	GPUParticleEmitter* emitters[SWORD_EMITTERS];
 	XMFLOAT4X4 emitterTransform;
 
 	SwordWaveCallback callback;
@@ -69,8 +72,8 @@ class BloodSword : public ScriptManager
 	XMFLOAT3 positionLerpTolerance = XMFLOAT3(0.5f, 0.5f, 0.5f);
 	XMFLOAT4 rotationLerpTolerance = XMFLOAT4(0.1f, 0.1f, 0.1f, 0.1f);
 
-	float slashPositionLerpScalar = 150.0f;
-	float slashRotationLerpScalar = 25.0f;
+	float slashPositionLerpScalar = 15.0f;
+	float slashRotationLerpScalar = 15.0f;
 
 	float readyingPositionLerpScalar = 10.0f;
 	float readyingRotationLerpScalar = 10.0f;
@@ -105,6 +108,15 @@ class BloodSword : public ScriptManager
 
 	XMFLOAT4 raisedQuatL;
 	XMFLOAT4 slashingQuatL;
+
+	XMFLOAT3 raisedPos;
+	XMFLOAT3 slashPos;
+
+	XMFLOAT3 raisedPosR = XMFLOAT3(5, 2, 3);
+	XMFLOAT3 slashPosR = XMFLOAT3(-7, -3, 3);
+
+	XMFLOAT3 raisedPosL = XMFLOAT3(-5, 2, 3);
+	XMFLOAT3 slashPosL = XMFLOAT3(7, -3, 3);
 
 	void Init();
 

@@ -20,7 +20,7 @@ cbuffer ExternalData : register(b0)
 	float particleInitMinSpeed; //minimum initial speed of the particle
 	float particleInitMaxSpeed; //maximum initial speed of the particle
 	int bakeWorldMat;
-	float padding;
+	int randNumCount;
 
 	float3 particleAcceleration;
 	int textureCount;
@@ -86,8 +86,8 @@ void main(uint3 id : SV_DispatchThreadID)
 	float randomOffset = randomNumbers[idOffset / 4][idOffset % 4] * 2.0f - 1.0f;
 	float randomOffset2 = randomNumbers[idOffset2 / 4][idOffset2 % 4] * 2.0f - 1.0f;
 
-	float3 start = normalize(float3(randomOffset, randomOffset2, 0.0f)) * (emissionStartRadius * randomNumbers[1][1]);
-	float3 end = float3(normalize(float2(randomOffset, randomOffset2)) * (emissionEndRadius * randomNumbers[1][1]), 1.0f);
+	float3 start = normalize(float3(randomOffset, randomOffset2, 0.0f)) * (emissionStartRadius * randomNumbers[id.x / 4][id.x % 4]);
+	float3 end = float3(normalize(float2(randomOffset, randomOffset2)) * (emissionEndRadius * randomNumbers[id.x / 4][id.x % 4]), 1.0f);
 
 	newParticle.remainingLife = particleMinLifetime + (particleMaxLifetime - particleMinLifetime) * randomNumbers[0][0];
 	newParticle.originalRemainingLife = newParticle.remainingLife;
