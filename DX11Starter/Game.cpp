@@ -73,6 +73,8 @@ void Game::Init()
 	//_CrtSetBreakAlloc(1048555);
 	//_CrtSetBreakAlloc(49892);
 
+	Config::hWnd = hWnd;
+
 	srand(static_cast <unsigned> (time(0)));
 	// Input 
 	if (Keyboard::SetupInstance())
@@ -133,6 +135,9 @@ void Game::Init()
 
 	DecalHandler::SetupInstance();
 	EEDecalHandler = DecalHandler::GetInstance();
+
+	sceneLoaderGarbageCallback.EEDecalHandler = EEDecalHandler;
+	EESceneLoader->garbageCollectCallback = (SceneLoaderCallback*)(&sceneLoaderGarbageCallback);
 
 	Renderer::SetupInstance();
 	EERenderer = Renderer::GetInstance();
@@ -332,8 +337,13 @@ void Game::Init()
 	musicChannel->set3DMinMaxDistance(0, 15.0f);
 
 
-	if(Config::Fullscreen)
+	if (Config::Fullscreen) {
+		RECT desktopRect;
+		GetClientRect(GetDesktopWindow(), &desktopRect);
+		Config::ViewPortWidth = desktopRect.right;
+		Config::ViewPortHeight = desktopRect.bottom;
 		Config::SwapChain->SetFullscreenState(true, NULL);
+	}
 
 	//cout << sizeof(Entity);
 
@@ -659,58 +669,11 @@ void Game::Draw(double deltaTime, double totalTime)
 
 void Game::GarbageCollect()
 {
-	size_t start = EESceneLoader->sceneEntities.size();
-	for (size_t i = start; i > 0; i--)
-	{
-		Entity* e = EESceneLoader->sceneEntities[i - 1];
-		if (e->destroyed) {
-			string name = e->GetName();
+	EESceneLoader->GarbageCollect();
 
-			if (EESceneLoader->sceneEntitiesTagMap.count(e->tag.STDStr())) {
-				vector<Entity*>& tagVec = EESceneLoader->sceneEntitiesTagMap[e->tag.STDStr()];
-				for (int j = tagVec.size() - 1; j >= 0; j--)
-				{
-					if (tagVec[j] == e) tagVec.erase(tagVec.begin() + j);
-				}
-			}
+	ScriptManager::GarbageCollect();
 
-			EESceneLoader->sceneEntitiesMap.erase(name);
-			EESceneLoader->sceneEntities.erase(EESceneLoader->sceneEntities.begin() + i - 1);
-
-			EEDecalHandler->DestroyDecals(name);
-
-			ParticleEmitter::KillEmitters(name);
-
-			if (Config::EtherealDebugLinesEnabled) {
-				DebugLines::debugLinesMap[name]->destroyed = true;
-				DebugLines::debugLinesMap.erase(name);
-			}
-
-			e->FreeMemory();
-			EEMemoryAllocator->DeallocateFromPool((unsigned int)MEMORY_POOL::ENTITY_POOL, e, sizeof(Entity));
-
-			vector<ScriptManager*> scriptFuncs = ScriptManager::scriptFunctionsMapVector[name];
-			size_t cnt = scriptFuncs.size();
-			for (size_t j = cnt; j > 0; j--)
-			{
-				scriptFuncs[j - 1]->destroyed = true;
-			}
-			ScriptManager::scriptFunctionsMap.erase(name);
-			ScriptManager::scriptFunctionsMapVector.erase(name);
-		}
-	}
-
-	start = ScriptManager::scriptFunctions.size();
-	for (size_t i = start; i > 0; i--)
-	{
-		ScriptManager* s = ScriptManager::scriptFunctions[i - 1];
-		if (s->destroyed) {
-			ScriptManager::scriptFunctions.erase(ScriptManager::scriptFunctions.begin() + i - 1);
-			delete s;
-		}
-	}
-
-	start = DebugLines::debugLines.size();
+	size_t start = DebugLines::debugLines.size();
 	for (size_t i = start; i > 0; i--)
 	{
 		DebugLines* d = DebugLines::debugLines[i - 1];
@@ -720,18 +683,9 @@ void Game::GarbageCollect()
 		}
 	}
 
-	start = ParticleEmitter::EmitterVector.size();
-	for (size_t i = start; i > 0; i--)
-	{
-		ParticleEmitter* e = ParticleEmitter::EmitterVector[i - 1];
-		if (!e->isAlive) {
-			ParticleEmitter::EmitterVector.erase(ParticleEmitter::EmitterVector.begin() + i - 1);
-			ParticleEmitter::EmitterMap.erase(e->GetName());
-			delete e;
-		}
-	}
-
+	ParticleEmitter::GarbageCollect();
 	EELightHandler->GarbageCollect();
+	EEDecalHandler->GarbageCollect();
 }
 
 /*

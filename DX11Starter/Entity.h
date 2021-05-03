@@ -37,7 +37,10 @@ class Entity
 private:
 	DirectX::XMFLOAT4X4 worldMatrix;
 	DirectX::XMFLOAT4X4 invWorldMatrix;
+
 	Mesh* mesh = nullptr;
+	Material* material = nullptr;
+
 	DirectX::XMFLOAT4 quaternion;
 	DirectX::XMFLOAT3 position;
 	DirectX::XMFLOAT3 scale;

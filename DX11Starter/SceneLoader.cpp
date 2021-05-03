@@ -183,6 +183,35 @@ bool SceneLoader::DestroyInstance()
 	return false;
 }
 
+void SceneLoader::GarbageCollect()
+{
+	size_t start = sceneEntities.size();
+	for (size_t i = start; i > 0; i--)
+	{
+		Entity* e = sceneEntities[i - 1];
+		if (e->destroyed) {
+			string name = e->GetName();
+
+			if (sceneEntitiesTagMap.count(e->tag.STDStr())) {
+				vector<Entity*>& tagVec = sceneEntitiesTagMap[e->tag.STDStr()];
+				for (int j = tagVec.size() - 1; j >= 0; j--)
+				{
+					if (tagVec[j] == e) tagVec.erase(tagVec.begin() + j);
+				}
+			}
+
+			if(sceneEntitiesMap.count(name))
+				sceneEntitiesMap.erase(name);
+			sceneEntities.erase(sceneEntities.begin() + i - 1);
+
+			garbageCollectCallback->callback(e);
+
+			e->FreeMemory();
+			EEMemoryAllocator->DeallocateFromPool((unsigned int)MEMORY_POOL::ENTITY_POOL, e, sizeof(Entity));
+		}
+	}
+}
+
 void SceneLoader::LoadAssetPreloadFile()
 {
 	ifstream infile("../../Assets/EEAssetPreload.txt");
@@ -1244,4 +1273,25 @@ std::vector<Entity*> SceneLoader::SplitMeshIntoChildEntities(Entity* e, float co
 	e->Destroy();
 
 	return childEntities;
+}
+
+void SceneLoader::DestroyEntity(string entityName)
+{
+	if (sceneEntitiesMap.count(entityName)) {
+		sceneEntitiesMap[entityName]->Destroy();
+		sceneEntitiesMap.erase(entityName);
+	}
+}
+
+void SceneLoader::DestroyEntitiesByTag(string tag)
+{
+	if (sceneEntitiesTagMap.count(tag)) {
+		for (size_t i = 0; i < sceneEntitiesTagMap[tag].size(); i++)
+		{
+			Entity* e = sceneEntitiesTagMap[tag][i];
+			e->Destroy();
+			sceneEntitiesMap.erase(e->GetName());
+		}
+		sceneEntitiesTagMap.erase(tag);
+	}
 }

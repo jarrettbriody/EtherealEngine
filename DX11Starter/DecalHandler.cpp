@@ -4,11 +4,13 @@
 DecalHandler* DecalHandler::instance = nullptr;
 map<string, DecalBucket*> DecalHandler::decalsMap;
 vector<DecalBucket*> DecalHandler::decalsVec;
+map<DecalBucket*, bool> DecalHandler::bucketIsDeadMap;
 //vector<DecalDrawInfo> DecalHandler::decalDrawList;
 
 DecalHandler::DecalHandler()
 {
 	//decalDrawList.reserve(Config::InitialDecalVectorSize);
+	memAlloc = MemoryAllocator::GetInstance();
 }
 
 DecalHandler::~DecalHandler()
@@ -36,6 +38,21 @@ bool DecalHandler::DestroyInstance()
 		return true;
 	}
 	return false;
+}
+
+void DecalHandler::GarbageCollect()
+{
+	int count = decalsVec.size();
+	DecalBucket* currentBucket = nullptr;
+	for (int i = count - 1; i >= 0; i--)
+	{
+		currentBucket = decalsVec[i];
+		if (bucketIsDeadMap.count(currentBucket)) {
+			decalsVec.erase(decalsVec.begin() + i);
+			bucketIsDeadMap.erase(currentBucket);
+			memAlloc->DeallocateFromPool((unsigned int)MEMORY_POOL::LIGHT_POOL, currentBucket, sizeof(DecalBucket));
+		}
+	}
 }
 
 void DecalHandler::GenerateDecal(Entity* owner, XMFLOAT3 rayDirection, XMFLOAT3 rayHitPosition, XMFLOAT3 boxScale, DecalType decalType)
@@ -72,26 +89,6 @@ void DecalHandler::GenerateDecal(Entity* owner, XMFLOAT3 rayDirection, XMFLOAT3 
 	XMFLOAT3 end;
 	XMStoreFloat3(&end, XMVectorAdd(XMLoadFloat3(&rayHitPosition), XMVectorScale(up,5.0f)));
 
-	/*
-	XMFLOAT3* rayPoints = new XMFLOAT3[8];
-	rayPoints[0] = start;
-	rayPoints[1] = start;
-	rayPoints[2] = start;
-	rayPoints[3] = start;
-	rayPoints[4] = end;
-	rayPoints[5] = end;
-	rayPoints[6] = end;
-	rayPoints[7] = end;
-	DebugLines* dl = new DebugLines("TestRay", 0, false);
-	dl->color = XMFLOAT3(0.0f, 0.0f, 1.0f);
-	// Create the world matrix for the debug line
-	XMFLOAT4X4 wm;
-	XMStoreFloat4x4(&wm, XMMatrixTranspose(DirectX::XMMatrixIdentity()));
-	dl->worldMatrix = wm;
-	dl->GenerateCuboidVertexBuffer(rayPoints, 8);
-	delete[] rayPoints;
-	*/
-
 	XMMATRIX scale = DirectX::XMMatrixScaling(boxScale.x, boxScale.y, boxScale.z);
 	
 	XMMATRIX localTransform = scale * rotation * translation;
@@ -104,7 +101,7 @@ void DecalHandler::GenerateDecal(Entity* owner, XMFLOAT3 rayDirection, XMFLOAT3 
 
 	if (!decalsMap.count(ownerName)) {
 		bool success;
-		DecalBucket* b = (DecalBucket*)MemoryAllocator::GetInstance()->AllocateToPool((unsigned int)MEMORY_POOL::DECAL_POOL, sizeof(DecalBucket), success);
+		DecalBucket* b = (DecalBucket*)memAlloc->AllocateToPool((unsigned int)MEMORY_POOL::DECAL_POOL, sizeof(DecalBucket), success);
 		ZeroMemory(b, sizeof(DecalBucket));
 		b->owner = owner;
 		decalsMap.insert({ ownerName, b });
@@ -120,14 +117,12 @@ void DecalHandler::GenerateDecal(Entity* owner, XMFLOAT3 rayDirection, XMFLOAT3 
 	return;
 }
 
-bool DecalHandler::DestroyDecals(string owner)
+bool DecalHandler::DestroyDecalsByOwner(string owner)
 {
-	if(!decalsMap.count(owner))
-		return false;
+	if(!decalsMap.count(owner)) return false;
 	DecalBucket* db = decalsMap[owner];
-	decalsVec.erase(decalsVec.begin() + db->index);
+	bucketIsDeadMap.insert({ db, true });
 	decalsMap.erase(owner);
-	MemoryAllocator::GetInstance()->DeallocateFromPool((unsigned int)MEMORY_POOL::DECAL_POOL, db, sizeof(DecalBucket));
 	return true;
 }
 

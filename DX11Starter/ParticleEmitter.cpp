@@ -82,7 +82,21 @@ ParticleEmitter::~ParticleEmitter()
 	if (texturesSRV != nullptr) texturesSRV->Release();
 }
 
-void ParticleEmitter::KillEmitters(string entityName)
+void ParticleEmitter::GarbageCollect()
+{
+	unsigned int start = EmitterVector.size();
+	for (unsigned int i = start; i > 0; i--)
+	{
+		ParticleEmitter* e = EmitterVector[i - 1];
+		if (!e->isAlive) {
+			EmitterVector.erase(EmitterVector.begin() + i - 1);
+			EmitterMap.erase(e->GetName());
+			delete e;
+		}
+	}
+}
+
+void ParticleEmitter::DestroyEmittersByOwner(string entityName)
 {
 	if (EntityEmitterMap.count(entityName)) {
 		for (auto iter = EntityEmitterMap[entityName].begin(); iter != EntityEmitterMap[entityName].end(); ++iter)
@@ -91,6 +105,31 @@ void ParticleEmitter::KillEmitters(string entityName)
 		}
 		EntityEmitterMap.erase(entityName);
 	}
+}
+
+void ParticleEmitter::DestroyEmitter(string emitterName)
+{
+	if (EmitterMap.count(emitterName)) {
+		EmitterMap[emitterName]->isAlive = false;
+		if (EntityEmitterMap.count(EmitterMap[emitterName]->parentName)) {
+			EntityEmitterMap[EmitterMap[emitterName]->parentName].erase(emitterName);
+		}
+	}
+}
+
+void ParticleEmitter::Destroy()
+{
+	if (EmitterMap.count(name)) {
+		isAlive = false;
+		if (EntityEmitterMap.count(parentName)) {
+			EntityEmitterMap[parentName].erase(name);
+		}
+	}
+}
+
+void ParticleEmitter::SetIsActive(bool toggle)
+{
+	isActive = toggle;
 }
 
 void ParticleEmitter::CalcWorldMatrix()
@@ -127,6 +166,11 @@ void ParticleEmitter::SetName(string name)
 void ParticleEmitter::SetParent(string parentName, XMFLOAT4X4* parentWorld)
 {
 	this->parentName = parentName;
+	this->parentWorld = parentWorld;
+}
+
+void ParticleEmitter::SetParentWorld(XMFLOAT4X4* parentWorld)
+{
 	this->parentWorld = parentWorld;
 }
 
@@ -400,10 +444,12 @@ string ParticleEmitter::GetName()
 
 void ParticleEmitter::Update(double deltaTime, double totalTime, XMFLOAT4X4 view)
 {
-	lifetime += deltaTime;
-	emitTimeCounter += deltaTime;
-	isAlive = (maxLifetime == 0.0f || lifetime < maxLifetime);
-	CalcWorldMatrix();
+	if (isActive) {
+		lifetime += deltaTime;
+		emitTimeCounter += deltaTime;
+		isAlive = (maxLifetime == 0.0f || lifetime < maxLifetime);
+		CalcWorldMatrix();
+	}
 }
 
 void ParticleEmitter::CalcEulerAngles()

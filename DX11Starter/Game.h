@@ -27,6 +27,25 @@
 
 using namespace std;
 
+struct SceneLoaderGarbageCallback : SceneLoaderCallback{
+	DecalHandler* EEDecalHandler = nullptr;
+
+	void callback(Entity* e) {
+		string name = e->GetName();
+
+		EEDecalHandler->DestroyDecalsByOwner(name);
+
+		ParticleEmitter::DestroyEmittersByOwner(name);
+
+		if (Config::EtherealDebugLinesEnabled) {
+			DebugLines::debugLinesMap[name]->destroyed = true;
+			DebugLines::debugLinesMap.erase(name);
+		}
+
+		ScriptManager::DestroyScriptsByOwner(name);
+	}
+};
+
 class Game 
 	: public DXCore
 {
@@ -88,6 +107,8 @@ private:
 	//FMOD_VECTOR listener_vel; // If we want a doppler effect
 	FMOD_VECTOR listener_forward = FMOD_VECTOR();
 	FMOD_VECTOR listener_up = FMOD_VECTOR();
+
+	SceneLoaderGarbageCallback sceneLoaderGarbageCallback;
 
 	// AI
 	

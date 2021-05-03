@@ -31,7 +31,7 @@ void AmbientParticles::Init()
 	emitDesc.fadeIn = true;
 	emitDesc.fadeOutStartTime = 1.0f;
 	emitDesc.fadeOut = true;
-	emitDesc.particleAcceleration = XMFLOAT3(-0.1f, -0.0005f, 0.2f);
+	emitDesc.particleAcceleration = XMFLOAT3(-0.05f, -0.0005f, 0.1f);
 
 	ambientAsh = new GPUParticleEmitter(emitDesc);
 	//ambientAsh->SetBlendingEnabled(true);

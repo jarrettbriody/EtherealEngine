@@ -39,8 +39,8 @@ public:
 	void Update(XMFLOAT4X4 camView);
 
 	LightContainer* AddLight(LightContainer newLight);
-	bool RemoveLight(string lightName);
-	bool RemoveLightsByOwner(string entityName);
+	bool DestroyLight(string lightName);
+	bool DestroyLightsByOwner(string entityName);
 	LightContainer* GetLight(string lightName);
 	map<string, LightContainer*> GetLights(string entityName);
 };

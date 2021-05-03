@@ -101,7 +101,7 @@ void main(uint3 id : SV_DispatchThreadID)
 	if (bakeWorldMat == 1) {
 		newParticle.position = mul(float4(newParticle.position, 1.0f), world);
 		newParticle.velocity = mul(float4(newParticle.velocity, 0.0f), world);
-		newParticle.acceleration = mul(float4(newParticle.acceleration, 0.0f), world);
+		newParticle.acceleration = float4(newParticle.acceleration, 0.0f);
 	}
 
 	// Put it back

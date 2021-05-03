@@ -4,10 +4,17 @@
 
 void FPSController::Init()
 {
+	if (Config::CaptureMouse) {
+		RECT rect;
+		if (GetWindowRect(Config::hWnd, &rect)) {
+			prevMousePos.x = rect.left + Config::ViewPortWidth / 2.0f;
+			prevMousePos.y = rect.top + Config::ViewPortHeight / 2.0f;
+			SetCursorPos(prevMousePos.x, prevMousePos.y);
+		}
+	}
+
 	eMap = ScriptManager::sceneEntitiesMap;
 	cam = ScriptManager::EERenderer->GetCamera("main");
-	prevMousePos.x = 0;
-	prevMousePos.y = 0;
 	direction = cam->direction; 
 	cam->SetFOV(fov);
 
@@ -612,7 +619,7 @@ void FPSController::GroundCheck()
 	//cout << pos.x << "|" << pos.y << "|" << pos.z << endl;
 	//XMFLOAT3 dir = entity->GetDirectionVector();
 	btVector3 from(pos.x, pos.y, pos.z);
-	btVector3 to(pos.x, pos.y - 3.05f, pos.z); // check a little below the player for any surface to stand on 
+	btVector3 to(pos.x, pos.y - 3.0f, pos.z); // check a little below the player for any surface to stand on 
 
 	// Create variable to store the ray hit and set flags
 	btCollisionWorld::ClosestRayResultCallback closestResult(from, to);
@@ -714,7 +721,7 @@ void FPSController::UpdateSwordSway()
 	XMFLOAT3 z = Z_AXIS;
 	//XMVECTOR quat = XMQuaternionRotationRollPitchYaw(swordRoll, )
 	XMVECTOR rollQuat = XMQuaternionRotationAxis(XMLoadFloat3(&z), swordRoll);
-	XMVECTOR yawQuat = XMQuaternionRotationAxis(XMLoadFloat3(&y), XMConvertToRadians(-90.0f));
+	XMVECTOR yawQuat = XMQuaternionRotationAxis(XMLoadFloat3(&y), 0.0f);
 	XMVECTOR tiltQuat = XMQuaternionRotationAxis(XMLoadFloat3(&x), swordTilt);
 	XMVECTOR resultQuat = XMVector4Normalize(XMQuaternionMultiply(XMQuaternionMultiply(yawQuat, tiltQuat), rollQuat));
 	XMFLOAT4 quat;
@@ -862,15 +869,26 @@ void FPSController::MouseLook()
 		}
 	}
 
+	POINT cursorPos;
+	GetCursorPos(&cursorPos);
+	cam->RotateCamera(((float)cursorPos.x - prevMousePos.x) * Config::MouseSensitivity, ((float)cursorPos.y - prevMousePos.y) * Config::MouseSensitivity, camRollAngle);
 
-	cam->RotateCamera((mouse->GetPosX() - (int)prevMousePos.x) / 100.0f, (mouse->GetPosY() - (int)prevMousePos.y) / 100.0f, camRollAngle);
+	if (Config::CaptureMouse && GetActiveWindow() == Config::hWnd) {
+		RECT rect;
+		if (GetWindowRect(Config::hWnd, &rect)) {
+			prevMousePos.x = rect.left + Config::ViewPortWidth / 2.0f;
+			prevMousePos.y = rect.top + Config::ViewPortHeight / 2.0f;
+			SetCursorPos(prevMousePos.x, prevMousePos.y);
+		}
+	}
+
 	if (cam->zRotation > CAM_ROLL_MAX) cam->zRotation = CAM_ROLL_MAX;
 	if (cam->zRotation < CAM_ROLL_MIN) cam->zRotation = CAM_ROLL_MIN;
 
 	if (((cam->zRotation > 0 && camRollAngle > 0) || (cam->zRotation < 0 && camRollAngle < 0)) && isReturning) cam->zRotation = 0;
 
-	prevMousePos.x = mouse->GetPosX();
-	prevMousePos.y = mouse->GetPosY();
+	//prevMousePos.x = mouse->GetPosX();
+	//prevMousePos.y = mouse->GetPosY();
 
 }
 

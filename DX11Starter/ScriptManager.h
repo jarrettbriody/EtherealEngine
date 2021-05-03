@@ -20,6 +20,9 @@ public:
 
 	bool inputEnabled = false;
 
+	static void GarbageCollect();
+	static void DestroyScriptsByOwner(string entityName);
+
 	bool GetIsInitialized() { return initialized; }
 
 	void CallInit();

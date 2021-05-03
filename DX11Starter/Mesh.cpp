@@ -3,8 +3,6 @@
 
 using namespace DirectX;
 
-vector<EEString<64>> Mesh::mtlPaths;
-
 Mesh::Mesh()
 {
 }
@@ -229,7 +227,6 @@ Mesh::Mesh(string meshN, char * objFile, bool* success)
 		}
 		else if (regex_search(line, match, mtllibRgx)) {
 			mtlPath = regex_replace(line, mtllibRgx, "");
-			mtlPaths.push_back(mtlPath);
 		}
 	}
 
@@ -485,11 +482,6 @@ int Mesh::GetChildCount()
 string Mesh::GetMTLPath()
 {
 	return mtlPath.STDStr();
-}
-
-vector<EEString<64>> Mesh::GetMTLPaths()
-{
-	return mtlPaths;
 }
 
 void Mesh::SetVertices(vector<DirectX::XMFLOAT3> verts)

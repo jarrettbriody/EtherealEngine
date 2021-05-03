@@ -158,7 +158,7 @@ LightContainer* LightHandler::AddLight(LightContainer newLight)
 	return allocatedLight;
 }
 
-bool LightHandler::RemoveLight(std::string name)
+bool LightHandler::DestroyLight(std::string name)
 {
 	if (!lightsMap.count(name)) return false;
 	LightContainer* lightPtr = lightsMap[name];
@@ -174,7 +174,7 @@ bool LightHandler::RemoveLight(std::string name)
 	return true;
 }
 
-bool LightHandler::RemoveLightsByOwner(string name)
+bool LightHandler::DestroyLightsByOwner(string name)
 {
 	if(!entityLightMap.count(name)) return false;
 	for (auto Iter = entityLightMap[name].begin(); Iter != entityLightMap[name].end(); ++Iter)

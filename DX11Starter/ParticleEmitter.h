@@ -54,11 +54,14 @@ public:
 	static map<string, ParticleEmitter*> EmitterMap;
 	static map<string, map<string, ParticleEmitter*>> EntityEmitterMap;
 
-	bool isAlive = true;
-
 	virtual ~ParticleEmitter();
+	static void GarbageCollect();
 
-	static void KillEmitters(string entityName);
+	static void DestroyEmittersByOwner(string entityName);
+	static void DestroyEmitter(string emitterName);
+
+	void Destroy();
+	void SetIsActive(bool toggle);
 
 	void CalcWorldMatrix();
 	XMFLOAT4X4 GetWorldMatrix();
@@ -66,6 +69,7 @@ public:
 	void SetName(string name);
 
 	void SetParent(string parentName, XMFLOAT4X4* parentWorld);
+	void SetParentWorld(XMFLOAT4X4* parentWorld);
 
 	void SetPosition(XMFLOAT3 position);
 	void SetRotationDegrees(XMFLOAT3 rotation);
@@ -108,6 +112,9 @@ protected:
 	ParticleEmitter(ParticleEmitterDescription d);
 
 	ID3D11ShaderResourceView* texturesSRV = nullptr;
+
+	bool isActive = true;
+	bool isAlive = true;
 
 	string name;
 	string parentName;

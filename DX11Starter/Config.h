@@ -43,6 +43,8 @@ enum class MEMORY_POOL {
 class Config
 {
 public:
+	static HWND hWnd;
+
 	static ID3D11Device* Device;
 	static ID3D11DeviceContext* Context;
 	static ID3D11SamplerState* Sampler;
@@ -53,8 +55,11 @@ public:
 	static unsigned int ViewPortWidth;
 	static unsigned int ViewPortHeight;
 	static bool Fullscreen;
+	static bool WindowedBorderless;
 	static bool ShowCursor;
+	static bool CaptureMouse;
 	static bool DebugCamera;
+	static float MouseSensitivity;
 
 	static unsigned int MemoryAllocatorSize; //1 gig ish
 	static unsigned int MemoryAllocatorAlignment; //32 byte boundary

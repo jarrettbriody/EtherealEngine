@@ -44,6 +44,7 @@ private:
 	bool leftIsDown = false;
 	bool rightIsDown = false;
 	bool mButtonIsDown = false;
+	bool mouseInWindow = false;
 	int x = 0;
 	int y = 0;
 	std::unordered_map<MouseEvent::EventType, MouseEvent> eventBuffer;

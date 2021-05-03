@@ -36,6 +36,10 @@ struct ScriptPair {
 	string script;
 };
 
+struct SceneLoaderCallback {
+	virtual void callback(Entity* e) {};
+};
+
 class SceneLoader
 {
 private:
@@ -186,9 +190,13 @@ public:
 	map<string, vector<Entity*>> sceneEntitiesTagMap;
 	vector<Entity*> sceneEntities;
 
+	SceneLoaderCallback* garbageCollectCallback;
+
 	static bool SetupInstance();
 	static SceneLoader* GetInstance();
 	static bool DestroyInstance();
+
+	void GarbageCollect();
 
 	void LoadAssetPreloadFile();
 
@@ -199,4 +207,7 @@ public:
 
 	Entity* CreateEntity(EntityCreationParameters& para);
 	std::vector<Entity*> SplitMeshIntoChildEntities(Entity* e, float componentMass);
+
+	void DestroyEntity(string entityName);
+	void DestroyEntitiesByTag(string tag);
 };

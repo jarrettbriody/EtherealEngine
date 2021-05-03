@@ -27,7 +27,7 @@ class FPSController : public ScriptManager
 
 	// Camera related attributes
 	Camera* cam;
-	POINT prevMousePos = POINT();
+	XMFLOAT2 prevMousePos;
 	double camRollAngle = 0.0f;
 	double camRollSpeed = 0.03f;
 	bool rollLeft = false;

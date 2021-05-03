@@ -21,7 +21,37 @@ void BloodSword::Init()
 	finalLerpPos = originalLerpPos;
 	lerpPositionFrom = finalLerpPos; 
 
-	finalLerpRot = originalLerpRot;
+	XMFLOAT3 x = X_AXIS;
+	XMFLOAT3 y = Y_AXIS;
+	XMFLOAT3 z = Z_AXIS;
+	XMVECTOR tiltQuat = XMQuaternionRotationAxis(XMLoadFloat3(&x), XMConvertToRadians(-30.0f));
+	XMVECTOR yawQuat = XMQuaternionRotationAxis(XMLoadFloat3(&y), 0.0f);
+	XMVECTOR rollQuat = XMQuaternionRotationAxis(XMLoadFloat3(&z), XMConvertToRadians(-45.0f));
+	XMVECTOR resultQuat = XMVector4Normalize(XMQuaternionMultiply(XMQuaternionMultiply(yawQuat, tiltQuat), rollQuat));
+	XMStoreFloat4(&raisedQuatR, resultQuat);
+
+	tiltQuat = XMQuaternionRotationAxis(XMLoadFloat3(&x), XMConvertToRadians(150.0f));
+	yawQuat = XMQuaternionRotationAxis(XMLoadFloat3(&y), 0.0f);
+	rollQuat = XMQuaternionRotationAxis(XMLoadFloat3(&z), XMConvertToRadians(-45.0f));
+	resultQuat = XMVector4Normalize(XMQuaternionMultiply(XMQuaternionMultiply(yawQuat, tiltQuat), rollQuat));
+	XMStoreFloat4(&slashingQuatR, resultQuat);
+
+	tiltQuat = XMQuaternionRotationAxis(XMLoadFloat3(&x), XMConvertToRadians(-30.0f));
+	yawQuat = XMQuaternionRotationAxis(XMLoadFloat3(&y), 0.0f);
+	rollQuat = XMQuaternionRotationAxis(XMLoadFloat3(&z), XMConvertToRadians(45.0f));
+	resultQuat = XMVector4Normalize(XMQuaternionMultiply(XMQuaternionMultiply(yawQuat, tiltQuat), rollQuat));
+	XMStoreFloat4(&raisedQuatL, resultQuat);
+
+	tiltQuat = XMQuaternionRotationAxis(XMLoadFloat3(&x), XMConvertToRadians(150.0f));
+	yawQuat = XMQuaternionRotationAxis(XMLoadFloat3(&y), 0.0f);
+	rollQuat = XMQuaternionRotationAxis(XMLoadFloat3(&z), XMConvertToRadians(45.0f));
+	resultQuat = XMVector4Normalize(XMQuaternionMultiply(XMQuaternionMultiply(yawQuat, tiltQuat), rollQuat));
+	XMStoreFloat4(&slashingQuatL, resultQuat);
+
+	resultQuat = XMQuaternionIdentity();
+	XMStoreFloat4(&idleQuat, resultQuat);
+
+	finalLerpRot = idleQuat;
 	lerpRotationFrom = finalLerpRot;
 
 	entity->SetPosition(lerpPositionFrom); 
@@ -57,8 +87,8 @@ void BloodSword::Init()
 		XMFLOAT3(8, -6, 3)
 	};*/
 
-	slashPointsRight = GenerateSlashPoints(XMFLOAT3(5, 3, 3), XMFLOAT3(-8, -4, 3), 0.5, 5.0f);
-	slashPointsLeft = GenerateSlashPoints(XMFLOAT3(-5, 3, 3), XMFLOAT3(8, -4, 3), 0.5, 5.0f);
+	slashPointsRight = GenerateSlashPoints(XMFLOAT3(5, 2, 3), XMFLOAT3(-8, -2, 3), 0.5, 5.0f);
+	slashPointsLeft = GenerateSlashPoints(XMFLOAT3(-5, 2, 3), XMFLOAT3(8, -2, 3), 0.5, 5.0f);
 
 	callback = {};
 
@@ -73,6 +103,36 @@ void BloodSword::Init()
 
 	EERenderer->SetRenderObjectCallback(entity, &callback);
 	callback.active = true;
+
+	ParticleEmitterDescription emitDesc;
+	emitDesc.emitterPosition = XMFLOAT3(0.0f, 0.0f, 0.0f);
+	emitDesc.parentName = entity->GetName();
+	emitDesc.parentWorld = entity->GetWorldMatrixPtr();//&emitterTransform;//
+	emitDesc.emitterDirection = Z_AXIS;
+	emitDesc.colorCount = 1;
+	ParticleColor particleColors[1] = {
+		{XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f), 1.0f},
+	};
+	emitDesc.colors = particleColors;
+	emitDesc.bakeWorldMatOnEmission = true;
+	emitDesc.emissionStartRadius = 0.5f;
+	emitDesc.emissionEndRadius = 0.5f;
+	emitDesc.emissionRate = 100.0f;
+	emitDesc.maxParticles = 5000;
+	emitDesc.particleInitMinSpeed = 0.01f;
+	emitDesc.particleInitMaxSpeed = 0.11f;
+	emitDesc.particleMinLifetime = 3.0f;
+	emitDesc.particleMaxLifetime = 5.0f;
+	emitDesc.particleInitMinScale = 0.01f;
+	emitDesc.particleInitMaxScale = 0.03f;
+	emitDesc.fadeInEndTime = 0.1f;
+	emitDesc.fadeIn = true;
+	emitDesc.fadeOutStartTime = 1.0f;
+	emitDesc.fadeOut = true;
+	emitDesc.particleAcceleration = XMFLOAT3(0, -10.0f, 0);
+
+	emitter = new GPUParticleEmitter(emitDesc);
+	((ParticleEmitter*)emitter)->SetIsActive(false);
 }
 
 void BloodSword::Update()
@@ -117,6 +177,10 @@ void BloodSword::Update()
 	//cam->CalcWorldMatrix(); // Putting camera world matrix calc after the entity makes the sword jitter much less severe...not sure why?
 
 	totalTime += deltaTime;
+
+	XMFLOAT4X4 world = entity->GetWorldMatrix();
+	XMMATRIX transMat = XMMatrixTranslation(world._14, world._24, world._34);
+	XMStoreFloat4x4(&emitterTransform, XMMatrixTranspose(transMat));
 }
 
 
@@ -127,14 +191,18 @@ void BloodSword::StartSlash()
 		if (keyboard->KeyIsPressed(0x41)) // a - left -> since character is right handed we only have to check for this, otherwise do the right handed slash
 		{
 			slashPoints = slashPointsLeft;
-			raisedRotation = XMFLOAT3(XMConvertToRadians(45.0f), XMConvertToRadians(-90.0f), 0.0f);
-			slashRotation = XMFLOAT3(XMConvertToRadians(45.0f), XMConvertToRadians(-90.0f), XMConvertToRadians(-70.0f));
+			//raisedRotation = XMFLOAT3(XMConvertToRadians(45.0f), 0.0f, 0.0f);
+			//slashRotation = XMFLOAT3(XMConvertToRadians(45.0f), 0.0f, XMConvertToRadians(-70.0f));
+			raisedQuat = raisedQuatL;
+			slashingQuat = slashingQuatL;
 		}
 		else
 		{
 			slashPoints = slashPointsRight;
-			raisedRotation = XMFLOAT3(XMConvertToRadians(-45.0f), XMConvertToRadians(-90.0f), 0.0f);
-			slashRotation = XMFLOAT3(XMConvertToRadians(-45.0f), XMConvertToRadians(-90.0f), XMConvertToRadians(-70.0f));;
+			//raisedRotation = XMFLOAT3(0.0f, 0.0f, XMConvertToRadians(-45.0f));
+			//slashRotation = XMFLOAT3(XMConvertToRadians(70.0f), XMConvertToRadians(-90.0f), XMConvertToRadians(-45.0f));
+			raisedQuat = raisedQuatR;
+			slashingQuat = slashingQuatR;
 		}
 
 		ss = SwordState::Raised;
@@ -145,13 +213,13 @@ void BloodSword::IdleState()
 {
 	// not doing any lerping in the idle state
 	finalLerpPos = originalLerpPos; // starting pos
-	finalLerpRot = originalLerpRot;
+	finalLerpRot = idleQuat;
 }
 
 void BloodSword::RaisedState()
 {
 	lerpPositionTo = slashPoints[slashPointsIndex]; // First index is the raised state
-	lerpRotationTo = raisedRotation;
+	lerpRotationTo = raisedQuat;
 	
 	CalcLerp();
 
@@ -162,13 +230,14 @@ void BloodSword::RaisedState()
 		slashPointsIndex++;
 		CheckSwordSlashHit();
 		ss = SwordState::Slashing;
+		((ParticleEmitter*)emitter)->SetIsActive(true);
 	}
 }
 
 void BloodSword::SlashingState()
 {
 	lerpPositionTo = slashPoints[slashPointsIndex];
-	lerpRotationTo = slashRotation;
+	lerpRotationTo = slashingQuat;
 	
 	CalcLerp();
 
@@ -182,6 +251,7 @@ void BloodSword::SlashingState()
 		{
 			slashPointsIndex = 0;
 			ss = SwordState::Reset;
+			((ParticleEmitter*)emitter)->SetIsActive(false);
 		}
 		
 	}
@@ -190,7 +260,7 @@ void BloodSword::SlashingState()
 void BloodSword::ResetState()
 {
 	lerpPositionTo = originalLerpPos;
-	lerpRotationTo = originalLerpRot;
+	lerpRotationTo = idleQuat;
 
 	CalcLerp();
 
@@ -201,26 +271,26 @@ void BloodSword::ResetState()
 	if (CheckTransformationsNearEqual(true, true))
 	{
 		if (!approachingReset) {
-			slashPositionLerpScalar = 400.0f;
-			slashRotationLerpScalar = 100.0f;
+			slashPositionLerpScalar = 300.0f;
+			slashRotationLerpScalar = 50.0f;
 
-			readyingPositionLerpScalar = 26.0f;
-			readyingRotationLerpScalar = 26.0f;
+			readyingPositionLerpScalar = 20.0f;
+			readyingRotationLerpScalar = 20.0f;
 
 			positionLerpTolerance = XMFLOAT3(0.01f, 0.01f, 0.01f);
-			rotationLerpTolerance = XMFLOAT3(0.01f, 0.01f, 0.01f);
+			rotationLerpTolerance = XMFLOAT4(0.01f, 0.01f, 0.01f, 0.01f);
 
 			approachingReset = true;
 		}
 		else {
-			slashPositionLerpScalar = 200.0f;
-			slashRotationLerpScalar = 50.0f;
+			slashPositionLerpScalar = 150.0f;
+			slashRotationLerpScalar = 25.0f;
 
-			readyingPositionLerpScalar = 13.0f;
-			readyingRotationLerpScalar = 13.0f;
+			readyingPositionLerpScalar = 10.0f;
+			readyingRotationLerpScalar = 10.0f;
 
 			positionLerpTolerance = XMFLOAT3(0.5f, 0.5f, 0.5f);
-			rotationLerpTolerance = XMFLOAT3(0.1f, 0.1f, 0.1f);
+			rotationLerpTolerance = XMFLOAT4(0.1f, 0.1f, 0.1f, 0.1f);
 
 			approachingReset = false; 
 			ss = SwordState::Idle;
@@ -235,9 +305,9 @@ bool BloodSword::CheckTransformationsNearEqual(bool checkPos, bool checkRot)
 	XMVECTOR lerpPosTo = XMLoadFloat3(&lerpPositionTo);
 	XMVECTOR posTolerance = XMLoadFloat3(&positionLerpTolerance);
 
-	XMVECTOR lerpRotFrom = XMLoadFloat3(&lerpRotationFrom);
-	XMVECTOR lerpRotTo = XMLoadFloat3(&lerpRotationTo);
-	XMVECTOR rotTolerance = XMLoadFloat3(&rotationLerpTolerance);
+	XMVECTOR lerpRotFrom = XMLoadFloat4(&lerpRotationFrom);
+	XMVECTOR lerpRotTo = XMLoadFloat4(&lerpRotationTo);
+	XMVECTOR rotTolerance = XMLoadFloat4(&rotationLerpTolerance);
 
 	if (checkPos)
 	{
@@ -245,11 +315,11 @@ bool BloodSword::CheckTransformationsNearEqual(bool checkPos, bool checkRot)
 	}
 	else if (checkRot)
 	{
-		return XMVector3NearEqual(lerpRotFrom, lerpRotTo, rotTolerance);
+		return XMVector4NearEqual(lerpRotFrom, lerpRotTo, rotTolerance);
 	}
 	else
 	{
-		return XMVector3NearEqual(lerpPosFrom, lerpPosTo, posTolerance) && XMVector3NearEqual(lerpRotFrom, lerpRotTo, rotTolerance);
+		return XMVector3NearEqual(lerpPosFrom, lerpPosTo, posTolerance) && XMVector4NearEqual(lerpRotFrom, lerpRotTo, rotTolerance);
 	}
 
 	
@@ -272,7 +342,7 @@ void BloodSword::CalcLerp()
 	}
 
 	XMStoreFloat3(&finalLerpPos, XMVectorLerp(XMLoadFloat3(&lerpPositionFrom), XMLoadFloat3(&lerpPositionTo), deltaTime * posLerpScalar));
-	XMStoreFloat3(&finalLerpRot, XMVectorLerp(XMLoadFloat3(&lerpRotationFrom), XMLoadFloat3(&lerpRotationTo), deltaTime * rotLerpScalar));
+	XMStoreFloat4(&finalLerpRot, XMQuaternionSlerp(XMLoadFloat4(&lerpRotationFrom), XMLoadFloat4(&lerpRotationTo), deltaTime * rotLerpScalar));
 }
 
 std::vector<XMFLOAT3> BloodSword::GenerateSlashPoints(XMFLOAT3 startingPos, XMFLOAT3 endingPos, float interval, float maxZ)

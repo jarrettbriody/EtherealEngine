@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "Config.h"
 
+HWND Config::hWnd;
+
 ID3D11Device* Config::Device = nullptr;
 ID3D11DeviceContext* Config::Context = nullptr;
 ID3D11SamplerState* Config::Sampler = nullptr;
@@ -8,11 +10,14 @@ ID3D11SamplerState* Config::ClampSampler = nullptr;
 IDXGISwapChain* Config::SwapChain = nullptr;
 ID3D11RenderTargetView* Config::BackBufferRTV = nullptr;
 ID3D11DepthStencilView* Config::DepthStencilView = nullptr;
-unsigned int Config::ViewPortWidth = 1600;
-unsigned int Config::ViewPortHeight = 900;
+unsigned int Config::ViewPortWidth = 1920;
+unsigned int Config::ViewPortHeight = 1080;
 bool Config::Fullscreen = false;
-bool Config::ShowCursor = true;
+bool Config::WindowedBorderless = true;
+bool Config::ShowCursor = false;
+bool Config::CaptureMouse = true;
 bool Config::DebugCamera = false;
+float Config::MouseSensitivity = 0.001f;
 
 unsigned int Config::MemoryAllocatorSize = MEGABYTE * 512;
 unsigned int Config::MemoryAllocatorAlignment = 16; //16 byte boundary
