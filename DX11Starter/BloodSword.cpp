@@ -111,16 +111,16 @@ void BloodSword::Init()
 	emitDesc.emitterDirection = Z_AXIS;
 	emitDesc.colorCount = 1;
 	ParticleColor particleColors[1] = {
-		{XMFLOAT4(0.5f, 0.0f, 0.0f, 0.6f), 1.0f},
+		{XMFLOAT4(0.45f, 0.0f, 0.0f, 0.6f), 1.0f},
 	};
 	emitDesc.colors = particleColors;
 	emitDesc.bakeWorldMatOnEmission = true;
 	emitDesc.emissionStartRadius = 0.25f;
-	emitDesc.emissionEndRadius = 0.25f;
+	emitDesc.emissionEndRadius = 0.5f;
 	emitDesc.emissionRate = 100.0;
 	emitDesc.maxParticles = 500;
-	emitDesc.particleInitMinSpeed = 10.0f;
-	emitDesc.particleInitMaxSpeed = 15.0f;
+	emitDesc.particleInitMinSpeed = 30.0f;
+	emitDesc.particleInitMaxSpeed = 60.0f;
 	emitDesc.particleMinLifetime = 1.0f;
 	emitDesc.particleMaxLifetime = 2.0f;
 	emitDesc.particleInitMinScale = 0.05f;
@@ -129,7 +129,7 @@ void BloodSword::Init()
 	//emitDesc.fadeIn = true;
 	emitDesc.fadeOutStartTime = 0.5f;
 	emitDesc.fadeOut = true;
-	emitDesc.particleAcceleration = XMFLOAT3(0, -10.0f, 0);
+	emitDesc.particleAcceleration = XMFLOAT3(0, -15.0f, 0);
 
 	for (size_t i = 0; i < SWORD_EMITTERS; i++)
 	{
@@ -137,6 +137,27 @@ void BloodSword::Init()
 		((ParticleEmitter*)emitters[i])->SetIsActive(false);
 		emitDesc.emitterPosition.y += 0.3f;
 	}
+
+	emitDesc.emitterPosition = XMFLOAT3(0.0f, 7.5f, 0.0f);
+	emitDesc.emitterDirection = NEG_Y_AXIS;
+	emitDesc.colors = particleColors;
+	emitDesc.emissionStartRadius = 0.01f;
+	emitDesc.emissionEndRadius = 3.0f;
+	emitDesc.emissionRate = 3.0;
+	emitDesc.maxParticles = 100;
+	emitDesc.particleInitMinSpeed = 0.005f;
+	emitDesc.particleInitMaxSpeed = 0.01f;
+	emitDesc.particleMinLifetime = 3.0f;
+	emitDesc.particleMaxLifetime = 5.0f;
+	emitDesc.particleInitMinScale = 0.01f;
+	emitDesc.particleInitMaxScale = 0.05f;
+	//emitDesc.fadeInEndTime = 0.1f;
+	//emitDesc.fadeIn = true;
+	emitDesc.fadeOutStartTime = 0.5f;
+	emitDesc.fadeOut = true;
+	emitDesc.particleAcceleration = XMFLOAT3(0, -8.0f, 0);
+
+	new GPUParticleEmitter(emitDesc);
 	//emitter = new GPUParticleEmitter(emitDesc);
 	//((ParticleEmitter*)emitter)->SetIsActive(false);
 }
