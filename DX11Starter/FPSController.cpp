@@ -95,7 +95,7 @@ void FPSController::Init()
 	playerRBody->setAngularFactor(btVector3(0, 1, 0)); // constrain rotations on x and z axes
 	// playerRBody->setLinearFactor(btVector3(1, 0, 1));
 	// playerRBody->setRestitution(0.1f);
-	// playerRBody->setFriction(1.0f); --> debating using friction because it would probably result in weird interations with other level gemoetry, would rather just use pure velocity dampening
+	playerRBody->setFriction(0.0f); //--> debating using friction because it would probably result in weird interations with other level gemoetry, would rather just use pure velocity dampening....UPDATE: Ended up needing to set this to zero because it would cause the character to wall ride
 
 	keyboard = Keyboard::GetInstance();
 	mouse = Mouse::GetInstance();
