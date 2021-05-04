@@ -114,7 +114,7 @@ private:
 	regex materialNameRegex = regex("material=\"(\\w+)\"");
 	regex repeatTextureRegex = regex("repeatTexture=\"(\\d*\\.\\d*|\\d+),(\\d*\\.\\d*|\\d+)\"");
 	regex uvOffsetRegex = regex("uvOffset=\"(-?\\d*\\.\\d*|-?\\d+),(-?\\d*\\.\\d*|-?\\d+)\"");
-	regex tagNameRegex = regex("tag=\"(\\w+)\""); //for getting the entity tag
+	regex tagNameRegex = regex("tags=\"([\\w+|,]+)\""); //for getting the entity tags
 	regex layerNameRegex = regex("layer=\"(\\w+)\""); //for getting the entity layer
 	regex scriptNamesRegex = regex("scripts=\"([\\w+|,]+)\""); //getting script names associated with entity
 	regex scriptNamesIteratorRegex = regex("\\w+"); //iterating over each script name associated with entity

@@ -936,6 +936,71 @@ float Entity::GetMass()
 	return mass;
 }
 
+bool Entity::HasTag(string tag)
+{
+	for (size_t i = 0; i < tagCount; i++)
+	{
+		if (tags[i] == tag) return true;
+	}
+	return false;
+}
+
+bool Entity::AddTag(string tag)
+{
+	if (tagCount < MAX_ENTITY_TAG_COUNT) {
+		tags[tagCount++] = tag;
+		return true;
+	}
+	return false;
+}
+
+bool Entity::RemoveTag(string tag)
+{
+	bool found = false;
+	for (size_t i = 0; i < tagCount; i++)
+	{
+		if (tags[i] == tag) {
+			found = true;
+			//tags[i] 
+			//return true;
+		}
+	}
+	return false;
+}
+
+EEString<EESTRING_SIZE>* Entity::GetTags()
+{
+	return tags;
+}
+
+bool Entity::HasLayer(string layer)
+{
+	for (size_t i = 0; i < layerCount; i++)
+	{
+		if (layers[i] == layer) return true;
+	}
+	return false;
+}
+
+bool Entity::AddLayer(string layer)
+{
+	if (layerCount < MAX_ENTITY_LAYER_COUNT) {
+		layers[tagCount++] = layer;
+		return true;
+	}
+	return false;
+}
+
+bool Entity::RemoveLayer(string layer)
+{
+	return false;
+}
+
+EEString<EESTRING_SIZE>* Entity::GetLayers()
+{
+	return layers;
+}
+
 void Entity::RemoveFromPhysicsSimulation()
 {
 	if (Config::DynamicsWorld != nullptr) {

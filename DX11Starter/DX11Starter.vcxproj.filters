@@ -225,6 +225,9 @@
     <ClCompile Include="FindPlayer.cpp">
       <Filter>EEBehaviors\Source</Filter>
     </ClCompile>
+    <ClCompile Include="NavmeshHandler.cpp">
+      <Filter>EECore\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h">
@@ -388,6 +391,9 @@
     </ClInclude>
     <ClInclude Include="FindPlayer.h">
       <Filter>EEBehaviors\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="NavmeshHandler.h">
+      <Filter>EECore\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

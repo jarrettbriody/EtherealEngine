@@ -19,8 +19,8 @@ protected:
 	vector<Mesh*>* childrenVec = nullptr;
 	Mesh** children = nullptr;
 	vector<string>* materialNameList = nullptr;
-	EEString<64> meshName;
-	EEString<64> mtlPath;
+	EEString<EESTRING_SIZE> meshName;
+	EEString<EESTRING_SIZE> mtlPath;
 	int childCount = 0;
 	Mesh* centeredMesh = nullptr;
 	vector<Vertex>* verts = nullptr;
