@@ -84,6 +84,7 @@ public:
 	static unsigned int InitialDecalVectorSize;
 
 	static btDiscreteDynamicsWorld* DynamicsWorld;
+	static FMOD::System* FMODSystem;
 
 	static unsigned int SSAOSampleCount;
 	static float SSAOKernelRadius;

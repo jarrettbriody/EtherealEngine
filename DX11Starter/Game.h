@@ -90,7 +90,6 @@ private:
 	
 	// Audio
 	FMOD_RESULT fmodResult = FMOD_RESULT();
-	FMOD::System* fmodSystem = nullptr;
 
 	FMOD::Sound* backgroundMusic = nullptr;
 	FMOD::Sound* sound[12];

@@ -39,6 +39,7 @@ bool Config::DecalsEnabled = true;
 unsigned int Config::InitialDecalVectorSize = 3000;
 
 btDiscreteDynamicsWorld* Config::DynamicsWorld = nullptr;
+FMOD::System* Config::FMODSystem = nullptr;
 
 unsigned int Config::SSAOSampleCount = 32;
 float Config::SSAOKernelRadius = 1.0f;

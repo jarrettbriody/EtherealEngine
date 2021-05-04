@@ -131,7 +131,7 @@ private:
 		regex clampTexRegex = regex("clampTex=\"(\\w+)\"");
 		regex transformationDataRegex = regex("P\\(.*\\)R\\(.*\\)S\\(.*\\)");
 		regex quaternionRegex = regex("Q\\(.*\\)");
-		regex transformNumIteratorRegex = regex("-\\d*\\.\\d*|\\d*\\.\\d*|-\\d+|\\d+"); //for iterating over each line to get the float values for transformations
+		regex transformNumIteratorRegex = regex("-?\\d*\\.\\d*|-?\\d+"); //for iterating over each line to get the float values for transformations
 
 		//Material loading regular expressions
 		regex newMtlRgx = regex("^(newmtl\\s+)");

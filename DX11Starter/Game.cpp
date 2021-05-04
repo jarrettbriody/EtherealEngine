@@ -62,8 +62,8 @@ Game::~Game()
 	sound[0]->release(); // For now just release the one sound we have assigned
 	backgroundMusic->release();
 	sfxGroup->release();
-	fmodSystem->close();
-	fmodSystem->release();
+	Config::FMODSystem->close();
+	Config::FMODSystem->release();
 }
 
 void Game::Init()
@@ -294,14 +294,14 @@ void Game::Init()
 	Config::Context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	// Audio -----------------
-	fmodResult = FMOD::System_Create(&fmodSystem); // Create the Studio System object
+	fmodResult = FMOD::System_Create(&Config::FMODSystem); // Create the Studio System object
 	if (fmodResult != FMOD_OK)
 	{
 		printf("FMOD error! (%d) %s\n", fmodResult, FMOD_ErrorString(fmodResult));
 		exit(-1);
 	}
 
-	fmodResult = fmodSystem->init(32, FMOD_INIT_NORMAL, 0); // Initialize FMOD with 32 max channels
+	fmodResult = Config::FMODSystem->init(32, FMOD_INIT_NORMAL, 0); // Initialize FMOD with 32 max channels
 	if (fmodResult != FMOD_OK)
 	{
 		printf("FMOD error! (%d) %s\n", fmodResult, FMOD_ErrorString(fmodResult));
@@ -310,23 +310,23 @@ void Game::Init()
 
 	// Test to see if 3D/2D audio works - EXAMPLE CODE
 
-	fmodResult = fmodSystem->createSound("../../Assets/Audio/CityofDawn.wav", FMOD_3D | FMOD_3D_LINEARROLLOFF | FMOD_LOOP_NORMAL, 0, &backgroundMusic); // Create a 3D/Looping sound with linear roll off
+	fmodResult = Config::FMODSystem->createSound("../../Assets/Audio/CityofDawn.wav", FMOD_3D | FMOD_3D_LINEARROLLOFF | FMOD_LOOP_NORMAL, 0, &backgroundMusic); // Create a 3D/Looping sound with linear roll off
 	FmodErrorCheck(fmodResult);
 
-	fmodResult = fmodSystem->createSound("../../Assets/Audio/wow.wav", FMOD_2D | FMOD_LOOP_OFF, 0, &sound[0]); // Create a non-looping 2D sound in the first slot
+	fmodResult = Config::FMODSystem->createSound("../../Assets/Audio/wow.wav", FMOD_2D | FMOD_LOOP_OFF, 0, &sound[0]); // Create a non-looping 2D sound in the first slot
 	FmodErrorCheck(fmodResult);
 
-	fmodResult = fmodSystem->createChannelGroup("SFX Group", &sfxGroup); // Create a channel group for sound effects
+	fmodResult = Config::FMODSystem->createChannelGroup("SFX Group", &sfxGroup); // Create a channel group for sound effects
 	FmodErrorCheck(fmodResult);
 
-	fmodResult = fmodSystem->getMasterChannelGroup(&masterGroup); // Assign masterGroup as the master channel
+	fmodResult = Config::FMODSystem->getMasterChannelGroup(&masterGroup); // Assign masterGroup as the master channel
 	FmodErrorCheck(fmodResult);
 
 	// Add the SFX group as a child of the master group as an example. Technically doesn't need to be done because the master group already controls everything
 	fmodResult = masterGroup->addGroup(sfxGroup); 
 	FmodErrorCheck(fmodResult);
 
-	fmodResult = fmodSystem->playSound(backgroundMusic, 0, false, &musicChannel); // Start playing the 3D sound
+	fmodResult = Config::FMODSystem->playSound(backgroundMusic, 0, false, &musicChannel); // Start playing the 3D sound
 	FmodErrorCheck(fmodResult);
 
 	FMOD_VECTOR pos = { 1.0f, 50.0f, 1.0f };
@@ -616,8 +616,8 @@ void Game::AudioStep()
 
 	//printf("Listener forward = x: %f y: %f z: %f \n", listener_forward.x, listener_forward.y, listener_forward.z);
 
-	fmodSystem->set3DListenerAttributes(0, &listener_pos, 0, &listener_forward, &listener_up); // Update 'ears'
-	fmodSystem->update();
+	Config::FMODSystem->set3DListenerAttributes(0, &listener_pos, 0, &listener_forward, &listener_up); // Update 'ears'
+	Config::FMODSystem->update();
 }
 
 void Game::Draw(double deltaTime, double totalTime)
