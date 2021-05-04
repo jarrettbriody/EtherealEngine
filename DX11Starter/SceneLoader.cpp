@@ -192,11 +192,27 @@ void SceneLoader::GarbageCollect()
 		if (e->destroyed) {
 			string name = e->GetName();
 
-			if (sceneEntitiesTagMap.count(e->tag.STDStr())) {
-				vector<Entity*>& tagVec = sceneEntitiesTagMap[e->tag.STDStr()];
-				for (int j = tagVec.size() - 1; j >= 0; j--)
-				{
-					if (tagVec[j] == e) tagVec.erase(tagVec.begin() + j);
+			EEString<EESTRING_SIZE>* tags = e->GetTags();
+			for (size_t j = 0; j < e->GetTagCount(); j++)
+			{
+				if (sceneEntitiesTagMap.count(tags[j].STDStr())) {
+					vector<Entity*>& tagVec = sceneEntitiesTagMap[tags[j].STDStr()];
+					for (int k = tagVec.size() - 1; k >= 0; k--)
+					{
+						if (tagVec[k] == e) tagVec.erase(tagVec.begin() + k);
+					}
+				}
+			}
+
+			EEString<EESTRING_SIZE>* layers = e->GetLayers();
+			for (size_t j = 0; j < e->GetLayerCount(); j++)
+			{
+				if (sceneEntitiesLayerMap.count(layers[j].STDStr())) {
+					vector<Entity*>& layerVec = sceneEntitiesLayerMap[layers[j].STDStr()];
+					for (int k = layerVec.size() - 1; k >= 0; k--)
+					{
+						if (layerVec[k] == e) layerVec.erase(layerVec.begin() + k);
+					}
 				}
 			}
 
@@ -885,14 +901,29 @@ void SceneLoader::LoadScene(string sceneName)
 
 				//check for entity tag
 				if (regex_search(line, match, tagNameRegex)) {
-					allocatedEntity->tag = match[1];
-					if (!sceneEntitiesTagMap.count(match[1])) sceneEntitiesTagMap.insert({ match[1],vector<Entity*>() });
-					sceneEntitiesTagMap[match[1]].push_back(allocatedEntity);
+					string tags = match[1].str();
+					std::sregex_iterator iter(tags.begin(), tags.end(), scriptNamesIteratorRegex);
+					for (; iter != std::sregex_iterator(); ++iter) {
+						match = *iter;
+						string tag = match.str();
+						if (!sceneEntitiesTagMap.count(tag)) sceneEntitiesTagMap.insert({ tag, vector<Entity*>() });
+						sceneEntitiesTagMap[tag].push_back(allocatedEntity);
+						allocatedEntity->AddTag(tag);
+					}
 				}
 
 				//check for entity layer
-				if (regex_search(line, match, layerNameRegex))
-					allocatedEntity->layer = match[1];
+				if (regex_search(line, match, layerNameRegex)) {
+					string layers = match[1].str();
+					std::sregex_iterator iter(layers.begin(), layers.end(), scriptNamesIteratorRegex);
+					for (; iter != std::sregex_iterator(); ++iter) {
+						match = *iter;
+						string layer = match.str();
+						if (!sceneEntitiesLayerMap.count(layer)) sceneEntitiesLayerMap.insert({ layer, vector<Entity*>() });
+						sceneEntitiesLayerMap[layer].push_back(allocatedEntity);
+						allocatedEntity->AddLayer(layer);
+					}
+				}
 
 				//check for transformation data associated with this entity
 				if (regex_search(line, match, transformationDataRegex)) {
@@ -1214,13 +1245,17 @@ Entity* SceneLoader::CreateEntity(EntityCreationParameters& para)
 		}
 	}
 
-	allocatedEntity->tag = para.tagName;
 	if (para.tagName != "") {
-		if (!sceneEntitiesTagMap.count(para.tagName)) sceneEntitiesTagMap.insert({ para.tagName,vector<Entity*>() });
+		allocatedEntity->AddTag(para.tagName);
+		if (!sceneEntitiesTagMap.count(para.tagName)) sceneEntitiesTagMap.insert({ para.tagName, vector<Entity*>() });
 		sceneEntitiesTagMap[para.tagName].push_back(allocatedEntity);
 	}
 
-	allocatedEntity->layer = para.layerName;
+	if (para.layerName != "") {
+		allocatedEntity->AddLayer(para.layerName);
+		if (!sceneEntitiesLayerMap.count(para.layerName)) sceneEntitiesLayerMap.insert({ para.layerName, vector<Entity*>() });
+		sceneEntitiesLayerMap[para.layerName].push_back(allocatedEntity);
+	}
 
 	for (size_t i = 0; i < para.scriptCount; i++)
 	{

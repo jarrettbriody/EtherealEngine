@@ -102,8 +102,10 @@ void Entity::operator=(const Entity& e)
 	colliders = new vector<Collider*>();
 
 	name = e.name;
-	tag = e.tag;
-	layer = e.layer;
+	tagCount = e.tagCount;
+	layerCount = e.layerCount;
+	memcpy(tags, e.tags, sizeof(EEString<EESTRING_SIZE>) * tagCount);
+	memcpy(layers, e.layers, sizeof(EEString<EESTRING_SIZE>) * layerCount);
 	*children = vector<Entity*>(*e.children);
 	*colliders = vector<Collider*>(*e.colliders);
 	*materialMap = map<string, Material*>(*e.materialMap);
@@ -956,13 +958,13 @@ bool Entity::AddTag(string tag)
 
 bool Entity::RemoveTag(string tag)
 {
-	bool found = false;
 	for (size_t i = 0; i < tagCount; i++)
 	{
 		if (tags[i] == tag) {
-			found = true;
-			//tags[i] 
-			//return true;
+			tags[i] = tags[tagCount - 1];
+			tags[tagCount - 1] = "";
+			tagCount--;
+			return true;
 		}
 	}
 	return false;
@@ -971,6 +973,11 @@ bool Entity::RemoveTag(string tag)
 EEString<EESTRING_SIZE>* Entity::GetTags()
 {
 	return tags;
+}
+
+unsigned int Entity::GetTagCount()
+{
+	return tagCount;
 }
 
 bool Entity::HasLayer(string layer)
@@ -993,12 +1000,26 @@ bool Entity::AddLayer(string layer)
 
 bool Entity::RemoveLayer(string layer)
 {
+	for (size_t i = 0; i < layerCount; i++)
+	{
+		if (layers[i] == layer) {
+			layers[i] = layers[layerCount - 1];
+			layers[layerCount - 1] = "";
+			layerCount--;
+			return true;
+		}
+	}
 	return false;
 }
 
 EEString<EESTRING_SIZE>* Entity::GetLayers()
 {
 	return layers;
+}
+
+unsigned int Entity::GetLayerCount()
+{
+	return layerCount;
 }
 
 void Entity::RemoveFromPhysicsSimulation()

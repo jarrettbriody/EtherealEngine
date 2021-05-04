@@ -115,7 +115,7 @@ private:
 	regex repeatTextureRegex = regex("repeatTexture=\"(\\d*\\.\\d*|\\d+),(\\d*\\.\\d*|\\d+)\"");
 	regex uvOffsetRegex = regex("uvOffset=\"(-?\\d*\\.\\d*|-?\\d+),(-?\\d*\\.\\d*|-?\\d+)\"");
 	regex tagNameRegex = regex("tags=\"([\\w+|,]+)\""); //for getting the entity tags
-	regex layerNameRegex = regex("layer=\"(\\w+)\""); //for getting the entity layer
+	regex layerNameRegex = regex("layers=\"([\\w+|,]+)\""); //for getting the entity layer
 	regex scriptNamesRegex = regex("scripts=\"([\\w+|,]+)\""); //getting script names associated with entity
 	regex scriptNamesIteratorRegex = regex("\\w+"); //iterating over each script name associated with entity
 	regex collidersEnabledRegex = regex("colliders=\"(\\w+)\"");
@@ -188,6 +188,7 @@ public:
 
 	map<string, Entity*> sceneEntitiesMap;
 	map<string, vector<Entity*>> sceneEntitiesTagMap;
+	map<string, vector<Entity*>> sceneEntitiesLayerMap;
 	vector<Entity*> sceneEntities;
 
 	SceneLoaderCallback* garbageCollectCallback;

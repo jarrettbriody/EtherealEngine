@@ -77,6 +77,8 @@ private:
 
 	unsigned int tagCount = 0;
 	unsigned int layerCount = 0;
+	EEString<EESTRING_SIZE> tags[MAX_ENTITY_TAG_COUNT];
+	EEString<EESTRING_SIZE> layers[MAX_ENTITY_LAYER_COUNT];
 public:
 	bool destroyed = false;
 	bool isCollisionStatic = true;
@@ -84,8 +86,6 @@ public:
 	bool colliderDebugLinesEnabled = false;
 	bool isEmptyObj = false;
 	bool renderObject = true;
-	EEString<EESTRING_SIZE> tags[MAX_ENTITY_TAG_COUNT];
-	EEString<EESTRING_SIZE> layers[MAX_ENTITY_LAYER_COUNT];
 	Entity();
 	Entity(string entityName);
 	Entity(string entityName, Mesh* entityMesh, Material* mat = nullptr);
@@ -147,10 +147,12 @@ public:
 	bool RemoveTag(string tag);
 	bool HasTag(string tag);
 	EEString<EESTRING_SIZE>* GetTags();
+	unsigned int GetTagCount();
 	bool AddLayer(string layer);
 	bool RemoveLayer(string layer);
 	bool HasLayer(string layer);
 	EEString<EESTRING_SIZE>* GetLayers();
+	unsigned int GetLayerCount();
 	void AddChildEntity(Entity* child, XMFLOAT4X4 childWorldMatrix);
 	void AddAutoBoxCollider();
 	bool CheckSATCollision(Entity* other);
