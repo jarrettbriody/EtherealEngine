@@ -54,7 +54,7 @@ void Grid::CreateGrid()
 					//printf("Raycast Hit: %s\n", hit->GetName().c_str());
 
 					// If our raycast didn't hit a floor then we probably can't move here
-					if (hit->GetName().find("Floor") == std::string::npos)
+					if (hit->GetName().find("street") == std::string::npos)
 						obstruction = true;
 				}
 			}
@@ -84,7 +84,7 @@ void Grid::CreateGrid()
 			else
 				c = XMFLOAT3(0.0f, 1.0f, 0.0f);
 			
-			if (obstruction)
+			if (true)
 			{
 				dl->color = c;
 				dl->worldMatrix = wm;

@@ -180,9 +180,6 @@ public:
 	void SetLeashedEntity(Entity* e);
 
 	void ResetHookshotTransform();
-
-	// AI
-	Grid grid;
 };
 
 /*
