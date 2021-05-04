@@ -13,7 +13,7 @@ void EnemyTest::Init()
 
 	//sMap["FPSCONTROLLER"].front()
 	FPSController* controller = (FPSController*)(scriptFunctionsMap["FPSController"]["FPSCONTROLLER"]);;
-	grid = &controller->grid;
+	//grid = &controller->grid;
 
 	Entity* player = eMap->find("FPSController")->second;
 

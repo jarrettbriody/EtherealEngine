@@ -22,6 +22,16 @@ class GameManager : public ScriptManager
 	void Update();
 
 public:
+	// AI
+	Grid grid1;
+	Grid grid2;
+	Grid grid3;
+	Grid grid4;
+	Grid grid5;
+	Grid grid6;
+	Grid grid7;
+	Grid grid8;
+
 	void DecrementEnemiesAlive();
 };
 

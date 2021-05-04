@@ -24,8 +24,8 @@ Status SeekPlayer::Update()
 	else
 		currentSpeed = enemy->GetRBody()->getLinearVelocity().length() * dampingScalar;
 
-	cout << "Current speed: " << currentSpeed << endl;
-	cout << "Movement vector- X: " << movementDirection.getX() << " | Y: " << movementDirection.getY() << " | Z: " << movementDirection.getZ() << endl;
+	//cout << "Current speed: " << currentSpeed << endl;
+	//cout << "Movement vector- X: " << movementDirection.getX() << " | Y: " << movementDirection.getY() << " | Z: " << movementDirection.getZ() << endl;
 
 	// FORCES ADDED TO RIGIDBODY
 	enemy->GetRBody()->activate();

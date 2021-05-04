@@ -97,19 +97,15 @@ void FPSController::Init()
 	dashBlurCallback.pShader = EESceneLoader->PixelShadersMap["DashBlur"];
 	dashBlurCallback.layerMask = EERenderer->depthStencilComponents.entityInfoSRV;
 	EERenderer->SetPostProcess(true, &dashBlurCallback, 1);
-
-	//-------------------------------------------------------
-	// AI Tests
-	//-------------------------------------------------------
-
-	XMFLOAT3 gridStart(-444.0f, 100.0f, -150.f);
-	XMFLOAT2 gridSize(60.0f, 150.0f);
-	grid = Grid(gridStart, gridSize, 4.0f);
-	grid.CreateGrid();
 }
 
 void FPSController::Update()
 {
+	if (keyboard->KeyIsPressed(0x4A)) // J
+	{
+		cout << "Player POS- X: " << entity->GetPosition().x << " | Y: " << entity->GetPosition().y << " | Z: " << entity->GetPosition().z << endl;
+	}
+
 	// player state machine
 	switch (ps)
 	{
