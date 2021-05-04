@@ -189,6 +189,42 @@
     <ClCompile Include="GameManager.cpp">
       <Filter>EEScripts\Source</Filter>
     </ClCompile>
+    <ClCompile Include="EnemySeesPlayer.cpp">
+      <Filter>EEBehaviors\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="EnemyTest.cpp">
+      <Filter>EEScripts\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Grid.cpp">
+      <Filter>EECore\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Node.cpp">
+      <Filter>EECore\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PriorityQueue.cpp">
+      <Filter>EECore\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="InCombat.cpp">
+      <Filter>EEBehaviors\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="PlayerVisible.cpp">
+      <Filter>EEBehaviors\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="SeekPlayer.cpp">
+      <Filter>EEBehaviors\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="FacePlayer.cpp">
+      <Filter>EEBehaviors\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="FollowPath.cpp">
+      <Filter>EEBehaviors\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Idle.cpp">
+      <Filter>EEBehaviors\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="FindPlayer.cpp">
+      <Filter>EEBehaviors\Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h">
@@ -293,14 +329,20 @@
     <ClInclude Include="BloodSword.h">
       <Filter>EEScripts\Headers</Filter>
     </ClInclude>
+    <ClInclude Include="BehaviorTreeBuilder.h">
+      <Filter>EECore\Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="BehaviorTree.h">
-      <Filter>EECore\Header Files\BehaviorTree</Filter>
+      <Filter>EECore\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="EnemySeesPlayer.h">
+      <Filter>EEBehaviors\Headers</Filter>
     </ClInclude>
     <ClInclude Include="TestBehavior.h">
-      <Filter>EECore\Header Files\BehaviorTree</Filter>
+      <Filter>EEBehaviors\Headers</Filter>
     </ClInclude>
-    <ClInclude Include="BehaviorTreeBuilder.h">
-      <Filter>EECore\Header Files\BehaviorTree</Filter>
+    <ClInclude Include="EnemyTest.h">
+      <Filter>EEScripts\Headers</Filter>
     </ClInclude>
     <ClInclude Include="RendererStructs.h">
       <Filter>EECore\Utility\Structs</Filter>
@@ -316,6 +358,36 @@
     </ClInclude>
     <ClInclude Include="GameManager.h">
       <Filter>EEScripts\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Grid.h">
+      <Filter>EECore\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Node.h">
+      <Filter>EECore\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PriorityQueue.h">
+      <Filter>EECore\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="InCombat.h">
+      <Filter>EEBehaviors\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="PlayerVisible.h">
+      <Filter>EEBehaviors\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="SeekPlayer.h">
+      <Filter>EEBehaviors\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="FacePlayer.h">
+      <Filter>EEBehaviors\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="FollowPath.h">
+      <Filter>EEBehaviors\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Idle.h">
+      <Filter>EEBehaviors\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="FindPlayer.h">
+      <Filter>EEBehaviors\Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -396,8 +468,14 @@
     <Filter Include="EECore\Source Files\Mouse">
       <UniqueIdentifier>{7b53909b-60ff-49bf-a1c8-616f0f49bd1d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="EECore\Header Files\BehaviorTree">
-      <UniqueIdentifier>{7b3ba34d-b5cb-4d23-8da0-1e3cae118d2c}</UniqueIdentifier>
+    <Filter Include="EEBehaviors">
+      <UniqueIdentifier>{20ab4999-beb8-4190-b245-701c0506c4db}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="EEBehaviors\Headers">
+      <UniqueIdentifier>{cf572d7c-fe56-44ce-88c8-c9eeb5e4fe9a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="EEBehaviors\Source">
+      <UniqueIdentifier>{d691ce4d-d7b1-466c-8a2a-73258e77f6fd}</UniqueIdentifier>
     </Filter>
     <Filter Include="EEShaders\Pixel Shaders\Post Process">
       <UniqueIdentifier>{cf732fcd-48b9-4540-b758-601c9faf93c4}</UniqueIdentifier>

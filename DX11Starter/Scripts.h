@@ -6,6 +6,7 @@
 #include "BloodOrb.h"
 #include "GameManager.h"
 #include "AmbientParticles.h"
+#include "EnemyTest.h"
 
 namespace Scripts {
 	enum class SCRIPT_NAMES {
@@ -16,6 +17,7 @@ namespace Scripts {
 		AMBIENTPARTICLES,
 		BLOODSWORD,
 		GAMEMANAGER
+		ENEMYTEST,
 	};
 
 	static map<string, SCRIPT_NAMES> scriptNameMap = {
@@ -26,6 +28,7 @@ namespace Scripts {
 		{"AMBIENTPARTICLES", SCRIPT_NAMES::AMBIENTPARTICLES},
 		{"BLOODSWORD", SCRIPT_NAMES::BLOODSWORD},
 		{"GAMEMANAGER", SCRIPT_NAMES::GAMEMANAGER}
+		{"ENEMYTEST", SCRIPT_NAMES::ENEMYTEST},
 	};
 
 	static map<SCRIPT_NAMES, string> scriptStringNameMap = {
@@ -36,6 +39,7 @@ namespace Scripts {
 		{SCRIPT_NAMES::AMBIENTPARTICLES, "AMBIENTPARTICLES"},
 		{SCRIPT_NAMES::BLOODSWORD, "BLOODSWORD"},
 		{SCRIPT_NAMES::GAMEMANAGER, "GAMEMANAGER"}
+		{SCRIPT_NAMES::ENEMYTEST, "ENEMYTEST"},
 	};
 
 	namespace {
@@ -64,6 +68,9 @@ namespace Scripts {
 				break;
 			case Scripts::SCRIPT_NAMES::GAMEMANAGER:
 				script = new GameManager();
+				break;
+			case Scripts::SCRIPT_NAMES::ENEMYTEST:
+				script = new EnemyTest();
 				break;
 			default:
 				break;

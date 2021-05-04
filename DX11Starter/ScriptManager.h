@@ -3,6 +3,7 @@
 #include "SceneLoader.h"
 #include "Keyboard.h"
 #include "Mouse.h"
+#include "Grid.h"
 
 class ScriptManager
 {

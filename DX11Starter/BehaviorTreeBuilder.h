@@ -129,7 +129,7 @@ public:
 		behavior_type* behavior = new behavior_type(params...);
 		root = behavior;
 
-		return LeafBuilder<BehaviorTreeBuilder, behavior_type>(this, node);
+		return LeafBuilder<BehaviorTreeBuilder, behavior_type>(this, behavior);
 	}
 
 	template <class composite_type, typename... param_types>

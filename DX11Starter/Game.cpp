@@ -358,20 +358,6 @@ void Game::Init()
 		Config::DynamicsWorld->debugDrawWorld(); // Use this to draw physics world once on start 
 	}
 
-	//-------------------------------------------------------
-	// Behavior tree tests
-	//-------------------------------------------------------
-
-	TestBehavior tb;
-	if (tb.initializeCalled == 0)
-		cout << "TEST 1 - SUCCESS" << endl;
-	else
-		cout << "TEST 1 - FAILURE" << endl;
-	tb.Tick();
-	if (tb.initializeCalled == 1)
-		cout << "TEST 2 - SUCCESS" << endl;
-	else
-		cout << "TEST 2 - FAILURE" << endl;
 
 	for (size_t i = 0; i < EESceneLoader->scriptPairs.size(); i++)
 	{
