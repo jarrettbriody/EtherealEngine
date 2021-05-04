@@ -77,6 +77,7 @@ private:
 
 	unsigned int tagCount = 0;
 	unsigned int layerCount = 0;
+	unsigned int layerMask = 0;
 	EEString<EESTRING_SIZE> tags[MAX_ENTITY_TAG_COUNT];
 	EEString<EESTRING_SIZE> layers[MAX_ENTITY_LAYER_COUNT];
 public:
@@ -153,6 +154,7 @@ public:
 	bool HasLayer(string layer);
 	EEString<EESTRING_SIZE>* GetLayers();
 	unsigned int GetLayerCount();
+	unsigned int GetLayerMask();
 	void AddChildEntity(Entity* child, XMFLOAT4X4 childWorldMatrix);
 	void AddAutoBoxCollider();
 	bool CheckSATCollision(Entity* other);

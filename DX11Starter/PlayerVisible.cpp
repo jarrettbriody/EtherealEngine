@@ -37,9 +37,9 @@ Status PlayerVisible::Update()
 			if (wrapper->type == PHYSICS_WRAPPER_TYPE::ENTITY) {
 				Entity* hit = (Entity*)wrapper->objectPointer;
 
-				if (hit->tag.STDStr() == std::string("Enemy"))
+				if (hit->HasTag("Enemy"))
 					continue;
-				else if (hit->GetName().c_str() == std::string("FPSController"))
+				else if (hit->GetName() == "FPSController")
 					return SUCCESS;
 				else
 					return FAILURE;

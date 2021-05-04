@@ -631,7 +631,12 @@ void Renderer::RenderFrame()
 		mat->GetPixelShader()->SetShaderResourceView("ShadowMap2", NULL);
 		mat->GetPixelShader()->SetShaderResourceView("ShadowMap3", NULL);
 	}
+}
 
+void Renderer::RenderDecals()
+{
+	UINT stride = sizeof(Vertex);
+	UINT offset = 0;
 	if (Config::DecalsEnabled) {
 		//ID3D11BlendState* originalBlend;
 		//Config::Context->OMGetBlendState(&originalBlend);
@@ -664,6 +669,7 @@ void Renderer::RenderFrame()
 
 		shaders.decalPS->SetSamplerState("ShadowSampler", shadowComponents.Sampler);
 		shaders.decalPS->SetFloat3("cameraPos", camera->position);
+		shaders.decalPS->SetData("decalLayerMask", &Config::EntityLayers["decal"], sizeof(unsigned int));
 
 		XMFLOAT4X4 world;
 		XMFLOAT4X4 invWorld;
@@ -709,7 +715,10 @@ void Renderer::RenderFrame()
 		Config::Context->OMSetDepthStencilState(NULL, 0);
 		Config::Context->OMSetBlendState(NULL, 0, 0xFFFFFFFF);
 	}
+}
 
+void Renderer::RenderHBAOPlus()
+{
 	if (Config::HBAOPlusEnabled) {
 		//(4.) RENDER AO
 		if (postProcessComponents.enabled) {
@@ -720,8 +729,6 @@ void Renderer::RenderFrame()
 		}
 		assert(hbaoPlusComponents.status == GFSDK_SSAO_OK);
 	}
-
-	/*if (Config::EtherealDebugLinesEnabled)*/ RenderDebugLines();
 }
 
 void Renderer::PresentFrame()
@@ -902,7 +909,8 @@ void Renderer::RenderDepthStencil()
 	UINT stride = sizeof(Vertex);
 	UINT offset = 0;
 
-	unsigned int entityInfo;
+	unsigned int entityLayerMask;
+	//unsigned int callbackLayerMask = Config::EntityLayers["decal"];
 
 	for (int i = renderObjectCount - 1; i >= 0; i--)
 	{
@@ -947,23 +955,22 @@ void Renderer::RenderDepthStencil()
 			shaders.depthStencilVS->CopyAllBufferData();
 		}
 
-		entityInfo = 0;
-		entityInfo = Config::EntityLayers[e->layer.STDStr()];
+		entityLayerMask = e->GetLayerMask();
 		if (callback != nullptr) {
 			if (callback->active && callback->prepassPShader) {
 				callback->prepassPShader->SetShader();
-				callback->prepassPShader->SetInt("entityInfo", entityInfo);
+				callback->prepassPShader->SetData("entityLayerMask", &entityLayerMask, sizeof(unsigned int));
 				callback->prepassPShader->SetFloat3("cameraPosition", camera->position);
 				callback->PrePrepassPixelShaderCallback();
 				callback->prepassPShader->CopyAllBufferData();
 			}
 			else {
-				shaders.depthStencilPS->SetInt("entityInfo", entityInfo);
+				shaders.depthStencilPS->SetData("entityLayerMask", &entityLayerMask, sizeof(unsigned int));
 				shaders.depthStencilPS->CopyAllBufferData();
 			}
 		}
 		else {
-			shaders.depthStencilPS->SetInt("entityInfo", entityInfo);
+			shaders.depthStencilPS->SetData("entityLayerMask", &entityLayerMask, sizeof(unsigned int));
 			shaders.depthStencilPS->CopyAllBufferData();
 		}
 

@@ -44,11 +44,4 @@ unsigned int Config::SSAOSampleCount = 32;
 float Config::SSAOKernelRadius = 1.0f;
 DirectX::XMFLOAT4 Config::SSAOKernel[32];
 
-std::map<std::string, unsigned int> Config::EntityTags = {
-	{ "PLACEHOLDER", 1 },
-};
-
-std::map<std::string, unsigned int> Config::EntityLayers = {
-	{ "decal", 1 },
-	{ "outline", 2 },
-};
+std::map<std::string, unsigned int> Config::EntityLayers;

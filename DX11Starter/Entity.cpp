@@ -3,7 +3,8 @@
 
 Entity::Entity()
 {
-	
+	ZeroMemory(tags, MAX_ENTITY_TAG_COUNT * sizeof(EEString<EESTRING_SIZE>));
+	ZeroMemory(layers, MAX_ENTITY_LAYER_COUNT * sizeof(EEString<EESTRING_SIZE>));
 }
 
 Entity::Entity(string entityName)
@@ -11,6 +12,8 @@ Entity::Entity(string entityName)
 	materialMap = new map<string, Material*>;
 	children = new vector<Entity*>;
 	colliders = new vector<Collider*>;
+	ZeroMemory(tags, MAX_ENTITY_TAG_COUNT * sizeof(EEString<EESTRING_SIZE>));
+	ZeroMemory(layers, MAX_ENTITY_LAYER_COUNT * sizeof(EEString<EESTRING_SIZE>));
 	
 	name = entityName;
 	position = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
@@ -33,6 +36,8 @@ Entity::Entity(string entityName, Mesh* entityMesh, Material* mat)
 	materialMap = new map<string, Material*>;
 	children = new vector<Entity*>;
 	colliders = new vector<Collider*>;
+	ZeroMemory(tags, MAX_ENTITY_TAG_COUNT * sizeof(EEString<EESTRING_SIZE>));
+	ZeroMemory(layers, MAX_ENTITY_LAYER_COUNT * sizeof(EEString<EESTRING_SIZE>));
 
 	mesh = entityMesh;
 	name = entityName;
@@ -100,10 +105,13 @@ void Entity::operator=(const Entity& e)
 	materialMap = new map<string, Material*>();
 	children = new vector<Entity*>();
 	colliders = new vector<Collider*>();
+	ZeroMemory(tags, MAX_ENTITY_TAG_COUNT * sizeof(EEString<EESTRING_SIZE>));
+	ZeroMemory(layers, MAX_ENTITY_LAYER_COUNT * sizeof(EEString<EESTRING_SIZE>));
 
 	name = e.name;
 	tagCount = e.tagCount;
 	layerCount = e.layerCount;
+	layerMask = e.layerMask;
 	memcpy(tags, e.tags, sizeof(EEString<EESTRING_SIZE>) * tagCount);
 	memcpy(layers, e.layers, sizeof(EEString<EESTRING_SIZE>) * layerCount);
 	*children = vector<Entity*>(*e.children);
@@ -136,6 +144,7 @@ void Entity::operator=(const Entity& e)
 	meshMaterialIndex = e.meshMaterialIndex;
 	colliderCnt = e.colliderCnt;
 	renderObject = e.renderObject;
+	pWrap = e.pWrap;
 }
 
 void Entity::InitRigidBody(BulletColliderShape shape, float entityMass, bool zeroObjects)
@@ -991,8 +1000,9 @@ bool Entity::HasLayer(string layer)
 
 bool Entity::AddLayer(string layer)
 {
-	if (layerCount < MAX_ENTITY_LAYER_COUNT) {
-		layers[tagCount++] = layer;
+	if (layerCount < MAX_ENTITY_LAYER_COUNT && Config::EntityLayers.count(layer)) {
+		layers[layerCount++] = layer;
+		layerMask |= Config::EntityLayers[layer];
 		return true;
 	}
 	return false;
@@ -1000,13 +1010,16 @@ bool Entity::AddLayer(string layer)
 
 bool Entity::RemoveLayer(string layer)
 {
-	for (size_t i = 0; i < layerCount; i++)
-	{
-		if (layers[i] == layer) {
-			layers[i] = layers[layerCount - 1];
-			layers[layerCount - 1] = "";
-			layerCount--;
-			return true;
+	if (Config::EntityLayers.count(layer)) {
+		for (size_t i = 0; i < layerCount; i++)
+		{
+			if (layers[i] == layer) {
+				layers[i] = layers[layerCount - 1];
+				layers[layerCount - 1] = "";
+				layerCount--;
+				layerMask ^= Config::EntityLayers[layer];
+				return true;
+			}
 		}
 	}
 	return false;
@@ -1020,6 +1033,11 @@ EEString<EESTRING_SIZE>* Entity::GetLayers()
 unsigned int Entity::GetLayerCount()
 {
 	return layerCount;
+}
+
+unsigned int Entity::GetLayerMask()
+{
+	return layerMask;
 }
 
 void Entity::RemoveFromPhysicsSimulation()

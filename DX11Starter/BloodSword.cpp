@@ -92,8 +92,8 @@ void BloodSword::Init()
 
 	callback = {};
 
-	callback.vShader = EESceneLoader->vertexShadersMap["BloodSword"];
-	callback.prepassVShader = EESceneLoader->vertexShadersMap["BloodSwordPrepass"];
+	callback.vShader = EESceneLoader->VertexShadersMap["BloodSword"];
+	callback.prepassVShader = EESceneLoader->VertexShadersMap["BloodSwordPrepass"];
 	callback.waveHeightX = 0.01f;
 	callback.waveHeightY = 0.3f;
 	callback.waveHeightZ = 0.02f;
@@ -442,7 +442,7 @@ std::vector<XMFLOAT3> BloodSword::GenerateSlashPoints(XMFLOAT3 startingPos, XMFL
 
 void BloodSword::CheckSwordSlashHit()
 {
-	std::vector<Entity*> enemies = EESceneLoader->sceneEntitiesTagMap["Enemy"];
+	std::vector<Entity*> enemies = EESceneLoader->SceneEntitiesTagMap["Enemy"];
 
 	for each (Entity* enemy in enemies)
 	{
@@ -463,7 +463,7 @@ void BloodSword::CheckSwordSlashHit()
 			Entity* newLeashedEntity = childEntities[0];
 			for each (Entity * e in childEntities)
 			{
-				e->tag = std::string("Body Part");
+				e->HasTag("Body Part");
 
 				if (leashedWhenKilled) // if the enemy is leashed while they are killed transfer the leash to the next closest body part
 				{
@@ -551,7 +551,7 @@ void BloodSword::OnCollision(btCollisionObject* other)
 
 		// cout << "Blood Sword Hit: " << otherE->GetName().c_str() << endl;
 		
-		if (otherE->tag.STDStr() == std::string("Enemy"))
+		if (otherE->HasTag("Enemy"))
 		{
 			std::vector<Entity*> childEntities = EESceneLoader->SplitMeshIntoChildEntities(otherE, 1.0f);
 		}

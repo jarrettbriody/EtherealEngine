@@ -145,14 +145,14 @@ void Game::Init()
 	EERenderer->EnableCamera("main");
 
 	RendererShaders rShaders;
-	rShaders.depthStencilVS = EESceneLoader->vertexShadersMap["DepthStencil"];
-	rShaders.depthStencilPS = EESceneLoader->pixelShadersMap["DepthStencil"];
-	rShaders.debugLineVS = EESceneLoader->vertexShadersMap["DebugLine"];
-	rShaders.debugLinePS = EESceneLoader->pixelShadersMap["DebugLine"];
-	rShaders.decalVS = EESceneLoader->vertexShadersMap["Decal"];
-	rShaders.decalPS = EESceneLoader->pixelShadersMap["Decal"];
-	rShaders.skyVS = EESceneLoader->vertexShadersMap["Sky"];
-	rShaders.skyPS = EESceneLoader->pixelShadersMap["Sky"];
+	rShaders.depthStencilVS = EESceneLoader->VertexShadersMap["DepthStencil"];
+	rShaders.depthStencilPS = EESceneLoader->PixelShadersMap["DepthStencil"];
+	rShaders.debugLineVS = EESceneLoader->VertexShadersMap["DebugLine"];
+	rShaders.debugLinePS = EESceneLoader->PixelShadersMap["DebugLine"];
+	rShaders.decalVS = EESceneLoader->VertexShadersMap["Decal"];
+	rShaders.decalPS = EESceneLoader->PixelShadersMap["Decal"];
+	rShaders.skyVS = EESceneLoader->VertexShadersMap["Sky"];
+	rShaders.skyPS = EESceneLoader->PixelShadersMap["Sky"];
 
 	EERenderer->SetRendererShaders(rShaders);
 	EERenderer->InitDepthStencil();
@@ -173,37 +173,37 @@ void Game::Init()
 	EERenderer->InitShadows(4);
 	EERenderer->InitSkybox();
 
-	EERenderer->SetEntities(&(EESceneLoader->sceneEntities));
+	EERenderer->SetEntities(&(EESceneLoader->SceneEntities));
 
 	ID3D11ShaderResourceView* decals[8];
-	decals[0] = EESceneLoader->defaultTexturesMap["BLOOD1"];
-	decals[1] = EESceneLoader->defaultTexturesMap["BLOOD2"];
-	decals[2] = EESceneLoader->defaultTexturesMap["BLOOD3"];
-	decals[3] = EESceneLoader->defaultTexturesMap["BLOOD4"];
-	decals[4] = EESceneLoader->defaultTexturesMap["BLOOD5"];
-	decals[5] = EESceneLoader->defaultTexturesMap["BLOOD6"];
-	decals[6] = EESceneLoader->defaultTexturesMap["BLOOD7"];
-	decals[7] = EESceneLoader->defaultTexturesMap["BLOOD8"];
+	decals[0] = EESceneLoader->DefaultTexturesMap["BLOOD1"];
+	decals[1] = EESceneLoader->DefaultTexturesMap["BLOOD2"];
+	decals[2] = EESceneLoader->DefaultTexturesMap["BLOOD3"];
+	decals[3] = EESceneLoader->DefaultTexturesMap["BLOOD4"];
+	decals[4] = EESceneLoader->DefaultTexturesMap["BLOOD5"];
+	decals[5] = EESceneLoader->DefaultTexturesMap["BLOOD6"];
+	decals[6] = EESceneLoader->DefaultTexturesMap["BLOOD7"];
+	decals[7] = EESceneLoader->DefaultTexturesMap["BLOOD8"];
 	EERenderer->SetDecals(decals);
 
 	EERenderer->SetMeshes(
-		EESceneLoader->defaultMeshesMap["Cube"], 
-		EESceneLoader->defaultMeshesMap["InverseCube"],
-		EESceneLoader->defaultMeshesMap["Sphere"], 
-		EESceneLoader->defaultMeshesMap["Cone"]);
+		EESceneLoader->DefaultMeshesMap["Cube"], 
+		EESceneLoader->DefaultMeshesMap["InverseCube"],
+		EESceneLoader->DefaultMeshesMap["Sphere"], 
+		EESceneLoader->DefaultMeshesMap["Cone"]);
 
 	DefaultGPUParticleShaders gpuParticleShaders;
-	gpuParticleShaders.copyDrawCountCS = EESceneLoader->computeShadersMap["ParticleDrawArgs"];
-	gpuParticleShaders.initDeadListCS = EESceneLoader->computeShadersMap["InitDeadList"];
-	gpuParticleShaders.particleEmissionCS = EESceneLoader->computeShadersMap["EmitParticle"];
-	gpuParticleShaders.particleUpdateCS = EESceneLoader->computeShadersMap["UpdateParticle"];
-	gpuParticleShaders.particleVS = EESceneLoader->vertexShadersMap["Particle"];
-	gpuParticleShaders.particlePS = EESceneLoader->pixelShadersMap["Particle"];
+	gpuParticleShaders.copyDrawCountCS = EESceneLoader->ComputeShadersMap["ParticleDrawArgs"];
+	gpuParticleShaders.initDeadListCS = EESceneLoader->ComputeShadersMap["InitDeadList"];
+	gpuParticleShaders.particleEmissionCS = EESceneLoader->ComputeShadersMap["EmitParticle"];
+	gpuParticleShaders.particleUpdateCS = EESceneLoader->ComputeShadersMap["UpdateParticle"];
+	gpuParticleShaders.particleVS = EESceneLoader->VertexShadersMap["Particle"];
+	gpuParticleShaders.particlePS = EESceneLoader->PixelShadersMap["Particle"];
 	GPUParticleEmitter::SetDefaultShaders(gpuParticleShaders);
 
 	DefaultCPUParticleShaders cpuParticleShaders;
-	cpuParticleShaders.particleVS = EESceneLoader->vertexShadersMap["CPUParticle"];
-	cpuParticleShaders.particlePS = EESceneLoader->pixelShadersMap["CPUParticle"];
+	cpuParticleShaders.particleVS = EESceneLoader->VertexShadersMap["CPUParticle"];
+	cpuParticleShaders.particlePS = EESceneLoader->PixelShadersMap["CPUParticle"];
 	CPUParticleEmitter::SetDefaultShaders(cpuParticleShaders);
 
 	ParticleEmitterDescription emitDesc;
@@ -249,7 +249,7 @@ void Game::Init()
 			ParticlePhysicsWrapper* particleWrapper = (wrapperA->type == PHYSICS_WRAPPER_TYPE::PARTICLE) ? (ParticlePhysicsWrapper*)wrapperA->objectPointer : (ParticlePhysicsWrapper*)wrapperB->objectPointer;
 			Entity* entity = (wrapperA->type == PHYSICS_WRAPPER_TYPE::ENTITY) ? (Entity*)wrapperA->objectPointer : (Entity*)wrapperB->objectPointer;
 	
-			if (entity->layer == "decal") {
+			if (entity->HasLayer("decal")) {
 				Particle* particle = (Particle*)particleWrapper->particle;
 				CPUParticleEmitter* emitter = (CPUParticleEmitter*)particleWrapper->emitter;
 				ParticleEmitter* emitterBase = (ParticleEmitter*)emitter;
@@ -282,9 +282,9 @@ void Game::Init()
 
 
 	Entity* e;
-	for (size_t i = 0; i < EESceneLoader->sceneEntities.size(); i++)
+	for (size_t i = 0; i < EESceneLoader->SceneEntities.size(); i++)
 	{
-		e = EESceneLoader->sceneEntities[i];
+		e = EESceneLoader->SceneEntities[i];
 		if(!e->isEmptyObj)
 			EERenderer->AddRenderObject(e, e->GetMesh(), e->GetMaterial(e->GetMeshMaterialName()));
 	}
@@ -469,7 +469,7 @@ void Game::Update(double deltaTime, double totalTime)
 	{
 		DebugLines* dbl = DebugLines::debugLines[i];
 		if (dbl->willUpdate) {
-			dbl->worldMatrix = EESceneLoader->sceneEntitiesMap[dbl->entityName]->GetCollider(dbl->colliderID)->GetWorldMatrix();
+			dbl->worldMatrix = EESceneLoader->SceneEntitiesMap[dbl->entityName]->GetCollider(dbl->colliderID)->GetWorldMatrix();
 		}
 	}
 
@@ -636,7 +636,9 @@ void Game::Draw(double deltaTime, double totalTime)
 	EERenderer->RenderShadowMap();
 	EERenderer->RenderDepthStencil();
 	EERenderer->RenderFrame();
-
+	EERenderer->RenderDecals();
+	EERenderer->RenderHBAOPlus();
+	EERenderer->RenderDebugLines();
 	EERenderer->RenderSkybox();
 
 	XMFLOAT4X4 view = EERenderer->GetCamera("main")->GetViewMatrix();

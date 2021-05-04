@@ -7,7 +7,7 @@ void AmbientParticles::Init()
 	ParticleEmitterDescription emitDesc;
 	emitDesc.emitterPosition = XMFLOAT3(0.0f, 10.0f, 0.0f);
 	emitDesc.parentName = "Blood_Orb";
-	emitDesc.parentWorld = EESceneLoader->sceneEntitiesMap["Blood_Orb"]->GetWorldMatrixPtr();
+	emitDesc.parentWorld = EESceneLoader->SceneEntitiesMap["Blood_Orb"]->GetWorldMatrixPtr();
 	emitDesc.emitterDirection = NEG_Y_AXIS;
 	emitDesc.colorCount = 3;
 	ParticleColor particleColors[3] = {
@@ -46,8 +46,8 @@ void AmbientParticles::Init()
 
 	ParticleTexture partTex[2] = {
 		//{EESceneLoader->texture2DMap["smoke1"], 1.0f},
-		{EESceneLoader->texture2DMap["smoke2"], 1.0f, 0.2f},
-		{EESceneLoader->texture2DMap["smoke3"], 1.0f, 0.3f},
+		{EESceneLoader->Texture2DMap["smoke2"], 1.0f, 0.2f},
+		{EESceneLoader->Texture2DMap["smoke3"], 1.0f, 0.3f},
 	};
 	emitDesc.textures = partTex;
 	emitDesc.textureCount = 2;
@@ -79,9 +79,9 @@ void AmbientParticles::Init()
 	emitDesc.fadeOutStartTime = -1.0f;
 	emitDesc.fadeInEndTime = 0.05f;
 	ParticleTexture partTexFire[3] = {
-		{EESceneLoader->texture2DMap["fire2"], 3.0f, 0.2f},
-		{EESceneLoader->texture2DMap["fire3"], 1.0f, 0.1f},
-		{EESceneLoader->texture2DMap["fire4"], 1.0f, 0.2f},
+		{EESceneLoader->Texture2DMap["fire2"], 3.0f, 0.2f},
+		{EESceneLoader->Texture2DMap["fire3"], 1.0f, 0.1f},
+		{EESceneLoader->Texture2DMap["fire4"], 1.0f, 0.2f},
 	};
 	//partTex[0] = { EESceneLoader->texture2DMap["fire"], 1.0f, 0.1f };
 	emitDesc.textures = partTexFire;
@@ -154,8 +154,8 @@ void AmbientParticles::Init()
 	LightHandler::GetInstance()->AddLight(testLight);
 
 	callback.active = true;
-	callback.vShader = EESceneLoader->vertexShadersMap["PostProcess"];
-	callback.pShader = EESceneLoader->pixelShadersMap["Outline"];
+	callback.vShader = EESceneLoader->VertexShadersMap["PostProcess"];
+	callback.pShader = EESceneLoader->PixelShadersMap["Outline"];
 	EERenderer->SetPostProcess(true, &callback, 0);
 }
 

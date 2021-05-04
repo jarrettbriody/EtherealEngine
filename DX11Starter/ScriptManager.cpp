@@ -63,8 +63,8 @@ void ScriptManager::Setup(Entity* e, string scriptName)
 
 	this->EERenderer = Renderer::GetInstance();
 	this->EESceneLoader = SceneLoader::GetInstance();
-	this->sceneEntities = &this->EESceneLoader->sceneEntities;
-	this->sceneEntitiesMap = &this->EESceneLoader->sceneEntitiesMap;
+	this->sceneEntities = &this->EESceneLoader->SceneEntities;
+	this->sceneEntitiesMap = &this->EESceneLoader->SceneEntitiesMap;
 
 	//add this script (and thereby all script function pointers) to the list of scripts
 	scriptFunctions.push_back(this);

@@ -21,7 +21,7 @@ void FPSController::Init()
 	icicleParams = {
 			"Blood Icicle",					// name
 			"Blood Icicle",					// tag
-			"Blood Icicle",					// layer
+			"",								// layer
 			"Cone",							// mesh
 			"Red",							// material
 			{"BLOODICICLE"},				// script names
@@ -62,7 +62,7 @@ void FPSController::Init()
 	hookshotParams = {	
 			"Hookshot",						// name
 			"Hookshot",						// tag
-			"Hookshot",						// layer
+			"playertools",					// layer
 			"bloodchain",					// mesh
 			"bloodchain",					// material
 			{""},							// script names
@@ -93,8 +93,9 @@ void FPSController::Init()
 
 	ps = PlayerState::Normal;
 
-	dashBlurCallback.vShader = EESceneLoader->vertexShadersMap["PostProcess"];
-	dashBlurCallback.pShader = EESceneLoader->pixelShadersMap["DashBlur"];
+	dashBlurCallback.vShader = EESceneLoader->VertexShadersMap["PostProcess"];
+	dashBlurCallback.pShader = EESceneLoader->PixelShadersMap["DashBlur"];
+	dashBlurCallback.layerMask = EERenderer->depthStencilComponents.entityInfoSRV;
 	EERenderer->SetPostProcess(true, &dashBlurCallback, 1);
 
 	//-------------------------------------------------------
@@ -320,7 +321,7 @@ void FPSController::HookshotThrow()
 	}
 	else
 	{
-		if (hookshotAttachedEntity->tag.STDStr() == std::string("Enemy") || hookshotAttachedEntity->tag.STDStr() == std::string("Body Part"))
+		if (hookshotAttachedEntity->HasTag("Enemy") || hookshotAttachedEntity->HasTag("Body Part"))
 		{
 			leashedEnemy = hookshotAttachedEntity;
 			leashSize = playerRBody->getCenterOfMassPosition().distance(leashedEnemy->GetRBody()->getCenterOfMassPosition()); 
@@ -328,7 +329,7 @@ void FPSController::HookshotThrow()
 
 			ps = PlayerState::HookshotLeash;
 		}
-		else if (hookshotAttachedEntity->tag.STDStr() == std::string("Environment"))
+		else if (hookshotAttachedEntity->HasTag("Environment"))
 		{
 			// playerRBody->clearForces(); --> don't know if needed
 

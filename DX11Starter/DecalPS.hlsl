@@ -38,6 +38,7 @@ cbuffer externalData : register(b1) {
 
 cbuffer constantPerFrame : register(b2) {
 	float3 cameraPos;
+	unsigned int decalLayerMask;
 };
 
 cbuffer shadowStuff : register(b3) {
@@ -77,9 +78,9 @@ float4 main(VertexToPixel input) : SV_TARGET
 {
 	float3 pixelIndex = float3(input.position.xy, 0);
 
-	unsigned int entityInfo = EntityInfoBuffer.Load(pixelIndex).r;
+	unsigned int layer = EntityInfoBuffer.Load(pixelIndex).r;
 
-	if (entityInfo != 1) discard;
+	if ((decalLayerMask | layer) != layer) discard;
 
 	float  depth = DepthBuffer.Load(pixelIndex).r;
 

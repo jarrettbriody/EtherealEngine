@@ -80,6 +80,8 @@ public:
 
 	void ClearFrame();
 	void RenderFrame();
+	void RenderDecals();
+	void RenderHBAOPlus();
 	void PresentFrame();
 	void RenderDebugLines();
 	void RenderShadowMap();

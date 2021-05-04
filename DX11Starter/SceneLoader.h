@@ -63,6 +63,7 @@ private:
 		{ "DIRLIGHT", 8 },
 		{ "CPUPARTICLE", 9 },
 		{ "GPUPARTICLE", 10 },
+		{ "LAYERMASK", 11 },
 	};
 
 	map<string, ShaderType> shaderTypes = {
@@ -73,76 +74,87 @@ private:
 
 	string modelPath = "../../Assets/Models/";
 
-	//Scene loading regular expressions
-	regex commentedLineRegex = regex("//.*"); //checking if line is commented
+	struct RegexObjects {
+		//Scene loading regular expressions
+		regex commentedLineRegex = regex("//.*"); //checking if line is commented
 
-	regex typeRegex = regex("TYPE=\"(\\w+)\""); //getting line type
+		regex typeRegex = regex("TYPE=\"(\\w+)\""); //getting line type
 
-	regex skyboxRegex = regex("dds=\"(\\w+)\""); //get dds name
+		regex skyboxRegex = regex("dds=\"(\\w+)\""); //get dds name
 
-	regex lightPosRegex = regex("P\\(.*\\)");
-	regex lightDirRegex = regex("D\\(.*\\)");
-	regex lightColorRegex = regex("C\\(.*\\)");
-	regex lightIntensityRegex = regex("intensity=\"(\\d*\\.\\d*|\\d+)\"");
+		regex lightPosRegex = regex("P\\(.*\\)");
+		regex lightDirRegex = regex("D\\(.*\\)");
+		regex lightColorRegex = regex("C\\(.*\\)");
+		regex lightIntensityRegex = regex("intensity=\"(\\d*\\.\\d*|\\d+)\"");
 
-	regex shaderFileRegex = regex("cso=\"(\\w+)\""); //get cso file name
-	regex shaderTypeRegex = regex("shaderType=\"(\\w+)\""); //get shader type
+		regex shaderFileRegex = regex("cso=\"(\\w+)\""); //get cso file name
+		regex shaderTypeRegex = regex("shaderType=\"(\\w+)\""); //get shader type
 
-	regex pathRegex = regex("path=\"(.+)\""); //get path to thing
+		regex pathRegex = regex("path=\"(.+)\""); //get path to thing
 
-	regex texArrayRegex = regex("array=\"(\\w+)\"");
+		regex texArrayRegex = regex("array=\"(\\w+)\"");
 
-	regex vShaderRegex = regex("vShader=\"(\\w+)\"");
-	regex pShaderRegex = regex("pShader=\"(\\w+)\"");
-	regex ambientTexRegex = regex("ambientTexture=\"(\\w+)\"");
-	regex diffuseTexRegex = regex("diffuseTexture=\"(\\w+)\"");
-	regex specColorTexRegex = regex("specularColorTexture=\"(\\w+)\"");
-	regex specHighlightTexRegex = regex("specularHighlightTexture=\"(\\w+)\"");
-	regex alphaTexRegex = regex("alphaTexture=\"(\\w+)\"");
-	regex normalTexRegex = regex("normalTexture=\"(\\w+)\"");
-	regex ambientColorRegex = regex("ambientColor\\(.*\\)");
-	regex diffuseColorRegex = regex("diffuseColor\\(.*\\)");
-	regex specularColorRegex = regex("specularColor\\(.*\\)");
-	regex specularExponentRegex = regex("specularExponent=\"(\\d*\\.\\d*|\\d+)\"");
-	regex transparencyRegex = regex("transparency=\"(\\d*\\.\\d*|\\d+)\"");
-	regex illuminationRegex = regex("illumination=\"(\\d+)\"");
-	regex ssaoRegex = regex("ssao=\"(\\w+)\"");
-	regex hbaoPlusRegex = regex("hbaoPlus=\"(\\w+)\"");
+		regex vShaderRegex = regex("vShader=\"(\\w+)\"");
+		regex pShaderRegex = regex("pShader=\"(\\w+)\"");
+		regex ambientTexRegex = regex("ambientTexture=\"(\\w+)\"");
+		regex diffuseTexRegex = regex("diffuseTexture=\"(\\w+)\"");
+		regex specColorTexRegex = regex("specularColorTexture=\"(\\w+)\"");
+		regex specHighlightTexRegex = regex("specularHighlightTexture=\"(\\w+)\"");
+		regex alphaTexRegex = regex("alphaTexture=\"(\\w+)\"");
+		regex normalTexRegex = regex("normalTexture=\"(\\w+)\"");
+		regex ambientColorRegex = regex("ambientColor\\(.*\\)");
+		regex diffuseColorRegex = regex("diffuseColor\\(.*\\)");
+		regex specularColorRegex = regex("specularColor\\(.*\\)");
+		regex specularExponentRegex = regex("specularExponent=\"(\\d*\\.\\d*|\\d+)\"");
+		regex transparencyRegex = regex("transparency=\"(\\d*\\.\\d*|\\d+)\"");
+		regex illuminationRegex = regex("illumination=\"(\\d+)\"");
+		regex ssaoRegex = regex("ssao=\"(\\w+)\"");
+		regex hbaoPlusRegex = regex("hbaoPlus=\"(\\w+)\"");
 
-	regex entityNameRegex = regex("name=\"([\\w|\\s]+)\""); //getting entity name
-	regex objNameRegex = regex("obj=\"(\\w+)\""); //getting obj model name
-	regex materialNameRegex = regex("material=\"(\\w+)\"");
-	regex repeatTextureRegex = regex("repeatTexture=\"(\\d*\\.\\d*|\\d+),(\\d*\\.\\d*|\\d+)\"");
-	regex uvOffsetRegex = regex("uvOffset=\"(-?\\d*\\.\\d*|-?\\d+),(-?\\d*\\.\\d*|-?\\d+)\"");
-	regex tagNameRegex = regex("tags=\"([\\w+|,]+)\""); //for getting the entity tags
-	regex layerNameRegex = regex("layers=\"([\\w+|,]+)\""); //for getting the entity layer
-	regex scriptNamesRegex = regex("scripts=\"([\\w+|,]+)\""); //getting script names associated with entity
-	regex scriptNamesIteratorRegex = regex("\\w+"); //iterating over each script name associated with entity
-	regex collidersEnabledRegex = regex("colliders=\"(\\w+)\"");
-	regex colliderTypeRegex = regex("colliderType=\"(\\w+)\"");
-	regex massRegex = regex("mass=\"(\\d*\\.\\d*|\\d+)\"");
-	regex debugRegex = regex("debug=\"(\\w+)\"");
-	regex raaRegex = regex("rotateAroundAxis=\"(\\w+)\"");
-	regex clampTexRegex = regex("clampTex=\"(\\w+)\"");
-	regex transformationDataRegex = regex("P\\(.*\\)R\\(.*\\)S\\(.*\\)");
-	regex quaternionRegex = regex("Q\\(.*\\)");
-	regex transformNumIteratorRegex = regex("-\\d*\\.\\d*|\\d*\\.\\d*|-\\d+|\\d+"); //for iterating over each line to get the float values for transformations
+		regex layerValueRegex = regex("value=\"(\\d+)\"");
+		regex layerOffsetRegex = regex("offset=\"(\\d+)\"");
 
-	//Material loading regular expressions
-	regex newMtlRgx = regex("^(newmtl\\s+)");
-	regex ambientColorRgx = regex("^(Ka\\s+)");
-	regex diffuseColorRgx = regex("^(Kd\\s+)");
-	regex specularColorRgx = regex("^(Ks\\s+)");
-	regex specularExpRgx = regex("^(Ns\\s+)");
-	regex dTransparencyRgx = regex("^(d\\s+)");
-	regex trTransparencyRgx = regex("^(Tr\\s+)");
-	regex illuminationRgx = regex("^(illum\\s+)");
-	regex ambientTextureRgx = regex("^(map_Ka\\s+)");
-	regex diffuseTextureRgx = regex("^(map_Kd\\s+)");
-	regex specularColorTextureRgx = regex("^(map_Ks\\s+)");
-	regex specularHighlightTextureRgx = regex("^(map_Ns\\s+)");
-	regex alphaTextureRgx = regex("^(map_d\\s+)");
-	regex normalTextureRgx = regex("^(map_Bump\\s+)");
+		regex entityNameRegex = regex("name=\"([\\w|\\s]+)\""); //getting entity name
+		regex objNameRegex = regex("obj=\"(\\w+)\""); //getting obj model name
+		regex materialNameRegex = regex("material=\"(\\w+)\"");
+		regex repeatTextureRegex = regex("repeatTexture=\"(\\d*\\.\\d*|\\d+),(\\d*\\.\\d*|\\d+)\"");
+		regex uvOffsetRegex = regex("uvOffset=\"(-?\\d*\\.\\d*|-?\\d+),(-?\\d*\\.\\d*|-?\\d+)\"");
+		regex tagNameRegex = regex("tags=\"([\\w+|,]+)\""); //for getting the entity tags
+		regex layerNameRegex = regex("layers=\"([\\w+|,]+)\""); //for getting the entity layers
+		regex scriptNamesRegex = regex("scripts=\"([\\w+|,]+)\""); //getting script names associated with entity
+		regex scriptNamesIteratorRegex = regex("\\w+"); //iterating over each script name associated with entity
+		regex collidersEnabledRegex = regex("colliders=\"(\\w+)\"");
+		regex colliderTypeRegex = regex("colliderType=\"(\\w+)\"");
+		regex massRegex = regex("mass=\"(\\d*\\.\\d*|\\d+)\"");
+		regex debugRegex = regex("debug=\"(\\w+)\"");
+		regex raaRegex = regex("rotateAroundAxis=\"(\\w+)\"");
+		regex clampTexRegex = regex("clampTex=\"(\\w+)\"");
+		regex transformationDataRegex = regex("P\\(.*\\)R\\(.*\\)S\\(.*\\)");
+		regex quaternionRegex = regex("Q\\(.*\\)");
+		regex transformNumIteratorRegex = regex("-\\d*\\.\\d*|\\d*\\.\\d*|-\\d+|\\d+"); //for iterating over each line to get the float values for transformations
+
+		//Material loading regular expressions
+		regex newMtlRgx = regex("^(newmtl\\s+)");
+		regex ambientColorRgx = regex("^(Ka\\s+)");
+		regex diffuseColorRgx = regex("^(Kd\\s+)");
+		regex specularColorRgx = regex("^(Ks\\s+)");
+		regex specularExpRgx = regex("^(Ns\\s+)");
+		regex dTransparencyRgx = regex("^(d\\s+)");
+		regex trTransparencyRgx = regex("^(Tr\\s+)");
+		regex illuminationRgx = regex("^(illum\\s+)");
+		regex ambientTextureRgx = regex("^(map_Ka\\s+)");
+		regex diffuseTextureRgx = regex("^(map_Kd\\s+)");
+		regex specularColorTextureRgx = regex("^(map_Ks\\s+)");
+		regex specularHighlightTextureRgx = regex("^(map_Ns\\s+)");
+		regex alphaTextureRgx = regex("^(map_d\\s+)");
+		regex normalTextureRgx = regex("^(map_Bump\\s+)");
+	} RegexObjects;
+
+	map<string, bool> utilizedMeshesMap;
+	map<string, bool> utilizedMaterialsMap;
+	map<string, bool> utilizedTexturesMap;
+
+	map<string, vector<string>> materialTextureAssociationMap;
 
 	void (*scriptCallback)(Entity* e, string script);
 
@@ -166,30 +178,24 @@ public:
 
 	vector<ScriptPair> scriptPairs;
 
-	map<string, SimpleVertexShader*> vertexShadersMap;
-	map<string, SimplePixelShader*> pixelShadersMap;
-	map<string, SimpleComputeShader*> computeShadersMap;
+	map<string, SimpleVertexShader*> VertexShadersMap;
+	map<string, SimplePixelShader*> PixelShadersMap;
+	map<string, SimpleComputeShader*> ComputeShadersMap;
 
-	map<string, bool> utilizedMeshesMap;
-	map<string, bool> utilizedMaterialsMap;
-	map<string, bool> utilizedTexturesMap;
+	map<string, Mesh*> DefaultMeshesMap;
+	map<string, Mesh*> GeneratedMeshesMap;
 
-	map<string, vector<string>> materialTextureAssociationMap;
+	map<string, ID3D11ShaderResourceView*> DefaultTexturesMap;
+	map<string, ID3D11ShaderResourceView*> GeneratedTexturesMap;
+	map<string, ID3D11Texture2D*> Texture2DMap;
 
-	map<string, Mesh*> defaultMeshesMap;
-	map<string, Mesh*> generatedMeshesMap;
+	map<string, Material*> DefaultMaterialsMap;
+	map<string, Material*> GeneratedMaterialsMap;
 
-	map<string, ID3D11ShaderResourceView*> defaultTexturesMap;
-	map<string, ID3D11ShaderResourceView*> generatedTexturesMap;
-	map<string, ID3D11Texture2D*> texture2DMap;
-
-	map<string, Material*> defaultMaterialsMap;
-	map<string, Material*> generatedMaterialsMap;
-
-	map<string, Entity*> sceneEntitiesMap;
-	map<string, vector<Entity*>> sceneEntitiesTagMap;
-	map<string, vector<Entity*>> sceneEntitiesLayerMap;
-	vector<Entity*> sceneEntities;
+	map<string, Entity*> SceneEntitiesMap;
+	map<string, vector<Entity*>> SceneEntitiesTagMap;
+	map<string, vector<Entity*>> SceneEntitiesLayerMap;
+	vector<Entity*> SceneEntities;
 
 	SceneLoaderCallback* garbageCollectCallback;
 

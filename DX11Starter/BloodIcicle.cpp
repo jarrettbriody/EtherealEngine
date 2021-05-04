@@ -32,14 +32,14 @@ void BloodIcicle::OnCollision(btCollisionObject* other)
 		// cout << "Blood Icicle Hit: " << otherE->GetName().c_str() << endl;
 
 		// pin icicle to environment
-		if (otherE->tag.STDStr() == std::string("Environment"))
+		if (otherE->HasTag("Environment"))
 		{
 			icicleRb->clearForces();
 			icicleRb->setActivationState(0); 
 		}
 
 		// if this icicle hits an enemy and there is not already a body part pinned to the icicle then split the enemy mesh and give each of the child entities the tag "Body Part" to detect the next necessary collision to accurately pin a body part
-		if (otherE->tag.STDStr() == std::string("Enemy") && !bodyPartPinned)
+		if (otherE->HasTag("Enemy") && !bodyPartPinned)
 		{
 			// Update the game manager attribute for enemies alive
 			gameManagerScript->DecrementEnemiesAlive();
@@ -51,12 +51,12 @@ void BloodIcicle::OnCollision(btCollisionObject* other)
 
 			for each (Entity* e in childEntities)
 			{
-				e->tag = std::string("Body Part");
+				e->AddTag("Body Part");
 			}
 		}
 
 		// if this icicle hits a child entity of a recently split enemy and there is not already a body part pinned to the icicle then pin the collided body part
-		if (otherE->tag.STDStr() == std::string("Body Part") && !bodyPartPinned)
+		if (otherE->HasTag("Body Part") && !bodyPartPinned)
 		{
 			closestChild = otherE;
 

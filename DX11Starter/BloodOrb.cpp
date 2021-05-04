@@ -5,10 +5,10 @@ void BloodOrb::Init()
 {
 	fluidCallback = {};
 
-	fluidCallback.vShader = EESceneLoader->vertexShadersMap["Fluid"];
-	fluidCallback.pShader = EESceneLoader->pixelShadersMap["Fluid"];
-	fluidCallback.prepassVShader = EESceneLoader->vertexShadersMap["FluidPrepass"];
-	fluidCallback.prepassPShader = EESceneLoader->pixelShadersMap["FluidPrepass"];
+	fluidCallback.vShader = EESceneLoader->VertexShadersMap["Fluid"];
+	fluidCallback.pShader = EESceneLoader->PixelShadersMap["Fluid"];
+	fluidCallback.prepassVShader = EESceneLoader->VertexShadersMap["FluidPrepass"];
+	fluidCallback.prepassPShader = EESceneLoader->PixelShadersMap["FluidPrepass"];
 	fluidCallback.fillLineY = -0.0f;
 	fluidCallback.waveHeight = 0.02f;
 
@@ -56,7 +56,7 @@ void BloodOrb::Init()
 void BloodOrb::Update()
 {
 	Camera* cam = EERenderer->GetCamera("main");
-	Entity* glass = EESceneLoader->sceneEntitiesMap["Blood_Orb_Glass"];
+	Entity* glass = EESceneLoader->SceneEntitiesMap["Blood_Orb_Glass"];
 	cam->CalcViewMatrix();
 	cam->CalcWorldMatrix();
 	XMFLOAT3 camPos = cam->position;

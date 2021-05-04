@@ -5,7 +5,7 @@ void GameManager::Init()
 {
 	eMap = ScriptManager::sceneEntitiesMap;
 
-	std::vector<Entity*> enemies = EESceneLoader->sceneEntitiesTagMap["Enemy"];
+	std::vector<Entity*> enemies = EESceneLoader->SceneEntitiesTagMap["Enemy"];
 
 	enemiesAlive = enemies.size();
 

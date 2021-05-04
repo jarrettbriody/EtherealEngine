@@ -9,8 +9,12 @@
 
 struct DashBlurCallback : RendererCallback {
 	int blurAmount = 1;
+	unsigned int playerToolsMask = Config::EntityLayers["playertools"];
+	ID3D11ShaderResourceView* layerMask = nullptr;
 	void PrePixelShaderCallback() {
 		pShader->SetInt("blurAmount", blurAmount);
+		pShader->SetInt("playerToolsMask", playerToolsMask);
+		pShader->SetShaderResourceView("LayerMasks", layerMask);
 	}
 };
 
