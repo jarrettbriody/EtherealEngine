@@ -13,10 +13,10 @@ private:
 	float minimumDistance;
 	float dampingScalar = 0.9f;
 	float turningSpeed;
-	float* deltaTime;
+	double* deltaTime;
 	btVector3 movementDirection;
 public:
-	FollowPath(std::list<Node*>* path, Entity* e, float speed, float distance, float turn, float* delta) : path(path), enemy(e), movementSpeed(speed), minimumDistance(distance), turningSpeed(turn), deltaTime(delta) {}
+	FollowPath(std::list<Node*>* path, Entity* e, float speed, float distance, float turn, double* delta) : path(path), enemy(e), movementSpeed(speed), minimumDistance(distance), turningSpeed(turn), deltaTime(delta) {}
 	~FollowPath() {}
 
 	void OnInitialize();

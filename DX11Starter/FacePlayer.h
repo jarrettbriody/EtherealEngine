@@ -9,9 +9,9 @@ private:
 	Entity* enemy;
 	Entity* player;
 	float speed;
-	float* deltaTime;
+	double* deltaTime;
 public:
-	FacePlayer(Entity* e, Entity* p, float speed, float* deltaTime) : enemy(e), player(p), speed(speed), deltaTime(deltaTime) {}
+	FacePlayer(Entity* e, Entity* p, float speed, double* deltaTime) : enemy(e), player(p), speed(speed), deltaTime(deltaTime) {}
 	~FacePlayer() {}
 
 	void OnInitialize();
