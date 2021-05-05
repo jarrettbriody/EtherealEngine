@@ -10,6 +10,8 @@
 #include "FollowPath.h"
 #include "Idle.h"
 #include "FPSController.h"
+#include "NavmeshHandler.h"
+#include "AStarSolver.h"
 
 class EnemyTest : public ScriptManager
 {
@@ -18,8 +20,11 @@ class EnemyTest : public ScriptManager
 	map<string, Entity*>* eMap;
 	map<string, vector<ScriptManager*>> sMap;
 
-	Grid* grid;
-	std::list<Node*> path;
+	//Grid* grid;
+	std::vector<Node*> path;
+	NavmeshHandler* navmesh = nullptr;
+	AStarSolver aStarSolver;
+
 
 	XMFLOAT3 pos;
 	bool inCombat = false;

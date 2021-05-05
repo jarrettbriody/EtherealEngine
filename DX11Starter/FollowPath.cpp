@@ -21,8 +21,8 @@ Status FollowPath::Update()
 
 	if (distance < minimumDistance)
 	{
-		path->pop_front();
-
+		//path->pop_front();
+		path->erase(path->begin());
 		if (path->size() == 0)
 			return SUCCESS;
 		

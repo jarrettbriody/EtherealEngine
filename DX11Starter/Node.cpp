@@ -5,8 +5,9 @@ Node::Node()
 {
 }
 
-Node::Node(int gridRow, int gridCol, DirectX::XMFLOAT3 worldPos, bool obs)
+Node::Node(unsigned int gridID, int gridRow, int gridCol, DirectX::XMFLOAT3 worldPos, bool obs)
 {
+    this->gridID = gridID;
     row = gridRow;
     col = gridCol;
     pos = worldPos;
@@ -17,6 +18,11 @@ Node::Node(int gridRow, int gridCol, DirectX::XMFLOAT3 worldPos, bool obs)
 
 Node::~Node()
 {
+}
+
+unsigned int Node::GetGridID()
+{
+    return gridID;
 }
 
 int Node::GetRow()

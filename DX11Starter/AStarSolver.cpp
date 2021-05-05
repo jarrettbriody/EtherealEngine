@@ -31,7 +31,8 @@ vector<Node*> AStarSolver::ReconstructPath(map<Node*, Node*> cameFrom, Node* ini
 
 float AStarSolver::GetEstimatedCost(Node* source, Node* destination)
 {
-	return abs(destination->GetRow() - source->GetRow()) + abs(destination->GetCol() - source->GetCol());
+	//return abs(destination->GetRow() - source->GetRow()) + abs(destination->GetCol() - source->GetCol());
+	return XMVector3LengthSq(XMVectorSubtract(XMLoadFloat3(&destination->GetPos()), XMLoadFloat3(&source->GetPos()))).m128_f32[0];
 }
 
 float AStarSolver::GetActualCost(Node* source, Node* destination)
@@ -59,13 +60,13 @@ vector<Node*> AStarSolver::FindPath(XMFLOAT3 start, XMFLOAT3 end)
 	PriorityQueue openNodes;
 	std::map<Node*, Node*> cameFrom;
 
-	startGrid, currentGrid = navmesh->GetGridAtPosition(start);
+	startGrid = currentGrid = navmesh->GetGridAtPosition(start);
 	endGrid = navmesh->GetGridAtPosition(end);
 
 	Node* firstNode = startGrid->FindNearestNode(start);
 	Node* target = endGrid->FindNearestNode(end);
 
-	firstNode->SetEstimatedTotalCost((startGrid == endGrid) ? GetEstimatedCost(firstNode, target) : GetEstimatedCost(firstNode, startGrid->FindNearestNode(end)));
+	firstNode->SetEstimatedTotalCost(GetEstimatedCost(firstNode, target));
 	touchedNodes.push_back(firstNode);
 
 	openNodes.Add(firstNode);
@@ -73,6 +74,7 @@ vector<Node*> AStarSolver::FindPath(XMFLOAT3 start, XMFLOAT3 end)
 	while (!openNodes.IsEmpty())
 	{
 		Node* currentNode = openNodes.Pop();
+		currentGrid = navmesh->GetGrid(currentNode->GetGridID());
 
 		if (currentNode == target)
 		{
@@ -84,17 +86,23 @@ vector<Node*> AStarSolver::FindPath(XMFLOAT3 start, XMFLOAT3 end)
 		int totalAdjacents = 0;
 		std::vector<Node*> possibleMoves;
 		currentGrid->GetUnobstructedMoves(currentNode, possibleMoves, totalAdjacents);
-		if (totalAdjacents < 4) {
-			XMFLOAT3 currentPos = currentNode->GetPos();
-			nextGrid = navmesh->GetAdjacentGrid(currentGrid->GetGridID(), currentPos);
-			Node* potentialNewNode = nextGrid->FindNearestNode(currentPos);
-			XMFLOAT3 nearestNewNodePos = potentialNewNode->GetPos();
-			if ((endGrid == nextGrid) || 
-				XMVector3LengthSq(XMVectorSubtract(XMLoadFloat3(&nearestNewNodePos), XMLoadFloat3(&currentPos))).m128_f32[0] < (currentGrid->GetNodeSpacing() * nextGrid->GetNodeSpacing())) {
-				currentGrid = nextGrid;
-				currentGrid->GetUnobstructedMoves(potentialNewNode, possibleMoves, totalAdjacents);
-			}
+		XMFLOAT3 currentPos = currentNode->GetPos();
+		nextGrid = navmesh->GetAdjacentGrid(currentGrid->GetGridID(), currentPos);
+		unsigned int nextGridID = nextGrid->GetGridID();
+		Node* potentialNewNode = nextGrid->FindNearestNode(currentPos);
+		XMFLOAT3 nearestNewNodePos = potentialNewNode->GetPos();
+		float tolerance = (currentGrid->GetNodeSpacing() * nextGrid->GetNodeSpacing() * 10);
+		float costToNewNode = GetEstimatedCost(currentNode, potentialNewNode);
+		if (costToNewNode <= tolerance) {
+			nextGrid->GetUnobstructedMoves(potentialNewNode, possibleMoves, totalAdjacents);
 		}
+		/*
+		if ((endGrid == nextGrid) ||
+			XMVector3LengthSq(XMVectorSubtract(XMLoadFloat3(&nearestNewNodePos), XMLoadFloat3(&currentPos))).m128_f32[0] < (currentGrid->GetNodeSpacing() * nextGrid->GetNodeSpacing())) {
+			currentGrid = nextGrid;
+			currentGrid->GetUnobstructedMoves(potentialNewNode, possibleMoves, totalAdjacents);
+		}
+		*/
 
 		for (auto& move : possibleMoves)
 		{
@@ -108,7 +116,7 @@ vector<Node*> AStarSolver::FindPath(XMFLOAT3 start, XMFLOAT3 end)
 				cameFrom[move] = currentNode;
 
 				move->SetCostSoFar(costToMove);
-				move->SetEstimatedTotalCost(move->GetCostSoFar() + ((currentGrid == endGrid) ? GetEstimatedCost(move, target) : GetEstimatedCost(move, currentGrid->FindNearestNode(end))));
+				move->SetEstimatedTotalCost(move->GetCostSoFar() + GetEstimatedCost(move, target));
 				touchedNodes.push_back(move);
 
 				if (!openNodes.Contains(move))

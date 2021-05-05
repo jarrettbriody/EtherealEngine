@@ -36,7 +36,7 @@ TYPE="CSHADER" name="ParticleDrawArgs" cso="ParticleDrawArgsCS"
 TYPE="CSHADER" name="EmitParticle" cso="EmitParticleCS"
 TYPE="CSHADER" name="UpdateParticle" cso="UpdateParticleCS"
 
-TYPE="MESH" name="bloodorb" path="Kamchatka/bloodorb.obj"
+TYPE="MESH" name="bloodorb" path="Kamchatka/bloodorbNEWNEW.obj"
 TYPE="MESH" name="Cube" path="Default/cube.obj"
 TYPE="MESH" name="InverseCube" path="Default/inverse_cube.obj"
 TYPE="MESH" name="Cylinder" path="Default/cylinder.obj"

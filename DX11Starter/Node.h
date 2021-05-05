@@ -10,11 +10,13 @@ private:
 	float estimatedTotalCost; //Cost to reach from START to END, using heuristic (for A-Star)
 	DirectX::XMFLOAT3 pos;
 	bool obstruction;
+	unsigned int gridID = 0;
 public:
 	Node();
-	Node(int gridRow, int gridCol, DirectX::XMFLOAT3 worldPos, bool obs);
+	Node(unsigned int gridID, int gridRow, int gridCol, DirectX::XMFLOAT3 worldPos, bool obs);
 	~Node();
 
+	unsigned int GetGridID();
 	int GetRow();
 	int GetCol();
 	float GetEstimatedTotalCost();

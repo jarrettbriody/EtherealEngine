@@ -48,8 +48,9 @@ VertexToPixel main(VertexShaderInput input)
 	float flux = (sin(newPos.x * 5.0f + totalTime)) * waveHeight;//((sin(totalTime) - 0.5f) / 2.0f + (sin(newPos.x + counter / 50.0f) - 0.5f) / 2.0f) * waveHeight;
 	flux += ((cos(newPos.z * 10.0f + totalTime)) * (waveHeight / 2.0f));
 	//flux += ((cos(newPos.y + totalTime)) * (waveHeight / 5.0f)) + waveHeight / 5.0f;
-	if (newPos.y > fillLineY) newPos.y = fillLineY + flux;
+	if (newPos.y >= (fillLineY + flux)) newPos.y = fillLineY + flux;
 
+	/*
 	float hypotenuse = length(newPos);
 	if (hypotenuse > radius) {
 		float deltaHypot = (hypotenuse - radius) * 1.003f;
@@ -59,6 +60,7 @@ VertexToPixel main(VertexShaderInput input)
 		float zMultiplier = (newPos.z < 0) ? -1.0f : 1.0f;
 		newPos = float3(newPos.x + deltaDist * xMultiplier * cos(3.14159265f / 4.0f), newPos.y, newPos.z + deltaDist * zMultiplier * sin(3.14159265f / 4.0f));
 	}
+	*/
 
 	output.worldPos = float3(newPos.x + world._41, newPos.y + world._42, newPos.z + world._43);
 

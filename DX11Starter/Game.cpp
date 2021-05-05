@@ -58,6 +58,8 @@ Game::~Game()
 
 	LightHandler::DestroyInstance();
 
+	NavmeshHandler::DestroyInstance();
+
 	// FMOD
 	sound[0]->release(); // For now just release the one sound we have assigned
 	backgroundMusic->release();
@@ -291,6 +293,8 @@ void Game::Init()
 
 	ScriptManager::EERenderer = EERenderer;
 
+	NavmeshHandler::SetupInstance();
+
 	Config::Context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	// Audio -----------------
@@ -326,7 +330,7 @@ void Game::Init()
 	fmodResult = masterGroup->addGroup(sfxGroup); 
 	FmodErrorCheck(fmodResult);
 
-	fmodResult = Config::FMODSystem->playSound(backgroundMusic, 0, false, &musicChannel); // Start playing the 3D sound
+	//fmodResult = Config::FMODSystem->playSound(backgroundMusic, 0, false, &musicChannel); // Start playing the 3D sound
 	FmodErrorCheck(fmodResult);
 
 	FMOD_VECTOR pos = { 1.0f, 50.0f, 1.0f };

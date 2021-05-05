@@ -23,6 +23,7 @@
 #include "CPUParticleEmitter.h"
 #include "Scripts.h"
 #include "LightHandler.h"
+#include "NavmeshHandler.h"
 
 using namespace std;
 

@@ -18,13 +18,13 @@ struct FluidCallback : RendererCallback {
 		vShader->SetFloat("totalTime", totalTime);
 		vShader->SetFloat("deltaTime", deltaTime);
 		vShader->SetFloat("waveHeight", waveHeight);
-		vShader->SetFloat("radius", radius);
+		//vShader->SetFloat("radius", radius);
 		vShader->SetInt("counter", waveCounter);
 	}
 
 	void PrePixelShaderCallback() {
 		pShader->SetFloat3("orbCenter", pos);
-		pShader->SetFloat("radius", radius + 0.005f);
+		pShader->SetFloat("radius", radius + 0.002f);
 	}
 
 	void PrePrepassVertexShaderCallback() {
@@ -32,13 +32,13 @@ struct FluidCallback : RendererCallback {
 		prepassVShader->SetFloat("totalTime", totalTime);
 		prepassVShader->SetFloat("deltaTime", deltaTime);
 		prepassVShader->SetFloat("waveHeight", waveHeight);
-		prepassVShader->SetFloat("radius", radius);
+		//prepassVShader->SetFloat("radius", radius);
 		prepassVShader->SetInt("counter", waveCounter);
 	}
 	
 	void PrePrepassPixelShaderCallback() {
 		prepassPShader->SetFloat3("orbCenter", pos);
-		prepassPShader->SetFloat("radius", radius + 0.005f);
+		prepassPShader->SetFloat("radius", radius + 0.002f);
 	}
 };
 

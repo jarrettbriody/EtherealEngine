@@ -3,16 +3,17 @@
 #include "BehaviorTree.h"
 #include "Entity.h"
 #include "Grid.h"
+#include "AStarSolver.h"
 
 class FindPlayer : public Behavior
 {
 private:
-	Grid* grid;
-	std::list<Node*>* path;
+	AStarSolver* aStarSolver;
+	std::vector<Node*>* path;
 	Entity* enemy;
 	Entity* player;
 public:
-	FindPlayer(Entity* e, Entity* p, Grid* grid, std::list<Node*>* path) : enemy(e), player(p), grid(grid), path(path) {}
+	FindPlayer(Entity* e, Entity* p, AStarSolver* aStarSolver, std::vector<Node*>* path) : enemy(e), player(p), aStarSolver(aStarSolver), path(path) {}
 	~FindPlayer() {}
 
 	void OnInitialize();

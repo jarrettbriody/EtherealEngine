@@ -7,7 +7,7 @@
 class FollowPath : public Behavior
 {
 private:
-	std::list<Node*>* path;
+	std::vector<Node*>* path;
 	Entity* enemy;
 	float movementSpeed;
 	float minimumDistance;
@@ -16,7 +16,7 @@ private:
 	double* deltaTime;
 	btVector3 movementDirection;
 public:
-	FollowPath(std::list<Node*>* path, Entity* e, float speed, float distance, float turn, double* delta) : path(path), enemy(e), movementSpeed(speed), minimumDistance(distance), turningSpeed(turn), deltaTime(delta) {}
+	FollowPath(std::vector<Node*>* path, Entity* e, float speed, float distance, float turn, double* delta) : path(path), enemy(e), movementSpeed(speed), minimumDistance(distance), turningSpeed(turn), deltaTime(delta) {}
 	~FollowPath() {}
 
 	void OnInitialize();

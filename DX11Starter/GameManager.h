@@ -1,5 +1,6 @@
 #pragma once
 #include "ScriptManager.h"
+#include "NavmeshHandler.h"
 
 enum class GameState
 {

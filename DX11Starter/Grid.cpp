@@ -66,14 +66,14 @@ void Grid::CreateGrid()
 				obstruction = true;
 			}
 
-			grid[x][z] = Node(x, z, nodePos, obstruction);
+			grid[x][z] = Node(gridID, x, z, nodePos, obstruction);
 			gridEndPosition = nodePos;
 
 			//------
 			// Debug line shit
 			//------
-			/*
 			// Create the world matrix for the debug line
+			/*
 			XMFLOAT4X4 wm;
 			XMStoreFloat4x4(&wm, XMMatrixTranspose(DirectX::XMMatrixIdentity()));
 
@@ -104,7 +104,8 @@ void Grid::CreateGrid()
 				rayPoints[7] = nodePos;
 				dl->GenerateCuboidVertexBuffer(rayPoints, 8);
 				delete[] rayPoints;
-			}*/
+			}
+			*/
 		}
 	}
 	gridSize = XMFLOAT3(gridEndPosition.x - gridStartPosition.x, gridSize.y, gridEndPosition.z - gridStartPosition.x);

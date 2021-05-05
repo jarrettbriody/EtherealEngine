@@ -122,6 +122,7 @@ Grid* NavmeshHandler::GetGridAtPosition(XMFLOAT3 position)
 			return Grids[i];
 		}
 		else if(XMVector3LengthSq(XMVectorSubtract(XMLoadFloat3(&Grids[i]->FindNearestNode(position)->GetPos()), pos)).m128_f32[0] < closestNodeDist) {
+			closestNodeDist = XMVector3LengthSq(XMVectorSubtract(XMLoadFloat3(&Grids[i]->FindNearestNode(position)->GetPos()), pos)).m128_f32[0];
 			closest = Grids[i];
 		}
 	}
@@ -138,11 +139,13 @@ Grid* NavmeshHandler::GetAdjacentGrid(unsigned int currentGridID, XMFLOAT3 posit
 
 	Grid* closest = GridsMap[connections[0]];
 	float closestNodeDist = XMVector3LengthSq(XMVectorSubtract(XMLoadFloat3(&closest->FindNearestNode(position)->GetPos()), pos)).m128_f32[0];
-
+	float testVal;
 	for (size_t i = 1; i < connections.size(); i++)
 	{
-		if (XMVector3LengthSq(XMVectorSubtract(XMLoadFloat3(&GridsMap[connections[i]]->FindNearestNode(position)->GetPos()), pos)).m128_f32[0] < closestNodeDist) {
-			closest = Grids[i];
+		testVal = XMVector3LengthSq(XMVectorSubtract(XMLoadFloat3(&GridsMap[connections[i]]->FindNearestNode(position)->GetPos()), pos)).m128_f32[0];
+		if (testVal < closestNodeDist) {
+			closestNodeDist = testVal;
+			closest = GridsMap[connections[i]];
 		}
 	}
 

@@ -36,7 +36,7 @@ void EnemyTest::Init()
 					.End()
 					.Composite<Sequence>() // Search player's last known location
 						.Leaf<InCombat>(&inCombat).End()
-						.Leaf<FindPlayer>(entity, player, grid, &path).End()
+						.Leaf<FindPlayer>(entity, player, &aStarSolver, &path).End()
 						.Leaf<FollowPath>(&path, entity, movementSpeed, minimumDistance, turnSpeed, &deltaTime).End()
 						.Leaf<Idle>(entity, &inCombat).End()
 					.End()
@@ -48,6 +48,7 @@ void EnemyTest::Init()
 			.End();
 
 	keyboard = Keyboard::GetInstance();
+	navmesh = NavmeshHandler::GetInstance();
 }
 
 void EnemyTest::Update()
@@ -61,7 +62,7 @@ void EnemyTest::Update()
 	if (keyboard->KeyIsPressed(0x4A)) // J
 	{
 		XMFLOAT3 ePos = entity->GetPosition();
-		Node* closest = grid->FindNearestNode(ePos);
+		Node* closest = navmesh->GetGridAtPosition(ePos)->FindNearestNode(ePos);
 		XMFLOAT3 nodePos = closest->GetPos();
 		cout << "Enemy position- X: " << ePos.x << "| Z: " << ePos.z << endl;
 		cout << "Node position- X: " << nodePos.x << "| Z: " << nodePos.z << endl;
@@ -69,7 +70,7 @@ void EnemyTest::Update()
 		clock_t t;
 		Entity* player = eMap->find("FPSController")->second;
 		t = clock();
-		//path = grid->FindPath(entity->GetPosition(), player->GetPosition());
+		path = aStarSolver.FindPath(entity->GetPosition(), player->GetPosition());
 		t = clock() - t;
 		printf("It took me %d clicks (%f seconds).\n", t, ((float)t) / CLOCKS_PER_SEC);
 
