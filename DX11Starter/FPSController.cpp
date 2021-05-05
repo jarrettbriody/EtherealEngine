@@ -967,4 +967,8 @@ void FPSController::OnCollision(btCollisionObject* other)
 {
 	Entity* otherE = (Entity*)((PhysicsWrapper*)other->getUserPointer())->objectPointer;
 	
+	if (otherE->tag.STDStr() == "Blood Pool")
+	{
+		cout << "Picked up blood" << endl;
+	}
 }

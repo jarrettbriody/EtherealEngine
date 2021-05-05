@@ -10,6 +10,10 @@ class GameManager : public ScriptManager
 {
 	map<string, Entity*>* eMap;
 
+	std::vector<Entity*> totalSplitMeshEntities;
+
+	EntityCreationParameters bloodPoolParams;
+
 	GameState gs;
 
 	const float MAX_GAME_TIME = 480.0f; // 8 minutes
@@ -21,7 +25,10 @@ class GameManager : public ScriptManager
 
 	void Update();
 
+	void BloodPoolSpawner();
+
 public:
 	void DecrementEnemiesAlive();
+	void AddRangeToTotalSplitMeshEntities(std::vector<Entity*> splitMeshEntities);
 };
 

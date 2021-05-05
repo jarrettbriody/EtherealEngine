@@ -53,6 +53,8 @@ void BloodIcicle::OnCollision(btCollisionObject* other)
 			{
 				e->tag = std::string("Body Part");
 			}
+
+			gameManagerScript->AddRangeToTotalSplitMeshEntities(childEntities);
 		}
 
 		// if this icicle hits a child entity of a recently split enemy and there is not already a body part pinned to the icicle then pin the collided body part

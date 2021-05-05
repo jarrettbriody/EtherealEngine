@@ -189,6 +189,9 @@
     <ClCompile Include="GameManager.cpp">
       <Filter>EEScripts\Source</Filter>
     </ClCompile>
+    <ClCompile Include="BloodPool.cpp">
+      <Filter>EEScripts\Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h">
@@ -315,6 +318,9 @@
       <Filter>EECore\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="GameManager.h">
+      <Filter>EEScripts\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="BloodPool.h">
       <Filter>EEScripts\Headers</Filter>
     </ClInclude>
   </ItemGroup>

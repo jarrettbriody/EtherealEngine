@@ -155,7 +155,7 @@ void BloodSword::RaisedState()
 	
 	CalcLerp();
 
-	cout << "Raising" << endl;
+	// cout << "Raising" << endl;
 
 	if (CheckTransformationsNearEqual(true, true))
 	{
@@ -172,7 +172,7 @@ void BloodSword::SlashingState()
 	
 	CalcLerp();
 
-	cout << "Slashing" << endl;
+	// cout << "Slashing" << endl;
 
 	if (CheckTransformationsNearEqual(true, false))
 	{
@@ -194,7 +194,7 @@ void BloodSword::ResetState()
 
 	CalcLerp();
 
-	cout << "Resetting" << endl;
+	// cout << "Resetting" << endl;
 
 	animReset = true;
 
@@ -366,6 +366,8 @@ void BloodSword::CheckSwordSlashHit()
 					}
 				}
 			}
+
+			gameManagerScript->AddRangeToTotalSplitMeshEntities(childEntities);
 
 			if (leashedWhenKilled)
 			{

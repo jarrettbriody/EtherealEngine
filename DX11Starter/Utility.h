@@ -133,4 +133,18 @@ namespace Utility {
 	{
 		return max(lower, min(n, upper));
 	}
+
+	static btCollisionWorld::ClosestRayResultCallback BulletRaycast(btVector3 from, btVector3 to)
+	{
+		Config::DynamicsWorld->updateAabbs();
+		Config::DynamicsWorld->computeOverlappingPairs();
+
+		// Create variable to store the ray hit and set flags
+		btCollisionWorld::ClosestRayResultCallback closestResult(from, to);
+		closestResult.m_flags &= btTriangleRaycastCallback::kF_FilterBackfaces;
+
+		Config::DynamicsWorld->rayTest(from, to, closestResult); // Raycast
+
+		return closestResult;
+	}
 }

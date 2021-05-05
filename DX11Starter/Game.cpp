@@ -34,11 +34,6 @@ Game::~Game()
 	//delete terrain;
 	//delete water;
 
-	delete collisionConfiguration;
-	delete dispatcher;
-	delete broadphase;
-	delete solver;
-	delete Config::DynamicsWorld;
 	// delete physicsDraw;
 
 	Keyboard::DestroyInstance();
@@ -51,6 +46,12 @@ Game::~Game()
 	{
 		delete ScriptManager::scriptFunctions[i];
 	}
+
+	delete collisionConfiguration;
+	delete dispatcher;
+	delete broadphase;
+	delete solver;
+	delete Config::DynamicsWorld;
 
 	MemoryAllocator::DestroyInstance();
 
