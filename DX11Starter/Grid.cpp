@@ -5,11 +5,12 @@ Grid::Grid()
 {
 }
 
-Grid::Grid(DirectX::XMFLOAT3 start, DirectX::XMFLOAT2 size, float spacing)
+Grid::Grid(unsigned int ID, DirectX::XMFLOAT3 start, DirectX::XMFLOAT3 size, float spacing)
 {
 	gridStartPosition = start;
 	gridSize = size;
 	nodeSpacing = spacing;
+	gridID = ID;
 }
 
 Grid::~Grid()
@@ -19,7 +20,7 @@ Grid::~Grid()
 void Grid::CreateGrid()
 {
 	numberOfRows = (int)(gridSize.x / nodeSpacing);
-	numberOfColumns = (int)(gridSize.y / nodeSpacing);
+	numberOfColumns = (int)(gridSize.z / nodeSpacing);
 
 	grid = std::vector<std::vector<Node>>(numberOfRows, std::vector<Node>(numberOfColumns));
 	bool obstruction;
@@ -54,7 +55,7 @@ void Grid::CreateGrid()
 					//printf("Raycast Hit: %s\n", hit->GetName().c_str());
 
 					// If our raycast didn't hit a floor then we probably can't move here
-					if (hit->GetName().find("street") == std::string::npos)
+					if (!hit->HasTag("navmesh"))
 						obstruction = true;
 				}
 			}
@@ -106,43 +107,11 @@ void Grid::CreateGrid()
 			}*/
 		}
 	}
-	gridSize = XMFLOAT2(gridEndPosition.x - gridStartPosition.x, gridEndPosition.z - gridStartPosition.x);
+	gridSize = XMFLOAT3(gridEndPosition.x - gridStartPosition.x, gridSize.y, gridEndPosition.z - gridStartPosition.x);
 }
 
 Node* Grid::FindNearestNode(DirectX::XMFLOAT3 position)
 {
-	/*
-	int x;
-	int z;
-	float diffx;
-	float diffz;
-
-	if ((position.x > 0 && gridStartPosition.x < 0) || (position.x < 0 && gridStartPosition.x > 0))
-		diffx = fabs(position.x) + fabs(gridStartPosition.x);
-	else
-		diffx = fabs(position.x) - fabs(gridStartPosition.x);
-
-	if ((position.z > 0 && gridStartPosition.z < 0) || (position.z < 0 && gridStartPosition.z > 0))
-		diffz = fabs(position.z) + fabs(gridStartPosition.z);
-	else
-		diffz = fabs(position.z) - fabs(gridStartPosition.z);
-
-	x = round(diffx / (nodeSpacing));
-	z = round(diffz / (nodeSpacing));
-
-	if (x < 0)
-		x = 0;
-	else if (x >= numberOfRows)
-		x = numberOfRows - 1;
-
-	if (z < 0)
-		z = 0;
-	else if (z >= numberOfColumns)
-		z = numberOfColumns - 1;
-
-	return &grid[x][z];
-	*/
-
 	unsigned int xIndex = 0;
 	unsigned int zIndex = 0;
 
@@ -220,20 +189,22 @@ std::vector<Node*> Grid::GetAdjacentNodes(Node* node)
 	return adjacent;
 }
 
-std::vector<Node*> Grid::GetUnobstructedMoves(Node* node)
+void Grid::GetUnobstructedMoves(Node* node, vector<Node*>& vec, int& totalAdjacents)
 {
 	std::vector<Node*> possibleMoves = GetAdjacentNodes(node);
-	std::vector<Node*> unobstructedMoves;
+	totalAdjacents = possibleMoves.size();
+	//std::vector<Node*> unobstructedMoves;
 
 	for (auto& move : possibleMoves)
 	{
 		if (!move->IsObstruction())
-			unobstructedMoves.push_back(move);
+			vec.push_back(move);
 	}
 
-	return unobstructedMoves;
+	//return unobstructedMoves;
 }
 
+/*
 void Grid::ResetAStar()
 {
 	for (auto& node : touchedNodes)
@@ -328,4 +299,25 @@ float Grid::GetActualCost(Node* source, Node* destination)
 	float zDiff = source->GetPos().z - destination->GetPos().z;
 
 	return sqrt(xDiff * xDiff + yDiff * yDiff + zDiff * zDiff);
+}
+*/
+
+XMFLOAT3 Grid::GetGridStart()
+{
+	return gridStartPosition;
+}
+
+XMFLOAT3 Grid::GetGridSize()
+{
+	return gridSize;
+}
+
+unsigned int Grid::GetGridID()
+{
+	return gridID;
+}
+
+float Grid::GetNodeSpacing()
+{
+	return nodeSpacing;
 }

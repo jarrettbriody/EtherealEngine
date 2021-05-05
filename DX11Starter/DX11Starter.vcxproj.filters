@@ -228,6 +228,9 @@
     <ClCompile Include="NavmeshHandler.cpp">
       <Filter>EECore\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="AStarSolver.cpp">
+      <Filter>EECore\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h">
@@ -393,6 +396,9 @@
       <Filter>EEBehaviors\Headers</Filter>
     </ClInclude>
     <ClInclude Include="NavmeshHandler.h">
+      <Filter>EECore\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AStarSolver.h">
       <Filter>EECore\Header Files</Filter>
     </ClInclude>
   </ItemGroup>

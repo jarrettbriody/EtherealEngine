@@ -4,8 +4,8 @@ TYPE="SKYBOX" dds="nightred"
 name="GameManager" colliders="false" scripts="GAMEMANAGER" P(0, 0, 0)R(0,0,0)S(0.0, 0.0, 0.0)
 name="FPSController" colliders="true" mass="1.0" colliderType="CAPSULE" scripts="FPSCONTROLLER" P(8, 1.0, 0)R(0,0,0)S(3.0, 3.0, 3.0)
 
-name="Blood_Orb" obj="bloodorb" layers="playertools" material="RedFluid" scripts="BLOODORB,AMBIENTPARTICLES" P(-15,5,0)R(0,0,0)S(0.5,0.5,0.5)
-name="Blood_Orb_Glass" obj="Sphere" layers="playertools" material="Glass" P(-15,5,0)R(0,0,0)S(1.05,1.05,1.05)
+name="Blood_Orb" obj="bloodorb" layers="playertools" material="RedFluid" scripts="BLOODORB,AMBIENTPARTICLES" P(-15,5,0)R(0,0,0)S(0.32,0.32,0.32)
+name="Blood_Orb_Glass" obj="Sphere" layers="playertools" material="Glass" P(-15,5,0)R(0,0,0)S(0.7,0.7,0.7)
 name="Blood Sword" tags="Blood Sword" layers="playertools" scripts="BLOODSWORD" obj="bloodsword" material="bloodsword" P(0,0,0)R(0,0,0)S(1,1,1)
 
 name="Antler Demon" obj="antlerdemon_separatedhead" layers="outline" tags="Boss" mass="0.0" colliders="true" P(-108.7,15,-30)R(0,180,0)S(0.8,0.8,0.8)

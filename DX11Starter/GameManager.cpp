@@ -14,7 +14,7 @@ void GameManager::Init()
 	//-------------------------------------------------------
 	// AI Tests
 	//-------------------------------------------------------
-
+	/*
 	// Starting alley
 	XMFLOAT3 gridStart(-135.0f, 100.0f, -105.0f);
 	XMFLOAT2 gridSize(58.0f, 280.0f);
@@ -62,6 +62,7 @@ void GameManager::Init()
 	gridSize = XMFLOAT2(590.0f, 420.0f);
 	grid8 = Grid(gridStart, gridSize, 6.0f);
 	grid8.CreateGrid();
+	*/
 }
 
 void GameManager::Update()

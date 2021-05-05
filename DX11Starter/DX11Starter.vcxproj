@@ -128,6 +128,7 @@
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>$(SolutionDir)Libraries\Bullet\inc;$(SolutionDir)Libraries\FMOD\inc;$(SolutionDir)Libraries\HBAO+\lib</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -140,6 +141,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="AmbientParticles.cpp" />
+    <ClCompile Include="AStarSolver.cpp" />
     <ClCompile Include="Barrel.cpp" />
     <ClCompile Include="BloodIcicle.cpp" />
     <ClCompile Include="BloodOrb.cpp" />
@@ -190,6 +192,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AmbientParticles.h" />
+    <ClInclude Include="AStarSolver.h" />
     <ClInclude Include="Barrel.h" />
     <ClInclude Include="BehaviorTree.h" />
     <ClInclude Include="BehaviorTreeBuilder.h" />

@@ -2,7 +2,9 @@
 #include "pch.h"
 
 //define macros
+#define ZERO_VECTOR4 XMFLOAT4(0.0f,0.0f,0.0f,0.0f)
 #define ZERO_VECTOR3 XMFLOAT3(0.0f,0.0f,0.0f)
+#define ZERO_VECTOR2 XMFLOAT2(0.0f,0.0f)
 #define ONE_VECTOR3 XMFLOAT3(1.0f,1.0f,1.0f)
 #define X_AXIS XMFLOAT3(1.0f,0.0f,0.0f)
 #define Y_AXIS XMFLOAT3(0.0f,1.0f,0.0f)

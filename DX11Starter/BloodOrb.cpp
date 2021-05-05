@@ -9,8 +9,9 @@ void BloodOrb::Init()
 	fluidCallback.pShader = EESceneLoader->PixelShadersMap["Fluid"];
 	fluidCallback.prepassVShader = EESceneLoader->VertexShadersMap["FluidPrepass"];
 	fluidCallback.prepassPShader = EESceneLoader->PixelShadersMap["FluidPrepass"];
-	fluidCallback.fillLineY = -0.0f;
-	fluidCallback.waveHeight = 0.02f;
+	fluidCallback.fillLineY = -0.25f;
+	//fluidCallback.waveHeight = 0.02f;
+	fluidCallback.radius = entity->GetScale().x;
 
 	EERenderer->SetRenderObjectCallback(entity, &fluidCallback);
 	fluidCallback.active = true;
@@ -61,12 +62,27 @@ void BloodOrb::Update()
 	cam->CalcWorldMatrix();
 	XMFLOAT3 camPos = cam->position;
 	XMFLOAT3 camDir = cam->direction;
-	XMFLOAT3 newPos = XMFLOAT3(camPos.x + camDir.x * 1.3f, camPos.y + camDir.y - 0.65f, camPos.z + camDir.z * 1.3f);
+	XMFLOAT3 newPos = XMFLOAT3(camPos.x + camDir.x * 1.1f, camPos.y + camDir.y - 0.2f, camPos.z + camDir.z * 1.1f);
 	newPos.y = newPos.y + sin(totalTime) * bobMagnitude;
 	entity->SetPosition(newPos);
 	glass->SetPosition(newPos);
 	entity->CalcWorldMatrix();
 	glass->CalcWorldMatrix();
+
+	if (GetAsyncKeyState(VK_UP))
+	{
+		fluidCallback.fillLineY += 0.1f * deltaTime;
+		if (fluidCallback.fillLineY > fluidCallback.radius) fluidCallback.fillLineY = fluidCallback.radius;
+	}
+	if (GetAsyncKeyState(VK_DOWN))
+	{
+		fluidCallback.fillLineY -= 0.1f * deltaTime;
+		if (fluidCallback.fillLineY < -fluidCallback.radius) fluidCallback.fillLineY = -fluidCallback.radius;
+	}
+	float modifier = (fluidCallback.radius - pow(abs(fluidCallback.fillLineY), 4.0f));
+	if (modifier < 0.01f) modifier = 0.01f;
+	else if (modifier > 0.99f) modifier = 0.99f;
+	fluidCallback.waveHeight = defaultWaveHeight * modifier;
 
 	fluidCallback.totalTime = totalTime;
 	fluidCallback.deltaTime = deltaTime;

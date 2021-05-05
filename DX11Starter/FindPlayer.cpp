@@ -14,7 +14,7 @@ Status FindPlayer::Update()
 	if (path->size() != 0)
 		return SUCCESS;
 
-	*path = grid->FindPath(enemy->GetPosition(), player->GetPosition());
+	//*path = grid->FindPath(enemy->GetPosition(), player->GetPosition());
 
 	if (path->size() == 0)
 		return FAILURE;

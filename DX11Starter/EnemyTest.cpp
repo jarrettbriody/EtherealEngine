@@ -69,7 +69,7 @@ void EnemyTest::Update()
 		clock_t t;
 		Entity* player = eMap->find("FPSController")->second;
 		t = clock();
-		path = grid->FindPath(entity->GetPosition(), player->GetPosition());
+		//path = grid->FindPath(entity->GetPosition(), player->GetPosition());
 		t = clock() - t;
 		printf("It took me %d clicks (%f seconds).\n", t, ((float)t) / CLOCKS_PER_SEC);
 
