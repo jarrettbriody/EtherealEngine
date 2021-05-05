@@ -23,7 +23,7 @@ void GameManager::Init()
 	desc.gridID = 0;
 	desc.position = XMFLOAT3(-135.0f, 100.0f, -105.0f);
 	desc.size = XMFLOAT3(58.0f, 1000.0f, 280.0f);
-	desc.nodeSpacing = 6.0f;
+	desc.nodeSpacing = 8.0f;
 	navmesh->AddGrid(desc, true);
 
 	// Alley before fire

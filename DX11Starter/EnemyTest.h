@@ -28,8 +28,8 @@ class EnemyTest : public ScriptManager
 
 	XMFLOAT3 pos;
 	bool inCombat = false;
-	float movementSpeed = 7.5f;
-	float maxSpeed = 25.0f;
+	float movementSpeed = 15.0f;
+	float maxSpeed = 40.0f;
 	float dampingScalar = 0.09f;
 	float turnSpeed = 1.0f;
 	float minimumDistance = 5.0f;
