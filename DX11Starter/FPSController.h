@@ -1,6 +1,7 @@
 #pragma once
 #include "ScriptManager.h"
 #include "BloodSword.h"
+#include "BloodOrb.h"
 #include <WinUser.h>
 #include "DXCore.h"
 #include "ParticleEmitter.h"
@@ -28,6 +29,11 @@ class FPSController : public ScriptManager
 	map<string, Entity*>* eMap;
 
 	DashBlurCallback dashBlurCallback;
+
+	BloodOrb* bloodOrbScript;
+
+	// Player Attributes
+	float bloodResource = 100.0f;
 
 	// Camera related attributes
 	Camera* cam;
@@ -125,6 +131,8 @@ class FPSController : public ScriptManager
 	const float BULLET_TIME_SCALAR = 0.5f;
 	const float NORMAL_TIME_SCALAR = 1.0f;
 	float bulletTimeRampDown = 0.25f;
+	const float BULLET_TIME_RAMP_DOWN_TIMER_MAX = 1.0f;
+	float bulletTimeRampDownTimer = BULLET_TIME_RAMP_DOWN_TIMER_MAX;
 
 	//sword rotation
 	const float MAX_SWORD_ROT = XMConvertToRadians(3.0f);

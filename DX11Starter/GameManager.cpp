@@ -5,8 +5,7 @@ void GameManager::Init()
 {
 	eMap = ScriptManager::sceneEntitiesMap;
 
-
-	enemiesAlive = EESceneLoader->sceneEntitiesTagMap["Enemy"].size(); // enemies alive on game start
+	enemiesAlive = EESceneLoader->SceneEntitiesTagMap["Enemy"].size(); // enemies alive on game start
 
 	totalSplitMeshEntities = std::vector<Entity*>();
 	
@@ -139,7 +138,7 @@ void GameManager::BloodPoolSpawner()
 			PhysicsWrapper* wrapper = (PhysicsWrapper*)closestResult.m_collisionObject->getUserPointer();
 			if (wrapper->type == PHYSICS_WRAPPER_TYPE::ENTITY) {
 				Entity* e = (Entity*)wrapper->objectPointer;
-				if (e->tag.STDStr() == std::string("Environment"))
+				if (e->HasTag(std::string("Environment")))
 				{
 					bloodPoolParams.position = Utility::BulletVectorToFloat3(closestResult.m_hitPointWorld);
 					ScriptManager::CreateEntity(bloodPoolParams);

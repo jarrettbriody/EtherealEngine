@@ -1,4 +1,4 @@
-#include "pch.h"
+﻿#include "pch.h"
 #include "BloodOrb.h"
 
 void BloodOrb::Init()
@@ -69,6 +69,12 @@ void BloodOrb::Update()
 	entity->CalcWorldMatrix();
 	glass->CalcWorldMatrix();
 
+	if (fluidCallback.fillLineY != fillLineMark)
+	{
+		if (fluidCallback.fillLineY < fillLineMark)fluidCallback.fillLineY += 0.25f * deltaTime;
+		if (fluidCallback.fillLineY > fillLineMark)fluidCallback.fillLineY -= 0.25f * deltaTime;
+	}
+
 	if (GetAsyncKeyState(VK_UP))
 	{
 		fluidCallback.fillLineY += 0.1f * deltaTime;
@@ -91,4 +97,22 @@ void BloodOrb::Update()
 
 	waveCounter+=5;
 	totalTime += deltaTime;
+}
+
+void BloodOrb::SetFillLinePercentage(float percentage)
+{
+	float fillLinePercentage = percentage;
+
+	if (fillLinePercentage > 100)
+	{
+		fillLinePercentage = 100;
+	}
+	else if (fillLinePercentage < 0)
+	{
+		fillLinePercentage = 0;
+	}
+	// value=min+(max−min)×percentage
+	fillLineMark = -fluidCallback.radius + (fluidCallback.radius - (-fluidCallback.radius)) * (fillLinePercentage/100);
+
+	// cout << "Percentage: " << percentage << " fillLineMark: " << fillLineMark << " Max: " << fluidCallback.radius << " Min: " << -fluidCallback.radius << endl;
 }

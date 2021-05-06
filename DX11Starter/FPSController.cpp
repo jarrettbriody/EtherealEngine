@@ -14,6 +14,8 @@ void FPSController::Init()
 	}
 
 	eMap = ScriptManager::sceneEntitiesMap;
+	bloodOrb = eMap->find("Blood_Orb")->second;
+	bloodOrbScript = (BloodOrb*)scriptFunctionsMap[(*eMap)["Blood_Orb"]->GetName()]["BLOODORB"];
 	cam = ScriptManager::EERenderer->GetCamera("main");
 	direction = cam->direction; 
 	cam->SetFOV(fov);
@@ -35,7 +37,6 @@ void FPSController::Init()
 			// defaults work for the rest
 	};
 	
-	bloodOrb = eMap->find("Blood_Orb")->second;
 
 	EntityCreationParameters dashRingParams = {
 			"Dash Ring",					// name
@@ -47,7 +48,7 @@ void FPSController::Init()
 			0,								// script count
 			XMFLOAT3(0.0f, 0.0f, 0.0f),		// position
 			XMFLOAT3(0.0f, 0.0f, 0.0f),		// rotation
-			XMFLOAT3(0.6f, 0.6f, 0.6f),		// scale
+			XMFLOAT3(0.4f, 0.4f, 0.4f),		// scale
 			0.0f,							// mass
 			false
 			// defaults work for the rest
@@ -129,6 +130,13 @@ void FPSController::Update()
 		cout << "Player POS- X: " << entity->GetPosition().x << " | Y: " << entity->GetPosition().y << " | Z: " << entity->GetPosition().z << endl;
 	}
 
+	if (bloodResource <= 0) // death
+	{
+		ps = PlayerState::Death;
+	}
+
+	bloodOrbScript->SetFillLinePercentage(bloodResource);
+
 	// player state machine
 	switch (ps)
 	{
@@ -196,6 +204,7 @@ void FPSController::Update()
 			playerRBody->setAngularFactor(btVector3(1, 1, 1)); // free rotations on x and z axes
 			playerRBody->setGravity(btVector3(0.0f, -25.0f, 0.0f));
 			cam->SetPosition(XMFLOAT3(entity->GetPosition().x, entity->GetPosition().y + entity->GetScale().y + headbobOffset, entity->GetPosition().z)); // after all updates make sure camera is following the affected entity
+			// TODO: How to set camera to ragdolling body
 			break;
 
 		case PlayerState::Victory:
@@ -231,6 +240,8 @@ void FPSController::CheckBloodIcicle()
 {
 	if (mouse->OnRMBDown() && bloodIcicleCooldownTimer <= 0) 
 	{
+		bloodResource -= 10;
+
 		// update position and rotation of the EntityCreationParams
 		icicleParams.position = bloodOrb->GetPosition();
 		icicleParams.rotationRadians = XMFLOAT3(cam->xRotation + 1.5708f /* 90 degress in radians */ , cam->yRotation, cam->zRotation);
@@ -259,12 +270,16 @@ void FPSController::CheckBloodIcicle()
 void FPSController::CheckBulletTime()
 {
 	// Slow time instantly and keep it slowed while Q is pressed but gradually ramp time back up to normal time when not pressed 
-	if (keyboard->KeyIsPressed(0x51)) 
+	if (keyboard->OnKeyDown(0x51)) 
 	{
+		bloodResource -= 25;
+
+		bulletTimeRampDownTimer = BULLET_TIME_RAMP_DOWN_TIMER_MAX;
+
 		bulletTimeRampDown = BULLET_TIME_SCALAR;
 		DXCore::deltaTimeScalar = BULLET_TIME_SCALAR;
 	}
-	else
+	else if(bulletTimeRampDownTimer <= 0)
 	{
 		if (bulletTimeRampDown < NORMAL_TIME_SCALAR)
 		{
@@ -276,6 +291,10 @@ void FPSController::CheckBulletTime()
 		}
 
 		DXCore::deltaTimeScalar = bulletTimeRampDown;
+	}
+	else
+	{
+		bulletTimeRampDownTimer -= deltaTime;
 	}
 }
 
@@ -497,21 +516,22 @@ void FPSController::UpdateDashRingsTransforms()
 	float yDegrees;
 	float zDegrees;
 
-	dashRings[0]->SetPosition(XMFLOAT3(camPos.x + camDir.x * 1.3f, camPos.y + camDir.y - 0.65f, camPos.z + camDir.z * 1.3f));
+	// dash ring updating position and spinning
+	dashRings[0]->SetPosition(XMFLOAT3(camPos.x + camDir.x * 1.1f, camPos.y + camDir.y - 0.5f, camPos.z + camDir.z * 1.1f));
 	xDegrees = dashRings[0]->GetEulerAngles().x;
 	dashRings[0]->SetRotation(Utility::FloatLerp(xDegrees, xDegrees + 10, 0.05 * deltaTime), 0, 0);
 	
-	dashRings[1]->SetPosition(XMFLOAT3(camPos.x + camDir.x * 1.3f, camPos.y + camDir.y - 0.65f, camPos.z + camDir.z * 1.3f));
+	dashRings[1]->SetPosition(XMFLOAT3(camPos.x + camDir.x * 1.1f, camPos.y + camDir.y - 0.5f, camPos.z + camDir.z * 1.1f));
 	xDegrees = dashRings[1]->GetEulerAngles().x;
-	dashRings[1]->SetRotation(Utility::FloatLerp(xDegrees, xDegrees + 10, 0.15 * deltaTime), 0, 0);
+	dashRings[1]->SetRotation(Utility::FloatLerp(xDegrees, xDegrees - 10, 0.15 * deltaTime), 0, 0);
 	
-	dashRings[2]->SetPosition(XMFLOAT3(camPos.x + camDir.x * 1.3f, camPos.y + camDir.y - 0.65f, camPos.z + camDir.z * 1.3f));
+	dashRings[2]->SetPosition(XMFLOAT3(camPos.x + camDir.x * 1.1f, camPos.y + camDir.y - 0.5f, camPos.z + camDir.z * 1.1f));
 	zDegrees = dashRings[2]->GetEulerAngles().z;
 	dashRings[2]->SetRotation(0, 0, Utility::FloatLerp(zDegrees, zDegrees + 10, 0.05 * deltaTime));
 	
-	dashRings[3]->SetPosition(XMFLOAT3(camPos.x + camDir.x * 1.3f, camPos.y + camDir.y - 0.65f, camPos.z + camDir.z * 1.3f));
+	dashRings[3]->SetPosition(XMFLOAT3(camPos.x + camDir.x * 1.1f, camPos.y + camDir.y - 0.5f, camPos.z + camDir.z * 1.1f));
 	zDegrees = dashRings[3]->GetEulerAngles().z;
-	dashRings[3]->SetRotation(0, 0, Utility::FloatLerp(zDegrees, zDegrees + 10, 0.15 * deltaTime));
+	dashRings[3]->SetRotation(0, 0, Utility::FloatLerp(zDegrees, zDegrees - 10, 0.15 * deltaTime));
 
 	for each (Entity* ring in dashRings)
 	{
@@ -1007,8 +1027,9 @@ void FPSController::OnCollision(btCollisionObject* other)
 {
 	Entity* otherE = (Entity*)((PhysicsWrapper*)other->getUserPointer())->objectPointer;
 	
-	if (otherE->tag.STDStr() == "Blood Pool")
+	if (otherE->HasTag(std::string("Blood Pool")))
 	{
+		bloodResource += 10;
 		otherE->Destroy();
 	}
 }

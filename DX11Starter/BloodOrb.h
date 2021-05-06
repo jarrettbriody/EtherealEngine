@@ -54,8 +54,13 @@ class BloodOrb : public ScriptManager
 
 	float bobMagnitude = 0.03f;
 
+	float fillLineMark = 0.0f;
+
 	void Init();
 
 	void Update();
+
+public:
+	void SetFillLinePercentage(float percentage);
 };
 
