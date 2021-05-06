@@ -5,7 +5,7 @@ void BloodPool::Init()
 {
 	poolGhostObject = new btGhostObject();
 	poolGhostObject->setCollisionFlags(poolGhostObject->getCollisionFlags() | btCollisionObject::CF_NO_CONTACT_RESPONSE);
-	poolGhostObject->setCollisionShape(new btBoxShape(btVector3(finalScale.x / 2, 2.0f, finalScale.z / 2))); // setting y half-extent to be high enough so there are never issues with picking up blood
+	poolGhostObject->setCollisionShape(new btBoxShape(btVector3(finalScale.x / 2, 2.5f, finalScale.z / 2))); // setting y half-extent to be high enough so there are never issues with picking up blood
 
 	btTransform transform;
 	transform.setIdentity();

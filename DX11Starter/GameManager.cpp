@@ -14,8 +14,8 @@ void GameManager::Init()
 			"Blood Pool",					// name
 			"Blood Pool",					// tag
 			"Blood Pool",					// layer
-			"Sphere",							// mesh
-			"swordgradient",							// material
+			"bloodpool",							// mesh
+			"Red",							// material
 			{"BLOODPOOL"},				// script names
 			1,								// script count
 			XMFLOAT3(0.0f, 0.0f, 0.0f),		// position

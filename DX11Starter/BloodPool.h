@@ -8,7 +8,7 @@ class BloodPool : public ScriptManager
 	btGhostObject* poolGhostObject;
 	
 	float growthScalar = 5.0f;
-	XMFLOAT3 finalScale = XMFLOAT3(3.5f, 0.1f, 3.5f);
+	XMFLOAT3 finalScale = XMFLOAT3(1.0f, 1.0f, 1.0f);
 
 	void Init();
 

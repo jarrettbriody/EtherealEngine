@@ -79,7 +79,7 @@ class FPSController : public ScriptManager
 	float dashImpulseScalar = 80.0f;
 	float dashRegenerationTimer = 0.0f;
 	const float DASH_MAX_REGENERATION_TIME = 1.5f;
-	std::vector<Entity*> dashOrbs;
+	std::vector<Entity*> dashRings;
 
 	// Sword
 	EntityCreationParameters swordParams;
@@ -156,9 +156,9 @@ class FPSController : public ScriptManager
 
 	void UpdateHookShotTransform();
 
-	void UpdateDashOrbsTransforms();
+	void UpdateDashRingsTransforms();
 
-	void UpdateDashOrbsActive(bool setActive);
+	void UpdateDashRingsActive(bool setActive);
 
 	void Move();
 

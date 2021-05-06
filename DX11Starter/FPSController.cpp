@@ -27,18 +27,20 @@ void FPSController::Init()
 			BulletColliderShape::BOX
 			// defaults work for the rest
 	};
+	
+	bloodOrb = eMap->find("Blood_Orb")->second;
 
-	EntityCreationParameters dashOrbParams = {
-			"Dash Orb",					// name
-			"Dash Orb",					// tag
-			"Dash Orb",					// layer
-			"dashorb",							// mesh
-			"swordgradient",							// material
+	EntityCreationParameters dashRingParams = {
+			"Dash Ring",					// name
+			"Dash Ring",					// tag
+			"Dash Ring",					// layer
+			"dashring",							// mesh
+			"Red",							// material
 			{""},				// script names
 			0,								// script count
 			XMFLOAT3(0.0f, 0.0f, 0.0f),		// position
 			XMFLOAT3(0.0f, 0.0f, 0.0f),		// rotation
-			XMFLOAT3(0.12f, 0.12f, 0.12f),		// scale
+			XMFLOAT3(0.6f, 0.6f, 0.6f),		// scale
 			0.0f,							// mass
 			false
 			// defaults work for the rest
@@ -46,7 +48,7 @@ void FPSController::Init()
 
 	for (int i = 0; i < MAX_DASHES; i++)
 	{
-		dashOrbs.push_back(ScriptManager::CreateEntity(dashOrbParams));
+		dashRings.push_back(ScriptManager::CreateEntity(dashRingParams));
 	}
 
 	/*
@@ -71,7 +73,6 @@ void FPSController::Init()
 	*/
 	sword = (*eMap)["Blood Sword"];
 	
-	bloodOrb = eMap->find("Blood_Orb")->second;
 
 	hookshotParams = {	
 			"Hookshot",						// name
@@ -131,7 +132,7 @@ void FPSController::Update()
 			Move();
 			MouseLook();
 			cam->SetPosition(XMFLOAT3(entity->GetPosition().x, entity->GetPosition().y + entity->GetScale().y + headbobOffset, entity->GetPosition().z)); // after all updates make sure camera is following the affected entity
-			UpdateDashOrbsTransforms();
+			UpdateDashRingsTransforms();
 			CheckAllAbilities();
 			UpdateSwordSway();
 			break;
@@ -141,7 +142,7 @@ void FPSController::Update()
 			MouseLook();
 			cam->SetPosition(XMFLOAT3(entity->GetPosition().x, entity->GetPosition().y + entity->GetScale().y + headbobOffset, entity->GetPosition().z)); // after all updates make sure camera is following the affected entity
 			UpdateHookShotTransform();
-			UpdateDashOrbsTransforms();
+			UpdateDashRingsTransforms();
 			CheckBloodSword();
 			CheckBloodIcicle();
 			CheckBulletTime();
@@ -153,7 +154,7 @@ void FPSController::Update()
 			MouseLook();
 			cam->SetPosition(XMFLOAT3(entity->GetPosition().x, entity->GetPosition().y + entity->GetScale().y + headbobOffset, entity->GetPosition().z)); // after all updates make sure camera is following the affected entity
 			UpdateHookShotTransform();
-			UpdateDashOrbsTransforms();
+			UpdateDashRingsTransforms();
 			CheckBloodSword();
 			CheckBloodIcicle();
 			CheckBulletTime();
@@ -166,7 +167,7 @@ void FPSController::Update()
 			MouseLook();
 			cam->SetPosition(XMFLOAT3(entity->GetPosition().x, entity->GetPosition().y + entity->GetScale().y + headbobOffset, entity->GetPosition().z)); // after all updates make sure camera is following the affected entity
 			UpdateHookShotTransform();
-			UpdateDashOrbsTransforms();
+			UpdateDashRingsTransforms();
 			CheckBloodSword();
 			CheckBloodIcicle();
 			CheckBulletTime();
@@ -471,7 +472,7 @@ void FPSController::UpdateHookShotTransform()
 	hookshot->CalcWorldMatrix();
 }
 
-void FPSController::UpdateDashOrbsTransforms()
+void FPSController::UpdateDashRingsTransforms()
 {
 	cam->CalcViewMatrix();
 	cam->CalcWorldMatrix();
@@ -479,14 +480,29 @@ void FPSController::UpdateDashOrbsTransforms()
 	XMFLOAT3 camDir = cam->direction;
 	XMFLOAT3 camRight = cam->right;
 
-	dashOrbs[0]->SetPosition(XMFLOAT3(camPos.x + camDir.x + 0.25, camPos.y + camDir.y, camPos.z + camDir.z * 1.38f));
-	dashOrbs[1]->SetPosition(XMFLOAT3(camPos.x + camDir.x - 0.25, camPos.y + camDir.y, camPos.z + camDir.z * 1.38f));
-	dashOrbs[2]->SetPosition(XMFLOAT3(camPos.x + camDir.x + 0.45, camPos.y + camDir.y, camPos.z + camDir.z * 1.38f));
-	dashOrbs[3]->SetPosition(XMFLOAT3(camPos.x + camDir.x - 0.45, camPos.y + camDir.y, camPos.z + camDir.z * 1.38f));
+	float xDegrees;
+	float yDegrees;
+	float zDegrees;
 
-	for each (Entity* orb in dashOrbs)
+	dashRings[0]->SetPosition(XMFLOAT3(camPos.x + camDir.x * 1.3f, camPos.y + camDir.y - 0.65f, camPos.z + camDir.z * 1.3f));
+	xDegrees = dashRings[0]->GetEulerAngles().x;
+	dashRings[0]->SetRotation(Utility::FloatLerp(xDegrees, xDegrees + 10, 0.05 * deltaTime), 0, 0);
+	
+	dashRings[1]->SetPosition(XMFLOAT3(camPos.x + camDir.x * 1.3f, camPos.y + camDir.y - 0.65f, camPos.z + camDir.z * 1.3f));
+	xDegrees = dashRings[1]->GetEulerAngles().x;
+	dashRings[1]->SetRotation(Utility::FloatLerp(xDegrees, xDegrees + 10, 0.15 * deltaTime), 0, 0);
+	
+	dashRings[2]->SetPosition(XMFLOAT3(camPos.x + camDir.x * 1.3f, camPos.y + camDir.y - 0.65f, camPos.z + camDir.z * 1.3f));
+	zDegrees = dashRings[2]->GetEulerAngles().z;
+	dashRings[2]->SetRotation(0, 0, Utility::FloatLerp(zDegrees, zDegrees + 10, 0.05 * deltaTime));
+	
+	dashRings[3]->SetPosition(XMFLOAT3(camPos.x + camDir.x * 1.3f, camPos.y + camDir.y - 0.65f, camPos.z + camDir.z * 1.3f));
+	zDegrees = dashRings[3]->GetEulerAngles().z;
+	dashRings[3]->SetRotation(0, 0, Utility::FloatLerp(zDegrees, zDegrees + 10, 0.15 * deltaTime));
+
+	for each (Entity* ring in dashRings)
 	{
-		orb->CalcWorldMatrix();
+		ring->CalcWorldMatrix();
 	}
 }
 
@@ -504,9 +520,9 @@ PlayerState FPSController::GetPlayerState()
 	return ps;
 }
 
-void FPSController::UpdateDashOrbsActive(bool setActive)
+void FPSController::UpdateDashRingsActive(bool setActive)
 {
-	for each (Entity* orb in dashOrbs)
+	for each (Entity* orb in dashRings)
 	{
 		if (setActive) // if true we want to set the first non-rendered dash orb we find to display
 		{
@@ -833,7 +849,7 @@ btVector3 FPSController::DashImpulseFromInput()
 		else
 		{
 			dashCount++;
-			UpdateDashOrbsActive(true);
+			UpdateDashRingsActive(true);
 			dashRegenerationTimer = DASH_MAX_REGENERATION_TIME;
 			// cout << "Dash Count: " << dashCount << endl;
 		}
@@ -848,7 +864,7 @@ btVector3 FPSController::DashImpulseFromInput()
 	if (dashCount > 0 && keyboard->OnKeyDown(VK_SHIFT))
 	{
 		dashCount--;
-		UpdateDashOrbsActive(false);
+		UpdateDashRingsActive(false);
 
 		// cout << dashCount << endl;
 		// default dash to forwards
@@ -969,6 +985,6 @@ void FPSController::OnCollision(btCollisionObject* other)
 	
 	if (otherE->tag.STDStr() == "Blood Pool")
 	{
-		cout << "Picked up blood" << endl;
+		otherE->Destroy();
 	}
 }
