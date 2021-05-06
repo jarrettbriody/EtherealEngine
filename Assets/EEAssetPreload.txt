@@ -35,6 +35,7 @@ TYPE="CSHADER" name="InitDeadList" cso="InitDeadListCS"
 TYPE="CSHADER" name="ParticleDrawArgs" cso="ParticleDrawArgsCS"
 TYPE="CSHADER" name="EmitParticle" cso="EmitParticleCS"
 TYPE="CSHADER" name="UpdateParticle" cso="UpdateParticleCS"
+TYPE="CSHADER" name="RandomNums" cso="RandomNumsCS"
 
 TYPE="MESH" name="bloodorb" path="Kamchatka/bloodorbNEWNEW.obj"
 TYPE="MESH" name="Cube" path="Default/cube.obj"
@@ -82,6 +83,11 @@ TYPE="TEXTURE" name="BloodRed" path="Default/bloodred.png"
 TYPE="TEXTURE" name="bloodsword" path="bloodsword.png"
 TYPE="TEXTURE" name="bloodsword_N" path="bloodsword_N.png"
 TYPE="TEXTURE" name="swordgradient" path="swordgradient.png"
+TYPE="TEXTURE" name="woodplaque" path="table_parts_Top_AlbedoTransparency.png"
+TYPE="TEXTURE" name="woodplaque_N" path="table_parts_Top_Normal.png"
+TYPE="TEXTURE" name="bricks" path="bricks.png"
+TYPE="TEXTURE" name="bricks_N" path="bricks_N.png"
+TYPE="TEXTURE" name="plaster" path="plaster-texture.jpg"
 
 //TYPE="MATERIAL" name="" vShader="" pShader="" ambientTexture="" diffuseTexture="" specularColorTexture="" specularHighlightTexture="" alphaTexture="" normalTexture="" ambientColor(0,0,0) diffuseColor(0,0,0) specularColor(0,0,0) specularExponent="0.0" transparency="1.0" illumination="1" ssao="false" hbaoPlus="true"
 TYPE="MATERIAL" name="DEFAULT" vShader="DEFAULT" pShader="DEFAULT"
@@ -97,6 +103,8 @@ TYPE="MATERIAL" name="Glass" vShader="DEFAULT" pShader="DEFAULT" diffuseTexture=
 TYPE="MATERIAL" name="bloodchain" vShader="DEFAULT" pShader="DEFAULT" diffuseTexture="bloodchain"
 TYPE="MATERIAL" name="swordgradient" vShader="DEFAULT" pShader="DEFAULT" diffuseTexture="swordgradient"  
 TYPE="MATERIAL" name="bloodsword" vShader="BloodSword" pShader="Normal" diffuseTexture="bloodsword" normalTexture="bloodsword_N"
+TYPE="MATERIAL" name="chimney" vShader="Normal" pShader="Normal" diffuseTexture="bricks" normalTexture="bricks_N"
+TYPE="MATERIAL" name="plaster" vShader="DEFAULT" pShader="DEFAULT" diffuseTexture="plaster"
 
 
 

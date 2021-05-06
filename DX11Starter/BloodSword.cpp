@@ -117,7 +117,7 @@ void BloodSword::Init()
 	emitDesc.bakeWorldMatOnEmission = true;
 	emitDesc.emissionStartRadius = 0.25f;
 	emitDesc.emissionEndRadius = 0.5f;
-	emitDesc.emissionRate = 100.0;
+	emitDesc.emissionRate = 250.0;
 	emitDesc.maxParticles = 500;
 	emitDesc.particleInitMinSpeed = 30.0f;
 	emitDesc.particleInitMaxSpeed = 60.0f;

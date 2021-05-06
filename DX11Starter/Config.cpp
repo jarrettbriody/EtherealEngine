@@ -15,8 +15,9 @@ unsigned int Config::ViewPortHeight = 900;
 bool Config::Fullscreen = false;
 bool Config::WindowedBorderless = false;
 bool Config::ShowCursor = false;
-bool Config::CaptureMouse = true;
-bool Config::DebugCamera = false;
+bool Config::CaptureMouse = false;
+bool Config::DebugCamera = true;
+float Config::DebugCameraSpeed = 15.0f;
 float Config::MouseSensitivity = 0.001f;
 
 unsigned int Config::MemoryAllocatorSize = MEGABYTE * 512;
@@ -33,7 +34,14 @@ bool Config::BulletDebugLinesEnabled = false;
 
 bool Config::ShadowsEnabled = true;
 bool Config::SSAOEnabled = false;
+
 bool Config::HBAOPlusEnabled = true;
+bool Config::HBAOBlurEnabled = true;
+float Config::HBAOUnitsPerMeter = 3.0f;
+float Config::HBAORadius = 1.0f;
+float Config::HBAOPowerExponent = 4.0f;
+float Config::HBAOBlurSharpness = 8.0f;
+GFSDK_SSAO_BlurRadius Config::HBAOBlurRadius = GFSDK_SSAO_BLUR_RADIUS_2;
 
 bool Config::DecalsEnabled = true;
 unsigned int Config::InitialDecalVectorSize = 3000;

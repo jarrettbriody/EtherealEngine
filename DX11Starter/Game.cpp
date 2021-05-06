@@ -166,8 +166,8 @@ void Game::Init()
 
 	//EESceneLoader->LoadScene("ArenaV2");
 
-	EESceneLoader->SetModelPath("../../Assets/Models/Kamchatka/");
-	EESceneLoader->LoadScene("Kamchatka");
+	EESceneLoader->SetModelPath("../../Assets/Models/MainMenu/");
+	EESceneLoader->LoadScene("MainMenu");
 
 	EERenderer->SetShadowCascadeInfo(0, 4096, 0.1f, 2000.0f, 100.0f, 100.0f);
 	EERenderer->SetShadowCascadeInfo(1, 4096, 0.1f, 2000.0f, 250.0f, 250.0f);
@@ -200,6 +200,7 @@ void Game::Init()
 	gpuParticleShaders.initDeadListCS = EESceneLoader->ComputeShadersMap["InitDeadList"];
 	gpuParticleShaders.particleEmissionCS = EESceneLoader->ComputeShadersMap["EmitParticle"];
 	gpuParticleShaders.particleUpdateCS = EESceneLoader->ComputeShadersMap["UpdateParticle"];
+	gpuParticleShaders.randomNumsCS = EESceneLoader->ComputeShadersMap["RandomNums"];
 	gpuParticleShaders.particleVS = EESceneLoader->VertexShadersMap["Particle"];
 	gpuParticleShaders.particlePS = EESceneLoader->PixelShadersMap["Particle"];
 	GPUParticleEmitter::SetDefaultShaders(gpuParticleShaders);
@@ -282,7 +283,13 @@ void Game::Init()
 		}
 	});
 
-
+	emitDesc.maxParticles = 30000;
+	emitDesc.emissionRate = 3000.0f;
+	emitDesc.particleInitMinSpeed = 10.0f;
+	emitDesc.particleInitMaxSpeed = 15.0f;
+	emitDesc.particleMinLifetime = 2.0f;
+	emitDesc.particleMaxLifetime = 3.0f;
+	new GPUParticleEmitter(emitDesc);
 
 	Entity* e;
 	for (size_t i = 0; i < EESceneLoader->SceneEntities.size(); i++)

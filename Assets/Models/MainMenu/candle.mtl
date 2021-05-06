@@ -1,0 +1,10 @@
+newmtl candleFBXASC0322FBXASC032lowSG
+map_Kd candle_1_low_3_DefaultMaterial_BaseColor.png
+map_Bump candle_1_low_3_DefaultMaterial_Normal.png
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+Ni 1.00
+Ks 0.20 0.20 0.20
+Ns 98.00

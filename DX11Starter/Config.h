@@ -63,7 +63,8 @@ public:
 	static bool WindowedBorderless;
 	static bool ShowCursor;
 	static bool CaptureMouse;
-	static bool DebugCamera;
+	static bool DebugCamera; 
+	static float DebugCameraSpeed;
 	static float MouseSensitivity;
 
 	static unsigned int MemoryAllocatorSize; //1 gig ish
@@ -80,7 +81,14 @@ public:
 
 	static bool ShadowsEnabled;
 	static bool SSAOEnabled;
+
 	static bool HBAOPlusEnabled;
+	static bool HBAOBlurEnabled;
+	static float HBAOUnitsPerMeter;
+	static float HBAORadius;
+	static float HBAOPowerExponent;
+	static float HBAOBlurSharpness;
+	static GFSDK_SSAO_BlurRadius HBAOBlurRadius;
 
 	static bool DecalsEnabled;
 	static unsigned int InitialDecalVectorSize;

@@ -47,13 +47,27 @@ SceneLoader::~SceneLoader()
 	//generated
 	for (auto texMapIter = GeneratedTexturesMap.begin(); texMapIter != GeneratedTexturesMap.end(); ++texMapIter)
 	{
-		texMapIter->second->Release();
+		try
+		{
+			texMapIter->second->Release();
+		}
+		catch (const std::exception&)
+		{
+			continue;
+		}
 		//cout << "Releasing " << texMapIter->first << endl;
 	}
 
 	for (auto matMapIter = GeneratedMaterialsMap.begin(); matMapIter != GeneratedMaterialsMap.end(); ++matMapIter)
 	{
-		matMapIter->second->FreeMemory();
+		try
+		{
+			matMapIter->second->FreeMemory();
+		}
+		catch (const std::exception&)
+		{
+			continue;
+		}
 		//cout << "Deleting " << matMapIter->first << endl;
 	}
 
@@ -61,7 +75,14 @@ SceneLoader::~SceneLoader()
 	{
 		//delete meshMapIter->second;
 		//if (meshMapIter->second->GetCenteredMesh() != nullptr) meshMapIter->second->GetCenteredMesh()->FreeMemory();
-		meshMapIter->second->FreeMemory();
+		try
+		{
+			meshMapIter->second->FreeMemory();
+		}
+		catch (const std::exception&)
+		{
+			continue;
+		}
 		//cout << "Deleting " << meshMapIter->first << endl;
 	}
 
@@ -447,6 +468,37 @@ void SceneLoader::LoadAssetPreloadFile()
 						}
 						else continue;
 						break;
+					}
+					case 12:
+					{
+						//ambientocclusion
+						regex enabledRegex = regex("enabled=\"(\\w+)\"");
+						regex blurEnabledRegex = regex("blurEnabled=\"(\\w+)\"");
+						regex radiusRegex = regex("radius=\"(\\d*\\.\\d*|\\d+)\"");
+						regex powerRegex = regex("power=\"(\\d*\\.\\d*|\\d+)\"");
+						regex blurSharpnessRegex = regex("blurSharpness=\"(\\d*\\.\\d*|\\d+)\"");
+						regex blurRadiusRegex = regex("blurRadius=\"(\\d+)\"");
+						if (regex_search(line, match, RegexObjects.enabledRegex)) {
+							if (match[1] == "true" || match[1] == "TRUE") Config::HBAOPlusEnabled = true;
+							if (match[1] == "false" || match[1] == "FALSE") Config::HBAOPlusEnabled = false;
+						}
+						if (regex_search(line, match, RegexObjects.blurEnabledRegex)) {
+							if (match[1] == "true" || match[1] == "TRUE") Config::HBAOBlurEnabled = true;
+							if (match[1] == "false" || match[1] == "FALSE") Config::HBAOBlurEnabled = false;
+						}
+						if (regex_search(line, match, RegexObjects.radiusRegex)) {
+							Config::HBAORadius = std::stof(match[1].str());
+						}
+						if (regex_search(line, match, RegexObjects.powerRegex)) {
+							Config::HBAOPowerExponent = std::stof(match[1].str());
+						}
+						if (regex_search(line, match, RegexObjects.blurSharpnessRegex)) {
+							Config::HBAOBlurSharpness = std::stof(match[1].str());
+						}
+						if (regex_search(line, match, RegexObjects.blurRadiusRegex)) {
+							Config::HBAOBlurRadius = (GFSDK_SSAO_BlurRadius)std::stoi(match[1].str());
+						}
+						EERenderer->InitHBAOPlus();
 					}
 					default:
 						break;
@@ -902,10 +954,16 @@ void SceneLoader::LoadScene(string sceneName)
 					if (regex_search(line, match, RegexObjects.materialNameRegex)) {
 						if (DefaultMaterialsMap.count(match[1]))
 							allocatedEntity->AddMaterial(DefaultMaterialsMap[match[1]], true);
+						else if(GeneratedMaterialsMap.count(match[1]))
+							allocatedEntity->AddMaterial(GeneratedMaterialsMap[match[1]], true);
 					}
 					else {
 						allocatedEntity->AddMaterial(DefaultMaterialsMap["DEFAULT"], true);
 					}
+				}
+
+				if (regex_search(line, match, RegexObjects.uvOffsetRegex)) {
+					allocatedEntity->SetUVOffset(std::stof(match[1].str()), std::stof(match[2].str()));
 				}
 
 				//check for texture repeat

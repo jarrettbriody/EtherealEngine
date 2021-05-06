@@ -4,17 +4,20 @@
 
 Camera::Camera()
 {
-	position = XMFLOAT3(0, 10, 0);
-	direction = XMFLOAT3(0.0f, 1.0f, 0.0f);
+	position = XMFLOAT3(-8.13f, 3.83f, -1.05f);
+
+	direction = Z_AXIS;
 	XMVECTOR dir = XMLoadFloat3(&direction);
 	dir = XMVector3Normalize(dir);
 	XMStoreFloat3(&direction, dir);
-	right = XMFLOAT3(1.0f, 0.0f, 0.0f);
+
+	right = X_AXIS;
 	XMVECTOR rightVec = XMLoadFloat3(&right);
 	rightVec = XMVector3Normalize(rightVec);
 	XMStoreFloat3(&right, rightVec);
+
 	xRotation = 0.0f;
-	yRotation = 0.0f;
+	yRotation = XMConvertToRadians(90.0f);
 	zRotation = 0.0f;
 	mouse = Mouse::GetInstance();
 	prevMousePos = { 0, 0 };
@@ -152,7 +155,7 @@ void Camera::Update()
 	XMVECTOR dir = XMLoadFloat3(&direction);
 	XMVECTOR rightVec = XMVector3Cross(XMLoadFloat3(&yAxis), dir);
 
-	float scalar = 30;
+	float scalar = Config::DebugCameraSpeed;
 
 	if (Config::DebugCamera) {
 		//* Can now use the new input system instead!
@@ -165,11 +168,11 @@ void Camera::Update()
 			XMStoreFloat3(&position, pos);
 		}
 		if (GetAsyncKeyState('A') & 0x8000) {
-			pos = XMVectorAdd(pos, XMVectorScale(rightVec, 0.05f * scalar));
+			pos = XMVectorAdd(pos, XMVectorScale(rightVec, -0.05f * scalar));
 			XMStoreFloat3(&position, pos);
 		}
 		if (GetAsyncKeyState('D') & 0x8000) {
-			pos = XMVectorAdd(pos, XMVectorScale(rightVec, -0.05f * scalar));
+			pos = XMVectorAdd(pos, XMVectorScale(rightVec, 0.05f * scalar));
 			XMStoreFloat3(&position, pos);
 		}
 
@@ -188,7 +191,7 @@ void Camera::Update()
 			RotateCamera(0, 0, -1);
 		}
 
-		/*if (mouse->OnLMBDown()) {
+		if (mouse->OnLMBDown()) {
 			prevMousePos.x = mouse->GetPosX();
 			prevMousePos.y = mouse->GetPosY();
 		}
@@ -197,7 +200,7 @@ void Camera::Update()
 			RotateCamera((float)(mouse->GetPosX() - (int)prevMousePos.x) / 100.0f, (float)(mouse->GetPosY() - (int)prevMousePos.y) / 100.0f);
 			prevMousePos.x = mouse->GetPosX();
 			prevMousePos.y = mouse->GetPosY();
-		}*/
+		}
 
 	}
 	

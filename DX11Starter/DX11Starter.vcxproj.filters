@@ -91,6 +91,9 @@
     <FxCompile Include="BloodSwordPrepassVS.hlsl">
       <Filter>EEShaders\Vertex Shaders\Render Prepass</Filter>
     </FxCompile>
+    <FxCompile Include="RandomNumsCS.hlsl">
+      <Filter>EEShaders\Compute Shaders</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Camera.cpp">
@@ -531,6 +534,12 @@
       <Filter>EEScenes</Filter>
     </Text>
     <Text Include="..\Assets\Scenes\Kamchatka.txt">
+      <Filter>EEScenes</Filter>
+    </Text>
+    <Text Include="..\Assets\Scenes\MainMenu.txt">
+      <Filter>EEScenes</Filter>
+    </Text>
+    <Text Include="..\Assets\Scenes\MainMenuTest.txt">
       <Filter>EEScenes</Filter>
     </Text>
   </ItemGroup>

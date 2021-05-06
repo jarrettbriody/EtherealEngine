@@ -2,11 +2,14 @@
 #include "pch.h"
 #include "ParticleEmitter.h"
 
+#define RAND_CNT 8
+
 struct DefaultGPUParticleShaders {
 	SimpleComputeShader* initDeadListCS;
 	SimpleComputeShader* copyDrawCountCS;
 	SimpleComputeShader* particleEmissionCS;
 	SimpleComputeShader* particleUpdateCS;
+	SimpleComputeShader* randomNumsCS;
 	SimpleVertexShader* particleVS;
 	SimplePixelShader* particlePS;
 };
@@ -14,6 +17,7 @@ struct DefaultGPUParticleShaders {
 struct CustomGPUParticleShaders {
 	SimpleComputeShader* particleEmissionCS;
 	SimpleComputeShader* particleUpdateCS;
+	SimpleComputeShader* randomNumsCS;
 };
 
 class GPUParticleEmitter : ParticleEmitter
@@ -50,6 +54,8 @@ private:
 	ID3D11UnorderedAccessView* particleDrawUAV;
 	ID3D11ShaderResourceView* particleDrawSRV;
 	ID3D11UnorderedAccessView* drawArgsUAV;
+
+	ID3D11UnorderedAccessView* randUAV;
 
 	ID3D11UnorderedAccessView* noneUAV[8] = {};
 	ID3D11ShaderResourceView* noneSRV[16] = {};

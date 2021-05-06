@@ -64,6 +64,7 @@ private:
 		{ "CPUPARTICLE", 9 },
 		{ "GPUPARTICLE", 10 },
 		{ "LAYERMASK", 11 },
+		{ "AMBIENTOCCLUSION", 12 },
 	};
 
 	map<string, ShaderType> shaderTypes = {
@@ -148,6 +149,13 @@ private:
 		regex specularHighlightTextureRgx = regex("^(map_Ns\\s+)");
 		regex alphaTextureRgx = regex("^(map_d\\s+)");
 		regex normalTextureRgx = regex("^(map_Bump\\s+)");
+
+		regex enabledRegex = regex("enabled=\"(\\w+)\"");
+		regex blurEnabledRegex = regex("blurEnabled=\"(\\w+)\"");
+		regex radiusRegex = regex("radius=\"(\\d*\\.\\d*|\\d+)\"");
+		regex powerRegex = regex("power=\"(\\d*\\.\\d*|\\d+)\"");
+		regex blurSharpnessRegex = regex("blurSharpness=\"(\\d*\\.\\d*|\\d+)\"");
+		regex blurRadiusRegex = regex("blurRadius=\"(\\d+)\"");
 	} RegexObjects;
 
 	map<string, bool> utilizedMeshesMap;

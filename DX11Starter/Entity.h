@@ -53,6 +53,7 @@ private:
 	XMFLOAT3 right;
 
 	DirectX::XMFLOAT2 repeatTex;
+	XMFLOAT2 uvOffset;
 	map<string, Material*>* materialMap = nullptr;
 	unsigned int meshMaterialIndex = 0;
 	EEString<EESTRING_SIZE> name;
@@ -123,6 +124,7 @@ public:
 	void SetRightVector(XMFLOAT3 right);
 	void CalcDirectionVector();
 	void SetRepeatTexture(float x, float y);
+	void SetUVOffset(float x, float y);
 	void SetShadowData(ShadowData shadowData);
 	void SetDepthStencilData(DepthStencilData depthStencilData);
 	void SetMeshAndMaterial(Mesh* mesh, Material* mat = nullptr);

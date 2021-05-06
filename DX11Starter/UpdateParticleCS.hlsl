@@ -24,7 +24,7 @@ RWStructuredBuffer<ParticleDrawInfo> ParticleDrawList	: register(u2);
 void main(uint3 id : SV_DispatchThreadID)
 {
 	// Valid particle?
-	if (id.x >= (uint)maxParticles) return;
+	if ((id.x + 1) * (id.y + 1) > (uint)maxParticles) return;
 
 	// Grab this particle
 	Particle particle = ParticlePool.Load(id.x);

@@ -129,6 +129,7 @@ void Entity::operator=(const Entity& e)
 	up = e.up;
 	right = e.right;
 	repeatTex = e.repeatTex;
+	uvOffset = e.uvOffset;
 	parent = e.parent;
 	shadowsEnabled = e.shadowsEnabled;
 	shadowData = e.shadowData;
@@ -446,6 +447,11 @@ void Entity::SetRepeatTexture(float x, float y)
 	repeatTex = XMFLOAT2(x, y);
 }
 
+void Entity::SetUVOffset(float x, float y)
+{
+	uvOffset = XMFLOAT2(x, y);
+}
+
 void Entity::SetShadowData(ShadowData shadowData)
 {
 	this->shadowData = shadowData;
@@ -627,6 +633,12 @@ void Entity::PrepareMaterialForDraw(string n, DirectX::XMFLOAT4X4 view, DirectX:
 		"uvMult",
 		&repeatTex,
 		sizeof(repeatTex)
+	);
+
+	ps->SetData(
+		"uvOffset",
+		&uvOffset,
+		sizeof(uvOffset)
 	);
 
 	if (shadowsEnabled) {

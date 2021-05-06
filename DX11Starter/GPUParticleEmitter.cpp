@@ -30,6 +30,7 @@ GPUParticleEmitter::~GPUParticleEmitter()
 
 	drawArgsBuffer->Release();
 	drawArgsUAV->Release();
+	randUAV->Release();
 
 	indexBuffer->Release();
 	additiveBlend->Release();
@@ -195,6 +196,31 @@ void GPUParticleEmitter::InitBuffers()
 		// Must keep buffer ref for indirect draw!
 	}
 
+	//Random numbers
+	{
+		// Buffer
+		ID3D11Buffer* randBuffer;
+		D3D11_BUFFER_DESC randDesc = {};
+		randDesc.BindFlags = D3D11_BIND_UNORDERED_ACCESS;
+		randDesc.ByteWidth = sizeof(float) * maxParticles * RAND_CNT;
+		randDesc.CPUAccessFlags = 0;
+		randDesc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
+		randDesc.StructureByteStride = sizeof(float);
+		randDesc.Usage = D3D11_USAGE_DEFAULT;
+		Config::Device->CreateBuffer(&randDesc, 0, &randBuffer);
+
+		// UAV
+		D3D11_UNORDERED_ACCESS_VIEW_DESC randUAVDesc = {};
+		randUAVDesc.Format = DXGI_FORMAT_UNKNOWN;
+		randUAVDesc.Buffer.FirstElement = 0;
+		randUAVDesc.Buffer.Flags = D3D11_BUFFER_UAV_FLAG_APPEND;
+		randUAVDesc.Buffer.NumElements = maxParticles * RAND_CNT;
+		randUAVDesc.ViewDimension = D3D11_UAV_DIMENSION_BUFFER;
+		Config::Device->CreateUnorderedAccessView(randBuffer, &randUAVDesc, &randUAV);
+		
+		randBuffer->Release();
+	}
+
 	// Launch the dead list init shader
 	defaultShaders.initDeadListCS->SetInt("maxParticles", maxParticles);
 	defaultShaders.initDeadListCS->SetUnorderedAccessView("DeadParticles", particleDeadUAV);
@@ -241,11 +267,10 @@ void GPUParticleEmitter::Update(double deltaTime, double totalTime, XMFLOAT4X4 v
 
 	SimpleComputeShader* emitCS = customShadersEnabled ? customShaders.particleEmissionCS : defaultShaders.particleEmissionCS;
 	SimpleComputeShader* updateCS = customShadersEnabled ? customShaders.particleUpdateCS : defaultShaders.particleUpdateCS;
+	SimpleComputeShader* randCS = customShadersEnabled ? customShaders.randomNumsCS : defaultShaders.randomNumsCS;
 
 	// Reset UAVs (potential issue with setting the following ones)
 	Config::Context->CSSetUnorderedAccessViews(0, 8, noneUAV, 0);
-
-	float randomNumbers[128];
 
 	// Track time
 	while ((emitTimeCounter >= emissionRate) && isActive)
@@ -255,6 +280,18 @@ void GPUParticleEmitter::Update(double deltaTime, double totalTime, XMFLOAT4X4 v
 
 		// Max to emit in a single batch is 65,535
 		emitCount = min(emitCount, 65535);
+
+		randCS->SetShader();
+		randCS->SetFloat("seed1", static_cast <float> (rand()) / static_cast <float> (RAND_MAX));
+		randCS->SetFloat("seed2", static_cast <float> (rand()) / static_cast <float> (RAND_MAX));
+		randCS->SetInt("count", emitCount * RAND_CNT);
+		//randCS->SetInt("maxParticles", (int)maxParticles);
+		randCS->SetUnorderedAccessView("RandNums", randUAV);
+		//randCS->SetUnorderedAccessView("DeadParticles", particleDeadUAV);
+		randCS->CopyAllBufferData();
+		randCS->DispatchByThreads(emitCount * RAND_CNT, 1, 1);
+
+		Config::Context->CSSetUnorderedAccessViews(0, 8, noneUAV, 0);
 
 		// Adjust time counter
 		emitTimeCounter = fmod(emitTimeCounter, emissionRate);
@@ -281,20 +318,13 @@ void GPUParticleEmitter::Update(double deltaTime, double totalTime, XMFLOAT4X4 v
 		emitCS->SetMatrix4x4("world", worldMatrix);
 		emitCS->SetInt("bakeWorldMat", (int)bakeWorldMatOnEmission);
 
-		int randNumCnt = min(emitCount*2 + 6, MAX_RANDOM_NUMS);
-		for (int i = 0; i < randNumCnt; i++)
-		{
-			randomNumbers[i] = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
-		}
-		emitCS->SetData("randomNumbers", randomNumbers, sizeof(float) * MAX_RANDOM_NUMS);
-		//emitCS->SetInt("randNumCount", randNumCnt);
-
 		emitCS->SetFloat3("particleAcceleration", particleAcceleration);
 
 		emitCS->SetData("colors", colors, sizeof(ParticleColor) * MAX_PARTICLE_COLORS);
 		emitCS->SetData("textures", texturesToGPU, sizeof(ParticleTextureToGPU) * MAX_PARTICLE_TEXTURES);
 		emitCS->SetUnorderedAccessView("ParticlePool", particlePoolUAV);
 		emitCS->SetUnorderedAccessView("DeadParticles", particleDeadUAV);
+		emitCS->SetUnorderedAccessView("RandNums", randUAV);
 		emitCS->CopyAllBufferData();
 		emitCS->DispatchByThreads(emitCount, 1, 1);
 	}

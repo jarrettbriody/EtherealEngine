@@ -1,0 +1,17 @@
+newmtl woodentabletop
+map_Kd table_parts_Top_AlbedoTransparency.png
+map_Bump table_parts_Top_Normal.png
+illum 4
+Kd 0.50 0.50 0.50
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+Ni 1.00
+
+newmtl woodentablebot
+map_Kd table_parts_Bot_AlbedoTransparency.png
+map_Bump table_parts_Bot_Normal.png
+illum 4
+Kd 0.50 0.50 0.50
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+Ni 1.00
