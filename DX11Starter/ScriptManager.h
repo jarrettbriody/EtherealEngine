@@ -3,6 +3,7 @@
 #include "SceneLoader.h"
 #include "Keyboard.h"
 #include "Mouse.h"
+#include "Grid.h"
 
 class ScriptManager
 {
@@ -19,6 +20,9 @@ public:
 	bool destroyed = false;
 
 	bool inputEnabled = false;
+
+	static void GarbageCollect();
+	static void DestroyScriptsByOwner(string entityName);
 
 	bool GetIsInitialized() { return initialized; }
 

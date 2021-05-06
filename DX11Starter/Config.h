@@ -2,7 +2,9 @@
 #include "pch.h"
 
 //define macros
+#define ZERO_VECTOR4 XMFLOAT4(0.0f,0.0f,0.0f,0.0f)
 #define ZERO_VECTOR3 XMFLOAT3(0.0f,0.0f,0.0f)
+#define ZERO_VECTOR2 XMFLOAT2(0.0f,0.0f)
 #define ONE_VECTOR3 XMFLOAT3(1.0f,1.0f,1.0f)
 #define X_AXIS XMFLOAT3(1.0f,0.0f,0.0f)
 #define Y_AXIS XMFLOAT3(0.0f,1.0f,0.0f)
@@ -23,6 +25,9 @@
 #define MAX_LIGHT_RENDER_DIST_SQ 75000
 #define MAX_RANDOM_NUMS 128
 #define MAX_POST_PROCESS_EFFECTS 8
+#define MAX_ENTITY_TAG_COUNT 8
+#define MAX_ENTITY_LAYER_COUNT 8
+#define EESTRING_SIZE 64
 
 enum class MESH_TYPE {
 	LOAD_FAILURE = -1,
@@ -43,6 +48,8 @@ enum class MEMORY_POOL {
 class Config
 {
 public:
+	static HWND hWnd;
+
 	static ID3D11Device* Device;
 	static ID3D11DeviceContext* Context;
 	static ID3D11SamplerState* Sampler;
@@ -53,8 +60,11 @@ public:
 	static unsigned int ViewPortWidth;
 	static unsigned int ViewPortHeight;
 	static bool Fullscreen;
+	static bool WindowedBorderless;
 	static bool ShowCursor;
+	static bool CaptureMouse;
 	static bool DebugCamera;
+	static float MouseSensitivity;
 
 	static unsigned int MemoryAllocatorSize; //1 gig ish
 	static unsigned int MemoryAllocatorAlignment; //32 byte boundary
@@ -76,12 +86,11 @@ public:
 	static unsigned int InitialDecalVectorSize;
 
 	static btDiscreteDynamicsWorld* DynamicsWorld;
+	static FMOD::System* FMODSystem;
 
 	static unsigned int SSAOSampleCount;
 	static float SSAOKernelRadius;
 	static DirectX::XMFLOAT4 SSAOKernel[32];
-
-	static std::map<std::string, unsigned int> EntityTags;
 
 	static std::map<std::string, unsigned int> EntityLayers;
 };

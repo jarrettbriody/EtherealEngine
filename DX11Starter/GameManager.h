@@ -1,5 +1,6 @@
 #pragma once
 #include "ScriptManager.h"
+#include "NavmeshHandler.h"
 
 enum class GameState
 {
@@ -28,6 +29,16 @@ class GameManager : public ScriptManager
 	void BloodPoolSpawner();
 
 public:
+	// AI
+	Grid grid1;
+	Grid grid2;
+	Grid grid3;
+	Grid grid4;
+	Grid grid5;
+	Grid grid6;
+	Grid grid7;
+	Grid grid8;
+
 	void DecrementEnemiesAlive();
 	void AddRangeToTotalSplitMeshEntities(std::vector<Entity*> splitMeshEntities);
 };

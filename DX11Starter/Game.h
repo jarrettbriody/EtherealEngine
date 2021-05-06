@@ -18,14 +18,33 @@
 #include "ScriptManager.h"
 #include "DebugLines.h"
 #include "DecalHandler.h"
-#include "TestBehavior.h"
 #include "ParticleEmitter.h"
 #include "GPUParticleEmitter.h"
 #include "CPUParticleEmitter.h"
 #include "Scripts.h"
 #include "LightHandler.h"
+#include "NavmeshHandler.h"
 
 using namespace std;
+
+struct SceneLoaderGarbageCallback : SceneLoaderCallback{
+	DecalHandler* EEDecalHandler = nullptr;
+
+	void callback(Entity* e) {
+		string name = e->GetName();
+
+		EEDecalHandler->DestroyDecalsByOwner(name);
+
+		ParticleEmitter::DestroyEmittersByOwner(name);
+
+		if (Config::EtherealDebugLinesEnabled) {
+			DebugLines::debugLinesMap[name]->destroyed = true;
+			DebugLines::debugLinesMap.erase(name);
+		}
+
+		ScriptManager::DestroyScriptsByOwner(name);
+	}
+};
 
 class Game 
 	: public DXCore
@@ -72,7 +91,6 @@ private:
 	
 	// Audio
 	FMOD_RESULT fmodResult = FMOD_RESULT();
-	FMOD::System* fmodSystem = nullptr;
 
 	FMOD::Sound* backgroundMusic = nullptr;
 	FMOD::Sound* sound[12];
@@ -88,6 +106,8 @@ private:
 	//FMOD_VECTOR listener_vel; // If we want a doppler effect
 	FMOD_VECTOR listener_forward = FMOD_VECTOR();
 	FMOD_VECTOR listener_up = FMOD_VECTOR();
+
+	SceneLoaderGarbageCallback sceneLoaderGarbageCallback;
 
 	// AI
 	

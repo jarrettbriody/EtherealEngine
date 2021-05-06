@@ -10,6 +10,31 @@ Renderer* ScriptManager::EERenderer;
 SceneLoader* ScriptManager::EESceneLoader;
 double ScriptManager::deltaTime = 0.0;
 
+void ScriptManager::GarbageCollect()
+{
+	unsigned int start = ScriptManager::scriptFunctions.size();
+	for (unsigned int i = start; i > 0; i--)
+	{
+		ScriptManager* s = scriptFunctions[i - 1];
+		if (s->destroyed) {
+			scriptFunctions.erase(scriptFunctions.begin() + i - 1);
+			delete s;
+		}
+	}
+}
+
+void ScriptManager::DestroyScriptsByOwner(string entityName)
+{
+	vector<ScriptManager*> scriptFuncs = scriptFunctionsMapVector[entityName];
+	size_t cnt = scriptFuncs.size();
+	for (size_t j = cnt; j > 0; j--)
+	{
+		scriptFuncs[j - 1]->destroyed = true;
+	}
+	scriptFunctionsMap.erase(entityName);
+	scriptFunctionsMapVector.erase(entityName);
+}
+
 void ScriptManager::CallInit()
 {
 	if (setup) {
@@ -38,8 +63,8 @@ void ScriptManager::Setup(Entity* e, string scriptName)
 
 	this->EERenderer = Renderer::GetInstance();
 	this->EESceneLoader = SceneLoader::GetInstance();
-	this->sceneEntities = &this->EESceneLoader->sceneEntities;
-	this->sceneEntitiesMap = &this->EESceneLoader->sceneEntitiesMap;
+	this->sceneEntities = &this->EESceneLoader->SceneEntities;
+	this->sceneEntitiesMap = &this->EESceneLoader->SceneEntitiesMap;
 
 	//add this script (and thereby all script function pointers) to the list of scripts
 	scriptFunctions.push_back(this);

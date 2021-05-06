@@ -9,8 +9,12 @@
 
 struct DashBlurCallback : RendererCallback {
 	int blurAmount = 1;
+	unsigned int playerToolsMask = Config::EntityLayers["playertools"];
+	ID3D11ShaderResourceView* layerMask = nullptr;
 	void PrePixelShaderCallback() {
 		pShader->SetInt("blurAmount", blurAmount);
+		pShader->SetInt("playerToolsMask", playerToolsMask);
+		pShader->SetShaderResourceView("LayerMasks", layerMask);
 	}
 };
 
@@ -27,7 +31,7 @@ class FPSController : public ScriptManager
 
 	// Camera related attributes
 	Camera* cam;
-	POINT prevMousePos = POINT();
+	XMFLOAT2 prevMousePos;
 	double camRollAngle = 0.0f;
 	double camRollSpeed = 0.03f;
 	bool rollLeft = false;
@@ -123,10 +127,10 @@ class FPSController : public ScriptManager
 	float bulletTimeRampDown = 0.25f;
 
 	//sword rotation
-	const float MAX_SWORD_ROT = XMConvertToRadians(5.0f);
+	const float MAX_SWORD_ROT = XMConvertToRadians(3.0f);
 	float swordTilt = 0.0f;
 	float swordRoll = 0.0f;
-	float swordRotationSpeed = 0.25f;
+	float swordRotationSpeed = 0.5f;
 	bool swordRollLeft = false;
 	bool swordRollRight = false;
 	bool swordRollForwards = false;

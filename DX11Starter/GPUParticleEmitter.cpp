@@ -248,7 +248,7 @@ void GPUParticleEmitter::Update(double deltaTime, double totalTime, XMFLOAT4X4 v
 	float randomNumbers[128];
 
 	// Track time
-	while (emitTimeCounter >= emissionRate)
+	while ((emitTimeCounter >= emissionRate) && isActive)
 	{
 		// How many to emit?
 		int emitCount = (int)(emitTimeCounter / emissionRate);

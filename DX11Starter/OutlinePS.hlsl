@@ -4,7 +4,7 @@ cbuffer Data : register(b0)
 	float pixelWidth;
 	float pixelHeight;
 	int sampleSize;
-	int outlineLayer;
+	unsigned int outlineLayerMask;
 }
 
 struct VertexToPixel
@@ -27,6 +27,7 @@ float4 main(VertexToPixel input) : SV_TARGET
 	uint numSamples = 0;
 	uint samplesNotInLayer = 0;
 	uint samplesInLayer = 0;
+
 	for (int y = -sampleSize; y <= sampleSize; y += 1)
 	{
 		for (int x = -sampleSize; x <= sampleSize; x += 1)
@@ -34,7 +35,8 @@ float4 main(VertexToPixel input) : SV_TARGET
 			float2 uv = input.uv + float2(x * pixelWidth, y * pixelHeight);
 			float3 pixelIndexOffset = float3(pixelIndex.xy + float2(x, y), 0);
 			uint layer = LayerMap.Load(pixelIndexOffset).r;
-			if (layer == outlineLayer) samplesInLayer++;
+			//if(layer >)
+			if ((outlineLayerMask | layer) == layer) samplesInLayer++;
 			else samplesNotInLayer++;
 			numSamples++;
 		}

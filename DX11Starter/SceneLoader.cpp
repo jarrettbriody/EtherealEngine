@@ -12,25 +12,25 @@ SceneLoader::SceneLoader()
 SceneLoader::~SceneLoader()
 {
 	//defaults
-	for (auto texMapIter = texture2DMap.begin(); texMapIter != texture2DMap.end(); ++texMapIter)
+	for (auto texMapIter = Texture2DMap.begin(); texMapIter != Texture2DMap.end(); ++texMapIter)
 	{
 		texMapIter->second->Release();
 		//cout << "Deleting " << texMapIter->first << endl;
 	}
 
-	for (auto texMapIter = defaultTexturesMap.begin(); texMapIter != defaultTexturesMap.end(); ++texMapIter)
+	for (auto texMapIter = DefaultTexturesMap.begin(); texMapIter != DefaultTexturesMap.end(); ++texMapIter)
 	{
 		texMapIter->second->Release();
 		//cout << "Deleting " << texMapIter->first << endl;
 	}
 
-	for (auto matMapIter = defaultMaterialsMap.begin(); matMapIter != defaultMaterialsMap.end(); ++matMapIter)
+	for (auto matMapIter = DefaultMaterialsMap.begin(); matMapIter != DefaultMaterialsMap.end(); ++matMapIter)
 	{
 		matMapIter->second->FreeMemory();
 		//cout << "Deleting " << matMapIter->first << endl;
 	}
 
-	for (auto meshMapIter = defaultMeshesMap.begin(); meshMapIter != defaultMeshesMap.end(); ++meshMapIter)
+	for (auto meshMapIter = DefaultMeshesMap.begin(); meshMapIter != DefaultMeshesMap.end(); ++meshMapIter)
 	{
 		try
 		{
@@ -45,19 +45,19 @@ SceneLoader::~SceneLoader()
 	}
 
 	//generated
-	for (auto texMapIter = generatedTexturesMap.begin(); texMapIter != generatedTexturesMap.end(); ++texMapIter)
+	for (auto texMapIter = GeneratedTexturesMap.begin(); texMapIter != GeneratedTexturesMap.end(); ++texMapIter)
 	{
 		texMapIter->second->Release();
 		//cout << "Releasing " << texMapIter->first << endl;
 	}
 
-	for (auto matMapIter = generatedMaterialsMap.begin(); matMapIter != generatedMaterialsMap.end(); ++matMapIter)
+	for (auto matMapIter = GeneratedMaterialsMap.begin(); matMapIter != GeneratedMaterialsMap.end(); ++matMapIter)
 	{
 		matMapIter->second->FreeMemory();
 		//cout << "Deleting " << matMapIter->first << endl;
 	}
 
-	for (auto meshMapIter = generatedMeshesMap.begin(); meshMapIter != generatedMeshesMap.end(); ++meshMapIter)
+	for (auto meshMapIter = GeneratedMeshesMap.begin(); meshMapIter != GeneratedMeshesMap.end(); ++meshMapIter)
 	{
 		//delete meshMapIter->second;
 		//if (meshMapIter->second->GetCenteredMesh() != nullptr) meshMapIter->second->GetCenteredMesh()->FreeMemory();
@@ -65,24 +65,24 @@ SceneLoader::~SceneLoader()
 		//cout << "Deleting " << meshMapIter->first << endl;
 	}
 
-	for (size_t i = 0; i < sceneEntities.size(); i++)
+	for (size_t i = 0; i < SceneEntities.size(); i++)
 	{
 		//delete sceneEntities[i];
-		sceneEntities[i]->FreeMemory();
+		SceneEntities[i]->FreeMemory();
 	}
 
 	//delete shaders
-	for (auto vertSIter = vertexShadersMap.begin(); vertSIter != vertexShadersMap.end(); ++vertSIter)
+	for (auto vertSIter = VertexShadersMap.begin(); vertSIter != VertexShadersMap.end(); ++vertSIter)
 	{
 		delete vertSIter->second;
 	}
 
-	for (auto pixSIter = pixelShadersMap.begin(); pixSIter != pixelShadersMap.end(); ++pixSIter)
+	for (auto pixSIter = PixelShadersMap.begin(); pixSIter != PixelShadersMap.end(); ++pixSIter)
 	{
 		delete pixSIter->second;
 	}
 
-	for (auto compSIter = computeShadersMap.begin(); compSIter != computeShadersMap.end(); ++compSIter)
+	for (auto compSIter = ComputeShadersMap.begin(); compSIter != ComputeShadersMap.end(); ++compSIter)
 	{
 		delete compSIter->second;
 	}
@@ -122,7 +122,7 @@ ID3D11ShaderResourceView* SceneLoader::LoadTexture(string texName, string texPat
 	texMap.insert({ texName, tex });
 	if (keepTex2D) {
 		ID3D11Texture2D* newTex2D = reinterpret_cast<ID3D11Texture2D*>(tex2D);
-		texture2DMap.insert({ texName, newTex2D });
+		Texture2DMap.insert({ texName, newTex2D });
 	}
 	return tex;
 }
@@ -130,7 +130,7 @@ ID3D11ShaderResourceView* SceneLoader::LoadTexture(string texName, string texPat
 Material* SceneLoader::CreateMaterial(string name, MaterialData matData, string vertShaderName, string pixelShaderName, map<string, Material*>& matMap)
 {
 	bool success;
-	Material mat = Material(name, matData, vertexShadersMap[vertShaderName], pixelShadersMap[pixelShaderName], Config::Sampler);
+	Material mat = Material(name, matData, VertexShadersMap[vertShaderName], PixelShadersMap[pixelShaderName], Config::Sampler);
 	Material* allocatedMaterial = (Material*)EEMemoryAllocator->AllocateToPool((unsigned int)MEMORY_POOL::MATERIAL_POOL, sizeof(Material), success);
 	*allocatedMaterial = mat;
 	matMap.insert({ name, allocatedMaterial });
@@ -140,7 +140,7 @@ Material* SceneLoader::CreateMaterial(string name, MaterialData matData, string 
 XMFLOAT3 SceneLoader::Float3FromString(string str)
 {
 	smatch match;
-	std::sregex_iterator iter(str.begin(), str.end(), transformNumIteratorRegex);
+	std::sregex_iterator iter(str.begin(), str.end(), RegexObjects.transformNumIteratorRegex);
 	int counter = 0;
 	float parsedNumbers[3];
 	for (; iter != std::sregex_iterator(); ++iter) {
@@ -183,6 +183,51 @@ bool SceneLoader::DestroyInstance()
 	return false;
 }
 
+void SceneLoader::GarbageCollect()
+{
+	size_t start = SceneEntities.size();
+	for (size_t i = start; i > 0; i--)
+	{
+		Entity* e = SceneEntities[i - 1];
+		if (e->destroyed) {
+			string name = e->GetName();
+
+			EEString<EESTRING_SIZE>* tags = e->GetTags();
+			for (size_t j = 0; j < e->GetTagCount(); j++)
+			{
+				if (SceneEntitiesTagMap.count(tags[j].STDStr())) {
+					vector<Entity*>& tagVec = SceneEntitiesTagMap[tags[j].STDStr()];
+					for (int k = tagVec.size() - 1; k >= 0; k--)
+					{
+						if (tagVec[k] == e) tagVec.erase(tagVec.begin() + k);
+					}
+				}
+			}
+
+			EEString<EESTRING_SIZE>* layers = e->GetLayers();
+			for (size_t j = 0; j < e->GetLayerCount(); j++)
+			{
+				if (SceneEntitiesLayerMap.count(layers[j].STDStr())) {
+					vector<Entity*>& layerVec = SceneEntitiesLayerMap[layers[j].STDStr()];
+					for (int k = layerVec.size() - 1; k >= 0; k--)
+					{
+						if (layerVec[k] == e) layerVec.erase(layerVec.begin() + k);
+					}
+				}
+			}
+
+			if(SceneEntitiesMap.count(name))
+				SceneEntitiesMap.erase(name);
+			SceneEntities.erase(SceneEntities.begin() + i - 1);
+
+			garbageCollectCallback->callback(e);
+
+			e->FreeMemory();
+			EEMemoryAllocator->DeallocateFromPool((unsigned int)MEMORY_POOL::ENTITY_POOL, e, sizeof(Entity));
+		}
+	}
+}
+
 void SceneLoader::LoadAssetPreloadFile()
 {
 	ifstream infile("../../Assets/EEAssetPreload.txt");
@@ -198,16 +243,16 @@ void SceneLoader::LoadAssetPreloadFile()
 		//cout << line << endl;
 		if (line != "") {
 			//if the line does not start with "//"
-			if (!regex_match(line, commentedLineRegex)) {
+			if (!regex_match(line, RegexObjects.commentedLineRegex)) {
 
-				if (regex_search(line, match, typeRegex)) {
+				if (regex_search(line, match, RegexObjects.typeRegex)) {
 					type = match[1];
 
 					if (!sceneLineTypes.count(type)) continue;
 
 					int num = sceneLineTypes[type];
 
-					if (regex_search(line, match, entityNameRegex)) {
+					if (regex_search(line, match, RegexObjects.entityNameRegex)) {
 						name = match[1];
 					}
 					else continue;
@@ -231,17 +276,17 @@ void SceneLoader::LoadAssetPreloadFile()
 					case 4: 
 					{
 						//vshader
-						if (regex_search(line, match, shaderFileRegex)) {
+						if (regex_search(line, match, RegexObjects.shaderFileRegex)) {
 							string cso = match[1];
 
 							ShaderType shaderType = ShaderType::DEFAULT;
-							if (regex_search(line, match, shaderTypeRegex)) {
+							if (regex_search(line, match, RegexObjects.shaderTypeRegex)) {
 								if (shaderTypes.count(match[1])) {
 									shaderType = shaderTypes[match[1]];
 								}
 							}
 
-							LoadShader<SimpleVertexShader>(name, cso, vertexShadersMap, shaderType);
+							LoadShader<SimpleVertexShader>(name, cso, VertexShadersMap, shaderType);
 						}
 						else continue;
 						break;
@@ -249,17 +294,17 @@ void SceneLoader::LoadAssetPreloadFile()
 					case 5:
 					{
 						//pshader
-						if (regex_search(line, match, shaderFileRegex)) {
+						if (regex_search(line, match, RegexObjects.shaderFileRegex)) {
 							string cso = match[1];
 
 							ShaderType shaderType = ShaderType::DEFAULT;
-							if (regex_search(line, match, shaderTypeRegex)) {
+							if (regex_search(line, match, RegexObjects.shaderTypeRegex)) {
 								if (shaderTypes.count(match[1])) {
 									shaderType = shaderTypes[match[1]];
 								}
 							}
 
-							LoadShader<SimplePixelShader>(name, cso, pixelShadersMap, shaderType);
+							LoadShader<SimplePixelShader>(name, cso, PixelShadersMap, shaderType);
 						}
 						else continue;
 						break;
@@ -267,17 +312,17 @@ void SceneLoader::LoadAssetPreloadFile()
 					case 6:
 					{
 						//cshader
-						if (regex_search(line, match, shaderFileRegex)) {
+						if (regex_search(line, match, RegexObjects.shaderFileRegex)) {
 							string cso = match[1];
 
 							ShaderType shaderType = ShaderType::DEFAULT;
-							if (regex_search(line, match, shaderTypeRegex)) {
+							if (regex_search(line, match, RegexObjects.shaderTypeRegex)) {
 								if (shaderTypes.count(match[1])) {
 									shaderType = shaderTypes[match[1]];
 								}
 							}
 
-							LoadShader<SimpleComputeShader>(name, cso, computeShadersMap, shaderType);
+							LoadShader<SimpleComputeShader>(name, cso, ComputeShadersMap, shaderType);
 						}
 						else continue;
 						break;
@@ -285,10 +330,10 @@ void SceneLoader::LoadAssetPreloadFile()
 					case 1:
 					{
 						//mesh
-						if (regex_search(line, match, pathRegex)) {
+						if (regex_search(line, match, RegexObjects.pathRegex)) {
 							string path = match[1];
 
-							LoadMesh(name, path, defaultMeshesMap);
+							LoadMesh(name, path, DefaultMeshesMap);
 						}
 						else continue;
 						break;
@@ -296,15 +341,15 @@ void SceneLoader::LoadAssetPreloadFile()
 					case 3:
 					{
 						//texture
-						if (regex_search(line, match, pathRegex)) {
+						if (regex_search(line, match, RegexObjects.pathRegex)) {
 							string path = match[1];
 
 							bool saveTex = false;
-							if (regex_search(line, match, texArrayRegex)) {
+							if (regex_search(line, match, RegexObjects.texArrayRegex)) {
 								saveTex = (match[1] == "true" || match[1] == "TRUE");
 							}
 
-							LoadTexture(name, path, defaultTexturesMap, saveTex);
+							LoadTexture(name, path, DefaultTexturesMap, saveTex);
 						}
 						else continue;
 						break;
@@ -318,76 +363,89 @@ void SceneLoader::LoadAssetPreloadFile()
 						string vShader;
 						string pShader;
 						
-						if (regex_search(line, match, vShaderRegex)) {
-							if (vertexShadersMap.count(match[1])) vShader = match[1];
+						if (regex_search(line, match, RegexObjects.vShaderRegex)) {
+							if (VertexShadersMap.count(match[1])) vShader = match[1];
 							else vShader = "DEFAULT";
 						}
 
-						if (regex_search(line, match, pShaderRegex)) {
-							if (pixelShadersMap.count(match[1])) pShader = match[1];
+						if (regex_search(line, match, RegexObjects.pShaderRegex)) {
+							if (PixelShadersMap.count(match[1])) pShader = match[1];
 							else pShader = "DEFAULT";
 						}
 
-						if (regex_search(line, match, ambientTexRegex)) {
-							if (defaultTexturesMap.count(match[1])) matData.AmbientTextureMapSRV = defaultTexturesMap[match[1]];
+						if (regex_search(line, match, RegexObjects.ambientTexRegex)) {
+							if (DefaultTexturesMap.count(match[1])) matData.AmbientTextureMapSRV = DefaultTexturesMap[match[1]];
 						}
 
-						if (regex_search(line, match, diffuseTexRegex)) {
-							if (defaultTexturesMap.count(match[1])) matData.DiffuseTextureMapSRV = defaultTexturesMap[match[1]];
+						if (regex_search(line, match, RegexObjects.diffuseTexRegex)) {
+							if (DefaultTexturesMap.count(match[1])) matData.DiffuseTextureMapSRV = DefaultTexturesMap[match[1]];
 						}
 
-						if (regex_search(line, match, specColorTexRegex)) {
-							if (defaultTexturesMap.count(match[1])) matData.SpecularColorTextureMapSRV = defaultTexturesMap[match[1]];
+						if (regex_search(line, match, RegexObjects.specColorTexRegex)) {
+							if (DefaultTexturesMap.count(match[1])) matData.SpecularColorTextureMapSRV = DefaultTexturesMap[match[1]];
 						}
 
-						if (regex_search(line, match, specHighlightTexRegex)) {
-							if (defaultTexturesMap.count(match[1])) matData.SpecularHighlightTextureMapSRV = defaultTexturesMap[match[1]];
+						if (regex_search(line, match, RegexObjects.specHighlightTexRegex)) {
+							if (DefaultTexturesMap.count(match[1])) matData.SpecularHighlightTextureMapSRV = DefaultTexturesMap[match[1]];
 						}
 
-						if (regex_search(line, match, alphaTexRegex)) {
-							if (defaultTexturesMap.count(match[1])) matData.AlphaTextureMapSRV = defaultTexturesMap[match[1]];
+						if (regex_search(line, match, RegexObjects.alphaTexRegex)) {
+							if (DefaultTexturesMap.count(match[1])) matData.AlphaTextureMapSRV = DefaultTexturesMap[match[1]];
 						}
 
-						if (regex_search(line, match, normalTexRegex)) {
-							if (defaultTexturesMap.count(match[1])) matData.NormalTextureMapSRV = defaultTexturesMap[match[1]];
+						if (regex_search(line, match, RegexObjects.normalTexRegex)) {
+							if (DefaultTexturesMap.count(match[1])) matData.NormalTextureMapSRV = DefaultTexturesMap[match[1]];
 						}
 
-						if (regex_search(line, match, ambientColorRegex)) {
+						if (regex_search(line, match, RegexObjects.ambientColorRegex)) {
 							matData.AmbientColor = Float3FromString(match[1]);
 						}
 
-						if (regex_search(line, match, diffuseColorRegex)) {
+						if (regex_search(line, match, RegexObjects.diffuseColorRegex)) {
 							matData.DiffuseColor = Float3FromString(match[1]);
 						}
 
-						if (regex_search(line, match, specularColorRegex)) {
+						if (regex_search(line, match, RegexObjects.specularColorRegex)) {
 							matData.SpecularColor = Float3FromString(match[1]);
 						}
 
-						if (regex_search(line, match, specularExponentRegex)) {
+						if (regex_search(line, match, RegexObjects.specularExponentRegex)) {
 							matData.SpecularExponent = std::stof(match[1].str());
 						}
 
-						if (regex_search(line, match, transparencyRegex)) {
+						if (regex_search(line, match, RegexObjects.transparencyRegex)) {
 							matData.Transparency = std::stof(match[1].str());
 						}
 
-						if (regex_search(line, match, illuminationRegex)) {
+						if (regex_search(line, match, RegexObjects.illuminationRegex)) {
 							matData.Illumination = std::stoi(match[1].str());
 						}
 
-						if (regex_search(line, match, ssaoRegex)) {
+						if (regex_search(line, match, RegexObjects.ssaoRegex)) {
 							if (match[1] == "true" || match[1] == "TRUE") matData.SSAO = true;
 							if (match[1] == "false" || match[1] == "FALSE") matData.SSAO = false;
 						}
 
-						if (regex_search(line, match, hbaoPlusRegex)) {
+						if (regex_search(line, match, RegexObjects.hbaoPlusRegex)) {
 							if (match[1] == "true" || match[1] == "TRUE") matData.hbaoPlusEnabled = true;
 							if (match[1] == "false" || match[1] == "FALSE") matData.hbaoPlusEnabled = false;
 						}
 
-						CreateMaterial(name, matData, vShader, pShader, defaultMaterialsMap);
+						CreateMaterial(name, matData, vShader, pShader, DefaultMaterialsMap);
 
+						break;
+					}
+					case 11:
+					{
+						//layermask
+						if (regex_search(line, match, RegexObjects.layerOffsetRegex)) {
+							unsigned int offset = stoi(match[1]);
+							if (regex_search(line, match, RegexObjects.layerValueRegex)) {
+								unsigned int value = stoi(match[1]);
+								Config::EntityLayers.insert({ name, (value << (offset * 4)) });
+							}
+						}
+						else continue;
 						break;
 					}
 					default:
@@ -402,16 +460,16 @@ void SceneLoader::LoadAssetPreloadFile()
 MESH_TYPE SceneLoader::AutoLoadOBJMTL(string name)
 {
 	//mesh exists in default meshes map, which will remain untouched during program execution
-	if (defaultMeshesMap.count(name))
+	if (DefaultMeshesMap.count(name))
 		return MESH_TYPE::DEFAULT_MESH;
 
 	//if mesh is already loaded
-	if (generatedMeshesMap.count(name)) {
+	if (GeneratedMeshesMap.count(name)) {
 		//if the mesh is not already recorded as utilized, utilize it
 		if (!utilizedMeshesMap.count(name)) {
 			utilizedMeshesMap.insert({ name, true });
 			//get the material names utilized under the mesh
-			vector<string> utilizedMaterials = generatedMeshesMap[name]->GetMaterialNameList();
+			vector<string> utilizedMaterials = GeneratedMeshesMap[name]->GetMaterialNameList();
 			for (int i = 0; i < utilizedMaterials.size(); i++)
 			{
 				//if the material is not already utilized, utilize it
@@ -451,12 +509,12 @@ MESH_TYPE SceneLoader::AutoLoadOBJMTL(string name)
 		return MESH_TYPE::LOAD_FAILURE;
 	}
 
-	generatedMeshesMap.insert({ name, newMesh });
+	GeneratedMeshesMap.insert({ name, newMesh });
 
 	//record mesh as utilized
 	utilizedMeshesMap.insert({ name,true });
 
-	string mtlPath = generatedMeshesMap[name]->GetMTLPath();
+	string mtlPath = GeneratedMeshesMap[name]->GetMTLPath();
 
 	if (mtlPath == "") {
 		cout << "Material Template Library (MTL) link not found inside \"" + name + ".obj\". If this is unintentional, link MTL file inside OBJ file." << endl;
@@ -483,18 +541,18 @@ MESH_TYPE SceneLoader::AutoLoadOBJMTL(string name)
 	while (getline(infile, line)) {
 		if (line != "" && !regex_search(line, match, regex("^#"))) {
 			//search for new material line
-			if (regex_search(line, match, newMtlRgx)) {
-				line = regex_replace(line, newMtlRgx, "");
+			if (regex_search(line, match, RegexObjects.newMtlRgx)) {
+				line = regex_replace(line, RegexObjects.newMtlRgx, "");
 				//new material line was found but a material was in progress, complete this material before continuing
-				if (ongoingMat && !generatedMaterialsMap.count(ongoingMatName)) {
+				if (ongoingMat && !GeneratedMaterialsMap.count(ongoingMatName)) {
 					Material someMaterial;
 
 					//Different shaders based on matData values
 					if (matData.NormalTextureMapSRV) {
-						someMaterial = Material(ongoingMatName, matData, vertexShadersMap["Normal"], pixelShadersMap["Normal"], (clampSampler) ? Config::ClampSampler : Config::Sampler);
+						someMaterial = Material(ongoingMatName, matData, VertexShadersMap["Normal"], PixelShadersMap["Normal"], (clampSampler) ? Config::ClampSampler : Config::Sampler);
 					}
 					else {
-						someMaterial = Material(ongoingMatName, matData, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], (clampSampler) ? Config::ClampSampler : Config::Sampler);
+						someMaterial = Material(ongoingMatName, matData, VertexShadersMap["DEFAULT"], PixelShadersMap["DEFAULT"], (clampSampler) ? Config::ClampSampler : Config::Sampler);
 					}
 
 					matData = {};
@@ -504,7 +562,7 @@ MESH_TYPE SceneLoader::AutoLoadOBJMTL(string name)
 					Material* allocatedMaterial = (Material*)EEMemoryAllocator->AllocateToPool((unsigned int)MEMORY_POOL::MATERIAL_POOL, sizeof(Material), success);
 					if (success) {
 						*allocatedMaterial = someMaterial;
-						generatedMaterialsMap.insert({ ongoingMatName, allocatedMaterial });
+						GeneratedMaterialsMap.insert({ ongoingMatName, allocatedMaterial });
 
 						//record material as utilized
 						utilizedMaterialsMap.insert({ ongoingMatName,true });
@@ -518,136 +576,136 @@ MESH_TYPE SceneLoader::AutoLoadOBJMTL(string name)
 				}
 			}
 			//ambient color
-			else if (regex_search(line, match, ambientColorRgx)) {
-				line = regex_replace(line, ambientColorRgx, "");
+			else if (regex_search(line, match, RegexObjects.ambientColorRgx)) {
+				line = regex_replace(line, RegexObjects.ambientColorRgx, "");
 				ParseFloat3FromString(line, matData.AmbientColor);
 			}
 			//diffuse color
-			else if (regex_search(line, match, diffuseColorRgx)) {
-				line = regex_replace(line, diffuseColorRgx, "");
+			else if (regex_search(line, match, RegexObjects.diffuseColorRgx)) {
+				line = regex_replace(line, RegexObjects.diffuseColorRgx, "");
 				ParseFloat3FromString(line, matData.DiffuseColor);
 			}
 			//specular color
-			else if (regex_search(line, match, specularColorRgx)) {
-				line = regex_replace(line, specularColorRgx, "");
+			else if (regex_search(line, match, RegexObjects.specularColorRgx)) {
+				line = regex_replace(line, RegexObjects.specularColorRgx, "");
 				ParseFloat3FromString(line, matData.SpecularColor);
 			}
 			//specular value
-			else if (regex_search(line, match, specularExpRgx)) {
-				line = regex_replace(line, specularExpRgx, "");
+			else if (regex_search(line, match, RegexObjects.specularExpRgx)) {
+				line = regex_replace(line, RegexObjects.specularExpRgx, "");
 				ParseFloatFromString(line, matData.SpecularExponent);
 			}
 			//transparency value
-			else if (regex_search(line, match, dTransparencyRgx)) {
-				line = regex_replace(line, dTransparencyRgx, "");
+			else if (regex_search(line, match, RegexObjects.dTransparencyRgx)) {
+				line = regex_replace(line, RegexObjects.dTransparencyRgx, "");
 				ParseFloatFromString(line, matData.Transparency);
 			}
 			//transparency value
-			else if (regex_search(line, match, trTransparencyRgx)) {
-				line = regex_replace(line, trTransparencyRgx, "");
+			else if (regex_search(line, match, RegexObjects.trTransparencyRgx)) {
+				line = regex_replace(line, RegexObjects.trTransparencyRgx, "");
 				ParseFloatFromString(line, matData.Transparency);
 				matData.Transparency = 1.0f - matData.Transparency;
 			}
 			//illumination value
-			else if (regex_search(line, match, illuminationRgx)) {
-				line = regex_replace(line, illuminationRgx, "");
+			else if (regex_search(line, match, RegexObjects.illuminationRgx)) {
+				line = regex_replace(line, RegexObjects.illuminationRgx, "");
 				ParseIntFromString(line, matData.Illumination);
 			}
 			//check for texture repeat
-			else if (regex_search(line, match, repeatTextureRegex))
+			else if (regex_search(line, match, RegexObjects.repeatTextureRegex))
 				matData.repeatTexture = XMFLOAT2(std::stof(match[1].str()), std::stof(match[2].str()));
 			//check for texture clamp
-			else if (regex_search(line, match, clampTexRegex)) {
+			else if (regex_search(line, match, RegexObjects.clampTexRegex)) {
 				if(match[1] == "true" || match[1] == "TRUE")
 					clampSampler = true;
 			}
-			else if (regex_search(line, match, uvOffsetRegex)) {
+			else if (regex_search(line, match, RegexObjects.uvOffsetRegex)) {
 				matData.uvOffset = XMFLOAT2(std::stof(match[1].str()), std::stof(match[2].str()));
 			}
 			//ambient occlusion map
-			else if (regex_search(line, match, ambientTextureRgx)) {
-				line = regex_replace(line, ambientTextureRgx, "");
-				if (!generatedTexturesMap.count(line)) {
-					generatedTexturesMap.insert({ line, Utility::LoadSRV(line) });
+			else if (regex_search(line, match, RegexObjects.ambientTextureRgx)) {
+				line = regex_replace(line, RegexObjects.ambientTextureRgx, "");
+				if (!GeneratedTexturesMap.count(line)) {
+					GeneratedTexturesMap.insert({ line, Utility::LoadSRV(line) });
 
 					//record texture as utilized
 					utilizedTexturesMap.insert({ line,true });
 				}
-				matData.AmbientTextureMapSRV = generatedTexturesMap[line];
+				matData.AmbientTextureMapSRV = GeneratedTexturesMap[line];
 				materialTextureAssociationMap[ongoingMatName].push_back(line);
 			}
 			//diffuse map
-			else if (regex_search(line, match, diffuseTextureRgx)) {
-				line = regex_replace(line, diffuseTextureRgx, "");
-				if (!generatedTexturesMap.count(line)) {
-					generatedTexturesMap.insert({ line, Utility::LoadSRV(line) });
+			else if (regex_search(line, match, RegexObjects.diffuseTextureRgx)) {
+				line = regex_replace(line, RegexObjects.diffuseTextureRgx, "");
+				if (!GeneratedTexturesMap.count(line)) {
+					GeneratedTexturesMap.insert({ line, Utility::LoadSRV(line) });
 
 					//record texture as utilized
 					utilizedTexturesMap.insert({ line,true });
 				}
-				matData.DiffuseTextureMapSRV = generatedTexturesMap[line];
+				matData.DiffuseTextureMapSRV = GeneratedTexturesMap[line];
 				materialTextureAssociationMap[ongoingMatName].push_back(line);
 			}
 			//specular color map
-			else if (regex_search(line, match, specularColorTextureRgx)) {
-				line = regex_replace(line, specularColorTextureRgx, "");
-				if (!generatedTexturesMap.count(line)) {
-					generatedTexturesMap.insert({ line, Utility::LoadSRV(line) });
+			else if (regex_search(line, match, RegexObjects.specularColorTextureRgx)) {
+				line = regex_replace(line, RegexObjects.specularColorTextureRgx, "");
+				if (!GeneratedTexturesMap.count(line)) {
+					GeneratedTexturesMap.insert({ line, Utility::LoadSRV(line) });
 
 					//record texture as utilized
 					utilizedTexturesMap.insert({ line,true });
 				}
-				matData.SpecularColorTextureMapSRV = generatedTexturesMap[line];
+				matData.SpecularColorTextureMapSRV = GeneratedTexturesMap[line];
 				materialTextureAssociationMap[ongoingMatName].push_back(line);
 			}
 			//specular highlight map
-			else if (regex_search(line, match, specularHighlightTextureRgx)) {
-				line = regex_replace(line, specularHighlightTextureRgx, "");
-				if (!generatedTexturesMap.count(line)) {
-					generatedTexturesMap.insert({ line, Utility::LoadSRV(line) });
+			else if (regex_search(line, match, RegexObjects.specularHighlightTextureRgx)) {
+				line = regex_replace(line, RegexObjects.specularHighlightTextureRgx, "");
+				if (!GeneratedTexturesMap.count(line)) {
+					GeneratedTexturesMap.insert({ line, Utility::LoadSRV(line) });
 
 					//record texture as utilized
 					utilizedTexturesMap.insert({ line,true });
 				}
-				matData.SpecularHighlightTextureMapSRV = generatedTexturesMap[line];
+				matData.SpecularHighlightTextureMapSRV = GeneratedTexturesMap[line];
 				materialTextureAssociationMap[ongoingMatName].push_back(line);
 			}
 			//alpha map
-			else if (regex_search(line, match, alphaTextureRgx)) {
-				line = regex_replace(line, alphaTextureRgx, "");
-				if (!generatedTexturesMap.count(line)) {
-					generatedTexturesMap.insert({ line, Utility::LoadSRV(line) });
+			else if (regex_search(line, match, RegexObjects.alphaTextureRgx)) {
+				line = regex_replace(line, RegexObjects.alphaTextureRgx, "");
+				if (!GeneratedTexturesMap.count(line)) {
+					GeneratedTexturesMap.insert({ line, Utility::LoadSRV(line) });
 
 					//record texture as utilized
 					utilizedTexturesMap.insert({ line,true });
 				}
-				matData.AlphaTextureMapSRV = generatedTexturesMap[line];
+				matData.AlphaTextureMapSRV = GeneratedTexturesMap[line];
 				materialTextureAssociationMap[ongoingMatName].push_back(line);
 			}
 			//bump map
-			else if (regex_search(line, match, normalTextureRgx)) {
-				line = regex_replace(line, normalTextureRgx, "");
-				if (!generatedTexturesMap.count(line)) {
-					generatedTexturesMap.insert({ line, Utility::LoadSRV(line) });
+			else if (regex_search(line, match, RegexObjects.normalTextureRgx)) {
+				line = regex_replace(line, RegexObjects.normalTextureRgx, "");
+				if (!GeneratedTexturesMap.count(line)) {
+					GeneratedTexturesMap.insert({ line, Utility::LoadSRV(line) });
 
 					//record texture as utilized
 					utilizedTexturesMap.insert({ line,true });
 				}
-				matData.NormalTextureMapSRV = generatedTexturesMap[line];
+				matData.NormalTextureMapSRV = GeneratedTexturesMap[line];
 				materialTextureAssociationMap[ongoingMatName].push_back(line);
 			}
 		}
 	}
 	//basically only executes if the end of the file is reached and there was an ongoing material being created
-	if (ongoingMat && !generatedMaterialsMap.count(ongoingMatName)) {
+	if (ongoingMat && !GeneratedMaterialsMap.count(ongoingMatName)) {
 		Material someMaterial;
 
 		//Different shaders based on matData values
 		if (matData.NormalTextureMapSRV) {
-			someMaterial = Material(ongoingMatName, matData, vertexShadersMap["Normal"], pixelShadersMap["Normal"], (clampSampler) ? Config::ClampSampler : Config::Sampler);
+			someMaterial = Material(ongoingMatName, matData, VertexShadersMap["Normal"], PixelShadersMap["Normal"], (clampSampler) ? Config::ClampSampler : Config::Sampler);
 		}
 		else {
-			someMaterial = Material(ongoingMatName, matData, vertexShadersMap["DEFAULT"], pixelShadersMap["DEFAULT"], (clampSampler) ? Config::ClampSampler : Config::Sampler);
+			someMaterial = Material(ongoingMatName, matData, VertexShadersMap["DEFAULT"], PixelShadersMap["DEFAULT"], (clampSampler) ? Config::ClampSampler : Config::Sampler);
 		}
 
 		matData = {};
@@ -658,7 +716,7 @@ MESH_TYPE SceneLoader::AutoLoadOBJMTL(string name)
 		Material* allocatedMaterial = (Material*)EEMemoryAllocator->AllocateToPool((unsigned int)MEMORY_POOL::MATERIAL_POOL, sizeof(Material), success);
 		if (success) {
 			*allocatedMaterial = someMaterial;
-			generatedMaterialsMap.insert({ ongoingMatName, allocatedMaterial });
+			GeneratedMaterialsMap.insert({ ongoingMatName, allocatedMaterial });
 
 			//record material as utilized
 			utilizedMaterialsMap.insert({ ongoingMatName,true });
@@ -671,14 +729,14 @@ MESH_TYPE SceneLoader::AutoLoadOBJMTL(string name)
 void SceneLoader::LoadScene(string sceneName)
 {
 	//remove all current entities loaded
-	for (size_t i = 0; i < sceneEntities.size(); i++)
+	for (size_t i = 0; i < SceneEntities.size(); i++)
 	{
-		sceneEntities[i]->FreeMemory();
-		EEMemoryAllocator->DeallocateFromPool((unsigned int)MEMORY_POOL::ENTITY_POOL, sceneEntities[i], sizeof(Entity));
+		SceneEntities[i]->FreeMemory();
+		EEMemoryAllocator->DeallocateFromPool((unsigned int)MEMORY_POOL::ENTITY_POOL, SceneEntities[i], sizeof(Entity));
 	}
-	sceneEntities.clear();
-	sceneEntitiesMap.clear();
-	sceneEntitiesTagMap.clear();
+	SceneEntities.clear();
+	SceneEntitiesMap.clear();
+	SceneEntitiesTagMap.clear();
 	utilizedMeshesMap.clear();
 	utilizedMaterialsMap.clear();
 	utilizedTexturesMap.clear();
@@ -694,9 +752,9 @@ void SceneLoader::LoadScene(string sceneName)
 		//cout << line << endl;
 		if (line != "") {
 			//if the line does not start with "//"
-			if (!regex_match(line, commentedLineRegex)) {
+			if (!regex_match(line, RegexObjects.commentedLineRegex)) {
 
-				if (regex_search(line, match, typeRegex)) {
+				if (regex_search(line, match, RegexObjects.typeRegex)) {
 					type = match[1];
 
 					if (!sceneLineTypes.count(type)) continue;
@@ -724,14 +782,14 @@ void SceneLoader::LoadScene(string sceneName)
 					case 7:
 						{
 							//skybox
-							if (regex_search(line, match, skyboxRegex)) {
+							if (regex_search(line, match, RegexObjects.skyboxRegex)) {
 								string name = match[1];
-								if (!generatedTexturesMap.count(name)) {
-									generatedTexturesMap.insert({ "DDS_" + name, Utility::LoadDDSSRV(name + ".dds") });
+								if (!GeneratedTexturesMap.count(name)) {
+									GeneratedTexturesMap.insert({ "DDS_" + name, Utility::LoadDDSSRV(name + ".dds") });
 									//record texture as utilized
 									utilizedTexturesMap.insert({ "DDS_" + name,true });
 								}
-								EERenderer->SetSkybox(generatedTexturesMap["DDS_" + name]);
+								EERenderer->SetSkybox(GeneratedTexturesMap["DDS_" + name]);
 							}
 							continue;
 						}
@@ -741,22 +799,22 @@ void SceneLoader::LoadScene(string sceneName)
 							string lightName;
 							Light dLight;
 							dLight.Type = LIGHT_TYPE_DIR;
-							if (regex_search(line, match, entityNameRegex)) {
+							if (regex_search(line, match, RegexObjects.entityNameRegex)) {
 								lightName = match[1];
 							}
-							if (regex_search(line, match, lightPosRegex)) {
+							if (regex_search(line, match, RegexObjects.lightPosRegex)) {
 								string transformData = match[0];
 								dLight.Position = Float3FromString(transformData);
 							}
-							if (regex_search(line, match, lightDirRegex)) {
+							if (regex_search(line, match, RegexObjects.lightDirRegex)) {
 								string transformData = match[0];
 								dLight.Direction = Float3FromString(transformData);
 							}
-							if (regex_search(line, match, lightColorRegex)) {
+							if (regex_search(line, match, RegexObjects.lightColorRegex)) {
 								string transformData = match[0];
 								dLight.Color = Float3FromString(transformData);
 							}
-							if (regex_search(line, match, lightIntensityRegex)) {
+							if (regex_search(line, match, RegexObjects.lightIntensityRegex)) {
 								string transformData = match[1];
 								dLight.Intensity = std::stof(transformData);
 							}
@@ -772,7 +830,7 @@ void SceneLoader::LoadScene(string sceneName)
 				MESH_TYPE meshType;
 
 				//search for OBJ name at start of line
-				if (regex_search(line, match, objNameRegex)) {
+				if (regex_search(line, match, RegexObjects.objNameRegex)) {
 					objName = match[1];
 					//load mesh, material, and textures, and if they already exist then mark them as utilized
 					meshType = AutoLoadOBJMTL(objName);
@@ -783,12 +841,12 @@ void SceneLoader::LoadScene(string sceneName)
 				Entity someEntity;
 
 				//search for entity name in scene file
-				string originalEntityName = regex_search(line, match, entityNameRegex) ? match[1] : objName;
+				string originalEntityName = regex_search(line, match, RegexObjects.entityNameRegex) ? match[1] : objName;
 				string entityName = originalEntityName;
 
 				//check if entity name already exists, if it does then add (1), (2), etc
 				int sameNameEntityCnt = 1;
-				while (sceneEntitiesMap.count(entityName)) {
+				while (SceneEntitiesMap.count(entityName)) {
 					entityName = originalEntityName + " (" + to_string(sameNameEntityCnt) + ")";
 					sameNameEntityCnt++;
 				}
@@ -803,10 +861,10 @@ void SceneLoader::LoadScene(string sceneName)
 					someEntity.isEmptyObj = true;
 					break;
 				case MESH_TYPE::DEFAULT_MESH:
-					someEntity = Entity(entityName, defaultMeshesMap[objName]);
+					someEntity = Entity(entityName, DefaultMeshesMap[objName]);
 					break;
 				case MESH_TYPE::GENERATED_MESH: {
-					someEntity = Entity(entityName, generatedMeshesMap[objName]);
+					someEntity = Entity(entityName, GeneratedMeshesMap[objName]);
 					break;
 				}
 				default:
@@ -820,8 +878,8 @@ void SceneLoader::LoadScene(string sceneName)
 					//allocatedEntity->CopyCollections(&someEntity);
 					//allocatedEntity->SetupCollections();
 					*allocatedEntity = someEntity;
-					sceneEntitiesMap.insert({ entityName, allocatedEntity });
-					sceneEntities.push_back(allocatedEntity);
+					SceneEntitiesMap.insert({ entityName, allocatedEntity });
+					SceneEntities.push_back(allocatedEntity);
 				}
 
 				if (meshType == MESH_TYPE::GENERATED_MESH) {
@@ -831,44 +889,59 @@ void SceneLoader::LoadScene(string sceneName)
 					for (int i = 0; i < requiredMaterials.size(); i++)
 					{
 						string requiredMat = requiredMaterials[i];
-						if (generatedMaterialsMap.count(requiredMat))
-							allocatedEntity->AddMaterial(generatedMaterialsMap[requiredMat]);
+						if (GeneratedMaterialsMap.count(requiredMat))
+							allocatedEntity->AddMaterial(GeneratedMaterialsMap[requiredMat]);
 					}
 					if (requiredMaterials.size() == 0) {
-						allocatedEntity->AddMaterial(defaultMaterialsMap["DEFAULT"]);
+						allocatedEntity->AddMaterial(DefaultMaterialsMap["DEFAULT"]);
 					}
 				}
 
 				//check for manual material
 				if (meshType == MESH_TYPE::DEFAULT_MESH) {
-					if (regex_search(line, match, materialNameRegex)) {
-						if (defaultMaterialsMap.count(match[1]))
-							allocatedEntity->AddMaterial(defaultMaterialsMap[match[1]], true);
+					if (regex_search(line, match, RegexObjects.materialNameRegex)) {
+						if (DefaultMaterialsMap.count(match[1]))
+							allocatedEntity->AddMaterial(DefaultMaterialsMap[match[1]], true);
 					}
 					else {
-						allocatedEntity->AddMaterial(defaultMaterialsMap["DEFAULT"], true);
+						allocatedEntity->AddMaterial(DefaultMaterialsMap["DEFAULT"], true);
 					}
 				}
 
 				//check for texture repeat
-				if (regex_search(line, match, repeatTextureRegex))
+				if (regex_search(line, match, RegexObjects.repeatTextureRegex))
 					allocatedEntity->SetRepeatTexture(std::stof(match[1].str()), std::stof(match[2].str()));
 
 				//check for entity tag
-				if (regex_search(line, match, tagNameRegex)) {
-					allocatedEntity->tag = match[1];
-					if (!sceneEntitiesTagMap.count(match[1])) sceneEntitiesTagMap.insert({ match[1],vector<Entity*>() });
-					sceneEntitiesTagMap[match[1]].push_back(allocatedEntity);
+				if (regex_search(line, match, RegexObjects.tagNameRegex)) {
+					string tags = match[1].str();
+					std::sregex_iterator iter(tags.begin(), tags.end(), RegexObjects.scriptNamesIteratorRegex);
+					for (; iter != std::sregex_iterator(); ++iter) {
+						match = *iter;
+						string tag = match.str();
+						if (!SceneEntitiesTagMap.count(tag)) SceneEntitiesTagMap.insert({ tag, vector<Entity*>() });
+						SceneEntitiesTagMap[tag].push_back(allocatedEntity);
+						allocatedEntity->AddTag(tag);
+					}
 				}
 
 				//check for entity layer
-				if (regex_search(line, match, layerNameRegex))
-					allocatedEntity->layer = match[1];
+				if (regex_search(line, match, RegexObjects.layerNameRegex)) {
+					string layers = match[1].str();
+					std::sregex_iterator iter(layers.begin(), layers.end(), RegexObjects.scriptNamesIteratorRegex);
+					for (; iter != std::sregex_iterator(); ++iter) {
+						match = *iter;
+						string layer = match.str();
+						if (!SceneEntitiesLayerMap.count(layer)) SceneEntitiesLayerMap.insert({ layer, vector<Entity*>() });
+						SceneEntitiesLayerMap[layer].push_back(allocatedEntity);
+						allocatedEntity->AddLayer(layer);
+					}
+				}
 
 				//check for transformation data associated with this entity
-				if (regex_search(line, match, transformationDataRegex)) {
+				if (regex_search(line, match, RegexObjects.transformationDataRegex)) {
 					string transformData = match[0];
-					std::sregex_iterator iter(transformData.begin(), transformData.end(), transformNumIteratorRegex);
+					std::sregex_iterator iter(transformData.begin(), transformData.end(), RegexObjects.transformNumIteratorRegex);
 					int counter = 0;
 					for (; iter != std::sregex_iterator(); ++iter) {
 						if (counter < 9) {
@@ -879,7 +952,7 @@ void SceneLoader::LoadScene(string sceneName)
 					}
 					allocatedEntity->SetPosition(parsedNumbers[0], parsedNumbers[1], parsedNumbers[2]);
 
-					if (regex_search(line, match, raaRegex)) {
+					if (regex_search(line, match, RegexObjects.raaRegex)) {
 						if (match[1] == "true" || match[1] == "TRUE") {
 							allocatedEntity->RotateAroundAxis(Z_AXIS, DirectX::XMConvertToRadians(parsedNumbers[5]));
 							allocatedEntity->RotateAroundAxis(Y_AXIS, DirectX::XMConvertToRadians(parsedNumbers[4]));
@@ -896,9 +969,9 @@ void SceneLoader::LoadScene(string sceneName)
 					allocatedEntity->CalcWorldMatrix();
 				}
 
-				if (regex_search(line, match, quaternionRegex)) {
+				if (regex_search(line, match, RegexObjects.quaternionRegex)) {
 					string transformData = match[0];
-					std::sregex_iterator iter(transformData.begin(), transformData.end(), transformNumIteratorRegex);
+					std::sregex_iterator iter(transformData.begin(), transformData.end(), RegexObjects.transformNumIteratorRegex);
 					int counter = 0;
 					for (; iter != std::sregex_iterator(); ++iter) {
 						if (counter < 4) {
@@ -912,7 +985,7 @@ void SceneLoader::LoadScene(string sceneName)
 				}
 
 				//check if object is collision enabled
-				if (regex_search(line, match, collidersEnabledRegex)) {
+				if (regex_search(line, match, RegexObjects.collidersEnabledRegex)) {
 					string collidersEnabled = match[1];
 					if (collidersEnabled == "true" || collidersEnabled == "TRUE") {
 						allocatedEntity->collisionsEnabled = true;
@@ -921,12 +994,12 @@ void SceneLoader::LoadScene(string sceneName)
 						BulletColliderShape collShape = BulletColliderShape::BOX;
 
 						//check if there is a mass
-						if (regex_search(line, match, massRegex)) {
+						if (regex_search(line, match, RegexObjects.massRegex)) {
 							mass = std::stof(match[1].str());
 						}
 						
 						//check if there is a collider type
-						if (regex_search(line, match, colliderTypeRegex)) {
+						if (regex_search(line, match, RegexObjects.colliderTypeRegex)) {
 							string collType = match[1];
 							if (bulletColliders.count(collType)) {
 								collShape = bulletColliders[collType];
@@ -963,7 +1036,7 @@ void SceneLoader::LoadScene(string sceneName)
 				}
 				
 				//check for debug lines
-				if (regex_search(line, match, debugRegex)) {
+				if (regex_search(line, match, RegexObjects.debugRegex)) {
 					string debugEnabled = match[1];
 					if (debugEnabled == "true" || debugEnabled == "TRUE") {
 						allocatedEntity->colliderDebugLinesEnabled = true;
@@ -983,9 +1056,9 @@ void SceneLoader::LoadScene(string sceneName)
 				}
 
 				//check for scripts
-				if (regex_search(line, match, scriptNamesRegex)) {
+				if (regex_search(line, match, RegexObjects.scriptNamesRegex)) {
 					string scripts = match[1].str();
-					std::sregex_iterator iter(scripts.begin(), scripts.end(), scriptNamesIteratorRegex);
+					std::sregex_iterator iter(scripts.begin(), scripts.end(), RegexObjects.scriptNamesIteratorRegex);
 					for (; iter != std::sregex_iterator(); ++iter) {
 						match = *iter;
 						string script = match.str();
@@ -1002,7 +1075,7 @@ void SceneLoader::LoadScene(string sceneName)
 	//clean up memory from prior scene, wont reload any resources that already exist and that
 	//are needed, but will remove unused resources in the current scene
 	vector<string> meshesToDelete;
-	for (auto meshMapIter = generatedMeshesMap.begin(); meshMapIter != generatedMeshesMap.end(); ++meshMapIter)
+	for (auto meshMapIter = GeneratedMeshesMap.begin(); meshMapIter != GeneratedMeshesMap.end(); ++meshMapIter)
 	{
 		if (!utilizedMeshesMap.count(meshMapIter->first)) {
 			meshesToDelete.push_back(meshMapIter->first);
@@ -1010,14 +1083,14 @@ void SceneLoader::LoadScene(string sceneName)
 	}
 	for (size_t i = 0; i < meshesToDelete.size(); i++)
 	{
-		Mesh* toDelete = generatedMeshesMap[meshesToDelete[i]];
+		Mesh* toDelete = GeneratedMeshesMap[meshesToDelete[i]];
 		toDelete->FreeMemory();
 		EEMemoryAllocator->DeallocateFromPool((unsigned int)MEMORY_POOL::MESH_POOL, toDelete, sizeof(Mesh));
-		generatedMeshesMap.erase(meshesToDelete[i]);
+		GeneratedMeshesMap.erase(meshesToDelete[i]);
 	}
 
 	vector<string> texturesToDelete;
-	for (auto texMapIter = generatedTexturesMap.begin(); texMapIter != generatedTexturesMap.end(); ++texMapIter)
+	for (auto texMapIter = GeneratedTexturesMap.begin(); texMapIter != GeneratedTexturesMap.end(); ++texMapIter)
 	{
 		if (!utilizedTexturesMap.count(texMapIter->first)) {
 			texturesToDelete.push_back(texMapIter->first);
@@ -1025,12 +1098,12 @@ void SceneLoader::LoadScene(string sceneName)
 	}
 	for (size_t i = 0; i < texturesToDelete.size(); i++)
 	{
-		generatedTexturesMap[texturesToDelete[i]]->Release();
-		generatedTexturesMap.erase(texturesToDelete[i]);
+		GeneratedTexturesMap[texturesToDelete[i]]->Release();
+		GeneratedTexturesMap.erase(texturesToDelete[i]);
 	}
 
 	vector<string> materialsToDelete;
-	for (auto matMapIter = generatedMaterialsMap.begin(); matMapIter != generatedMaterialsMap.end(); ++matMapIter)
+	for (auto matMapIter = GeneratedMaterialsMap.begin(); matMapIter != GeneratedMaterialsMap.end(); ++matMapIter)
 	{
 		if (!utilizedMaterialsMap.count(matMapIter->first)) {
 			materialsToDelete.push_back(matMapIter->first);
@@ -1038,10 +1111,10 @@ void SceneLoader::LoadScene(string sceneName)
 	}
 	for (size_t i = 0; i < materialsToDelete.size(); i++)
 	{
-		Material* toDelete = generatedMaterialsMap[materialsToDelete[i]];
+		Material* toDelete = GeneratedMaterialsMap[materialsToDelete[i]];
 		toDelete->FreeMemory();
 		EEMemoryAllocator->DeallocateFromPool((unsigned int)MEMORY_POOL::MATERIAL_POOL, toDelete, sizeof(Material));
-		generatedMaterialsMap.erase(materialsToDelete[i]);
+		GeneratedMaterialsMap.erase(materialsToDelete[i]);
 	}
 }
 
@@ -1064,7 +1137,7 @@ Entity* SceneLoader::CreateEntity(EntityCreationParameters& para)
 	//naming of entity internally
 	string entityName = para.entityName; //temporary, should have entity name in scene file
 	int sameNameEntityCnt = 1;
-	while (sceneEntitiesMap.count(entityName)) {
+	while (SceneEntitiesMap.count(entityName)) {
 		entityName = para.entityName + " (" + to_string(sameNameEntityCnt) + ")";
 		sameNameEntityCnt++;
 	}
@@ -1078,12 +1151,12 @@ Entity* SceneLoader::CreateEntity(EntityCreationParameters& para)
 	bool success = false;
 
 	if (para.meshName != "") {
-		if (generatedMeshesMap.count(para.meshName)) {
-			mesh = generatedMeshesMap[para.meshName];
+		if (GeneratedMeshesMap.count(para.meshName)) {
+			mesh = GeneratedMeshesMap[para.meshName];
 			e = Entity(para.entityName, mesh);
 		}
-		else if (defaultMeshesMap.count(para.meshName)) {
-			mesh = defaultMeshesMap[para.meshName];
+		else if (DefaultMeshesMap.count(para.meshName)) {
+			mesh = DefaultMeshesMap[para.meshName];
 			e = Entity(para.entityName, mesh);
 		}
 		else {
@@ -1093,22 +1166,22 @@ Entity* SceneLoader::CreateEntity(EntityCreationParameters& para)
 		allocatedEntity = (Entity*)EEMemoryAllocator->AllocateToPool((unsigned int)MEMORY_POOL::ENTITY_POOL, sizeof(Entity), success);
 		if (success) {
 			*allocatedEntity = e;
-			sceneEntitiesMap.insert({ para.entityName, allocatedEntity });
-			sceneEntities.push_back(allocatedEntity);
+			SceneEntitiesMap.insert({ para.entityName, allocatedEntity });
+			SceneEntities.push_back(allocatedEntity);
 		}
 
 		if (para.materialName != "") {
-			if (generatedMaterialsMap.count(para.materialName)) {
-				mat = generatedMaterialsMap[para.materialName];
+			if (GeneratedMaterialsMap.count(para.materialName)) {
+				mat = GeneratedMaterialsMap[para.materialName];
 				allocatedEntity->AddMaterial(mat, true);
 			}
-			else if (defaultMaterialsMap.count(para.materialName)) {
-				mat = defaultMaterialsMap[para.materialName];
+			else if (DefaultMaterialsMap.count(para.materialName)) {
+				mat = DefaultMaterialsMap[para.materialName];
 				allocatedEntity->AddMaterial(mat, true);
 			}
 			else {
 				para.materialName = "DEFAULT";
-				mat = defaultMaterialsMap["DEFAULT"];
+				mat = DefaultMaterialsMap["DEFAULT"];
 				allocatedEntity->AddMaterial(mat, true);
 			}
 		}
@@ -1120,8 +1193,8 @@ Entity* SceneLoader::CreateEntity(EntityCreationParameters& para)
 		allocatedEntity = (Entity*)EEMemoryAllocator->AllocateToPool((unsigned int)MEMORY_POOL::ENTITY_POOL, sizeof(Entity), success);
 		if (success) {
 			*allocatedEntity = e;
-			sceneEntitiesMap.insert({ para.entityName, allocatedEntity });
-			sceneEntities.push_back(allocatedEntity);
+			SceneEntitiesMap.insert({ para.entityName, allocatedEntity });
+			SceneEntities.push_back(allocatedEntity);
 		}
 	}
 
@@ -1185,13 +1258,17 @@ Entity* SceneLoader::CreateEntity(EntityCreationParameters& para)
 		}
 	}
 
-	allocatedEntity->tag = para.tagName;
 	if (para.tagName != "") {
-		if (!sceneEntitiesTagMap.count(para.tagName)) sceneEntitiesTagMap.insert({ para.tagName,vector<Entity*>() });
-		sceneEntitiesTagMap[para.tagName].push_back(allocatedEntity);
+		allocatedEntity->AddTag(para.tagName);
+		if (!SceneEntitiesTagMap.count(para.tagName)) SceneEntitiesTagMap.insert({ para.tagName, vector<Entity*>() });
+		SceneEntitiesTagMap[para.tagName].push_back(allocatedEntity);
 	}
 
-	allocatedEntity->layer = para.layerName;
+	if (para.layerName != "") {
+		allocatedEntity->AddLayer(para.layerName);
+		if (!SceneEntitiesLayerMap.count(para.layerName)) SceneEntitiesLayerMap.insert({ para.layerName, vector<Entity*>() });
+		SceneEntitiesLayerMap[para.layerName].push_back(allocatedEntity);
+	}
 
 	for (size_t i = 0; i < para.scriptCount; i++)
 	{
@@ -1232,8 +1309,8 @@ std::vector<Entity*> SceneLoader::SplitMeshIntoChildEntities(Entity* e, float co
 		allocatedEntity->AddAutoBoxCollider();
 		allocatedEntity->InitRigidBody(BulletColliderShape::BOX, componentMass, true);
 		// allocatedEntity->GetRBody()->getWorldTransform().setOrigin(allocatedEntity->GetRBody()->getCenterOfMassPosition());
-		sceneEntitiesMap.insert({ children[i]->GetName(), allocatedEntity });
-		sceneEntities.push_back(allocatedEntity);
+		SceneEntitiesMap.insert({ children[i]->GetName(), allocatedEntity });
+		SceneEntities.push_back(allocatedEntity);
 		EERenderer->AddRenderObject(allocatedEntity, newCenteredMesh, mat);
 
 		childEntities.push_back(allocatedEntity);
@@ -1244,4 +1321,25 @@ std::vector<Entity*> SceneLoader::SplitMeshIntoChildEntities(Entity* e, float co
 	e->Destroy();
 
 	return childEntities;
+}
+
+void SceneLoader::DestroyEntity(string entityName)
+{
+	if (SceneEntitiesMap.count(entityName)) {
+		SceneEntitiesMap[entityName]->Destroy();
+		SceneEntitiesMap.erase(entityName);
+	}
+}
+
+void SceneLoader::DestroyEntitiesByTag(string tag)
+{
+	if (SceneEntitiesTagMap.count(tag)) {
+		for (size_t i = 0; i < SceneEntitiesTagMap[tag].size(); i++)
+		{
+			Entity* e = SceneEntitiesTagMap[tag][i];
+			e->Destroy();
+			SceneEntitiesMap.erase(e->GetName());
+		}
+		SceneEntitiesTagMap.erase(tag);
+	}
 }

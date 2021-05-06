@@ -19,7 +19,7 @@ struct ParticleEmitterDescription {
 	unsigned int maxParticles = 1000; //set once when emitter is created, unchangeable thereafter
 	float emissionStartRadius = 0.001f;
 	float emissionEndRadius = 1.0f;
-	float emissionRate = 10.0f; //particles per second
+	double emissionRate = 10.0; //particles per second
 
 	float particleMinLifetime = 10.0f; //minimum lifetime of emitted particles in seconds
 	float particleMaxLifetime = 15.0f; //maximum lifetime of emitted particles in seconds
@@ -54,11 +54,14 @@ public:
 	static map<string, ParticleEmitter*> EmitterMap;
 	static map<string, map<string, ParticleEmitter*>> EntityEmitterMap;
 
-	bool isAlive = true;
-
 	virtual ~ParticleEmitter();
+	static void GarbageCollect();
 
-	static void KillEmitters(string entityName);
+	static void DestroyEmittersByOwner(string entityName);
+	static void DestroyEmitter(string emitterName);
+
+	void Destroy();
+	void SetIsActive(bool toggle);
 
 	void CalcWorldMatrix();
 	XMFLOAT4X4 GetWorldMatrix();
@@ -66,6 +69,7 @@ public:
 	void SetName(string name);
 
 	void SetParent(string parentName, XMFLOAT4X4* parentWorld);
+	void SetParentWorld(XMFLOAT4X4* parentWorld);
 
 	void SetPosition(XMFLOAT3 position);
 	void SetRotationDegrees(XMFLOAT3 rotation);
@@ -81,7 +85,7 @@ public:
 	void SetEmissionRadii(float start, float end);
 
 	//Emission rate in particles per second
-	void SetEmissionRate(float emissionRate);
+	void SetEmissionRate(double emissionRate);
 	void SetParticleLifetime(float min, float max);
 	void SetParticleInitialScale(float min, float max);
 	void SetParticleInitialAngularVelocity(float min, float max);
@@ -109,6 +113,9 @@ protected:
 
 	ID3D11ShaderResourceView* texturesSRV = nullptr;
 
+	bool isActive = true;
+	bool isAlive = true;
+
 	string name;
 	string parentName;
 	XMFLOAT4X4* parentWorld;
@@ -116,7 +123,7 @@ protected:
 	float lifetime = 0.0f;
 	float maxLifetime = 0.0f;
 
-	float emitTimeCounter = 0.0f;
+	double emitTimeCounter = 0.0;
 
 	XMFLOAT4X4 worldMatrix = MATRIX_IDENTITY;
 	XMFLOAT3 position = ZERO_VECTOR3;
@@ -131,7 +138,7 @@ protected:
 	float emissionAngleDegrees = 0.0f;
 	float emissionAngleRadians = 0.0f;
 	unsigned int maxParticles = 0;
-	float emissionRate = 0.0f;
+	double emissionRate = 0.0;
 	float particleMinLifetime = 0.0f;
 	float particleMaxLifetime = 0.0f;
 	float particleAvgLifetime = 0.0f;

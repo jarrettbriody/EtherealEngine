@@ -106,7 +106,7 @@ HRESULT DXCore::InitWindow()
 	SetRect(&clientRect, 0, 0, Config::ViewPortWidth, Config::ViewPortHeight);
 	AdjustWindowRect(
 		&clientRect,
-		WS_OVERLAPPEDWINDOW,	// Has a title bar, border, min and max buttons, etc.
+		(Config::WindowedBorderless) ? WS_POPUP : WS_OVERLAPPEDWINDOW,	// Has a title bar, border, min and max buttons, etc.
 		false);					// No menu bar
 
 	// Center the window to the screen
@@ -121,7 +121,7 @@ HRESULT DXCore::InitWindow()
 	hWnd = CreateWindow(
 		wndClass.lpszClassName,
 		titleBarText.c_str(),
-		WS_OVERLAPPEDWINDOW,
+		(Config::WindowedBorderless) ? WS_POPUP : WS_OVERLAPPEDWINDOW,
 		centeredX,
 		centeredY,
 		clientRect.right - clientRect.left,	// Calculated width
@@ -141,6 +141,8 @@ HRESULT DXCore::InitWindow()
 	// The window exists but is not visible yet
 	// We need to tell Windows to show it, and how to show it
 	ShowWindow(hWnd, SW_SHOW);
+
+	ShowCursor(Config::ShowCursor);
 
 	// Return an "everything is ok" HRESULT value
 	return S_OK;
@@ -182,7 +184,7 @@ HRESULT DXCore::InitDirectX()
 	swapDesc.SampleDesc.Count = 1;
 	swapDesc.SampleDesc.Quality = 0;
 	swapDesc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
-	swapDesc.Windowed = true;
+	swapDesc.Windowed = true;//!Config::Fullscreen;
 
 	// Result variable for below function calls
 	HRESULT hr = S_OK;
@@ -526,8 +528,10 @@ LRESULT DXCore::ProcessMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 		// Don't adjust anything when minimizing,
 		// since we end up with a Config::ViewPortWidth/Config::ViewPortHeight of zero
 		// and that doesn't play well with DirectX
-		if (wParam == SIZE_MINIMIZED)
+		if (wParam == SIZE_MINIMIZED) {
+			ShowCursor(true);
 			return 0;
+		}
 
 		// Save the new client area dimensions.
 		Config::ViewPortWidth = LOWORD(lParam);

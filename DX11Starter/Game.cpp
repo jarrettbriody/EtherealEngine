@@ -59,12 +59,14 @@ Game::~Game()
 
 	LightHandler::DestroyInstance();
 
+	NavmeshHandler::DestroyInstance();
+
 	// FMOD
 	sound[0]->release(); // For now just release the one sound we have assigned
 	backgroundMusic->release();
 	sfxGroup->release();
-	fmodSystem->close();
-	fmodSystem->release();
+	Config::FMODSystem->close();
+	Config::FMODSystem->release();
 }
 
 void Game::Init()
@@ -73,6 +75,8 @@ void Game::Init()
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 	//_CrtSetBreakAlloc(1048555);
 	//_CrtSetBreakAlloc(49892);
+
+	Config::hWnd = hWnd;
 
 	srand(static_cast <unsigned> (time(0)));
 	// Input 
@@ -135,20 +139,23 @@ void Game::Init()
 	DecalHandler::SetupInstance();
 	EEDecalHandler = DecalHandler::GetInstance();
 
+	sceneLoaderGarbageCallback.EEDecalHandler = EEDecalHandler;
+	EESceneLoader->garbageCollectCallback = (SceneLoaderCallback*)(&sceneLoaderGarbageCallback);
+
 	Renderer::SetupInstance();
 	EERenderer = Renderer::GetInstance();
 	EERenderer->AddCamera("main", EECamera);
 	EERenderer->EnableCamera("main");
 
 	RendererShaders rShaders;
-	rShaders.depthStencilVS = EESceneLoader->vertexShadersMap["DepthStencil"];
-	rShaders.depthStencilPS = EESceneLoader->pixelShadersMap["DepthStencil"];
-	rShaders.debugLineVS = EESceneLoader->vertexShadersMap["DebugLine"];
-	rShaders.debugLinePS = EESceneLoader->pixelShadersMap["DebugLine"];
-	rShaders.decalVS = EESceneLoader->vertexShadersMap["Decal"];
-	rShaders.decalPS = EESceneLoader->pixelShadersMap["Decal"];
-	rShaders.skyVS = EESceneLoader->vertexShadersMap["Sky"];
-	rShaders.skyPS = EESceneLoader->pixelShadersMap["Sky"];
+	rShaders.depthStencilVS = EESceneLoader->VertexShadersMap["DepthStencil"];
+	rShaders.depthStencilPS = EESceneLoader->PixelShadersMap["DepthStencil"];
+	rShaders.debugLineVS = EESceneLoader->VertexShadersMap["DebugLine"];
+	rShaders.debugLinePS = EESceneLoader->PixelShadersMap["DebugLine"];
+	rShaders.decalVS = EESceneLoader->VertexShadersMap["Decal"];
+	rShaders.decalPS = EESceneLoader->PixelShadersMap["Decal"];
+	rShaders.skyVS = EESceneLoader->VertexShadersMap["Sky"];
+	rShaders.skyPS = EESceneLoader->PixelShadersMap["Sky"];
 
 	EERenderer->SetRendererShaders(rShaders);
 	EERenderer->InitDepthStencil();
@@ -169,37 +176,37 @@ void Game::Init()
 	EERenderer->InitShadows(4);
 	EERenderer->InitSkybox();
 
-	EERenderer->SetEntities(&(EESceneLoader->sceneEntities));
+	EERenderer->SetEntities(&(EESceneLoader->SceneEntities));
 
 	ID3D11ShaderResourceView* decals[8];
-	decals[0] = EESceneLoader->defaultTexturesMap["BLOOD1"];
-	decals[1] = EESceneLoader->defaultTexturesMap["BLOOD2"];
-	decals[2] = EESceneLoader->defaultTexturesMap["BLOOD3"];
-	decals[3] = EESceneLoader->defaultTexturesMap["BLOOD4"];
-	decals[4] = EESceneLoader->defaultTexturesMap["BLOOD5"];
-	decals[5] = EESceneLoader->defaultTexturesMap["BLOOD6"];
-	decals[6] = EESceneLoader->defaultTexturesMap["BLOOD7"];
-	decals[7] = EESceneLoader->defaultTexturesMap["BLOOD8"];
+	decals[0] = EESceneLoader->DefaultTexturesMap["BLOOD1"];
+	decals[1] = EESceneLoader->DefaultTexturesMap["BLOOD2"];
+	decals[2] = EESceneLoader->DefaultTexturesMap["BLOOD3"];
+	decals[3] = EESceneLoader->DefaultTexturesMap["BLOOD4"];
+	decals[4] = EESceneLoader->DefaultTexturesMap["BLOOD5"];
+	decals[5] = EESceneLoader->DefaultTexturesMap["BLOOD6"];
+	decals[6] = EESceneLoader->DefaultTexturesMap["BLOOD7"];
+	decals[7] = EESceneLoader->DefaultTexturesMap["BLOOD8"];
 	EERenderer->SetDecals(decals);
 
 	EERenderer->SetMeshes(
-		EESceneLoader->defaultMeshesMap["Cube"], 
-		EESceneLoader->defaultMeshesMap["InverseCube"],
-		EESceneLoader->defaultMeshesMap["Sphere"], 
-		EESceneLoader->defaultMeshesMap["Cone"]);
+		EESceneLoader->DefaultMeshesMap["Cube"], 
+		EESceneLoader->DefaultMeshesMap["InverseCube"],
+		EESceneLoader->DefaultMeshesMap["Sphere"], 
+		EESceneLoader->DefaultMeshesMap["Cone"]);
 
 	DefaultGPUParticleShaders gpuParticleShaders;
-	gpuParticleShaders.copyDrawCountCS = EESceneLoader->computeShadersMap["ParticleDrawArgs"];
-	gpuParticleShaders.initDeadListCS = EESceneLoader->computeShadersMap["InitDeadList"];
-	gpuParticleShaders.particleEmissionCS = EESceneLoader->computeShadersMap["EmitParticle"];
-	gpuParticleShaders.particleUpdateCS = EESceneLoader->computeShadersMap["UpdateParticle"];
-	gpuParticleShaders.particleVS = EESceneLoader->vertexShadersMap["Particle"];
-	gpuParticleShaders.particlePS = EESceneLoader->pixelShadersMap["Particle"];
+	gpuParticleShaders.copyDrawCountCS = EESceneLoader->ComputeShadersMap["ParticleDrawArgs"];
+	gpuParticleShaders.initDeadListCS = EESceneLoader->ComputeShadersMap["InitDeadList"];
+	gpuParticleShaders.particleEmissionCS = EESceneLoader->ComputeShadersMap["EmitParticle"];
+	gpuParticleShaders.particleUpdateCS = EESceneLoader->ComputeShadersMap["UpdateParticle"];
+	gpuParticleShaders.particleVS = EESceneLoader->VertexShadersMap["Particle"];
+	gpuParticleShaders.particlePS = EESceneLoader->PixelShadersMap["Particle"];
 	GPUParticleEmitter::SetDefaultShaders(gpuParticleShaders);
 
 	DefaultCPUParticleShaders cpuParticleShaders;
-	cpuParticleShaders.particleVS = EESceneLoader->vertexShadersMap["CPUParticle"];
-	cpuParticleShaders.particlePS = EESceneLoader->pixelShadersMap["CPUParticle"];
+	cpuParticleShaders.particleVS = EESceneLoader->VertexShadersMap["CPUParticle"];
+	cpuParticleShaders.particlePS = EESceneLoader->PixelShadersMap["CPUParticle"];
 	CPUParticleEmitter::SetDefaultShaders(cpuParticleShaders);
 
 	ParticleEmitterDescription emitDesc;
@@ -245,7 +252,7 @@ void Game::Init()
 			ParticlePhysicsWrapper* particleWrapper = (wrapperA->type == PHYSICS_WRAPPER_TYPE::PARTICLE) ? (ParticlePhysicsWrapper*)wrapperA->objectPointer : (ParticlePhysicsWrapper*)wrapperB->objectPointer;
 			Entity* entity = (wrapperA->type == PHYSICS_WRAPPER_TYPE::ENTITY) ? (Entity*)wrapperA->objectPointer : (Entity*)wrapperB->objectPointer;
 	
-			if (entity->layer == "decal") {
+			if (entity->HasLayer("decal")) {
 				Particle* particle = (Particle*)particleWrapper->particle;
 				CPUParticleEmitter* emitter = (CPUParticleEmitter*)particleWrapper->emitter;
 				ParticleEmitter* emitterBase = (ParticleEmitter*)emitter;
@@ -278,26 +285,28 @@ void Game::Init()
 
 
 	Entity* e;
-	for (size_t i = 0; i < EESceneLoader->sceneEntities.size(); i++)
+	for (size_t i = 0; i < EESceneLoader->SceneEntities.size(); i++)
 	{
-		e = EESceneLoader->sceneEntities[i];
+		e = EESceneLoader->SceneEntities[i];
 		if(!e->isEmptyObj)
 			EERenderer->AddRenderObject(e, e->GetMesh(), e->GetMaterial(e->GetMeshMaterialName()));
 	}
 
 	ScriptManager::EERenderer = EERenderer;
 
+	NavmeshHandler::SetupInstance();
+
 	Config::Context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	// Audio -----------------
-	fmodResult = FMOD::System_Create(&fmodSystem); // Create the Studio System object
+	fmodResult = FMOD::System_Create(&Config::FMODSystem); // Create the Studio System object
 	if (fmodResult != FMOD_OK)
 	{
 		printf("FMOD error! (%d) %s\n", fmodResult, FMOD_ErrorString(fmodResult));
 		exit(-1);
 	}
 
-	fmodResult = fmodSystem->init(32, FMOD_INIT_NORMAL, 0); // Initialize FMOD with 32 max channels
+	fmodResult = Config::FMODSystem->init(32, FMOD_INIT_NORMAL, 0); // Initialize FMOD with 32 max channels
 	if (fmodResult != FMOD_OK)
 	{
 		printf("FMOD error! (%d) %s\n", fmodResult, FMOD_ErrorString(fmodResult));
@@ -306,23 +315,23 @@ void Game::Init()
 
 	// Test to see if 3D/2D audio works - EXAMPLE CODE
 
-	fmodResult = fmodSystem->createSound("../../Assets/Audio/CityofDawn.wav", FMOD_3D | FMOD_3D_LINEARROLLOFF | FMOD_LOOP_NORMAL, 0, &backgroundMusic); // Create a 3D/Looping sound with linear roll off
+	fmodResult = Config::FMODSystem->createSound("../../Assets/Audio/CityofDawn.wav", FMOD_3D | FMOD_3D_LINEARROLLOFF | FMOD_LOOP_NORMAL, 0, &backgroundMusic); // Create a 3D/Looping sound with linear roll off
 	FmodErrorCheck(fmodResult);
 
-	fmodResult = fmodSystem->createSound("../../Assets/Audio/wow.wav", FMOD_2D | FMOD_LOOP_OFF, 0, &sound[0]); // Create a non-looping 2D sound in the first slot
+	fmodResult = Config::FMODSystem->createSound("../../Assets/Audio/wow.wav", FMOD_2D | FMOD_LOOP_OFF, 0, &sound[0]); // Create a non-looping 2D sound in the first slot
 	FmodErrorCheck(fmodResult);
 
-	fmodResult = fmodSystem->createChannelGroup("SFX Group", &sfxGroup); // Create a channel group for sound effects
+	fmodResult = Config::FMODSystem->createChannelGroup("SFX Group", &sfxGroup); // Create a channel group for sound effects
 	FmodErrorCheck(fmodResult);
 
-	fmodResult = fmodSystem->getMasterChannelGroup(&masterGroup); // Assign masterGroup as the master channel
+	fmodResult = Config::FMODSystem->getMasterChannelGroup(&masterGroup); // Assign masterGroup as the master channel
 	FmodErrorCheck(fmodResult);
 
 	// Add the SFX group as a child of the master group as an example. Technically doesn't need to be done because the master group already controls everything
 	fmodResult = masterGroup->addGroup(sfxGroup); 
 	FmodErrorCheck(fmodResult);
 
-	fmodResult = fmodSystem->playSound(backgroundMusic, 0, false, &musicChannel); // Start playing the 3D sound
+	//fmodResult = Config::FMODSystem->playSound(backgroundMusic, 0, false, &musicChannel); // Start playing the 3D sound
 	FmodErrorCheck(fmodResult);
 
 	FMOD_VECTOR pos = { 1.0f, 50.0f, 1.0f };
@@ -333,8 +342,13 @@ void Game::Init()
 	musicChannel->set3DMinMaxDistance(0, 15.0f);
 
 
-	if(Config::Fullscreen)
+	if (Config::Fullscreen) {
+		RECT desktopRect;
+		GetClientRect(GetDesktopWindow(), &desktopRect);
+		Config::ViewPortWidth = desktopRect.right;
+		Config::ViewPortHeight = desktopRect.bottom;
 		Config::SwapChain->SetFullscreenState(true, NULL);
+	}
 
 	//cout << sizeof(Entity);
 
@@ -349,20 +363,6 @@ void Game::Init()
 		Config::DynamicsWorld->debugDrawWorld(); // Use this to draw physics world once on start 
 	}
 
-	//-------------------------------------------------------
-	// Behavior tree tests
-	//-------------------------------------------------------
-
-	TestBehavior tb;
-	if (tb.initializeCalled == 0)
-		cout << "TEST 1 - SUCCESS" << endl;
-	else
-		cout << "TEST 1 - FAILURE" << endl;
-	tb.Tick();
-	if (tb.initializeCalled == 1)
-		cout << "TEST 2 - SUCCESS" << endl;
-	else
-		cout << "TEST 2 - FAILURE" << endl;
 
 	for (size_t i = 0; i < EESceneLoader->scriptPairs.size(); i++)
 	{
@@ -474,7 +474,7 @@ void Game::Update(double deltaTime, double totalTime)
 	{
 		DebugLines* dbl = DebugLines::debugLines[i];
 		if (dbl->willUpdate) {
-			dbl->worldMatrix = EESceneLoader->sceneEntitiesMap[dbl->entityName]->GetCollider(dbl->colliderID)->GetWorldMatrix();
+			dbl->worldMatrix = EESceneLoader->SceneEntitiesMap[dbl->entityName]->GetCollider(dbl->colliderID)->GetWorldMatrix();
 		}
 	}
 
@@ -621,8 +621,8 @@ void Game::AudioStep()
 
 	//printf("Listener forward = x: %f y: %f z: %f \n", listener_forward.x, listener_forward.y, listener_forward.z);
 
-	fmodSystem->set3DListenerAttributes(0, &listener_pos, 0, &listener_forward, &listener_up); // Update 'ears'
-	fmodSystem->update();
+	Config::FMODSystem->set3DListenerAttributes(0, &listener_pos, 0, &listener_forward, &listener_up); // Update 'ears'
+	Config::FMODSystem->update();
 }
 
 void Game::Draw(double deltaTime, double totalTime)
@@ -641,7 +641,9 @@ void Game::Draw(double deltaTime, double totalTime)
 	EERenderer->RenderShadowMap();
 	EERenderer->RenderDepthStencil();
 	EERenderer->RenderFrame();
-
+	EERenderer->RenderDecals();
+	EERenderer->RenderHBAOPlus();
+	EERenderer->RenderDebugLines();
 	EERenderer->RenderSkybox();
 
 	XMFLOAT4X4 view = EERenderer->GetCamera("main")->GetViewMatrix();
@@ -660,58 +662,11 @@ void Game::Draw(double deltaTime, double totalTime)
 
 void Game::GarbageCollect()
 {
-	size_t start = EESceneLoader->sceneEntities.size();
-	for (size_t i = start; i > 0; i--)
-	{
-		Entity* e = EESceneLoader->sceneEntities[i - 1];
-		if (e->destroyed) {
-			string name = e->GetName();
+	EESceneLoader->GarbageCollect();
 
-			if (EESceneLoader->sceneEntitiesTagMap.count(e->tag.STDStr())) {
-				vector<Entity*>& tagVec = EESceneLoader->sceneEntitiesTagMap[e->tag.STDStr()];
-				for (int j = tagVec.size() - 1; j >= 0; j--)
-				{
-					if (tagVec[j] == e) tagVec.erase(tagVec.begin() + j);
-				}
-			}
+	ScriptManager::GarbageCollect();
 
-			EESceneLoader->sceneEntitiesMap.erase(name);
-			EESceneLoader->sceneEntities.erase(EESceneLoader->sceneEntities.begin() + i - 1);
-
-			EEDecalHandler->DestroyDecals(name);
-
-			ParticleEmitter::KillEmitters(name);
-
-			if (Config::EtherealDebugLinesEnabled) {
-				DebugLines::debugLinesMap[name]->destroyed = true;
-				DebugLines::debugLinesMap.erase(name);
-			}
-
-			e->FreeMemory();
-			EEMemoryAllocator->DeallocateFromPool((unsigned int)MEMORY_POOL::ENTITY_POOL, e, sizeof(Entity));
-
-			vector<ScriptManager*> scriptFuncs = ScriptManager::scriptFunctionsMapVector[name];
-			size_t cnt = scriptFuncs.size();
-			for (size_t j = cnt; j > 0; j--)
-			{
-				scriptFuncs[j - 1]->destroyed = true;
-			}
-			ScriptManager::scriptFunctionsMap.erase(name);
-			ScriptManager::scriptFunctionsMapVector.erase(name);
-		}
-	}
-
-	start = ScriptManager::scriptFunctions.size();
-	for (size_t i = start; i > 0; i--)
-	{
-		ScriptManager* s = ScriptManager::scriptFunctions[i - 1];
-		if (s->destroyed) {
-			ScriptManager::scriptFunctions.erase(ScriptManager::scriptFunctions.begin() + i - 1);
-			delete s;
-		}
-	}
-
-	start = DebugLines::debugLines.size();
+	size_t start = DebugLines::debugLines.size();
 	for (size_t i = start; i > 0; i--)
 	{
 		DebugLines* d = DebugLines::debugLines[i - 1];
@@ -721,18 +676,9 @@ void Game::GarbageCollect()
 		}
 	}
 
-	start = ParticleEmitter::EmitterVector.size();
-	for (size_t i = start; i > 0; i--)
-	{
-		ParticleEmitter* e = ParticleEmitter::EmitterVector[i - 1];
-		if (!e->isAlive) {
-			ParticleEmitter::EmitterVector.erase(ParticleEmitter::EmitterVector.begin() + i - 1);
-			ParticleEmitter::EmitterMap.erase(e->GetName());
-			delete e;
-		}
-	}
-
+	ParticleEmitter::GarbageCollect();
 	EELightHandler->GarbageCollect();
+	EEDecalHandler->GarbageCollect();
 }
 
 /*

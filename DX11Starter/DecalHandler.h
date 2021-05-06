@@ -44,21 +44,25 @@ class DecalHandler
 {
 private:
 	static DecalHandler* instance;
+	MemoryAllocator* memAlloc = nullptr;
 
 	DecalHandler();
 	~DecalHandler();
 public:
 	static map<string, DecalBucket*> decalsMap;
 	static vector<DecalBucket*> decalsVec;
+	static map<DecalBucket*, bool> bucketIsDeadMap;
 	//static vector<DecalDrawInfo> decalDrawList;
 
 	static bool SetupInstance();
 	static DecalHandler* GetInstance();
 	static bool DestroyInstance();
 
+	void GarbageCollect();
+
 	void GenerateDecal(Entity* owner, XMFLOAT3 rayDirection, XMFLOAT3 rayHitPosition, XMFLOAT3 boxScale, DecalType decalType);
 
-	bool DestroyDecals(string owner);
+	bool DestroyDecalsByOwner(string owner);
 
 	//void UpdateDecals();
 };

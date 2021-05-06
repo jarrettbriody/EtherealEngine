@@ -37,7 +37,10 @@ class Entity
 private:
 	DirectX::XMFLOAT4X4 worldMatrix;
 	DirectX::XMFLOAT4X4 invWorldMatrix;
+
 	Mesh* mesh = nullptr;
+	Material* material = nullptr;
+
 	DirectX::XMFLOAT4 quaternion;
 	DirectX::XMFLOAT3 position;
 	DirectX::XMFLOAT3 scale;
@@ -52,7 +55,7 @@ private:
 	DirectX::XMFLOAT2 repeatTex;
 	map<string, Material*>* materialMap = nullptr;
 	unsigned int meshMaterialIndex = 0;
-	EEString<64> name;
+	EEString<EESTRING_SIZE> name;
 	vector<Entity*>* children = nullptr;
 	Entity* parent = nullptr;
 	vector<Collider*>* colliders = nullptr;
@@ -71,6 +74,12 @@ private:
 	int colliderCnt = 0;
 
 	PhysicsWrapper pWrap;
+
+	unsigned int tagCount = 0;
+	unsigned int layerCount = 0;
+	unsigned int layerMask = 0;
+	EEString<EESTRING_SIZE> tags[MAX_ENTITY_TAG_COUNT];
+	EEString<EESTRING_SIZE> layers[MAX_ENTITY_LAYER_COUNT];
 public:
 	bool destroyed = false;
 	bool isCollisionStatic = true;
@@ -78,8 +87,6 @@ public:
 	bool colliderDebugLinesEnabled = false;
 	bool isEmptyObj = false;
 	bool renderObject = true;
-	EEString<64> tag;
-	EEString<64> layer;
 	Entity();
 	Entity(string entityName);
 	Entity(string entityName, Mesh* entityMesh, Material* mat = nullptr);
@@ -137,6 +144,17 @@ public:
 	vector<string> GetMaterialNameList();
 	void AddMaterial(Material* mat, bool addToMesh = false);
 	string GetName();
+	bool AddTag(string tag);
+	bool RemoveTag(string tag);
+	bool HasTag(string tag);
+	EEString<EESTRING_SIZE>* GetTags();
+	unsigned int GetTagCount();
+	bool AddLayer(string layer);
+	bool RemoveLayer(string layer);
+	bool HasLayer(string layer);
+	EEString<EESTRING_SIZE>* GetLayers();
+	unsigned int GetLayerCount();
+	unsigned int GetLayerMask();
 	void AddChildEntity(Entity* child, XMFLOAT4X4 childWorldMatrix);
 	void AddAutoBoxCollider();
 	bool CheckSATCollision(Entity* other);

@@ -43,6 +43,7 @@ cbuffer externalData : register(b2) {
 	float3 manualColor;
 	float transparency;
 	float3 orbCenter;
+	float radius;
 };
 
 cbuffer shadowStuff : register(b3) {
@@ -80,7 +81,7 @@ SamplerComparisonState ShadowSampler	: register(s1);
 float4 main(VertexToPixel input) : SV_TARGET
 {
 	float3 pixDist = input.worldPos - orbCenter;
-	if (length(pixDist) > 0.505f) discard;
+	if (length(pixDist) > radius) discard;
 	//return float4(1.0f,0.0f,0.0f,1.0f);
 	input.uv = float2(input.uv.x * uvMult.x + uvOffset.x, input.uv.y * uvMult.y + uvOffset.y);
 
@@ -162,6 +163,6 @@ float4 main(VertexToPixel input) : SV_TARGET
 
 	float3 gammaCorrect = pow(abs(finalColor), 1.0f / 2.2f);
 
-	return float4(gammaCorrect, transparency);
+	return float4(gammaCorrect, surfaceColor.a - (1.0f - transparency));
 
 }

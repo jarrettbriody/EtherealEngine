@@ -4,6 +4,7 @@ cbuffer Data : register(b0)
 	float pixelWidth;
 	float pixelHeight;
 	int blurAmount;
+	unsigned int playerToolsMask;
 }
 
 
@@ -17,14 +18,18 @@ struct VertexToPixel
 
 // Textures and such
 Texture2D Pixels		: register(t0);
+Texture2D<unsigned int> LayerMasks	: register(t1);
 SamplerState Sampler	: register(s0);
 
 
 // Entry point for this pixel shader
 float4 main(VertexToPixel input) : SV_TARGET
-{
+{ 
+	float3 pixelIndex = float3(input.position.xy, 0);
+	unsigned int layer = LayerMasks.Load(pixelIndex).r;
+
 	// Track the total color and samples
-	float4 totalColor = float4(0,0,0,0);
+	float4 totalColor = float4(0, 0, 0, 0);
 	uint numSamples = 0;
 
 	// Loop and sample surrounding pixels
@@ -39,6 +44,7 @@ float4 main(VertexToPixel input) : SV_TARGET
 			numSamples++;
 		}
 	}
+	if ((playerToolsMask | layer) != layer) return totalColor / numSamples;
 
-	return totalColor / numSamples;
+	else return Pixels.Sample(Sampler, input.uv);
 }

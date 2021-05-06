@@ -55,6 +55,8 @@ VertexToPixel main(VertexShaderInput input)
 
 	output.normal = normalize(mul(input.normal, worldNoTranslation));
 
+	output.tangent = normalize(mul(input.tangent, (float3x3)world));
+
 	output.uv = input.uv;
 
 	return output;

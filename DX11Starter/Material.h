@@ -44,7 +44,7 @@ protected:
 	SimplePixelShader* pixelShader;
 	MaterialData materialData;
 	ID3D11SamplerState* samplerState;
-	EEString<64> name;
+	EEString<EESTRING_SIZE> name;
 public:
 	Material();
 	Material(string n, MaterialData matData, SimpleVertexShader* vShader, SimplePixelShader* pShader, ID3D11SamplerState* sampler);

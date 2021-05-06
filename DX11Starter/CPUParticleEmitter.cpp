@@ -257,7 +257,7 @@ void CPUParticleEmitter::Update(double deltaTime, double totalTime, XMFLOAT4X4 v
 	drawCount = 0;
 
 	// Track time
-	while (emitTimeCounter >= emissionRate)
+	while ((emitTimeCounter >= emissionRate) && isActive)
 	{
 		// How many to emit?
 		int emitCount = (int)(emitTimeCounter / emissionRate);
@@ -347,7 +347,7 @@ void CPUParticleEmitter::Update(double deltaTime, double totalTime, XMFLOAT4X4 v
 				XMMATRIX world = XMMatrixTranspose(XMLoadFloat4x4(&worldMatrix));
 				XMStoreFloat3(&newParticle.position, XMVector4Transform(pos, world));
 				XMStoreFloat3(&newParticle.velocity, XMVector4Transform(vel, world));
-				XMStoreFloat3(&newParticle.acceleration, XMVector4Transform(accel, world));
+				//XMStoreFloat3(&newParticle.acceleration, XMVector4Transform(accel, world));
 			}
 
 			// Put it back
