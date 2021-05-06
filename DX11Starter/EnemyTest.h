@@ -38,6 +38,9 @@ class EnemyTest : public ScriptManager
 	float oscillationMagnitude = 0.01f;
 	float totalTime = 0.0f;
 
+	bool leashed;
+	float delay;
+
 	BehaviorTree* bt;
 
 	Keyboard* keyboard;
@@ -47,4 +50,7 @@ class EnemyTest : public ScriptManager
 	void Update();
 
 	void OnCollision(btCollisionObject* other);
+
+public:
+	void IsLeashed(bool leashed, float delay);
 };

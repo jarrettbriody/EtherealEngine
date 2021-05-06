@@ -19,6 +19,8 @@ struct DashBlurCallback : RendererCallback {
 	}
 };
 
+class EnemyTest; // Forward declaration to avoid circular dependency 
+
 enum class PlayerState
 {
 	Intro, Normal, HookshotThrow, HookshotFlight, HookshotLeash, Paused, Death, Victory
@@ -31,6 +33,7 @@ class FPSController : public ScriptManager
 	DashBlurCallback dashBlurCallback;
 
 	BloodOrb* bloodOrbScript;
+	EnemyTest* enemyTestScript; 
 
 	// Player Attributes
 	float bloodResource = 100.0f;
@@ -97,10 +100,10 @@ class FPSController : public ScriptManager
 
 	// Blood Icicle
 	EntityCreationParameters icicleParams;
-	float bloodIcicleScalar = 60.0f;
-	float bloodIcicleRecoilScalar = 45.0f;
+	float bloodIcicleScalar = 200.0f;
+	float bloodIcicleRecoilScalar = 65.0f;
 	float bloodIcicleCooldownTimer = 0.0f;
-	const float BLOOD_ICICLE_MAX_COOLDOWN_TIME = 1.0f;
+	const float BLOOD_ICICLE_MAX_COOLDOWN_TIME = 2.0f;
 	float bloodIcicleRecoilDampTimer = 0.0f;
 	const float BLOOD_ICICLE_RECOIL_DAMP_TIMER_MAX = 0.3f;
 	

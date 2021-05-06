@@ -52,6 +52,11 @@ void BloodIcicle::OnCollision(btCollisionObject* other)
 			for each (Entity* e in childEntities)
 			{
 				e->AddTag("Body Part");
+
+				e->GetRBody()->activate();
+				// lower values because of incoming blood projectile
+				e->GetRBody()->applyCentralImpulse(btVector3(15, 15, 15));
+				e->GetRBody()->applyTorqueImpulse(btVector3(10, 10, 10));
 			}
 
 			gameManagerScript->AddRangeToTotalSplitMeshEntities(childEntities);
@@ -64,7 +69,9 @@ void BloodIcicle::OnCollision(btCollisionObject* other)
 
 			//closestChild->RemoveFromPhysicsSimulation(); ---> works better without this right now
 			bodyPartPinned = true;
-			closestChild->GetRBody()->setAngularFactor(btVector3(0, 0, 0)); // do not allow the child to rotate after pinned
+			closestChild->GetRBody()->activate();
+			closestChild->GetRBody()->clearForces();
+			closestChild->GetRBody()->setAngularFactor(btVector3(0, 0, 0)); // do not allow the child to rotate after pinned TODO: Why doesn't this work
 		}
 	}
 }

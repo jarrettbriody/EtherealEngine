@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "FPSController.h"
+#include "EnemyTest.h"
 
 
 void FPSController::Init()
@@ -240,7 +241,7 @@ void FPSController::CheckBloodIcicle()
 {
 	if (mouse->OnRMBDown() && bloodIcicleCooldownTimer <= 0) 
 	{
-		bloodResource -= 10;
+		bloodResource -= 20;
 
 		// update position and rotation of the EntityCreationParams
 		icicleParams.position = bloodOrb->GetPosition();
@@ -371,6 +372,10 @@ void FPSController::HookshotThrow()
 			leashSize = playerRBody->getCenterOfMassPosition().distance(leashedEnemy->GetRBody()->getCenterOfMassPosition()); 
 			// cout << leashSize << endl;
 
+			enemyTestScript = (EnemyTest*)scriptFunctionsMap[leashedEnemy->GetName()]["ENEMYTEST"];
+
+			if(hookshotAttachedEntity->HasTag("Enemy")) enemyTestScript->IsLeashed(true, 0.0f);
+
 			ps = PlayerState::HookshotLeash;
 		}
 		else if (hookshotAttachedEntity->HasTag("Environment"))
@@ -447,6 +452,8 @@ void FPSController::HookshotLeash()
 
 	if (keyboard->OnKeyDown(0x45)) // enemy pull cancel after pressing E again
 	{
+		if (hookshotAttachedEntity->HasTag("Enemy")) enemyTestScript->IsLeashed(false, 2.0f);
+
 		ResetHookshotTransform();
 
 		// Pull enemy towards player when canceling the leash
@@ -455,6 +462,8 @@ void FPSController::HookshotLeash()
 
 	if (keyboard->OnKeyDown(VK_SPACE)) // pull player to enemy cancel after press space 
 	{
+		if (hookshotAttachedEntity->HasTag("Enemy")) enemyTestScript->IsLeashed(false, 0.5f);
+
 		ResetHookshotTransform();
 
 		// Pull player towards enemy when canceling the leash

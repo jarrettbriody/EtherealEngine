@@ -108,7 +108,22 @@ void EnemyTest::Update()
 		}
 	}
 
-	Status result = bt->Run();
+	if (leashed && delay <= 0)
+	{
+		entity->GetRBody()->setAngularFactor(btVector3(1, 1, 1));
+		entity->GetRBody()->setLinearFactor(btVector3(1, 1, 1));
+	}
+	else if (!leashed && delay <= 0)
+	{
+		entity->GetRBody()->setAngularFactor(btVector3(0, 1, 0)); // Constrain rotations on x and z axes
+		entity->GetRBody()->setLinearFactor(btVector3(1, 0, 1)); // Constrain movement on the y axis
+
+		Status result = bt->Run();
+	}
+	else
+	{
+		delay -= deltaTime;
+	}
 }
 
 void EnemyTest::OnCollision(btCollisionObject* other)
@@ -116,4 +131,10 @@ void EnemyTest::OnCollision(btCollisionObject* other)
 	//Entity* otherE = (Entity*)((PhysicsWrapper*)other->getUserPointer())->objectPointer;
 
 	//cout << "Enemy collides with: " << otherE->GetName() << endl;
+}
+
+void EnemyTest::IsLeashed(bool leashed, float delay)
+{
+	this->leashed = leashed;
+	this->delay = delay;
 }
