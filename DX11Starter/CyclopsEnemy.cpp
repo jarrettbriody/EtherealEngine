@@ -32,7 +32,7 @@ void CyclopsEnemy::Init()
 		{""},
 		0,
 		XMFLOAT3(0, 0, 0),
-		XMFLOAT3(Utility::DegToRad(90), 0, 0),
+		XMFLOAT3(0, 0, 0),
 		XMFLOAT3(1, 1, 1),
 		1.0f
 	};

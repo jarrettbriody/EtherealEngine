@@ -11,9 +11,9 @@ void ChargePlayer::OnTerminate(Status s)
 
 Status ChargePlayer::Update()
 {
-	btVector3 direction = player->GetRBody()->getCenterOfMassPosition() - enemy->GetRBody()->getCenterOfMassPosition(); // TODO: Reverse this when models are turned to face correctly
+	btVector3 direction = player->GetRBody()->getCenterOfMassPosition() - enemy->GetRBody()->getCenterOfMassPosition();
 
-	enemy->GetRBody()->applyCentralImpulse(direction.normalized() * chargeSpeed);
+	enemy->GetRBody()->setLinearVelocity(direction.normalized() * chargeSpeed);
 
 	return SUCCESS;
 }

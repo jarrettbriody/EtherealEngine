@@ -65,11 +65,11 @@ Status EnemySeesPlayer::Update()
 	//------
 
 	// Get the floored (y = 0) positions of both the enemy and player
-	XMFLOAT3 pos = enemy->GetPosition();
+	XMFLOAT3 pos = Utility::BulletVectorToFloat3(enemy->GetRBody()->getCenterOfMassPosition()); //enemy->GetPosition();
 	pos.y = 0.0f;
 	XMVECTOR flooredEnemyPos = XMLoadFloat3(&pos);
 
-	pos = player->GetPosition();
+	pos = Utility::BulletVectorToFloat3(player->GetRBody()->getCenterOfMassPosition()); //player->GetPosition();
 	pos.y = 0.0f;
 	XMVECTOR flooredPlayerPos = XMLoadFloat3(&pos);
 
