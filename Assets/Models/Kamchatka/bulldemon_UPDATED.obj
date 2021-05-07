@@ -117,8 +117,8 @@ vn -0.990010 -0.140994 0.000000
 vn -0.990010 -0.140994 0.000000
 vn -0.990010 -0.140994 0.000000
 s 1
-g evenmoredemons:bulldemonbody
-usemtl initialShadingGroup
+g evenmoredemons:bulldemon1body
+usemtl bulldemon1
 f 1/7/1 2/2/2 4/6/3 3/11/4
 s off
 f 3/11/5 4/6/6 6/21/7 5/22/8
@@ -697,8 +697,8 @@ vn 0.705595 0.142148 -0.694211
 vn 0.705595 0.142148 -0.694211
 vn 0.705595 0.142148 -0.694211
 s 1
-g evenmoredemons:bulldemonbody evenmoredemons:bulldemonhed
-usemtl initialShadingGroup
+g evenmoredemons:bulldemon1body evenmoredemons:bulldemon1hed
+usemtl bulldemon1
 f 21/45/63 22/42/64 24/114/65 23/113/66
 s off
 f 23/113/67 24/114/68 26/115/69 25/116/70

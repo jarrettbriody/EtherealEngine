@@ -212,7 +212,7 @@ vn -0.935276 -0.353920 0.000000
 vn -0.935276 -0.353920 0.000000
 s off
 g evenmoredemons:verteye_body
-usemtl evenmoredemons:lambert2SG
+usemtl verteyedemon
 f 1/17/1 2/18/2 4/14/3 3/13/4
 f 3/13/5 4/14/6 6/49/7 5/16/8
 f 5/16/9 6/49/10 8/47/11 7/20/12
@@ -524,7 +524,7 @@ vn -0.001345 0.267973 0.963425
 vn -0.001345 0.267973 0.963425
 s 1
 g evenmoredemons:verteye_body evenmoredemons:verteyehead
-usemtl evenmoredemons:lambert2SG
+usemtl verteyedemon
 f 53/121/117 54/126/118 40/131/119 39/114/120
 s off
 f 45/115/121 46/129/122 47/130/123 48/116/124
@@ -693,7 +693,7 @@ vn 1.000000 0.000000 0.000000
 vn -1.000000 -0.000000 -0.000000
 s 1
 g evenmoredemons:verteye_body evenmoredemons:verteyehead evenmoredemons:uppereye
-usemtl evenmoredemons:lambert2SG
+usemtl verteyedemon
 f 81/143/241 95/144/242 101/145/243 98/146/244
 f 95/144/242 82/147/245 96/148/246 101/145/243
 f 101/145/243 96/148/246 84/149/247 97/150/248
@@ -803,7 +803,7 @@ vn 1.000000 0.000000 0.000000
 vn -1.000000 0.000000 -0.000000
 s 1
 g evenmoredemons:verteye_body evenmoredemons:verteyehead evenmoredemons:bottomeye
-usemtl evenmoredemons:lambert2SG
+usemtl verteyedemon
 f 107/173/267 121/174/268 127/175/269 124/176/270
 f 121/174/268 108/177/271 122/178/272 127/175/269
 f 127/175/269 122/178/272 110/179/273 123/180/274
