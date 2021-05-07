@@ -1,7 +1,6 @@
-
-newmtl bulldemon1
-illum 4
+newmtl bulldemon_UPDATED:bulldemon1
 map_Kd bulldemon_TX.png
+illum 4
 Kd 0.00 0.00 0.00
 Ka 0.00 0.00 0.00
 Tf 1.00 1.00 1.00
