@@ -14,9 +14,9 @@
 #include "NavmeshHandler.h"
 #include "AStarSolver.h"
 
-class EnemyTest : public ScriptManager
+class CyclopsEnemy : public ScriptManager
 {
-	~EnemyTest();
+	~CyclopsEnemy();
 
 	map<string, Entity*>* eMap;
 	map<string, vector<ScriptManager*>> sMap;
@@ -54,3 +54,4 @@ class EnemyTest : public ScriptManager
 public:
 	void IsLeashed(bool leashed, float delay);
 };
+

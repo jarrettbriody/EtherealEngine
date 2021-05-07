@@ -14,9 +14,9 @@
 #include "NavmeshHandler.h"
 #include "AStarSolver.h"
 
-class EnemyTest : public ScriptManager
+class HornedEnemy : public ScriptManager
 {
-	~EnemyTest();
+	~HornedEnemy();
 
 	map<string, Entity*>* eMap;
 	map<string, vector<ScriptManager*>> sMap;

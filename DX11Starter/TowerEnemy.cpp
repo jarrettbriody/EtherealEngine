@@ -1,12 +1,12 @@
 #include "pch.h"
-#include "EnemyTest.h"
+#include "TowerEnemy.h"
 
-EnemyTest::~EnemyTest()
+TowerEnemy::~TowerEnemy()
 {
 	delete bt;
 }
 
-void EnemyTest::Init()
+void TowerEnemy::Init()
 {
 	eMap = ScriptManager::sceneEntitiesMap;
 	sMap = ScriptManager::scriptFunctionsMapVector;
@@ -26,28 +26,13 @@ void EnemyTest::Init()
 	entity->GetRBody()->setAngularFactor(btVector3(0, 1, 0)); // Constrain rotations on x and z axes
 	entity->GetRBody()->setLinearFactor(btVector3(1, 0, 1)); // Constrain movement on the y axis
 
-	EntityCreationParameters fireballParams = {
-		"fireball",
-		"fireball",
-		"fireball",
-		"Sphere",
-		"Red",
-		{""},
-		0,
-		XMFLOAT3(0, 0, 0),
-		XMFLOAT3(0, 0, 0),
-		XMFLOAT3(1, 1, 1),
-		1.0f
-	};
-
 	bt =	BehaviorTreeBuilder()
 				.Composite<ActiveSelector>()
 					.Composite<Sequence>() // Seek the player if they are visible
-						.Leaf<InCombat>(&inCombat).End()						
+						.Leaf<InCombat>(&inCombat).End()
 						.Leaf<PlayerVisible>(entity, player).End()
 						.Leaf<FacePlayer>(entity, player, turnSpeed, &deltaTime).End()
 						.Leaf<SeekPlayer>(entity, player, movementSpeed, maxSpeed, minimumDistance).End()
-						.Leaf<FireProjectile>(entity, player, fireballParams, 50.0f).End()
 					.End()
 					.Composite<Sequence>() // Search player's last known location
 						.Leaf<InCombat>(&inCombat).End()
@@ -66,7 +51,7 @@ void EnemyTest::Init()
 	navmesh = NavmeshHandler::GetInstance();
 }
 
-void EnemyTest::Update()
+void TowerEnemy::Update()
 {
 	// Hover
 	//totalTime += deltaTime;
@@ -81,7 +66,7 @@ void EnemyTest::Update()
 		XMFLOAT3 nodePos = closest->GetPos();
 		cout << "Enemy position- X: " << ePos.x << "| Z: " << ePos.z << endl;
 		cout << "Node position- X: " << nodePos.x << "| Z: " << nodePos.z << endl;
-		
+
 		clock_t t;
 		Entity* player = eMap->find("FPSController")->second;
 		t = clock();
@@ -145,14 +130,14 @@ void EnemyTest::Update()
 	}
 }
 
-void EnemyTest::OnCollision(btCollisionObject* other)
+void TowerEnemy::OnCollision(btCollisionObject* other)
 {
 	//Entity* otherE = (Entity*)((PhysicsWrapper*)other->getUserPointer())->objectPointer;
 
 	//cout << "Enemy collides with: " << otherE->GetName() << endl;
 }
 
-void EnemyTest::IsLeashed(bool leashed, float delay)
+void TowerEnemy::IsLeashed(bool leashed, float delay)
 {
 	this->leashed = leashed;
 	this->delay = delay;

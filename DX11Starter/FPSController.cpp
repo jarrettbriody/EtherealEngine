@@ -374,7 +374,7 @@ void FPSController::HookshotThrow()
 
 			enemyTestScript = (EnemyTest*)scriptFunctionsMap[leashedEnemy->GetName()]["ENEMYTEST"];
 
-			if(hookshotAttachedEntity->HasTag("Enemy")) enemyTestScript->IsLeashed(true, 0.0f);
+			if(hookshotAttachedEntity->HasTag("Enemy")) enemyTestScript->IsLeashed(true, 0.0f); // TODO: Figure out how to approach this for different enemy types
 
 			ps = PlayerState::HookshotLeash;
 		}

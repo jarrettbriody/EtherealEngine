@@ -147,10 +147,12 @@
     <ClCompile Include="BloodOrb.cpp" />
     <ClCompile Include="BloodPool.cpp" />
     <ClCompile Include="BloodSword.cpp" />
+    <ClCompile Include="BullEnemy.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Collider.cpp" />
     <ClCompile Include="Config.cpp" />
     <ClCompile Include="CPUParticleEmitter.cpp" />
+    <ClCompile Include="CyclopsEnemy.cpp" />
     <ClCompile Include="DebugLines.cpp" />
     <ClCompile Include="DecalHandler.cpp" />
     <ClCompile Include="DXCore.cpp" />
@@ -166,6 +168,7 @@
     <ClCompile Include="GameManager.cpp" />
     <ClCompile Include="GPUParticleEmitter.cpp" />
     <ClCompile Include="Grid.cpp" />
+    <ClCompile Include="HornedEnemy.cpp" />
     <ClCompile Include="NavmeshHandler.cpp" />
     <ClCompile Include="Idle.cpp" />
     <ClCompile Include="InCombat.cpp" />
@@ -191,6 +194,7 @@
     <ClCompile Include="ScriptManager.cpp" />
     <ClCompile Include="SeekPlayer.cpp" />
     <ClCompile Include="SimpleShader.cpp" />
+    <ClCompile Include="TowerEnemy.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AmbientParticles.h" />
@@ -202,10 +206,12 @@
     <ClInclude Include="BloodOrb.h" />
     <ClInclude Include="BloodPool.h" />
     <ClInclude Include="BloodSword.h" />
+    <ClInclude Include="BullEnemy.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Collider.h" />
     <ClInclude Include="Config.h" />
     <ClInclude Include="CPUParticleEmitter.h" />
+    <ClInclude Include="CyclopsEnemy.h" />
     <ClInclude Include="DebugLines.h" />
     <ClInclude Include="DecalHandler.h" />
     <ClInclude Include="DXCore.h" />
@@ -222,6 +228,7 @@
     <ClInclude Include="GameManager.h" />
     <ClInclude Include="GPUParticleEmitter.h" />
     <ClInclude Include="Grid.h" />
+    <ClInclude Include="HornedEnemy.h" />
     <ClInclude Include="NavmeshHandler.h" />
     <ClInclude Include="Idle.h" />
     <ClInclude Include="InCombat.h" />
@@ -249,6 +256,7 @@
     <ClInclude Include="SeekPlayer.h" />
     <ClInclude Include="SimpleShader.h" />
     <ClInclude Include="TestBehavior.h" />
+    <ClInclude Include="TowerEnemy.h" />
     <ClInclude Include="Utility.h" />
     <ClInclude Include="Vertex.h" />
   </ItemGroup>

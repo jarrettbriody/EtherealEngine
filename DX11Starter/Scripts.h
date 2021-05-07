@@ -8,6 +8,10 @@
 #include "BloodPool.h"
 #include "AmbientParticles.h"
 #include "EnemyTest.h"
+#include "TowerEnemy.h"
+#include "HornedEnemy.h"
+#include "BullEnemy.h"
+#include "CyclopsEnemy.h"
 
 namespace Scripts {
 	enum class SCRIPT_NAMES {
@@ -19,7 +23,11 @@ namespace Scripts {
 		BLOODSWORD,
 		GAMEMANAGER,
 		BLOODPOOL,
-		ENEMYTEST
+		ENEMYTEST,
+		TOWERENEMY,
+		HORNEDENEMY,
+		BULLENEMY,
+		CYCLOPSENEMY
 	};
 
 	static map<string, SCRIPT_NAMES> scriptNameMap = {
@@ -31,7 +39,11 @@ namespace Scripts {
 		{"BLOODSWORD", SCRIPT_NAMES::BLOODSWORD},
 		{"GAMEMANAGER", SCRIPT_NAMES::GAMEMANAGER},
 		{"BLOODPOOL", SCRIPT_NAMES::BLOODPOOL},
-		{"ENEMYTEST", SCRIPT_NAMES::ENEMYTEST}
+		{"ENEMYTEST", SCRIPT_NAMES::ENEMYTEST},
+		{"TOWERENEMY", SCRIPT_NAMES::TOWERENEMY},
+		{"HORNEDENEMY", SCRIPT_NAMES::HORNEDENEMY},
+		{"BULLENEMY", SCRIPT_NAMES::BULLENEMY},
+		{"CYCLOPSENEMY", SCRIPT_NAMES::CYCLOPSENEMY}
 	};
 
 	static map<SCRIPT_NAMES, string> scriptStringNameMap = {
@@ -43,7 +55,12 @@ namespace Scripts {
 		{SCRIPT_NAMES::BLOODSWORD, "BLOODSWORD"},
 		{SCRIPT_NAMES::GAMEMANAGER, "GAMEMANAGER"},
 		{SCRIPT_NAMES::BLOODPOOL, "BLOODPOOL"},
-		{SCRIPT_NAMES::ENEMYTEST, "ENEMYTEST"}
+		{SCRIPT_NAMES::ENEMYTEST, "ENEMYTEST"},
+		{SCRIPT_NAMES::TOWERENEMY, "TOWERENEMY"},
+		{SCRIPT_NAMES::HORNEDENEMY, "HORNEDENEMY"},
+		{SCRIPT_NAMES::BULLENEMY, "BULLENEMY"},
+		{SCRIPT_NAMES::CYCLOPSENEMY, "CYCLOPSENEMY"}
+
 	};
 
 	namespace {
@@ -78,6 +95,18 @@ namespace Scripts {
 				break;
 			case Scripts::SCRIPT_NAMES::ENEMYTEST:
 				script = new EnemyTest();
+				break;
+			case Scripts::SCRIPT_NAMES::TOWERENEMY:
+				script = new TowerEnemy();
+				break;
+			case Scripts::SCRIPT_NAMES::HORNEDENEMY:
+				script = new HornedEnemy();
+				break;
+			case Scripts::SCRIPT_NAMES::BULLENEMY:
+				script = new BullEnemy();
+				break;
+			case Scripts::SCRIPT_NAMES::CYCLOPSENEMY:
+				script = new CyclopsEnemy();
 				break;
 			default:
 				break;
