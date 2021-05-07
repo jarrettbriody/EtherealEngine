@@ -75,6 +75,7 @@ void BloodOrb::Update()
 		if (fluidCallback.fillLineY > fillLineMark)fluidCallback.fillLineY -= 0.25f * deltaTime;
 	}
 
+	/*
 	if (GetAsyncKeyState(VK_UP))
 	{
 		fluidCallback.fillLineY += 0.1f * deltaTime;
@@ -85,6 +86,8 @@ void BloodOrb::Update()
 		fluidCallback.fillLineY -= 0.1f * deltaTime;
 		if (fluidCallback.fillLineY < -fluidCallback.radius) fluidCallback.fillLineY = -fluidCallback.radius;
 	}
+	*/
+
 	float modifier = (fluidCallback.radius - pow(abs(fluidCallback.fillLineY), 4.0f));
 	if (modifier < 0.01f) modifier = 0.01f;
 	else if (modifier > 0.99f) modifier = 0.99f;

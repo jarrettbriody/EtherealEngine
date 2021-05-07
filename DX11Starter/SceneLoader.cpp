@@ -469,37 +469,6 @@ void SceneLoader::LoadAssetPreloadFile()
 						else continue;
 						break;
 					}
-					case 12:
-					{
-						//ambientocclusion
-						regex enabledRegex = regex("enabled=\"(\\w+)\"");
-						regex blurEnabledRegex = regex("blurEnabled=\"(\\w+)\"");
-						regex radiusRegex = regex("radius=\"(\\d*\\.\\d*|\\d+)\"");
-						regex powerRegex = regex("power=\"(\\d*\\.\\d*|\\d+)\"");
-						regex blurSharpnessRegex = regex("blurSharpness=\"(\\d*\\.\\d*|\\d+)\"");
-						regex blurRadiusRegex = regex("blurRadius=\"(\\d+)\"");
-						if (regex_search(line, match, RegexObjects.enabledRegex)) {
-							if (match[1] == "true" || match[1] == "TRUE") Config::HBAOPlusEnabled = true;
-							if (match[1] == "false" || match[1] == "FALSE") Config::HBAOPlusEnabled = false;
-						}
-						if (regex_search(line, match, RegexObjects.blurEnabledRegex)) {
-							if (match[1] == "true" || match[1] == "TRUE") Config::HBAOBlurEnabled = true;
-							if (match[1] == "false" || match[1] == "FALSE") Config::HBAOBlurEnabled = false;
-						}
-						if (regex_search(line, match, RegexObjects.radiusRegex)) {
-							Config::HBAORadius = std::stof(match[1].str());
-						}
-						if (regex_search(line, match, RegexObjects.powerRegex)) {
-							Config::HBAOPowerExponent = std::stof(match[1].str());
-						}
-						if (regex_search(line, match, RegexObjects.blurSharpnessRegex)) {
-							Config::HBAOBlurSharpness = std::stof(match[1].str());
-						}
-						if (regex_search(line, match, RegexObjects.blurRadiusRegex)) {
-							Config::HBAOBlurRadius = (GFSDK_SSAO_BlurRadius)std::stoi(match[1].str());
-						}
-						EERenderer->InitHBAOPlus();
-					}
 					default:
 						break;
 					}
@@ -874,6 +843,107 @@ void SceneLoader::LoadScene(string sceneName)
 							EELightHandler->AddLight(newLight);
 							continue;
 						}
+
+					case 12:
+					{
+						//ambientocclusion
+						if (regex_search(line, match, RegexObjects.enabledRegex)) {
+							if (match[1] == "true" || match[1] == "TRUE") Config::HBAOPlusEnabled = true;
+							if (match[1] == "false" || match[1] == "FALSE") Config::HBAOPlusEnabled = false;
+						}
+						if (regex_search(line, match, RegexObjects.blurEnabledRegex)) {
+							if (match[1] == "true" || match[1] == "TRUE") Config::HBAOBlurEnabled = true;
+							if (match[1] == "false" || match[1] == "FALSE") Config::HBAOBlurEnabled = false;
+						}
+						if (regex_search(line, match, RegexObjects.radiusRegex)) {
+							Config::HBAORadius = std::stof(match[1].str());
+						}
+						if (regex_search(line, match, RegexObjects.powerRegex)) {
+							Config::HBAOPowerExponent = std::stof(match[1].str());
+						}
+						if (regex_search(line, match, RegexObjects.blurSharpnessRegex)) {
+							Config::HBAOBlurSharpness = std::stof(match[1].str());
+						}
+						if (regex_search(line, match, RegexObjects.blurRadiusRegex)) {
+							Config::HBAOBlurRadius = (GFSDK_SSAO_BlurRadius)std::stoi(match[1].str());
+						}
+						EERenderer->InitHBAOPlus();
+						continue;
+					}
+					case 13:
+					{
+						//ambient light
+						if (regex_search(line, match, RegexObjects.lightIntensityRegex)) {
+							Config::SceneBrightness = std::stof(match[1].str());
+						}
+						continue;
+					}
+					case 14:
+					{
+						//point light
+						string lightName;
+						Light dLight;
+						dLight.Type = LIGHT_TYPE_POINT;
+						if (regex_search(line, match, RegexObjects.entityNameRegex)) {
+							lightName = match[1];
+						}
+						if (regex_search(line, match, RegexObjects.lightPosRegex)) {
+							string transformData = match[0];
+							dLight.Position = Float3FromString(transformData);
+						}
+						if (regex_search(line, match, RegexObjects.lightColorRegex)) {
+							string transformData = match[0];
+							dLight.Color = Float3FromString(transformData);
+						}
+						if (regex_search(line, match, RegexObjects.lightIntensityRegex)) {
+							string transformData = match[1];
+							dLight.Intensity = std::stof(transformData);
+						}
+						if (regex_search(line, match, RegexObjects.lightRangeRegex)) {
+							string transformData = match[1];
+							dLight.Range = std::stof(transformData);
+						}
+						LightContainer newLight = { dLight, lightName };
+						EELightHandler->AddLight(newLight);
+						continue;
+					}
+					case 15:
+					{
+						//spot light
+						string lightName;
+						Light dLight;
+						dLight.Type = LIGHT_TYPE_SPOT;
+						if (regex_search(line, match, RegexObjects.entityNameRegex)) {
+							lightName = match[1];
+						}
+						if (regex_search(line, match, RegexObjects.lightPosRegex)) {
+							string transformData = match[0];
+							dLight.Position = Float3FromString(transformData);
+						}
+						if (regex_search(line, match, RegexObjects.lightDirRegex)) {
+							string transformData = match[0];
+							dLight.Direction = Float3FromString(transformData);
+						}
+						if (regex_search(line, match, RegexObjects.lightColorRegex)) {
+							string transformData = match[0];
+							dLight.Color = Float3FromString(transformData);
+						}
+						if (regex_search(line, match, RegexObjects.lightIntensityRegex)) {
+							string transformData = match[1];
+							dLight.Intensity = std::stof(transformData);
+						}
+						if (regex_search(line, match, RegexObjects.lightRangeRegex)) {
+							string transformData = match[1];
+							dLight.Range = std::stof(transformData);
+						}
+						if (regex_search(line, match, RegexObjects.lightSpotFalloff)) {
+							string transformData = match[1];
+							dLight.SpotFalloff = std::stof(transformData);
+						}
+						LightContainer newLight = { dLight, lightName };
+						EELightHandler->AddLight(newLight);
+						continue;
+					}
 					default:
 						break;
 					}
@@ -962,8 +1032,15 @@ void SceneLoader::LoadScene(string sceneName)
 					}
 				}
 
+				//uv offset
 				if (regex_search(line, match, RegexObjects.uvOffsetRegex)) {
 					allocatedEntity->SetUVOffset(std::stof(match[1].str()), std::stof(match[2].str()));
+				}
+
+				//hbaoplus enabled
+				if (regex_search(line, match, RegexObjects.hbaoPlusRegex)) {
+					if (match[1] == "true" || match[1] == "TRUE") allocatedEntity->ToggleHBAOPlus(true);
+					if (match[1] == "false" || match[1] == "FALSE") allocatedEntity->ToggleHBAOPlus(false);
 				}
 
 				//check for texture repeat

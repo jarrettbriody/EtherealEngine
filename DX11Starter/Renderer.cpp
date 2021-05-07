@@ -923,7 +923,7 @@ void Renderer::RenderDepthStencil()
 		Material* mat = renderObject.material;
 		RendererCallback* callback = renderObject.callback;
 
-		if (e->isEmptyObj || !renderObject.material->GetMaterialData().hbaoPlusEnabled) continue;
+		if (e->isEmptyObj || !renderObject.material->GetMaterialData().hbaoPlusEnabled || !renderObject.entity->hbaoPlusEnabled) continue;
 
 		if (!e->renderObject) continue;
 
@@ -1151,6 +1151,11 @@ void Renderer::RenderPostProcess()
 	}
 }
 
+void Renderer::RenderUI()
+{
+
+}
+
 bool Renderer::AddCamera(string name, Camera* newCamera)
 {
 	if (cameras.count(name)) {
@@ -1278,4 +1283,11 @@ void Renderer::SetPostProcess(bool toggle, RendererCallback* callback, unsigned 
 	postProcessComponents.enabled = toggle;
 	if (!toggle || (toggle && callback == nullptr) || index >= MAX_POST_PROCESS_EFFECTS) return;
 	postProcessComponents.callbacks[index] = callback;
+}
+
+void Renderer::SetRenderUICallback(bool toggle, Utility::Callback* cb, unsigned int index)
+{
+	uiComponents.enabled = true;
+	if (!toggle || (toggle && cb == nullptr) || index >= MAX_UI_CALLBACKS) return;
+	uiComponents.UICallbacks[index] = cb;
 }

@@ -17,7 +17,7 @@ bool Config::WindowedBorderless = false;
 bool Config::ShowCursor = false;
 bool Config::CaptureMouse = false;
 bool Config::DebugCamera = true;
-float Config::DebugCameraSpeed = 15.0f;
+float Config::DebugCameraSpeed = 3.0f;
 float Config::MouseSensitivity = 0.001f;
 
 unsigned int Config::MemoryAllocatorSize = MEGABYTE * 512;
@@ -42,6 +42,8 @@ float Config::HBAORadius = 1.0f;
 float Config::HBAOPowerExponent = 4.0f;
 float Config::HBAOBlurSharpness = 8.0f;
 GFSDK_SSAO_BlurRadius Config::HBAOBlurRadius = GFSDK_SSAO_BLUR_RADIUS_2;
+
+float Config::SceneBrightness = 0.05f;
 
 bool Config::DecalsEnabled = true;
 unsigned int Config::InitialDecalVectorSize = 3000;

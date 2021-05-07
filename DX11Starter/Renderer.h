@@ -61,6 +61,7 @@ public:
 	HBAOPlusComponents hbaoPlusComponents;
 	SkyboxComponents skyboxComponents;
 	PostProcessComponents postProcessComponents;
+	UIComponents uiComponents;
 
 	void SetEntities(vector<Entity*>* entities);
 	void SetRendererShaders(RendererShaders rShaders);
@@ -89,6 +90,7 @@ public:
 	void RenderSkybox();
 	void RenderTransparents();
 	void RenderPostProcess();
+	void RenderUI();
 
 	bool AddCamera(string name, Camera* newCamera);
 	bool RemoveCamera(string name);
@@ -102,4 +104,5 @@ public:
 
 	void SetRenderObjectCallback(Entity* e, RendererCallback* callback);
 	void SetPostProcess(bool toggle, RendererCallback* callback = nullptr, unsigned int index = 0);
+	void SetRenderUICallback(bool toggle, Utility::Callback* cb, unsigned int index = 0);
 };

@@ -28,6 +28,7 @@
 #define MAX_ENTITY_TAG_COUNT 8
 #define MAX_ENTITY_LAYER_COUNT 8
 #define EESTRING_SIZE 64
+#define MAX_UI_CALLBACKS 8
 
 enum class MESH_TYPE {
 	LOAD_FAILURE = -1,
@@ -89,6 +90,8 @@ public:
 	static float HBAOPowerExponent;
 	static float HBAOBlurSharpness;
 	static GFSDK_SSAO_BlurRadius HBAOBlurRadius;
+
+	static float SceneBrightness;
 
 	static bool DecalsEnabled;
 	static unsigned int InitialDecalVectorSize;

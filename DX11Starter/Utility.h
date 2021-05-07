@@ -3,6 +3,10 @@
 #include "Config.h"
 
 namespace Utility {
+	struct Callback {
+		virtual void CallbackFunc() {};
+	};
+
 	static void ParseFloat3FromString(std::string s, DirectX::XMFLOAT3& f) {
 		std::smatch match;
 		int i = 0;

@@ -8,6 +8,7 @@
 #include "BloodPool.h"
 #include "AmbientParticles.h"
 #include "EnemyTest.h"
+#include "MainMenuManager.h"
 
 namespace Scripts {
 	enum class SCRIPT_NAMES {
@@ -19,7 +20,8 @@ namespace Scripts {
 		BLOODSWORD,
 		GAMEMANAGER,
 		BLOODPOOL,
-		ENEMYTEST
+		ENEMYTEST,
+		MAINMENUMANAGER,
 	};
 
 	static map<string, SCRIPT_NAMES> scriptNameMap = {
@@ -31,7 +33,8 @@ namespace Scripts {
 		{"BLOODSWORD", SCRIPT_NAMES::BLOODSWORD},
 		{"GAMEMANAGER", SCRIPT_NAMES::GAMEMANAGER},
 		{"BLOODPOOL", SCRIPT_NAMES::BLOODPOOL},
-		{"ENEMYTEST", SCRIPT_NAMES::ENEMYTEST}
+		{"ENEMYTEST", SCRIPT_NAMES::ENEMYTEST},
+		{"MAINMENUMANAGER", SCRIPT_NAMES::MAINMENUMANAGER},
 	};
 
 	static map<SCRIPT_NAMES, string> scriptStringNameMap = {
@@ -43,7 +46,8 @@ namespace Scripts {
 		{SCRIPT_NAMES::BLOODSWORD, "BLOODSWORD"},
 		{SCRIPT_NAMES::GAMEMANAGER, "GAMEMANAGER"},
 		{SCRIPT_NAMES::BLOODPOOL, "BLOODPOOL"},
-		{SCRIPT_NAMES::ENEMYTEST, "ENEMYTEST"}
+		{SCRIPT_NAMES::ENEMYTEST, "ENEMYTEST"},
+		{SCRIPT_NAMES::MAINMENUMANAGER, "MAINMENUMANAGER"},
 	};
 
 	namespace {
@@ -78,6 +82,9 @@ namespace Scripts {
 				break;
 			case Scripts::SCRIPT_NAMES::ENEMYTEST:
 				script = new EnemyTest();
+				break;
+			case Scripts::SCRIPT_NAMES::MAINMENUMANAGER:
+				script = new MainMenuManager();
 				break;
 			default:
 				break;

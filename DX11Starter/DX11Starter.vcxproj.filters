@@ -237,6 +237,9 @@
     <ClCompile Include="AStarSolver.cpp">
       <Filter>EECore\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="MainMenuManager.cpp">
+      <Filter>EEScripts\Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h">
@@ -409,6 +412,9 @@
     </ClInclude>
     <ClInclude Include="AStarSolver.h">
       <Filter>EECore\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MainMenuManager.h">
+      <Filter>EEScripts\Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -98,3 +98,8 @@ struct PostProcessComponents {
 	ID3D11ShaderResourceView* tempSRV[MAX_POST_PROCESS_EFFECTS] = { nullptr,nullptr,nullptr,nullptr,nullptr,nullptr,nullptr,nullptr };
 	RendererCallback* callbacks[MAX_POST_PROCESS_EFFECTS] = { nullptr,nullptr,nullptr,nullptr,nullptr,nullptr,nullptr,nullptr };
 };
+
+struct UIComponents {
+	bool enabled = false;
+	Utility::Callback* UICallbacks[MAX_UI_CALLBACKS] = { nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
+};

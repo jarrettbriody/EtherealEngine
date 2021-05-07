@@ -33,7 +33,7 @@ float Attenuate(Light light, float3 worldPos)
 
 //Lighting methods
 
-float3 CalcDirectionalLight(float4 surfaceColor, float3 normal, Light light, float3 toCameraVector, float specularValue, float shadowAmount) 
+float3 CalcDirectionalLight(float4 surfaceColor, float3 normal, Light light, float3 toCameraVector, float specularValue, float shadowAmount, float brightness) 
 {
 	float3 toLight = normalize(-light.Direction);
 	float diffuse = saturate(dot(normal, toLight));
@@ -44,10 +44,10 @@ float3 CalcDirectionalLight(float4 surfaceColor, float3 normal, Light light, flo
 
 	finalColor *= light.Intensity * light.Color;
 
-	return (finalColor * shadowAmount) + (surfaceColor * 0.05f);
+	return (finalColor * shadowAmount) + (surfaceColor * brightness);
 }
 
-float3 CalcPointLight(float4 surfaceColor, float3 normal, Light light, float3 toCameraVector, float specularValue, float3 worldPos) 
+float3 CalcPointLight(float4 surfaceColor, float3 normal, Light light, float3 toCameraVector, float specularValue, float3 worldPos, float brightness)
 {
 	float3 toLight = normalize(light.Position - worldPos);
 
@@ -57,13 +57,13 @@ float3 CalcPointLight(float4 surfaceColor, float3 normal, Light light, float3 to
 	float specularity = GetSpecularity(normal, toLight, toCameraVector, specularValue);
 	float3 finalColor = (diffuse * surfaceColor + specularity) * atten * light.Intensity * light.Color;
 	
-	return float4(finalColor,0.0f) + (surfaceColor * 0.05f);
+	return finalColor;// + (surfaceColor * brightness);
 }
 
-float3 CalcSpotLight(float4 surfaceColor, float3 normal, Light light, float3 toCameraVector, float specularValue, float3 worldPos)
+float3 CalcSpotLight(float4 surfaceColor, float3 normal, Light light, float3 toCameraVector, float specularValue, float3 worldPos, float brightness)
 {
 	float3 toLight = normalize(light.Position - worldPos);
 	float penumbra = pow(saturate(dot(-toLight, light.Direction)), light.SpotFalloff);
 
-	return CalcPointLight(surfaceColor, normal, light, toCameraVector, specularValue, worldPos) * penumbra;
+	return CalcPointLight(surfaceColor, normal, light, toCameraVector, specularValue, worldPos, brightness) * penumbra;
 }

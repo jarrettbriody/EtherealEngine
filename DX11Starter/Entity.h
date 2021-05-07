@@ -88,6 +88,7 @@ public:
 	bool colliderDebugLinesEnabled = false;
 	bool isEmptyObj = false;
 	bool renderObject = true;
+	bool hbaoPlusEnabled = true;
 	Entity();
 	Entity(string entityName);
 	Entity(string entityName, Mesh* entityMesh, Material* mat = nullptr);
@@ -129,6 +130,7 @@ public:
 	void SetDepthStencilData(DepthStencilData depthStencilData);
 	void SetMeshAndMaterial(Mesh* mesh, Material* mat = nullptr);
 	void ToggleShadows(bool toggle);
+	void ToggleHBAOPlus(bool toggle);
 	void Move(XMFLOAT3 f);
 	void Move(float x, float y, float z);
 	ID3D11Buffer* GetMeshVertexBuffer(int childIndex = -1);

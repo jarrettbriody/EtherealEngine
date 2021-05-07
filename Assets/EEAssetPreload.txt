@@ -87,7 +87,10 @@ TYPE="TEXTURE" name="woodplaque" path="table_parts_Top_AlbedoTransparency.png"
 TYPE="TEXTURE" name="woodplaque_N" path="table_parts_Top_Normal.png"
 TYPE="TEXTURE" name="bricks" path="bricks.png"
 TYPE="TEXTURE" name="bricks_N" path="bricks_N.png"
-TYPE="TEXTURE" name="plaster" path="plaster-texture.jpg"
+TYPE="TEXTURE" name="plaster" path="plaster-texture.png"
+TYPE="TEXTURE" name="plaster_N" path="plaster-texture_N.png"
+TYPE="TEXTURE" name="woodfloor" path="woodfloor.png"
+TYPE="TEXTURE" name="woodfloor_N" path="woodfloor_N.png"
 
 //TYPE="MATERIAL" name="" vShader="" pShader="" ambientTexture="" diffuseTexture="" specularColorTexture="" specularHighlightTexture="" alphaTexture="" normalTexture="" ambientColor(0,0,0) diffuseColor(0,0,0) specularColor(0,0,0) specularExponent="0.0" transparency="1.0" illumination="1" ssao="false" hbaoPlus="true"
 TYPE="MATERIAL" name="DEFAULT" vShader="DEFAULT" pShader="DEFAULT"
@@ -104,7 +107,8 @@ TYPE="MATERIAL" name="bloodchain" vShader="DEFAULT" pShader="DEFAULT" diffuseTex
 TYPE="MATERIAL" name="swordgradient" vShader="DEFAULT" pShader="DEFAULT" diffuseTexture="swordgradient"  
 TYPE="MATERIAL" name="bloodsword" vShader="BloodSword" pShader="Normal" diffuseTexture="bloodsword" normalTexture="bloodsword_N"
 TYPE="MATERIAL" name="chimney" vShader="Normal" pShader="Normal" diffuseTexture="bricks" normalTexture="bricks_N"
-TYPE="MATERIAL" name="plaster" vShader="DEFAULT" pShader="DEFAULT" diffuseTexture="plaster"
+TYPE="MATERIAL" name="plaster" vShader="Normal" pShader="Normal" diffuseTexture="plaster" normalTexture="plaster_N"
+TYPE="MATERIAL" name="woodfloor" vShader="Normal" pShader="Normal" diffuseTexture="woodfloor" normalTexture="woodfloor_N"
 
 
 

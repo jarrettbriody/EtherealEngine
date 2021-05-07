@@ -38,6 +38,7 @@ cbuffer uvRepeatCBuffer : register(b1) {
 cbuffer externalData : register(b2) {
 
 	int specularValue;
+	float brightness;
 	float3 cameraPosition;
 	int illumination;
 	float3 manualColor;
@@ -108,13 +109,13 @@ float4 main(VertexToPixel input) : SV_TARGET
 	{
 		switch (lights[i].Type) {
 		case LIGHT_TYPE_DIR:
-			finalColor += (CalcDirectionalLight(surfaceColor, input.normal, lights[i], toCameraVector, specularValue, shadowAmount));
+			finalColor += (CalcDirectionalLight(surfaceColor, input.normal, lights[i], toCameraVector, specularValue, shadowAmount, brightness));
 			break;
 		case LIGHT_TYPE_POINT:
-			finalColor += (CalcPointLight(surfaceColor, input.normal, lights[i], toCameraVector, specularValue, input.worldPos));
+			finalColor += (CalcPointLight(surfaceColor, input.normal, lights[i], toCameraVector, specularValue, input.worldPos, brightness));
 			break;
 		case LIGHT_TYPE_SPOT:
-			finalColor += (CalcSpotLight(surfaceColor, input.normal, lights[i], toCameraVector, specularValue, input.worldPos));
+			finalColor += (CalcSpotLight(surfaceColor, input.normal, lights[i], toCameraVector, specularValue, input.worldPos, brightness));
 			break;
 		}
 	}

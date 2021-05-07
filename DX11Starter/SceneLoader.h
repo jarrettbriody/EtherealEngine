@@ -65,6 +65,9 @@ private:
 		{ "GPUPARTICLE", 10 },
 		{ "LAYERMASK", 11 },
 		{ "AMBIENTOCCLUSION", 12 },
+		{ "AMBIENTLIGHT", 13 },
+		{ "POINTLIGHT", 14 },
+		{ "SPOTLIGHT", 15 },
 	};
 
 	map<string, ShaderType> shaderTypes = {
@@ -87,6 +90,8 @@ private:
 		regex lightDirRegex = regex("D\\(.*\\)");
 		regex lightColorRegex = regex("C\\(.*\\)");
 		regex lightIntensityRegex = regex("intensity=\"(\\d*\\.\\d*|\\d+)\"");
+		regex lightRangeRegex = regex("range=\"(\\d*\\.\\d*|\\d+)\"");;
+		regex lightSpotFalloff = regex("spotFalloff=\"(\\d*\\.\\d*|\\d+)\"");;
 
 		regex shaderFileRegex = regex("cso=\"(\\w+)\""); //get cso file name
 		regex shaderTypeRegex = regex("shaderType=\"(\\w+)\""); //get shader type

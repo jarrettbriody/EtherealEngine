@@ -474,6 +474,11 @@ void Entity::ToggleShadows(bool toggle)
 	shadowsEnabled = toggle;
 }
 
+void Entity::ToggleHBAOPlus(bool toggle)
+{
+	hbaoPlusEnabled = toggle;
+}
+
 void Entity::Move(XMFLOAT3 f)
 {
 	position.x += f.x;

@@ -1,5 +1,21 @@
 TYPE="DIRLIGHT" name="Sun" intensity="0.4" P(200,500,25)D(-0.37099,-0.92748,-0.046374)C(1.0,1.0,1.0)
-TYPE="AMBIENTOCCLUSION" enabled="true" unitsPerMeter="1.0" radius="0.1" power="1.0" blurEnabled="false" blurSharpness="16.0" blurRadius="0" 
+
+TYPE="SPOTLIGHT" name="hearth" intensity="0.5" range="20.0" spotFalloff="10" P(10.77,2,-0.6)D(-1,0,0)C(1.0,0.38039,0)
+TYPE="POINTLIGHT" name="hearthpoint" intensity="1.0" range="3.0" P(10.77,2,-0.6)C(1.0,0.26274,0)
+
+//0.75
+TYPE="SPOTLIGHT" name="menulight" intensity="0.0001" range="50.0" spotFalloff="40" P(0,5,5)D(0,0,-1)C(1.0,0.87843,0.72941) 
+
+TYPE="POINTLIGHT" name="candleLight" intensity="1.0" range="5.0" P(0.37,4.0,-1.27)C(1.0,0.4,0)
+TYPE="POINTLIGHT" name="candleLight2" intensity="1.0" range="5.0" P(-4.0,4.0,-0.27)C(1.0,0.4,0)
+
+//TYPE="POINTLIGHT" name="hearth" intensity="0.1" range="10.0" P(10.77,2.0,-0.6)C(1.0,0.61569,0)
+//TYPE="SPOTLIGHT" name="menulight" intensity="0.3" range="30.0" spotFalloff="20" P(0,5,5)D(0,0,-1)C(1.0,0.87843,0.72941)
+
+TYPE="AMBIENTLIGHT" intensity="0.005"
+TYPE="AMBIENTOCCLUSION" enabled="true" unitsPerMeter="1.0" radius="1.0" power="2.0" blurEnabled="true" blurSharpness="16.0" blurRadius="0" 
+
+name="MainMenuManager" scripts="MAINMENUMANAGER" P(0,0,0)R(0,0,0)S(0,0,0)
 
 obj="Cube" material="plaster" layer="decal" colliders="true" P(0,5,-12.25)R(0,270,0)S(1,10,35.96559)
 obj="Cube" material="White" layer="decal" colliders="true" P(-2.12,6.311,7.394)R(0,180,0)S(0.31424,0.4819499,0.05249912)
@@ -12,7 +28,7 @@ obj="Cube" material="plaster" layer="decal" colliders="true" P(0.000998014,5,8.2
 obj="Cube" material="plaster" layer="decal" colliders="true" P(-12.29,5,0)R(0,180,0)S(1,10,25)
 obj="Cube" material="plaster" layer="decal" colliders="true" P(12.85,5,0)R(0,180,0)S(1,10,25)
 obj="Cube" material="plaster" layer="decal" colliders="true" P(0,10,0)R(0,180,0)S(35.96559,1,25)
-obj="Cube" material="plaster" layer="decal" colliders="true" P(0,0,0)R(0,180,0)S(35.96559,1,25)
+obj="Cube" material="woodfloor" repeatTexture="5,5" layer="decal" colliders="true" P(0,0,0)R(0,180,0)S(35.96559,1,25)
 obj="Cube" material="chimney" uvOffset="0,0" repeatTexture="0.3,0.3" layer="decal" colliders="true" P(10.77,7.78,-0.6)R(0,180,0)S(2.009708,4.9798,2.95135)
 obj="wallplaque" layer="decal" colliders="true" P(0.31,4.95,-11.7)R(90,180,90)S(6,0.09280913,6)
 obj="wallplaque" layer="decal" colliders="true" P(-6.32,6.79,-11.794)R(90,180,90)S(2.279428,0.09280913,2.279428)
@@ -32,5 +48,6 @@ obj="hornedhead" layer="decal" colliders="true" P(6.85,7.03,-11.54)R(0,180,0)S(0
 obj="cyclopshead" layer="decal" colliders="true" P(-6.35,7,-11.48)R(0,180,0)S(0.1275987,0.1275987,0.1275987)
 obj="bullhead" layer="decal" colliders="true" P(-6.29,3.03,-11.653)R(0,180,0)S(0.15256,0.15256,0.15256)
 obj="candle" layer="decal" colliders="true" P(0.37,2.63,-1.27)R(0,325.406,0)S(0.03749782,0.03749782,0.03749782)
+obj="candle" layer="decal" colliders="true" P(-4.0,2.63,-0.27)R(0,300,0)S(0.03749782,0.03749782,0.03749782)
 obj="Wooden_Table" layer="decal" colliders="true" P(-1.48,0.47,-0.09)R(0,267,0)S(0.15,0.077711,0.15)
-obj="bloodswordlowpoly" layer="decal" colliders="true" P(-3.819,6.59,7.527)R(180,-180,90)S(0.46094,0.46094,0.46094)
+obj="bloodswordlowpoly2" layer="decal" colliders="true" P(-3.819,6.59,7.527)R(180,-180,90)S(0.46094,0.46094,0.46094)
