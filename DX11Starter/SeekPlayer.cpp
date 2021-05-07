@@ -20,9 +20,13 @@ Status SeekPlayer::Update()
 	{
 		movementDirection = btVector3(playerPos.x - enemyPos.x, 0.0f, playerPos.z - enemyPos.z);
 		currentSpeed = movementSpeed;
+		*inRange = false;
 	}
 	else
+	{
 		currentSpeed = enemy->GetRBody()->getLinearVelocity().length() * dampingScalar;
+		*inRange = true;
+	}
 
 	//cout << "Current speed: " << currentSpeed << endl;
 	//cout << "Movement vector- X: " << movementDirection.getX() << " | Y: " << movementDirection.getY() << " | Z: " << movementDirection.getZ() << endl;

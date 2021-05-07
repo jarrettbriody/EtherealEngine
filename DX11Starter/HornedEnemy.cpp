@@ -32,7 +32,7 @@ void HornedEnemy::Init()
 						.Leaf<InCombat>(&inCombat).End()
 						.Leaf<PlayerVisible>(entity, player).End()
 						.Leaf<FacePlayer>(entity, player, turnSpeed, &deltaTime).End()
-						.Leaf<SeekPlayer>(entity, player, movementSpeed, maxSpeed, minimumDistance).End()
+						.Leaf<SeekPlayer>(entity, player, movementSpeed, maxSpeed, minimumDistance, &playerIsInRange).End()
 					.End()
 					.Composite<Sequence>() // Search player's last known location
 						.Leaf<InCombat>(&inCombat).End()

@@ -28,6 +28,7 @@ class HornedEnemy : public ScriptManager
 
 	XMFLOAT3 pos;
 	bool inCombat = false;
+	bool playerIsInRange = false;
 	float movementSpeed = 15.0f;
 	float maxSpeed = 40.0f;
 	float dampingScalar = 0.09f;

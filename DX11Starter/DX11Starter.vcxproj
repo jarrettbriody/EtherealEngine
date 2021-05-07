@@ -149,6 +149,7 @@
     <ClCompile Include="BloodSword.cpp" />
     <ClCompile Include="BullEnemy.cpp" />
     <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="ChargePlayer.cpp" />
     <ClCompile Include="Collider.cpp" />
     <ClCompile Include="Config.cpp" />
     <ClCompile Include="CPUParticleEmitter.cpp" />
@@ -187,6 +188,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="PlayerIsInRange.cpp" />
     <ClCompile Include="PlayerVisible.cpp" />
     <ClCompile Include="PriorityQueue.cpp" />
     <ClCompile Include="Renderer.cpp" />
@@ -208,6 +210,7 @@
     <ClInclude Include="BloodSword.h" />
     <ClInclude Include="BullEnemy.h" />
     <ClInclude Include="Camera.h" />
+    <ClInclude Include="ChargePlayer.h" />
     <ClInclude Include="Collider.h" />
     <ClInclude Include="Config.h" />
     <ClInclude Include="CPUParticleEmitter.h" />
@@ -246,6 +249,7 @@
     <ClInclude Include="Particles.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="PhysicsWrapper.h" />
+    <ClInclude Include="PlayerIsInRange.h" />
     <ClInclude Include="PlayerVisible.h" />
     <ClInclude Include="PriorityQueue.h" />
     <ClInclude Include="Renderer.h" />

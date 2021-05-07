@@ -11,7 +11,12 @@ name="Blood Sword" tags="Blood Sword" layers="playertools" scripts="BLOODSWORD" 
 name="Antler Demon" obj="antlerdemon_separatedhead" layers="outline" tags="Boss" mass="0.0" colliders="true" P(-108.7,15,-30)R(0,180,0)S(0.8,0.8,0.8)
 obj="sneklad" layers="outline" tags="Enemy" colliders="true" mass="1.0" P(-108.7,1,50)R(0,502.239,0)S(0.2,0.2,0.2)
 obj="horneddemon1" layers="outline" tags="Enemy" colliders="true" mass="1.0" P(-108.7,2.5,70)R(0,403.3411,0)S(0.3,0.3,0.3)
-obj="horneddemon1" layers="outline" tags="Enemy" colliders="true" scripts="ENEMYTEST" mass="1.0" P(-298.98,2.5,800)R(0,403.3411,0)S(0.3,0.3,0.3)
+
+obj="horneddemon1" layers="outline" tags="Enemy" colliders="true" scripts="CYCLOPSENEMY" mass="1.0" P(-298.98,2.5,800)R(0,403.3411,0)S(0.3,0.3,0.3)
+obj="cyclops" layers="outline" tags="Enemy" colliders="true" scripts="CYCLOPSENEMY" mass="1.0" P(-298.98,2.5,750)R(0,403.3411,0)S(0.3,0.3,0.3)
+obj="bulldemon_UPDATED" layers="outline" tags="Enemy" colliders="true" scripts="BULLENEMY" mass="1.0" P(-298.98,2.5,700)R(0,403.3411,0)S(0.3,0.3,0.3)
+obj="verteyedemon_UPDATED" layers="outline" tags="Enemy" colliders="true" scripts="TOWERENEMY" mass="1.0" P(-298.98,2.5,650)R(0,403.3411,0)S(0.3,0.3,0.3)
+
 obj="horneddemon2" layers="outline" tags="Enemy" colliders="true" mass="1.0" P(-108.7,2.5,25)R(0,180.2974,0)S(0.3,0.3,0.3)
 //obj="burningcommieblocv2" P(500,240,0)R(0,90,0)S(25,25,25)
 //obj="grave" tags="Environment" layers="decal" colliders="true" repeatTexture="0.025,0.025" P(0,-0.8,0)R(0,180,0)S(1,1,1)

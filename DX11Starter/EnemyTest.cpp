@@ -26,28 +26,13 @@ void EnemyTest::Init()
 	entity->GetRBody()->setAngularFactor(btVector3(0, 1, 0)); // Constrain rotations on x and z axes
 	entity->GetRBody()->setLinearFactor(btVector3(1, 0, 1)); // Constrain movement on the y axis
 
-	EntityCreationParameters fireballParams = {
-		"fireball",
-		"fireball",
-		"fireball",
-		"Sphere",
-		"Red",
-		{""},
-		0,
-		XMFLOAT3(0, 0, 0),
-		XMFLOAT3(0, 0, 0),
-		XMFLOAT3(1, 1, 1),
-		1.0f
-	};
-
 	bt =	BehaviorTreeBuilder()
 				.Composite<ActiveSelector>()
 					.Composite<Sequence>() // Seek the player if they are visible
 						.Leaf<InCombat>(&inCombat).End()						
 						.Leaf<PlayerVisible>(entity, player).End()
 						.Leaf<FacePlayer>(entity, player, turnSpeed, &deltaTime).End()
-						.Leaf<SeekPlayer>(entity, player, movementSpeed, maxSpeed, minimumDistance).End()
-						.Leaf<FireProjectile>(entity, player, fireballParams, 50.0f).End()
+						.Leaf<SeekPlayer>(entity, player, movementSpeed, maxSpeed, minimumDistance, &playerIsInRange).End()
 					.End()
 					.Composite<Sequence>() // Search player's last known location
 						.Leaf<InCombat>(&inCombat).End()

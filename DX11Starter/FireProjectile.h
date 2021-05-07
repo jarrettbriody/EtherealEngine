@@ -11,6 +11,8 @@ private:
 	Entity* enemy;
 	EntityCreationParameters projectileParams;
 	float projectileSpeed;
+
+	Entity* projectile;
 public:
 	FireProjectile(Entity* e, Entity* p, EntityCreationParameters projParams, float pSpeed) : enemy(e), player(p), projectileParams(projParams), projectileSpeed(pSpeed) {}
 	~FireProjectile() {}

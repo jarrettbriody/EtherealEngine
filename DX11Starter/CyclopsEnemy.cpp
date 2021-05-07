@@ -23,16 +23,32 @@ void CyclopsEnemy::Init()
 			.Leaf<EnemySeesPlayer>(entity, player, 30.0f, 30.0f).End()
 		.End();*/
 
+	EntityCreationParameters fireballParams = {
+		"fireball",
+		"projectile",
+		"projectile",
+		"spikesmall",
+		"Red",
+		{""},
+		0,
+		XMFLOAT3(0, 0, 0),
+		XMFLOAT3(Utility::DegToRad(90), 0, 0),
+		XMFLOAT3(1, 1, 1),
+		1.0f
+	};
+
 	entity->GetRBody()->setAngularFactor(btVector3(0, 1, 0)); // Constrain rotations on x and z axes
 	entity->GetRBody()->setLinearFactor(btVector3(1, 0, 1)); // Constrain movement on the y axis
 
 	bt =	BehaviorTreeBuilder()
 				.Composite<ActiveSelector>()
-					.Composite<Sequence>() // Seek the player if they are visible
+					.Composite<Sequence>() // Seek and attack the player if they are visible/in-range
 						.Leaf<InCombat>(&inCombat).End()
 						.Leaf<PlayerVisible>(entity, player).End()
 						.Leaf<FacePlayer>(entity, player, turnSpeed, &deltaTime).End()
-						.Leaf<SeekPlayer>(entity, player, movementSpeed, maxSpeed, minimumDistance).End()
+						.Leaf<SeekPlayer>(entity, player, movementSpeed, maxSpeed, minimumDistance, &playerIsInRange).End()
+						.Leaf<PlayerIsInRange>(&playerIsInRange).End()
+						.Leaf<FireProjectile>(entity, player, fireballParams, 50.0f).End()
 					.End()
 					.Composite<Sequence>() // Search player's last known location
 						.Leaf<InCombat>(&inCombat).End()

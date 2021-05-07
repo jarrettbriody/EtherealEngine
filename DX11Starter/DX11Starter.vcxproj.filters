@@ -249,6 +249,12 @@
     <ClCompile Include="TowerEnemy.cpp">
       <Filter>EEScripts\Source</Filter>
     </ClCompile>
+    <ClCompile Include="PlayerIsInRange.cpp">
+      <Filter>EEBehaviors\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="ChargePlayer.cpp">
+      <Filter>EEBehaviors\Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h">
@@ -436,6 +442,12 @@
     </ClInclude>
     <ClInclude Include="TowerEnemy.h">
       <Filter>EEScripts\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="PlayerIsInRange.h">
+      <Filter>EEBehaviors\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="ChargePlayer.h">
+      <Filter>EEBehaviors\Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
