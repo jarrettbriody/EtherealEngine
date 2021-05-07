@@ -159,6 +159,7 @@
     <ClCompile Include="Entity.cpp" />
     <ClCompile Include="FacePlayer.cpp" />
     <ClCompile Include="FindPlayer.cpp" />
+    <ClCompile Include="FireProjectile.cpp" />
     <ClCompile Include="FollowPath.cpp" />
     <ClCompile Include="FPSController.cpp" />
     <ClCompile Include="Game.cpp" />
@@ -214,6 +215,7 @@
     <ClInclude Include="Entity.h" />
     <ClInclude Include="FacePlayer.h" />
     <ClInclude Include="FindPlayer.h" />
+    <ClInclude Include="FireProjectile.h" />
     <ClInclude Include="FollowPath.h" />
     <ClInclude Include="FPSController.h" />
     <ClInclude Include="Game.h" />

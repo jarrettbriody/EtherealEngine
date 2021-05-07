@@ -9,6 +9,7 @@
 #include "FindPlayer.h"
 #include "FollowPath.h"
 #include "Idle.h"
+#include "FireProjectile.h"
 #include "FPSController.h"
 #include "NavmeshHandler.h"
 #include "AStarSolver.h"
@@ -32,7 +33,7 @@ class EnemyTest : public ScriptManager
 	float maxSpeed = 40.0f;
 	float dampingScalar = 0.09f;
 	float turnSpeed = 1.0f;
-	float minimumDistance = 5.0f;
+	float minimumDistance = 10.0f;
 	float visionConeAngle = 30.0f;
 	float visionConeDistance = 30.0f;
 	float oscillationMagnitude = 0.01f;
@@ -40,6 +41,8 @@ class EnemyTest : public ScriptManager
 
 	bool leashed;
 	float delay;
+
+	Entity* fireball;
 
 	BehaviorTree* bt;
 

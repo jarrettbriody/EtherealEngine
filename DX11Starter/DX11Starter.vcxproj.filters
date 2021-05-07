@@ -234,6 +234,9 @@
     <ClCompile Include="AStarSolver.cpp">
       <Filter>EECore\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="FireProjectile.cpp">
+      <Filter>EEBehaviors\Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h">
@@ -406,6 +409,9 @@
     </ClInclude>
     <ClInclude Include="AStarSolver.h">
       <Filter>EECore\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FireProjectile.h">
+      <Filter>EEBehaviors\Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
