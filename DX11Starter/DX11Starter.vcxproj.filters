@@ -96,46 +96,13 @@
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Camera.cpp">
-      <Filter>EECore\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Collider.cpp">
-      <Filter>EECore\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="DebugLines.cpp">
-      <Filter>EECore\Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="DXCore.cpp">
-      <Filter>EECore\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Entity.cpp">
       <Filter>EECore\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Game.cpp">
       <Filter>EECore\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Main.cpp">
-      <Filter>EECore\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Material.cpp">
-      <Filter>EECore\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Mesh.cpp">
-      <Filter>EECore\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Renderer.cpp">
-      <Filter>EECore\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="SceneLoader.cpp">
-      <Filter>EECore\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="SimpleShader.cpp">
-      <Filter>EECore\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Config.cpp">
-      <Filter>EECore\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ScriptManager.cpp">
       <Filter>EECore\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="MemoryAllocator.cpp">
@@ -151,19 +118,16 @@
       <Filter>EECore\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="KeyboardEvent.cpp">
-      <Filter>EECore\Source Files\Keyboard</Filter>
+      <Filter>EECore\Source Files\Input\Keyboard</Filter>
     </ClCompile>
     <ClCompile Include="Keyboard.cpp">
-      <Filter>EECore\Source Files\Keyboard</Filter>
-    </ClCompile>
-    <ClCompile Include="DecalHandler.cpp">
-      <Filter>EECore\Source Files</Filter>
+      <Filter>EECore\Source Files\Input\Keyboard</Filter>
     </ClCompile>
     <ClCompile Include="Mouse.cpp">
-      <Filter>EECore\Source Files\Mouse</Filter>
+      <Filter>EECore\Source Files\Input\Mouse</Filter>
     </ClCompile>
     <ClCompile Include="MouseEvent.cpp">
-      <Filter>EECore\Source Files\Mouse</Filter>
+      <Filter>EECore\Source Files\Input\Mouse</Filter>
     </ClCompile>
     <ClCompile Include="BloodIcicle.cpp">
       <Filter>EEScripts\Source</Filter>
@@ -186,9 +150,6 @@
     <ClCompile Include="AmbientParticles.cpp">
       <Filter>EEScripts\Source</Filter>
     </ClCompile>
-    <ClCompile Include="LightHandler.cpp">
-      <Filter>EECore\Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="GameManager.cpp">
       <Filter>EEScripts\Source</Filter>
     </ClCompile>
@@ -200,15 +161,6 @@
     </ClCompile>
     <ClCompile Include="EnemyTest.cpp">
       <Filter>EEScripts\Source</Filter>
-    </ClCompile>
-    <ClCompile Include="Grid.cpp">
-      <Filter>EECore\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Node.cpp">
-      <Filter>EECore\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="PriorityQueue.cpp">
-      <Filter>EECore\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="InCombat.cpp">
       <Filter>EEBehaviors\Source</Filter>
@@ -231,54 +183,72 @@
     <ClCompile Include="FindPlayer.cpp">
       <Filter>EEBehaviors\Source</Filter>
     </ClCompile>
-    <ClCompile Include="NavmeshHandler.cpp">
-      <Filter>EECore\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="AStarSolver.cpp">
-      <Filter>EECore\Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="MainMenuManager.cpp">
       <Filter>EEScripts\Source</Filter>
     </ClCompile>
+    <ClCompile Include="Transform.cpp">
+      <Filter>EECore\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="AStarSolver.cpp">
+      <Filter>EECore\Source Files\AI</Filter>
+    </ClCompile>
+    <ClCompile Include="Grid.cpp">
+      <Filter>EECore\Source Files\AI</Filter>
+    </ClCompile>
+    <ClCompile Include="Node.cpp">
+      <Filter>EECore\Source Files\AI</Filter>
+    </ClCompile>
+    <ClCompile Include="NavmeshHandler.cpp">
+      <Filter>EECore\Source Files\AI</Filter>
+    </ClCompile>
+    <ClCompile Include="PriorityQueue.cpp">
+      <Filter>EECore\Source Files\AI</Filter>
+    </ClCompile>
+    <ClCompile Include="Config.cpp">
+      <Filter>EECore\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DebugLines.cpp">
+      <Filter>EECore\Source Files\Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="DecalHandler.cpp">
+      <Filter>EECore\Source Files\Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="Camera.cpp">
+      <Filter>EECore\Source Files\Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="LightHandler.cpp">
+      <Filter>EECore\Source Files\Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer.cpp">
+      <Filter>EECore\Source Files\Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="Collider.cpp">
+      <Filter>EECore\Source Files\Entity Component System</Filter>
+    </ClCompile>
+    <ClCompile Include="Entity.cpp">
+      <Filter>EECore\Source Files\Entity Component System</Filter>
+    </ClCompile>
+    <ClCompile Include="Material.cpp">
+      <Filter>EECore\Source Files\Entity Component System</Filter>
+    </ClCompile>
+    <ClCompile Include="Mesh.cpp">
+      <Filter>EECore\Source Files\Entity Component System</Filter>
+    </ClCompile>
+    <ClCompile Include="SceneLoader.cpp">
+      <Filter>EECore\Source Files\Entity Component System</Filter>
+    </ClCompile>
+    <ClCompile Include="ScriptManager.cpp">
+      <Filter>EECore\Source Files\Entity Component System</Filter>
+    </ClCompile>
+    <ClCompile Include="SimpleShader.cpp">
+      <Filter>EECore\Source Files\Rendering</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Camera.h">
-      <Filter>EECore\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Collider.h">
-      <Filter>EECore\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="DebugLines.h">
-      <Filter>EECore\Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="DXCore.h">
       <Filter>EECore\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Entity.h">
-      <Filter>EECore\Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Game.h">
-      <Filter>EECore\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Material.h">
-      <Filter>EECore\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Mesh.h">
-      <Filter>EECore\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Renderer.h">
-      <Filter>EECore\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="SceneLoader.h">
-      <Filter>EECore\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="SimpleShader.h">
-      <Filter>EECore\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Config.h">
-      <Filter>EECore\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ScriptManager.h">
       <Filter>EECore\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="pch.h">
@@ -293,14 +263,11 @@
     <ClInclude Include="FPSController.h">
       <Filter>EEScripts\Headers</Filter>
     </ClInclude>
-    <ClInclude Include="DecalHandler.h">
-      <Filter>EECore\Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="KeyboardEvent.h">
-      <Filter>EECore\Header Files\Keyboard</Filter>
+      <Filter>EECore\Header Files\Input\Keyboard</Filter>
     </ClInclude>
     <ClInclude Include="Keyboard.h">
-      <Filter>EECore\Header Files\Keyboard</Filter>
+      <Filter>EECore\Header Files\Input\Keyboard</Filter>
     </ClInclude>
     <ClInclude Include="Utility.h">
       <Filter>EECore\Utility</Filter>
@@ -333,22 +300,16 @@
       <Filter>EECore\Utility</Filter>
     </ClInclude>
     <ClInclude Include="Mouse.h">
-      <Filter>EECore\Header Files\Mouse</Filter>
+      <Filter>EECore\Header Files\Input\Mouse</Filter>
     </ClInclude>
     <ClInclude Include="MouseEvent.h">
-      <Filter>EECore\Header Files\Mouse</Filter>
+      <Filter>EECore\Header Files\Input\Mouse</Filter>
     </ClInclude>
     <ClInclude Include="BloodIcicle.h">
       <Filter>EEScripts\Headers</Filter>
     </ClInclude>
     <ClInclude Include="BloodSword.h">
       <Filter>EEScripts\Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="BehaviorTreeBuilder.h">
-      <Filter>EECore\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="BehaviorTree.h">
-      <Filter>EECore\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="EnemySeesPlayer.h">
       <Filter>EEBehaviors\Headers</Filter>
@@ -368,23 +329,11 @@
     <ClInclude Include="AmbientParticles.h">
       <Filter>EEScripts\Headers</Filter>
     </ClInclude>
-    <ClInclude Include="LightHandler.h">
-      <Filter>EECore\Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="GameManager.h">
       <Filter>EEScripts\Headers</Filter>
     </ClInclude>
     <ClInclude Include="BloodPool.h">
       <Filter>EEScripts\Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="Grid.h">
-      <Filter>EECore\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Node.h">
-      <Filter>EECore\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="PriorityQueue.h">
-      <Filter>EECore\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="InCombat.h">
       <Filter>EEBehaviors\Headers</Filter>
@@ -407,14 +356,71 @@
     <ClInclude Include="FindPlayer.h">
       <Filter>EEBehaviors\Headers</Filter>
     </ClInclude>
-    <ClInclude Include="NavmeshHandler.h">
-      <Filter>EECore\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="AStarSolver.h">
-      <Filter>EECore\Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="MainMenuManager.h">
       <Filter>EEScripts\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="AStarSolver.h">
+      <Filter>EECore\Header Files\AI</Filter>
+    </ClInclude>
+    <ClInclude Include="Grid.h">
+      <Filter>EECore\Header Files\AI</Filter>
+    </ClInclude>
+    <ClInclude Include="NavmeshHandler.h">
+      <Filter>EECore\Header Files\AI</Filter>
+    </ClInclude>
+    <ClInclude Include="PriorityQueue.h">
+      <Filter>EECore\Header Files\AI</Filter>
+    </ClInclude>
+    <ClInclude Include="Node.h">
+      <Filter>EECore\Header Files\AI</Filter>
+    </ClInclude>
+    <ClInclude Include="Config.h">
+      <Filter>EECore\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="BehaviorTree.h">
+      <Filter>EECore\Header Files\AI</Filter>
+    </ClInclude>
+    <ClInclude Include="BehaviorTreeBuilder.h">
+      <Filter>EECore\Header Files\AI</Filter>
+    </ClInclude>
+    <ClInclude Include="Camera.h">
+      <Filter>EECore\Header Files\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="DebugLines.h">
+      <Filter>EECore\Header Files\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="DecalHandler.h">
+      <Filter>EECore\Header Files\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="LightHandler.h">
+      <Filter>EECore\Header Files\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer.h">
+      <Filter>EECore\Header Files\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Collider.h">
+      <Filter>EECore\Header Files\Entity Component System</Filter>
+    </ClInclude>
+    <ClInclude Include="Entity.h">
+      <Filter>EECore\Header Files\Entity Component System</Filter>
+    </ClInclude>
+    <ClInclude Include="Material.h">
+      <Filter>EECore\Header Files\Entity Component System</Filter>
+    </ClInclude>
+    <ClInclude Include="Mesh.h">
+      <Filter>EECore\Header Files\Entity Component System</Filter>
+    </ClInclude>
+    <ClInclude Include="SceneLoader.h">
+      <Filter>EECore\Header Files\Entity Component System</Filter>
+    </ClInclude>
+    <ClInclude Include="ScriptManager.h">
+      <Filter>EECore\Header Files\Entity Component System</Filter>
+    </ClInclude>
+    <ClInclude Include="Transform.h">
+      <Filter>EECore\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SimpleShader.h">
+      <Filter>EECore\Header Files\Rendering</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -468,12 +474,6 @@
     <Filter Include="EEShaders\Geometry Shaders">
       <UniqueIdentifier>{ee0ab75f-3663-4ccb-bfa3-6b5a731e270d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="EECore\Header Files\Keyboard">
-      <UniqueIdentifier>{72ff7ae4-872c-4f1a-9a4a-cf79f1e2dad4}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="EECore\Source Files\Keyboard">
-      <UniqueIdentifier>{aa161763-d20f-462e-a089-4f34139a2f99}</UniqueIdentifier>
-    </Filter>
     <Filter Include="EEShaders\Headers">
       <UniqueIdentifier>{38885e00-7a45-4790-a0c0-d10b3ba76ced}</UniqueIdentifier>
     </Filter>
@@ -488,12 +488,6 @@
     </Filter>
     <Filter Include="EECore\Source Files\Particle System">
       <UniqueIdentifier>{3bc807bf-bb34-40c9-9b5b-e4b0e16b8ecb}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="EECore\Header Files\Mouse">
-      <UniqueIdentifier>{3bdc881b-405f-4590-884a-1e7d742290cf}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="EECore\Source Files\Mouse">
-      <UniqueIdentifier>{7b53909b-60ff-49bf-a1c8-616f0f49bd1d}</UniqueIdentifier>
     </Filter>
     <Filter Include="EEBehaviors">
       <UniqueIdentifier>{20ab4999-beb8-4190-b245-701c0506c4db}</UniqueIdentifier>
@@ -521,6 +515,42 @@
     </Filter>
     <Filter Include="EEShaders\Vertex Shaders\Particle System">
       <UniqueIdentifier>{199272bf-d11b-4187-b0f9-e77493b049aa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="EECore\Source Files\AI">
+      <UniqueIdentifier>{1c31049f-6786-4b78-890f-47e01d9208d6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="EECore\Header Files\AI">
+      <UniqueIdentifier>{f47ea7db-2fe9-4f38-a47f-bac2c4db99b8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="EECore\Header Files\Rendering">
+      <UniqueIdentifier>{3698b408-bdee-4078-9e01-32aae09b4690}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="EECore\Source Files\Rendering">
+      <UniqueIdentifier>{140d4851-94c9-41bb-8d22-f23e5e4baefa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="EECore\Header Files\Entity Component System">
+      <UniqueIdentifier>{a2595e68-26c4-4242-95ef-cc9122e7612a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="EECore\Source Files\Entity Component System">
+      <UniqueIdentifier>{37936d4e-ca35-425d-894c-878d3cc49b70}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="EECore\Header Files\Input">
+      <UniqueIdentifier>{929a64c4-24f5-4bf9-b63e-57c6cc625ec8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="EECore\Header Files\Input\Mouse">
+      <UniqueIdentifier>{3bdc881b-405f-4590-884a-1e7d742290cf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="EECore\Header Files\Input\Keyboard">
+      <UniqueIdentifier>{72ff7ae4-872c-4f1a-9a4a-cf79f1e2dad4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="EECore\Source Files\Input">
+      <UniqueIdentifier>{e3a17fb7-380a-4a0f-8d61-1a21daaec484}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="EECore\Source Files\Input\Mouse">
+      <UniqueIdentifier>{7b53909b-60ff-49bf-a1c8-616f0f49bd1d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="EECore\Source Files\Input\Keyboard">
+      <UniqueIdentifier>{aa161763-d20f-462e-a089-4f34139a2f99}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

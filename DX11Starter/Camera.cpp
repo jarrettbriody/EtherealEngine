@@ -63,6 +63,16 @@ XMFLOAT4X4* Camera::GetWorldMatrixPtr()
 	return &worldMatrix;
 }
 
+XMFLOAT4 Camera::GetRotationQuaternion()
+{
+	return quaternion;
+}
+
+void Camera::SetRotationQuaternion(XMFLOAT4 quat)
+{
+	quaternion = quat;
+}
+
 void Camera::SetProjMatrix(XMFLOAT4X4 pm)
 {
 	projMatrix = pm;
@@ -116,7 +126,8 @@ void Camera::CalcProjMatrix()
 
 void Camera::CalcWorldMatrix()
 {
-	XMVECTOR quat = XMQuaternionRotationRollPitchYaw(xRotation, yRotation, zRotation);
+	XMVECTOR quat = XMQuaternionNormalize(XMQuaternionRotationRollPitchYaw(xRotation, yRotation, zRotation));
+	XMStoreFloat4(&quaternion, quat);
 	DirectX::XMMATRIX rot = DirectX::XMMatrixRotationQuaternion(quat);
 	DirectX::XMMATRIX trans = DirectX::XMMatrixTranslation(position.x, position.y, position.z);
 	DirectX::XMMATRIX world = rot * trans;
@@ -144,9 +155,24 @@ void Camera::CalcViewMatrix()
 	XMStoreFloat3(&direction, newDir);
 	XMStoreFloat3(&right, rightVec);
 
+	/*
+		void Transform::CalcViewMatrix()
+		{
+			XMVECTOR pos = XMLoadFloat3(&position);
+			XMVECTOR d = XMLoadFloat3(&direction);
+			XMVECTOR u = XMLoadFloat3(&up);
+
+			XMMATRIX view = XMMatrixLookToLH(pos, d, u);
+			XMMATRIX inverseView = XMMatrixInverse(nullptr, view);
+
+			XMStoreFloat4x4(&viewMatrix, XMMatrixTranspose(view));
+			XMStoreFloat4x4(&invViewMatrix, XMMatrixTranspose(inverseView));
+		}
+	*/
+
 }
 
-void Camera::Update()
+void Camera::Update(double deltaTime)
 {
 	XMFLOAT3 zAxis(0.0f, 0.0f, 1.0f);
 	XMFLOAT3 yAxis(0.0f, 1.0f, 0.0f);
@@ -160,28 +186,28 @@ void Camera::Update()
 	if (Config::DebugCamera) {
 		//* Can now use the new input system instead!
 		if (GetAsyncKeyState('W') & 0x8000) {
-			pos = XMVectorAdd(pos, XMVectorScale(dir, 0.05f * scalar));
+			pos = XMVectorAdd(pos, XMVectorScale(dir, scalar * deltaTime));
 			XMStoreFloat3(&position, pos);
 		}
 		if (GetAsyncKeyState('S') & 0x8000) {
-			pos = XMVectorAdd(pos, XMVectorScale(dir, -0.05f * scalar));
+			pos = XMVectorAdd(pos, XMVectorScale(dir, -scalar * deltaTime));
 			XMStoreFloat3(&position, pos);
 		}
 		if (GetAsyncKeyState('A') & 0x8000) {
-			pos = XMVectorAdd(pos, XMVectorScale(rightVec, -0.05f * scalar));
+			pos = XMVectorAdd(pos, XMVectorScale(rightVec, -scalar * deltaTime));
 			XMStoreFloat3(&position, pos);
 		}
 		if (GetAsyncKeyState('D') & 0x8000) {
-			pos = XMVectorAdd(pos, XMVectorScale(rightVec, 0.05f * scalar));
+			pos = XMVectorAdd(pos, XMVectorScale(rightVec, scalar * deltaTime));
 			XMStoreFloat3(&position, pos);
 		}
 
 		if (GetAsyncKeyState(VK_SPACE) & 0x8000) {
-			pos = XMVectorAdd(pos, XMVectorScale(XMLoadFloat3(&yAxis), 0.05f));
+			pos = XMVectorAdd(pos, XMVectorScale(XMLoadFloat3(&yAxis), 0.5f * deltaTime));
 			XMStoreFloat3(&position, pos);
 		}
 		if (GetAsyncKeyState('X') & 0x8000) {
-			pos = XMVectorAdd(pos, XMVectorScale(XMLoadFloat3(&yAxis), -0.05f));
+			pos = XMVectorAdd(pos, XMVectorScale(XMLoadFloat3(&yAxis), -0.5f * deltaTime));
 			XMStoreFloat3(&position, pos);
 		}
 		if (GetAsyncKeyState('K') & 0x8000) {

@@ -30,7 +30,7 @@ cbuffer lightCBuffer : register(b0)
 
 cbuffer externalData : register(b1) {
 	int illumination;
-	//float brightness;
+	float brightness;
 	int specularValue;
 	float3 manualColor;
 	matrix worldMatrix;
@@ -156,25 +156,29 @@ float4 main(VertexToPixel input) : SV_TARGET
 
 	float3 toCameraVector = normalize(cameraPos - input.worldPos);
 
+	//float3 finalColor = (surfaceColor * 0.1f) * shadowAmount + (surfaceColor * 0.01f);
 
-	float3 finalColor = (surfaceColor * 0.1f) * shadowAmount + (surfaceColor * 0.01f);
-	/*
+	float3 ddxWp = ddx_fine(worldPos);
+	float3 ddyWp = ddy_fine(worldPos);
+	float3 normal = normalize(cross(ddxWp, ddyWp));
+
 	float3 finalColor = float3(0.f, 0.f, 0.f);
 	for (int i = 0; i < lightCount; i++)
 	{
 		switch (lights[i].Type) {
 		case LIGHT_TYPE_DIR:
-			finalColor += (CalcDirectionalLight(surfaceColor, input.normal, lights[i], toCameraVector, specularValue, shadowAmount, brightness));
+			finalColor += (CalcDirectionalLight(surfaceColor, normal, lights[i], toCameraVector, specularValue, shadowAmount, brightness));
 			break;
 		case LIGHT_TYPE_POINT:
-			finalColor += (CalcPointLight(surfaceColor, input.normal, lights[i], toCameraVector, specularValue, input.worldPos, brightness));
+			finalColor += (CalcPointLight(surfaceColor, normal, lights[i], toCameraVector, specularValue, worldPos, brightness));
 			break;
 		case LIGHT_TYPE_SPOT:
-			finalColor += (CalcSpotLight(surfaceColor, input.normal, lights[i], toCameraVector, specularValue, input.worldPos, brightness));
+			finalColor += (CalcSpotLight(surfaceColor, normal, lights[i], toCameraVector, specularValue, worldPos, brightness));
 			break;
 		}
 	}
-	*/
+
+	finalColor += (surfaceColor * 0.01f);
 
 	float3 gammaCorrect = pow(abs(finalColor), 1.0f / 2.2f);
 

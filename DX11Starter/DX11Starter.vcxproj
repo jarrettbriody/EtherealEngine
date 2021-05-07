@@ -191,6 +191,7 @@
     <ClCompile Include="ScriptManager.cpp" />
     <ClCompile Include="SeekPlayer.cpp" />
     <ClCompile Include="SimpleShader.cpp" />
+    <ClCompile Include="Transform.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AmbientParticles.h" />
@@ -249,6 +250,7 @@
     <ClInclude Include="SeekPlayer.h" />
     <ClInclude Include="SimpleShader.h" />
     <ClInclude Include="TestBehavior.h" />
+    <ClInclude Include="Transform.h" />
     <ClInclude Include="Utility.h" />
     <ClInclude Include="Vertex.h" />
   </ItemGroup>

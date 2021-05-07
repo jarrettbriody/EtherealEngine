@@ -35,38 +35,38 @@ using namespace DirectX;
 class Entity
 {
 private:
-	DirectX::XMFLOAT4X4 worldMatrix;
-	DirectX::XMFLOAT4X4 invWorldMatrix;
+	DirectX::XMFLOAT4X4 worldMatrix = MATRIX_IDENTITY;
+	DirectX::XMFLOAT4X4 invWorldMatrix = MATRIX_IDENTITY;
 
 	Mesh* mesh = nullptr;
 	Material* material = nullptr;
 
-	DirectX::XMFLOAT4 quaternion;
-	DirectX::XMFLOAT3 position;
-	DirectX::XMFLOAT3 scale;
-	DirectX::XMFLOAT3 rotation;
-	DirectX::XMFLOAT3 rotationInDegrees;
+	DirectX::XMFLOAT4 quaternion = QUATERNION_IDENTITY;
+	DirectX::XMFLOAT3 position = ZERO_VECTOR3;
+	DirectX::XMFLOAT3 scale = ONE_VECTOR3;
+	DirectX::XMFLOAT3 rotation = ZERO_VECTOR3;
+	DirectX::XMFLOAT3 rotationInDegrees = ZERO_VECTOR3;
 	XMFLOAT4X4* parentWorld = nullptr;
 
-	XMFLOAT3 direction;
-	XMFLOAT3 up;
-	XMFLOAT3 right;
+	XMFLOAT3 direction = Z_AXIS;
+	XMFLOAT3 up = Y_AXIS;
+	XMFLOAT3 right = X_AXIS;
 
-	DirectX::XMFLOAT2 repeatTex;
-	XMFLOAT2 uvOffset;
+	DirectX::XMFLOAT2 repeatTex = ONE_VECTOR2;
+	XMFLOAT2 uvOffset = ZERO_VECTOR2;
 	map<string, Material*>* materialMap = nullptr;
 	unsigned int meshMaterialIndex = 0;
-	EEString<EESTRING_SIZE> name;
+	EEString<EESTRING_SIZE> name = "";
 	vector<Entity*>* children = nullptr;
 	Entity* parent = nullptr;
 	vector<Collider*>* colliders = nullptr;
 
 	bool shadowsEnabled = true;
-	ShadowData shadowData;
+	ShadowData shadowData = {};
 
-	DepthStencilData depthStencilData;
+	DepthStencilData depthStencilData = {};
 
-	float mass;
+	float mass = 0.0f;
 
 	btCompoundShape* compoundShape = nullptr;
 	btCollisionShape** collShape = nullptr;
@@ -74,7 +74,7 @@ private:
 
 	int colliderCnt = 0;
 
-	PhysicsWrapper pWrap;
+	PhysicsWrapper pWrap = {};
 
 	unsigned int tagCount = 0;
 	unsigned int layerCount = 0;

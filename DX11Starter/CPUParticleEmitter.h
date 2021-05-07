@@ -4,6 +4,8 @@
 #include "MemoryAllocator.h"
 #include "PhysicsWrapper.h"
 
+using namespace DirectX;
+
 struct DefaultCPUParticleShaders {
 	SimpleVertexShader* particleVS;
 	SimplePixelShader* particlePS;

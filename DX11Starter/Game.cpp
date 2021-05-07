@@ -210,6 +210,7 @@ void Game::Init()
 	cpuParticleShaders.particlePS = EESceneLoader->PixelShadersMap["CPUParticle"];
 	CPUParticleEmitter::SetDefaultShaders(cpuParticleShaders);
 
+	/*
 	ParticleEmitterDescription emitDesc;
 	//emitDesc.parentName = "FPSController";
 	//emitDesc.parentWorld = EESceneLoader->sceneEntitiesMap["FPSController"]->GetWorldMatrixPtr();
@@ -290,6 +291,7 @@ void Game::Init()
 	emitDesc.particleMinLifetime = 2.0f;
 	emitDesc.particleMaxLifetime = 3.0f;
 	new GPUParticleEmitter(emitDesc);
+	*/
 
 	Entity* e;
 	for (size_t i = 0; i < EESceneLoader->SceneEntities.size(); i++)
@@ -402,7 +404,7 @@ void Game::Update(double deltaTime, double totalTime)
 
 	GarbageCollect();
 
-	EECamera->Update();
+	EECamera->Update(deltaTime);
 
 	PhysicsStep(deltaTime);
 
@@ -485,7 +487,7 @@ void Game::Update(double deltaTime, double totalTime)
 		}
 	}
 
-	EECamera->Update();
+	EECamera->Update(deltaTime);
 
 	//EEDecalHandler->UpdateDecals();
 
@@ -663,6 +665,8 @@ void Game::Draw(double deltaTime, double totalTime)
 	EERenderer->RenderTransparents();
 
 	EERenderer->RenderPostProcess();
+
+	EERenderer->RenderUI();
 
 	EERenderer->PresentFrame();
 }

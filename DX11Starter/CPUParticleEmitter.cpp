@@ -3,6 +3,8 @@
 
 DefaultCPUParticleShaders CPUParticleEmitter::defaultShaders;
 
+using namespace DirectX;
+
 void CPUParticleEmitter::SetDefaultShaders(DefaultCPUParticleShaders s)
 {
 	defaultShaders = s;
@@ -192,12 +194,15 @@ void CPUParticleEmitter::SetCollisionsEnabled(void(*collisionCallback)(void* ptr
 
 			btTransform transform;
 			transform.setIdentity();
+
+			/*
 			transform.setOrigin(btVector3(0.0f, 0.0f, 0.0f));
 			btQuaternion qx = btQuaternion(btVector3(1.0f, 0.0f, 0.0f), 0.0f);
 			btQuaternion qy = btQuaternion(btVector3(0.0f, 1.0f, 0.0f), 0.0f);
 			btQuaternion qz = btQuaternion(btVector3(0.0f, 0.0f, 1.0f), 0.0f);
 			btQuaternion res = qz * qy * qx;
 			transform.setRotation(res);
+			*/
 
 			particlePhysicsPool[i].ghostObject = new btGhostObject();
 			particlePhysicsPool[i].ghostObject->setCollisionFlags(particlePhysicsPool[i].ghostObject->getCollisionFlags() | btCollisionObject::CF_NO_CONTACT_RESPONSE);
@@ -268,11 +273,14 @@ void CPUParticleEmitter::Update(double deltaTime, double totalTime, XMFLOAT4X4 v
 		// Adjust time counter
 		emitTimeCounter = fmod(emitTimeCounter, emissionRate);
 
-		float randNum;
+		float randNum1;
 		float randNum2;
 		float randNum3;
 		float randNum4;
 		float randNum5;
+		float randNum6;
+		float randNum7;
+		float randNum8;
 		unsigned int newParticleIndex;
 		float speed;
 		float randomOffset;
@@ -282,11 +290,14 @@ void CPUParticleEmitter::Update(double deltaTime, double totalTime, XMFLOAT4X4 v
 
 		for (size_t i = 0; i < emitCount; i++)
 		{
-			randNum = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+			randNum1 = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
 			randNum2 = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
 			randNum3 = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
 			randNum4 = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
 			randNum5 = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+			randNum6 = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+			randNum7 = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+			randNum8 = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
 
 			// Grab a single index from the dead list
 			if (deadListCount == 0) break;
@@ -302,7 +313,7 @@ void CPUParticleEmitter::Update(double deltaTime, double totalTime, XMFLOAT4X4 v
 			bool isColor = false;
 			for (int j = 0; j < colorCount; j++)
 			{
-				if (randNum3 <= colors[j].weight) {
+				if (randNum1 <= colors[j].weight) {
 					newParticle.color = colors[j].color;
 					newParticle.originalTransparency = colors[j].color.w;
 					isColor = true;
@@ -312,7 +323,7 @@ void CPUParticleEmitter::Update(double deltaTime, double totalTime, XMFLOAT4X4 v
 			if (!isColor) {
 				for (int j = 0; j < textureCount; j++)
 				{
-					if (randNum3 <= textures[j].weight) {
+					if (randNum1 <= textures[j].weight) {
 						newParticle.textureIndex = j;
 						newParticle.transparency = textures[j].transparency;
 						newParticle.originalTransparency = textures[j].transparency;
@@ -321,20 +332,27 @@ void CPUParticleEmitter::Update(double deltaTime, double totalTime, XMFLOAT4X4 v
 				}
 			}
 
-			speed = particleInitMinSpeed + (particleInitMaxSpeed - particleInitMinSpeed) * randNum5;
-			randomOffset = randNum * 2.0f - 1.0f;
-			randomOffset2 = randNum2 * 2.0f - 1.0f;
+			speed = particleInitMinSpeed + (particleInitMaxSpeed - particleInitMinSpeed) * randNum2;
+			randomOffset = randNum3 * 2.0f - 1.0f;
+			randomOffset2 = randNum4 * 2.0f - 1.0f;
 
-			start = XMFLOAT3(randomOffset * emissionStartRadius, randomOffset2 * emissionStartRadius, 0.0f);
-			end = XMFLOAT3(randomOffset * emissionEndRadius, randomOffset2 * emissionEndRadius, 1.0f);
+			//float dirRand = RandNums.Consume();
+			//float3 start = normalize(float3(randomOffset, randomOffset2, 0.0f)) * (emissionStartRadius * dirRand);
+			//float3 end = float3(normalize(float2(randomOffset, randomOffset2)) * (emissionEndRadius * dirRand), 1.0f);
 
-			newParticle.remainingLife = particleMinLifetime + (particleMaxLifetime - particleMinLifetime) * randNum;
+			//start = XMFLOAT3(randomOffset * emissionStartRadius, randomOffset2 * emissionStartRadius, 0.0f);
+			XMStoreFloat3(&start, XMVectorScale((XMVector3Normalize(XMVectorSet(randomOffset, randomOffset2, 0, 0))), emissionStartRadius * randNum5));
+			//end = XMFLOAT3(randomOffset * emissionEndRadius, randomOffset2 * emissionEndRadius, 1.0f);
+			XMStoreFloat3(&end, XMVectorScale((XMVector2Normalize(XMVectorSet(randomOffset, randomOffset2, 0, 0))), emissionEndRadius * randNum5));
+			end.z = 1.0f;
+
+			newParticle.remainingLife = particleMinLifetime + (particleMaxLifetime - particleMinLifetime) * randNum6;
 			newParticle.originalRemainingLife = newParticle.remainingLife;
 			newParticle.position = start;
-			newParticle.scale = particleInitMinScale + (particleInitMaxScale - particleInitMinScale) * randNum4;
+			newParticle.scale = particleInitMinScale + (particleInitMaxScale - particleInitMinScale) * randNum7;
 			DirectX::XMStoreFloat3(&newParticle.velocity, XMVectorScale(XMVector3Normalize(XMVectorSubtract(XMLoadFloat3(&end), XMLoadFloat3(&start))), speed));
 			newParticle.rotationRadians = 0.0f;
-			newParticle.angularVelocity = particleInitMinAngularVelocity + (particleInitMaxAngularVelocity - particleInitMinAngularVelocity) * randNum;
+			newParticle.angularVelocity = particleInitMinAngularVelocity + (particleInitMaxAngularVelocity - particleInitMinAngularVelocity) * randNum8;
 			newParticle.acceleration = particleAcceleration;
 
 			newParticle.worldMatBaked = (int)bakeWorldMatOnEmission;
@@ -343,7 +361,8 @@ void CPUParticleEmitter::Update(double deltaTime, double totalTime, XMFLOAT4X4 v
 				XMVECTOR vel = XMLoadFloat3(&newParticle.velocity);
 				XMVECTOR accel = XMLoadFloat3(&newParticle.acceleration);
 				pos.m128_f32[3] = 1.0f;
-				vel.m128_f32[3], accel.m128_f32[3] = 0.0f;
+				vel.m128_f32[3] = 0.0f;
+				accel.m128_f32[3] = 0.0f;
 				XMMATRIX world = XMMatrixTranspose(XMLoadFloat4x4(&worldMatrix));
 				XMStoreFloat3(&newParticle.position, XMVector4Transform(pos, world));
 				XMStoreFloat3(&newParticle.velocity, XMVector4Transform(vel, world));
@@ -358,7 +377,7 @@ void CPUParticleEmitter::Update(double deltaTime, double totalTime, XMFLOAT4X4 v
 				transform.setIdentity();
 				XMVECTOR particlePos = XMLoadFloat3(&newParticle.position);
 				particlePos.m128_f32[3] = 1.0f;
-				XMVECTOR pos = XMVector4Transform(particlePos, XMMatrixTranspose(XMLoadFloat4x4(&worldMatrix)));
+				XMVECTOR pos = (newParticle.worldMatBaked) ? particlePos : XMVector4Transform(particlePos, XMMatrixTranspose(XMLoadFloat4x4(&worldMatrix)));
 				btVector3 transformPos = btVector3(pos.m128_f32[0], pos.m128_f32[1], pos.m128_f32[2]);
 				transform.setOrigin(transformPos);
 
@@ -437,7 +456,7 @@ void CPUParticleEmitter::Update(double deltaTime, double totalTime, XMFLOAT4X4 v
 				transform.setIdentity();
 				XMVECTOR particlePos = XMLoadFloat3(&particle.position);
 				particlePos.m128_f32[3] = 1.0f;
-				XMVECTOR pos = XMVector4Transform(particlePos, XMMatrixTranspose(XMLoadFloat4x4(&worldMatrix)));
+				XMVECTOR pos = (particle.worldMatBaked) ? particlePos : XMVector4Transform(particlePos, XMMatrixTranspose(XMLoadFloat4x4(&worldMatrix)));
 				btVector3 transformPos = btVector3(pos.m128_f32[0], pos.m128_f32[1], pos.m128_f32[2]);
 				transform.setOrigin(transformPos);
 

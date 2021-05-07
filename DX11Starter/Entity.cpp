@@ -16,18 +16,6 @@ Entity::Entity(string entityName)
 	ZeroMemory(layers, MAX_ENTITY_LAYER_COUNT * sizeof(EEString<EESTRING_SIZE>));
 	
 	name = entityName;
-	position = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
-	scale = DirectX::XMFLOAT3(1.0f, 1.0f, 1.0f);
-	rotation = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
-	direction = Z_AXIS;
-	up = Y_AXIS;
-	right = X_AXIS;
-	rotationInDegrees = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
-	XMVECTOR quat = XMQuaternionRotationRollPitchYaw(rotation.x, rotation.y, rotation.z);
-	XMStoreFloat4(&quaternion, XMQuaternionNormalize(quat));
-	repeatTex = XMFLOAT2(1.0f, 1.0f);
-	DirectX::XMMATRIX W = DirectX::XMMatrixIdentity();
-	DirectX::XMStoreFloat4x4(&worldMatrix, XMMatrixTranspose(W));
 	isEmptyObj = true;
 }
 
@@ -41,18 +29,6 @@ Entity::Entity(string entityName, Mesh* entityMesh, Material* mat)
 
 	mesh = entityMesh;
 	name = entityName;
-	position = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
-	scale = DirectX::XMFLOAT3(1.0f, 1.0f, 1.0f);
-	rotation = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
-	direction = Z_AXIS;
-	up = Y_AXIS;
-	right = X_AXIS;
-	rotationInDegrees = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
-	XMVECTOR quat = XMQuaternionRotationRollPitchYaw(rotation.x, rotation.y, rotation.z);
-	XMStoreFloat4(&quaternion, XMQuaternionNormalize(quat));
-	repeatTex = XMFLOAT2(1.0f, 1.0f);
-	DirectX::XMMATRIX W = DirectX::XMMatrixIdentity();
-	DirectX::XMStoreFloat4x4(&worldMatrix, XMMatrixTranspose(W));
 	if (mat != nullptr)
 		materialMap->insert({ mat->GetName(), mat });
 }
@@ -146,6 +122,7 @@ void Entity::operator=(const Entity& e)
 	colliderCnt = e.colliderCnt;
 	renderObject = e.renderObject;
 	pWrap = e.pWrap;
+	hbaoPlusEnabled = e.hbaoPlusEnabled;
 }
 
 void Entity::InitRigidBody(BulletColliderShape shape, float entityMass, bool zeroObjects)

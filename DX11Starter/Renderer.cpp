@@ -669,6 +669,19 @@ void Renderer::RenderDecals()
 
 		shaders.decalPS->SetSamplerState("ShadowSampler", shadowComponents.Sampler);
 		shaders.decalPS->SetFloat3("cameraPos", camera->position);
+		shaders.decalPS->SetFloat("brightness", Config::SceneBrightness);
+
+		shaders.decalPS->SetData(
+			"lights",
+			&EELightHandler->DrawList,
+			sizeof(EELightHandler->DrawList)
+		);
+		shaders.decalPS->SetData(
+			"lightCount",
+			&EELightHandler->DrawCount,
+			sizeof(EELightHandler->DrawCount)
+		);
+
 		shaders.decalPS->SetData("decalLayerMask", &Config::EntityLayers["decal"], sizeof(unsigned int));
 
 		XMFLOAT4X4 world;
@@ -1153,7 +1166,13 @@ void Renderer::RenderPostProcess()
 
 void Renderer::RenderUI()
 {
+	if (!uiComponents.enabled) return;
 
+	for (size_t i = 0; i < MAX_UI_CALLBACKS; i++)
+	{
+		if(uiComponents.UICallbacks[i] != nullptr)
+			uiComponents.UICallbacks[i]->CallbackFunc();
+	}
 }
 
 bool Renderer::AddCamera(string name, Camera* newCamera)

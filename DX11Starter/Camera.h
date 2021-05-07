@@ -20,6 +20,7 @@ private:
 	float farClip = 2000.0f;
 	Mouse* mouse;
 	POINT prevMousePos;
+	XMFLOAT4 quaternion;
 public:
 	XMFLOAT3 position;
 	XMFLOAT3 direction;
@@ -36,6 +37,8 @@ public:
 	XMFLOAT4X4 GetWorldMatrix();
 	XMFLOAT4X4 GetInvWorldMatrix();
 	XMFLOAT4X4* GetWorldMatrixPtr();
+	XMFLOAT4 GetRotationQuaternion();
+	void SetRotationQuaternion(XMFLOAT4 quat);
 	void SetProjMatrix(XMFLOAT4X4 pm);
 	void SetViewMatrix(XMFLOAT4X4 vm);
 	void RotateCamera(float x, float y, float z = 0.0f);
@@ -44,6 +47,6 @@ public:
 	void CalcWorldMatrix();
 	void CalcViewMatrix();
 	void CalcProjMatrix();
-	void Update();
+	void Update(double deltaTime);
 };
 
