@@ -244,6 +244,10 @@ void MainMenuManager::Update()
 
 		uiCb.transparency += scalar * deltaTime;
 		if (uiCb.transparency > 1.0f) uiCb.transparency = 1.0f;
+		if(uiCb.transparency == 1.0f && ((totalTime - firedTime) > 2.0f)) {
+			uiCb.otherTransparency += scalar * deltaTime;
+			if (uiCb.otherTransparency > 1.0f) uiCb.otherTransparency = 1.0f;
+		}
 	}
 	if (GetAsyncKeyState(VK_DOWN))
 	{
@@ -252,7 +256,16 @@ void MainMenuManager::Update()
 		
 		uiCb.transparency -= scalar * deltaTime;
 		if (uiCb.transparency < 0.0f) uiCb.transparency = 0.0f;
+		uiCb.otherTransparency -= scalar * deltaTime;
+		if (uiCb.otherTransparency < 0.0f) uiCb.otherTransparency = 0.0f;
 	}
+	
+	if (rotCounter < 5) {
+		if ((totalTime - rotTimeStamp) > timeOffsetsRotation[rotCounter]) {
+			rotCounter++;
+		}
+	}
+	
 }
 
 MainMenuManager::~MainMenuManager()

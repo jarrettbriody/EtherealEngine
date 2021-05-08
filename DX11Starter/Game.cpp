@@ -210,7 +210,6 @@ void Game::Init()
 	cpuParticleShaders.particlePS = EESceneLoader->PixelShadersMap["CPUParticle"];
 	CPUParticleEmitter::SetDefaultShaders(cpuParticleShaders);
 
-	/*
 	ParticleEmitterDescription emitDesc;
 	//emitDesc.parentName = "FPSController";
 	//emitDesc.parentWorld = EESceneLoader->sceneEntitiesMap["FPSController"]->GetWorldMatrixPtr();
@@ -291,7 +290,6 @@ void Game::Init()
 	emitDesc.particleMinLifetime = 2.0f;
 	emitDesc.particleMaxLifetime = 3.0f;
 	new GPUParticleEmitter(emitDesc);
-	*/
 
 	Entity* e;
 	for (size_t i = 0; i < EESceneLoader->SceneEntities.size(); i++)

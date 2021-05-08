@@ -23,6 +23,7 @@ private:
 
 public:
 	XMFLOAT3 rotation = ZERO_VECTOR3;
+	XMFLOAT4 quaternion = QUATERNION_IDENTITY;
 	Camera();
 	~Camera();
 	Transform& GetTransform();

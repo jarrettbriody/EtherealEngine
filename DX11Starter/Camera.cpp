@@ -129,6 +129,7 @@ void Camera::CalcViewMatrix()
 	XMStoreFloat3(&newDire, newDir);
 	XMStoreFloat3(&newR, rightVec);
 	XMStoreFloat3(&newU, rightVec);
+	quaternion = quater;
 	//transform.SetDirectionVectorUR(newDire, newU, newR);
 }
 
