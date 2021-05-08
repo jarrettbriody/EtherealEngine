@@ -148,27 +148,33 @@ void Camera::Update(double deltaTime)
 		if (GetAsyncKeyState('W') & 0x8000) {
 			pos = XMVectorAdd(pos, XMVectorScale(dir, scalar * deltaTime));
 			XMStoreFloat3(&newPos, pos);
+			transform.SetPosition(newPos);
 		}
 		if (GetAsyncKeyState('S') & 0x8000) {
 			pos = XMVectorAdd(pos, XMVectorScale(dir, -scalar * deltaTime));
 			XMStoreFloat3(&newPos, pos);
+			transform.SetPosition(newPos);
 		}
 		if (GetAsyncKeyState('A') & 0x8000) {
 			pos = XMVectorAdd(pos, XMVectorScale(right, -scalar * deltaTime));
 			XMStoreFloat3(&newPos, pos);
+			transform.SetPosition(newPos);
 		}
 		if (GetAsyncKeyState('D') & 0x8000) {
 			pos = XMVectorAdd(pos, XMVectorScale(right, scalar * deltaTime));
 			XMStoreFloat3(&newPos, pos);
+			transform.SetPosition(newPos);
 		}
 
 		if (GetAsyncKeyState(VK_SPACE) & 0x8000) {
 			pos = XMVectorAdd(pos, XMVectorScale(up, 0.5f * deltaTime));
 			XMStoreFloat3(&newPos, pos);
+			transform.SetPosition(newPos);
 		}
 		if (GetAsyncKeyState('X') & 0x8000) {
 			pos = XMVectorAdd(pos, XMVectorScale(up, -0.5f * deltaTime));
 			XMStoreFloat3(&newPos, pos);
+			transform.SetPosition(newPos);
 		}
 		if (GetAsyncKeyState('K') & 0x8000) {
 			RotateCamera(0, 0, 1);
@@ -188,7 +194,6 @@ void Camera::Update(double deltaTime)
 			prevMousePos.y = mouse->GetPosY();
 		}
 
-		transform.SetPosition(newPos);
 	}
 
 	CalcViewMatrix();

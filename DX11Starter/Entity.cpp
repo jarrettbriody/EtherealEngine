@@ -114,6 +114,7 @@ void Entity::operator=(const Entity& e)
 	renderObject = e.renderObject;
 	pWrap = e.pWrap;
 	hbaoPlusEnabled = e.hbaoPlusEnabled;
+
 }
 
 Transform& Entity::GetTransform()

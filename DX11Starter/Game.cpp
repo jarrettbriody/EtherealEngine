@@ -73,7 +73,7 @@ void Game::Init()
 {
 	//dont delete this, its for finding mem leaks
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-	//_CrtSetBreakAlloc(1048555);
+	//_CrtSetBreakAlloc(420);
 	//_CrtSetBreakAlloc(49892);
 
 	Config::hWnd = hWnd;
@@ -166,8 +166,8 @@ void Game::Init()
 
 	//EESceneLoader->LoadScene("ArenaV2");
 
-	EESceneLoader->SetModelPath("../../Assets/Models/Kamchatka/");
-	EESceneLoader->LoadScene("Kamchatka");
+	EESceneLoader->SetModelPath("../../Assets/Models/MainMenu/");
+	EESceneLoader->LoadScene("MainMenu");
 
 	EERenderer->SetShadowCascadeInfo(0, 4096, 0.1f, 2000.0f, 100.0f, 100.0f);
 	EERenderer->SetShadowCascadeInfo(1, 4096, 0.1f, 2000.0f, 250.0f, 250.0f);

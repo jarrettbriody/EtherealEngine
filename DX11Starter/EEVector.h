@@ -11,8 +11,8 @@ private:
 public:
 	EEVector(unsigned int preAlloc = 16) {
 		bufferSize = preAlloc;
-		buffer = new T[bufferSize];
-		ZeroMemory(buffer, sizeof(T) * bufferSize);
+		buffer = new T[preAlloc];
+		ZeroMemory(buffer, sizeof(T) * preAlloc);
 	};
 
 	~EEVector() {
@@ -23,7 +23,7 @@ public:
 		bufferSize = other.bufferSize;
 		count = other.count;
 		buffer = new T[bufferSize];
-		memcpy(buffer, other.buffer, sizeof(T) * other.bufferSize);
+		memcpy(buffer, other.buffer, sizeof(T) * bufferSize);
 	};
 
 	T& operator[] (const unsigned int index) {

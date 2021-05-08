@@ -14,7 +14,7 @@ struct uiCallback : Utility::Callback {
 	float windowHeightRatio;
 	POINT windowCenter;
 	float transparency = 0.0f;
-	void CallbackFunc() {
+	void Call() {
 
 		spriteBatch->Begin(SpriteSortMode_Deferred, Renderer::GetInstance()->blendState);
 

@@ -101,6 +101,31 @@ Transform::~Transform()
 {
 }
 
+void Transform::operator= (const Transform& other) {
+	flags = other.flags;
+
+	parent = other.parent;
+	parentWorld = other.parentWorld;
+	children = other.children;
+
+	worldMatrix = other.worldMatrix;
+	invWorldMatrix = other.invWorldMatrix;
+
+	position = other.position;
+
+	quaternion = other.quaternion;
+	rotation = other.rotation;
+	rotationInDegrees = other.rotationInDegrees;
+
+	scale = other.scale;
+
+	direction = other.direction;
+	up = other.up;
+	right = other.right;
+
+	updateCallback = nullptr;
+}
+
 void Transform::SetParent(Transform* parent, bool preserveChild)
 {
 	this->parent = parent;

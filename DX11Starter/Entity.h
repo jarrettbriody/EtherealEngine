@@ -36,7 +36,7 @@ using namespace DirectX;
 class Entity
 {
 private:
-	Transform eTransform = Transform();
+	Transform eTransform;
 
 	Mesh* mesh = nullptr;
 	Material* material = nullptr;

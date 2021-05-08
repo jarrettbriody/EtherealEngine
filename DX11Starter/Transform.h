@@ -53,6 +53,8 @@ public:
 	Transform(unsigned int flags = -1);
 	~Transform();
 
+	void operator= (const Transform& other);
+
 	void SetUpdateCallback(Callback* cb);
 
 	void SetParent(Transform* parent, bool preserveChild = true);
