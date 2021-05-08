@@ -4,7 +4,7 @@
 
 namespace Utility {
 	struct Callback {
-		virtual void CallbackFunc() {};
+		virtual void Call() {};
 	};
 
 	static void ParseFloat3FromString(std::string s, DirectX::XMFLOAT3& f) {

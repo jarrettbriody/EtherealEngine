@@ -430,8 +430,8 @@ void Entity::AddChild(Entity* child, bool preserveChild)
 	children->push_back(child);
 	child->parent = this;
 
-	child->eTransform.SetParent(&eTransform, preserveChild);
-	//eTransform.AddChild(&child->eTransform, preserveChild);
+	//child->eTransform.SetParent(&eTransform, preserveChild);
+	eTransform.AddChild(&child->eTransform, preserveChild);
 }
 
 void Entity::AddAutoBoxCollider()
@@ -441,11 +441,15 @@ void Entity::AddAutoBoxCollider()
 			Mesh** children = mesh->GetChildren();
 			for (size_t i = 0; i < mesh->GetChildCount(); i++)
 			{
-				colliders->push_back(new Collider(children[i], children[i]->GetVertices()));
+				Collider* coll = new Collider(children[i], children[i]->GetVertices());
+				colliders->push_back(coll);
+				eTransform.AddChild(&coll->GetTransform(), false);
 			}
 		}
 		else {
-			colliders->push_back(new Collider(mesh, mesh->GetVertices()));
+			Collider* coll = new Collider(mesh, mesh->GetVertices());
+			colliders->push_back(coll);
+			eTransform.AddChild(&coll->GetTransform(), false);
 		}
 	}
 	else {
@@ -541,10 +545,10 @@ btCompoundShape* Entity::GetBTCompoundShape(int index)
 
 void Entity::Update()
 {
-	for (size_t i = 0; i < colliders->size(); i++)
-	{
-		(*colliders)[i]->SetWorldMatrix(eTransform.GetWorldMatrix());
-	}
+	//for (size_t i = 0; i < colliders->size(); i++)
+	//{
+	//	(*colliders)[i]->Update(eTransform.GetWorldMatrix());
+	//}
 }
 
 float Entity::GetMass()

@@ -77,7 +77,7 @@ void Renderer::CalcShadowMatrices(unsigned int cascadeIndex)
 	// the light's point of view
 	LightContainer* sun = EELightHandler->GetLight("Sun");
 	XMFLOAT3 dir = sun->light.Direction;
-	XMFLOAT3 pos = camera->position;
+	XMFLOAT3 pos = camera->GetTransform().GetPosition();
 	pos.y = 0.0f;
 	XMStoreFloat3(&pos, XMVectorAdd(XMLoadFloat3(&sun->light.Position), XMLoadFloat3(&pos)));
 	XMMATRIX shadowView = XMMatrixTranspose(XMMatrixLookToLH(
@@ -545,6 +545,8 @@ void Renderer::RenderFrame()
 	if (!entities || !camera || renderObjectCount == 0)
 		return;
 
+	XMFLOAT3 camPos = camera->GetTransform().GetPosition();
+
 	UINT stride = sizeof(Vertex);
 	UINT offset = 0;
 
@@ -602,7 +604,7 @@ void Renderer::RenderFrame()
 				&EELightHandler->DrawCount,
 				sizeof(EELightHandler->DrawCount)
 			);
-			ps->SetFloat3("cameraPosition", camera->position);
+			ps->SetFloat3("cameraPosition", camPos);
 			lightsSentToShader.insert({ ps, true });
 		}
 
@@ -635,6 +637,7 @@ void Renderer::RenderFrame()
 
 void Renderer::RenderDecals()
 {
+	XMFLOAT3 camPos = camera->GetTransform().GetPosition();
 	UINT stride = sizeof(Vertex);
 	UINT offset = 0;
 	if (Config::DecalsEnabled) {
@@ -650,7 +653,7 @@ void Renderer::RenderDecals()
 		shaders.decalVS->SetShader();
 		shaders.decalPS->SetShader();
 
-		shaders.decalVS->SetFloat3("cameraPos", camera->position);
+		shaders.decalVS->SetFloat3("cameraPos", camPos);
 
 		//shaders.decalPS->SetMatrix4x4("shadowViewProj", shadowComponents.shadowViewProj);
 		shaders.decalPS->SetMatrix4x4("shadowView", shadowComponents.view);
@@ -668,7 +671,7 @@ void Renderer::RenderDecals()
 		}
 
 		shaders.decalPS->SetSamplerState("ShadowSampler", shadowComponents.Sampler);
-		shaders.decalPS->SetFloat3("cameraPos", camera->position);
+		shaders.decalPS->SetFloat3("cameraPos", camPos);
 		shaders.decalPS->SetFloat("brightness", Config::SceneBrightness);
 
 		shaders.decalPS->SetData(
@@ -909,12 +912,17 @@ void Renderer::RenderDepthStencil()
 
 	//Config::Context->RSSetState(depthStencilComponents.depthStencilRasterizer);
 
+	XMFLOAT4X4 camWorld;
+	XMFLOAT4X4 camView = camera->GetViewMatrix();
+	XMFLOAT4X4 camProj = camera->GetProjMatrix();
+	XMFLOAT3 camPos = camera->GetTransform().GetPosition();
+
 	// Set up the shaders
 	shaders.depthStencilVS->SetShader();
 	shaders.depthStencilPS->SetShader();
-	shaders.depthStencilVS->SetMatrix4x4("view", camera->GetViewMatrix());
-	shaders.depthStencilVS->SetMatrix4x4("projection", camera->GetProjMatrix());
-	shaders.depthStencilPS->SetFloat3("cameraPosition", camera->position);
+	shaders.depthStencilVS->SetMatrix4x4("view", camView);
+	shaders.depthStencilVS->SetMatrix4x4("projection", camProj);
+	shaders.depthStencilPS->SetFloat3("cameraPosition", camPos);
 
 	//Config::Context->PSSetShader(0, 0, 0); // Turns OFF the pixel shader
 
@@ -924,6 +932,7 @@ void Renderer::RenderDepthStencil()
 
 	unsigned int entityLayerMask;
 	//unsigned int callbackLayerMask = Config::EntityLayers["decal"];
+
 
 	for (int i = renderObjectCount - 1; i >= 0; i--)
 	{
@@ -953,8 +962,8 @@ void Renderer::RenderDepthStencil()
 			if (callback->active && callback->prepassVShader) {
 				callback->prepassVShader->SetShader();
 				callback->prepassVShader->SetMatrix4x4("world", e->GetTransform().GetWorldMatrix());
-				callback->prepassVShader->SetMatrix4x4("view", camera->GetViewMatrix());
-				callback->prepassVShader->SetMatrix4x4("projection", camera->GetProjMatrix());
+				callback->prepassVShader->SetMatrix4x4("view", camView);
+				callback->prepassVShader->SetMatrix4x4("projection", camProj);
 				callback->PrePrepassVertexShaderCallback();
 				callback->prepassVShader->CopyAllBufferData();
 			}
@@ -973,7 +982,7 @@ void Renderer::RenderDepthStencil()
 			if (callback->active && callback->prepassPShader) {
 				callback->prepassPShader->SetShader();
 				callback->prepassPShader->SetData("entityLayerMask", &entityLayerMask, sizeof(unsigned int));
-				callback->prepassPShader->SetFloat3("cameraPosition", camera->position);
+				callback->prepassPShader->SetFloat3("cameraPosition", camPos);
 				callback->PrePrepassPixelShaderCallback();
 				callback->prepassPShader->CopyAllBufferData();
 			}
@@ -1171,7 +1180,7 @@ void Renderer::RenderUI()
 	for (size_t i = 0; i < MAX_UI_CALLBACKS; i++)
 	{
 		if(uiComponents.UICallbacks[i] != nullptr)
-			uiComponents.UICallbacks[i]->CallbackFunc();
+			uiComponents.UICallbacks[i]->Call();
 	}
 }
 

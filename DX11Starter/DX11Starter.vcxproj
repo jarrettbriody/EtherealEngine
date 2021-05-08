@@ -211,6 +211,7 @@
     <ClInclude Include="DecalHandler.h" />
     <ClInclude Include="DXCore.h" />
     <ClInclude Include="EEString.h" />
+    <ClInclude Include="EEVector.h" />
     <ClInclude Include="EnemySeesPlayer.h" />
     <ClInclude Include="EnemyTest.h" />
     <ClInclude Include="Entity.h" />

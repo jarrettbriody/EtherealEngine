@@ -1,8 +1,14 @@
 #include "pch.h"
 #include "Collider.h"
 
+void ColliderUpdate::Call() {
+	((Collider*)collider)->Update();
+}
+
 Collider::Collider()
 {
+	callback.collider = (void*)this;
+	transform.SetUpdateCallback((Utility::Callback*)&callback);
 }
 
 Collider::Collider(Mesh* m, vector<XMFLOAT3> vertices)
@@ -67,18 +73,20 @@ Collider::Collider(Mesh* m, vector<XMFLOAT3> vertices)
 	{
 		pivotShiftedColliderCorners[i] = XMFLOAT3(untransformedColliderCorners[i].x, untransformedColliderCorners[i].y, untransformedColliderCorners[i].z);// - 2 * centerLocal.z);
 	}
+
+	callback.collider = (void*)this;
+	transform.SetUpdateCallback((Utility::Callback*)&callback);
 }
 
 Collider::~Collider()
 {
 }
 
-void Collider::SetWorldMatrix(XMFLOAT4X4 worldMat)
+void Collider::Update()
 {
 	//Assign the model matrix
-	worldMatrix = worldMat;
 
-	XMMATRIX calculableWorldMatrix = XMMatrixTranspose(XMLoadFloat4x4(&worldMat));
+	XMMATRIX calculableWorldMatrix = XMMatrixTranspose(XMLoadFloat4x4(&transform.GetWorldMatrix()));
 
 	//back square
 	colliderCorners[0] = minLocal;
@@ -336,11 +344,6 @@ XMFLOAT3* Collider::GetPivotShiftedColliderCorners()
 	return pivotShiftedColliderCorners;
 }
 
-XMFLOAT4X4 Collider::GetWorldMatrix()
-{
-	return worldMatrix;
-}
-
 XMFLOAT3 Collider::GetSpan() 
 {
 	return span;
@@ -369,4 +372,9 @@ XMFLOAT3 Collider::GetCenterGlobal()
 string Collider::GetName()
 {
 	return name;
+}
+
+Transform& Collider::GetTransform()
+{
+	return transform;
 }

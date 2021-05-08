@@ -1,9 +1,12 @@
 #pragma once
 #include "pch.h"
 #include "Config.h"
+#include "EEVector.h"
+#include "Utility.h"
 
 using namespace DirectX;
 using namespace std;
+using namespace Utility;
 
 enum class TRANSFORM_FLAGS {
 	ALL = 0 - 1,
@@ -21,16 +24,10 @@ private:
 
 	Transform* parent = nullptr;
 	XMFLOAT4X4* parentWorld = nullptr;
-	//vector<Transform*>* children = nullptr;
+	EEVector<Transform*> children;
 
 	XMFLOAT4X4 worldMatrix = MATRIX_IDENTITY;
 	XMFLOAT4X4 invWorldMatrix = MATRIX_IDENTITY;
-
-	XMFLOAT4X4 viewMatrix = MATRIX_IDENTITY;
-	XMFLOAT4X4 invViewMatrix = MATRIX_IDENTITY;
-
-	XMFLOAT4X4 projectionMatrix = MATRIX_IDENTITY;
-	XMFLOAT4X4 invProjectionMatrix = MATRIX_IDENTITY;
 
 	XMFLOAT3 position = ZERO_VECTOR3;
 
@@ -44,6 +41,8 @@ private:
 	XMFLOAT3 up = Y_AXIS;
 	XMFLOAT3 right = X_AXIS;
 
+	Callback* updateCallback = nullptr;
+
 	void CalcPosRotScale();
 	void CalcEulerAngles();
 	void CalcQuaternion();
@@ -51,12 +50,14 @@ private:
 	void CalcWorldMatrix();
 
 public:
-	Transform(TRANSFORM_FLAGS flags = TRANSFORM_FLAGS::ALL);
+	Transform(unsigned int flags = -1);
 	~Transform();
+
+	void SetUpdateCallback(Callback* cb);
 
 	void SetParent(Transform* parent, bool preserveChild = true);
 	void SetParent(XMFLOAT4X4* parent, bool preserveChild = true);
-	//void AddChild(Transform* child, bool preserveChild = true);
+	void AddChild(Transform* child, bool preserveChild = true);
 
 	void SetWorldMatrix(XMFLOAT4X4 matrix);
 	XMFLOAT4X4 GetWorldMatrix();

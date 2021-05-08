@@ -21,7 +21,7 @@ void Transform::CalcPosRotScale()
 
 void Transform::CalcEulerAngles()
 {
-	XMVECTOR q = XMLoadFloat4(&quaternion);
+	XMVECTOR q = XMQuaternionNormalize(XMLoadFloat4(&quaternion));
 
 	XMFLOAT3 x = X_AXIS;
 	XMFLOAT3 y = Y_AXIS;
@@ -82,21 +82,23 @@ void Transform::CalcWorldMatrix()
 
 	XMStoreFloat4x4(&invWorldMatrix, XMMatrixTranspose(XMMatrixInverse(nullptr, world)));
 
-	//for (size_t i = 0; i < children->size(); i++)
-	//{
-	//	(*children)[i]->CalcWorldMatrix();
-	//}
+	for (size_t i = 0; i < children.Count(); i++)
+	{
+		children[i]->CalcWorldMatrix();
+	}
+
+	if (updateCallback != nullptr) {
+		updateCallback->Call();
+	}
 }
 
-Transform::Transform(TRANSFORM_FLAGS flags)
+Transform::Transform(unsigned int flags)
 {
-	this->flags = (unsigned int)flags;
-	//children = new vector<Transform*>();
+	this->flags = flags;
 }
 
 Transform::~Transform()
 {
-	//delete children;
 }
 
 void Transform::SetParent(Transform* parent, bool preserveChild)
@@ -123,11 +125,16 @@ void Transform::SetParent(XMFLOAT4X4* parent, bool preserveChild)
 	CalcWorldMatrix();
 }
 
-//void Transform::AddChild(Transform* child, bool preserveChild)
-//{
-//	(*children).push_back(child);
-//	child->SetParent(this, preserveChild);
-//}
+void Transform::AddChild(Transform* child, bool preserveChild)
+{
+	children.Push(child);
+	child->SetParent(this, preserveChild);
+}
+
+void Transform::SetUpdateCallback(Callback* cb)
+{
+	updateCallback = cb;
+}
 
 void Transform::SetWorldMatrix(XMFLOAT4X4 matrix)
 {
@@ -286,9 +293,9 @@ void Transform::RotateAroundAxis(XMFLOAT3 axis, float scalar)
 {
 	if ((flags | (unsigned int)TRANSFORM_FLAGS::ROTATION) == flags) {
 		XMVECTOR a = XMLoadFloat3(&axis);
-		XMVECTOR quat = XMQuaternionRotationAxis(a, scalar);
-		XMVECTOR existingQuat = XMLoadFloat4(&quaternion);
-		XMVECTOR result = XMQuaternionMultiply(XMQuaternionNormalize(quat), existingQuat);
+		XMVECTOR quat = XMQuaternionNormalize(XMQuaternionRotationAxis(a, scalar));
+		XMVECTOR existingQuat = XMQuaternionNormalize(XMLoadFloat4(&quaternion));
+		XMVECTOR result = XMQuaternionMultiply(quat, existingQuat);
 		XMStoreFloat4(&quaternion, XMQuaternionNormalize(result));
 
 		CalcEulerAngles();

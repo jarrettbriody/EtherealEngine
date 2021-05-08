@@ -16,7 +16,7 @@ void BloodSword::Init()
 	ss = SwordState::Idle;
 	
 	// starting positioning
-	entity->GetTransform().SetParent(cam->GetWorldMatrixPtr());
+	entity->GetTransform().SetParent(cam->GetTransform().GetWorldMatrixPtr());
 	
 	finalLerpPos = originalLerpPos;
 	lerpPositionFrom = finalLerpPos; 
@@ -198,7 +198,7 @@ void BloodSword::Update()
 
 	// Calc world matrix of the sword
 	cam->CalcViewMatrix();
-	cam->CalcWorldMatrix();
+	//cam->CalcWorldMatrix();
 	//cam->CalcWorldMatrix(); // Putting camera world matrix calc after the entity makes the sword jitter much less severe...not sure why?
 
 	totalTime += deltaTime;
@@ -494,7 +494,7 @@ void BloodSword::CheckSwordSlashHit()
 
 bool BloodSword::EntityInSlashDetectionField(Entity* e)
 {
-	float currentAngle = atan2(cam->direction.z, cam->direction.x);
+	float currentAngle = atan2(cam->GetTransform().GetDirectionVector().z, cam->GetTransform().GetDirectionVector().x);
 	float halfViewAngle = XMConvertToRadians(viewAngle / 2);
 	float hypotenuse = viewDistance / cos(halfViewAngle);
 	XMFLOAT3 viewLeft = XMFLOAT3(cos(currentAngle + halfViewAngle) * hypotenuse, 0.0f, sin(currentAngle + halfViewAngle) * hypotenuse);

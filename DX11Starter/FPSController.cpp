@@ -17,7 +17,7 @@ void FPSController::Init()
 	bloodOrb = eMap->find("Blood_Orb")->second;
 	bloodOrbScript = (BloodOrb*)scriptFunctionsMap[(*eMap)["Blood_Orb"]->GetName()]["BLOODORB"];
 	cam = ScriptManager::EERenderer->GetCamera("main");
-	direction = cam->direction; 
+	direction = cam->GetTransform().GetDirectionVector();
 	cam->SetFOV(fov);
 
 	icicleParams = {
@@ -155,7 +155,7 @@ void FPSController::Update()
 		case PlayerState::Normal:
 			Move();
 			MouseLook();
-			cam->SetPosition(XMFLOAT3(ePos.x, ePos.y + eScl.y + headbobOffset, ePos.z)); // after all updates make sure camera is following the affected entity
+			cam->GetTransform().SetPosition(XMFLOAT3(ePos.x, ePos.y + eScl.y + headbobOffset, ePos.z)); // after all updates make sure camera is following the affected entity
 			UpdateDashRingsTransforms();
 			CheckAllAbilities();
 			UpdateSwordSway();
@@ -164,7 +164,7 @@ void FPSController::Update()
 		case PlayerState::HookshotThrow:
 			HookshotThrow();
 			MouseLook();
-			cam->SetPosition(XMFLOAT3(ePos.x, ePos.y + eScl.y + headbobOffset, ePos.z)); // after all updates make sure camera is following the affected entity
+			cam->GetTransform().SetPosition(XMFLOAT3(ePos.x, ePos.y + eScl.y + headbobOffset, ePos.z)); // after all updates make sure camera is following the affected entity
 			UpdateHookShotTransform();
 			UpdateDashRingsTransforms();
 			CheckBloodSword();
@@ -176,7 +176,7 @@ void FPSController::Update()
 		case PlayerState::HookshotFlight:
 			HookshotFlight();
 			MouseLook();
-			cam->SetPosition(XMFLOAT3(ePos.x, ePos.y + eScl.y + headbobOffset, ePos.z)); // after all updates make sure camera is following the affected entity
+			cam->GetTransform().SetPosition(XMFLOAT3(ePos.x, ePos.y + eScl.y + headbobOffset, ePos.z)); // after all updates make sure camera is following the affected entity
 			UpdateHookShotTransform();
 			UpdateDashRingsTransforms();
 			CheckBloodSword();
@@ -189,7 +189,7 @@ void FPSController::Update()
 			HookshotLeash();
 			Move();
 			MouseLook();
-			cam->SetPosition(XMFLOAT3(ePos.x, ePos.y + eScl.y + headbobOffset, ePos.z)); // after all updates make sure camera is following the affected entity
+			cam->GetTransform().SetPosition(XMFLOAT3(ePos.x, ePos.y + eScl.y + headbobOffset, ePos.z)); // after all updates make sure camera is following the affected entity
 			UpdateHookShotTransform();
 			UpdateDashRingsTransforms();
 			CheckBloodSword();
@@ -206,7 +206,7 @@ void FPSController::Update()
 			// ragdoll the player
 			playerRBody->setAngularFactor(btVector3(1, 1, 1)); // free rotations on x and z axes
 			playerRBody->setGravity(btVector3(0.0f, -25.0f, 0.0f));
-			cam->SetPosition(XMFLOAT3(ePos.x, ePos.y + eScl.y + headbobOffset, ePos.z)); // after all updates make sure camera is following the affected entity
+			cam->GetTransform().SetPosition(XMFLOAT3(ePos.x, ePos.y + eScl.y + headbobOffset, ePos.z)); // after all updates make sure camera is following the affected entity
 			// TODO: How to set camera to ragdolling body
 			break;
 
@@ -247,11 +247,11 @@ void FPSController::CheckBloodIcicle()
 
 		// update position and rotation of the EntityCreationParams
 		icicleParams.position = bloodOrb->GetTransform().GetPosition();
-		icicleParams.rotationRadians = XMFLOAT3(cam->xRotation + 1.5708f /* 90 degress in radians */ , cam->yRotation, cam->zRotation);
+		icicleParams.rotationRadians = XMFLOAT3(cam->rotation.x + 1.5708f /* 90 degress in radians */ , cam->rotation.y, cam->rotation.z);
 
 		Entity* bloodIcicle = ScriptManager::CreateEntity(icicleParams);
 
-		btVector3 shotImpulse = Utility::Float3ToBulletVector(cam->direction);
+		btVector3 shotImpulse = Utility::Float3ToBulletVector(cam->GetTransform().GetDirectionVector());
 
 		bloodIcicle->GetRBody()->setGravity(btVector3(0,0,0));
 		bloodIcicle->GetRBody()->activate();
@@ -473,10 +473,10 @@ void FPSController::HookshotLeash()
 void FPSController::UpdateHookShotTransform()
 {
 	cam->CalcViewMatrix();
-	cam->CalcWorldMatrix();
-	XMFLOAT3 camPos = cam->position;
-	XMFLOAT3 camDir = cam->direction;
-	XMFLOAT3 camRight = cam->right;
+	//cam->CalcWorldMatrix();
+	XMFLOAT3 camPos = cam->GetTransform().GetPosition();
+	XMFLOAT3 camDir = cam->GetTransform().GetDirectionVector();
+	XMFLOAT3 camRight = cam->GetTransform().GetRightVector();
 	XMFLOAT3 newPos = XMFLOAT3(camPos.x + -camRight.x, camPos.y + camDir.y - 0.65f, camPos.z + -camRight.z);
 
 	XMFLOAT3 hookshotDirection;
@@ -509,10 +509,10 @@ void FPSController::UpdateHookShotTransform()
 void FPSController::UpdateDashRingsTransforms()
 {
 	cam->CalcViewMatrix();
-	cam->CalcWorldMatrix();
-	XMFLOAT3 camPos = cam->position;
-	XMFLOAT3 camDir = cam->direction;
-	XMFLOAT3 camRight = cam->right;
+	//cam->CalcWorldMatrix();
+	XMFLOAT3 camPos = cam->GetTransform().GetPosition();
+	XMFLOAT3 camDir = cam->GetTransform().GetDirectionVector();
+	XMFLOAT3 camRight = cam->GetTransform().GetRightVector();
 
 	float xDegrees;
 	float yDegrees;
@@ -587,7 +587,7 @@ void FPSController::Move()
 	// Choosing to go with a dynamic character controller to ensure ease of interaction with Bullet, many people online mentioned funky things going on when trying to get kinematic to work
 	
 	// ready the needed information
-	direction = cam->direction;
+	direction = cam->GetTransform().GetDirectionVector();
 	XMFLOAT3 yAxis = Y_AXIS;
 	XMVECTOR pos = XMLoadFloat3(&position);
 	XMVECTOR dir = XMLoadFloat3(&direction);
@@ -964,11 +964,11 @@ void FPSController::MouseLook()
 	bool isReturning = (!rollLeft && !rollRight) || (rollLeft && rollRight);
 	if (isReturning) // if side movement keys are not being pressed return to normal camera zRotation depending on what the current rotation is or if both bools are true at the same time straighten cam to avoid jittering
 	{
-		if (cam->zRotation > 0)
+		if (cam->rotation.z > 0)
 		{
 			camRollAngle -= camRollSpeed * deltaTime;
 		}
-		else if (cam->zRotation < 0)
+		else if (cam->rotation.z < 0)
 		{
 			camRollAngle += camRollSpeed * deltaTime;
 		}
@@ -979,11 +979,11 @@ void FPSController::MouseLook()
 	}
 	else // otherwise role to the respective min and max positions according to boolean assigned from input in Move()
 	{
-		if (cam->zRotation < CAM_ROLL_MAX && rollRight)
+		if (cam->rotation.z < CAM_ROLL_MAX && rollRight)
 		{
 			camRollAngle += camRollSpeed * deltaTime;
 		}
-		else if (cam->zRotation > CAM_ROLL_MIN && rollLeft)
+		else if (cam->rotation.z > CAM_ROLL_MIN && rollLeft)
 		{
 			camRollAngle -= camRollSpeed * deltaTime;
 		}
@@ -1008,10 +1008,10 @@ void FPSController::MouseLook()
 		}
 	}
 
-	if (cam->zRotation > CAM_ROLL_MAX) cam->zRotation = CAM_ROLL_MAX;
-	if (cam->zRotation < CAM_ROLL_MIN) cam->zRotation = CAM_ROLL_MIN;
+	if (cam->rotation.z > CAM_ROLL_MAX) cam->rotation.z = CAM_ROLL_MAX;
+	if (cam->rotation.z < CAM_ROLL_MIN) cam->rotation.z = CAM_ROLL_MIN;
 
-	if (((cam->zRotation > 0 && camRollAngle > 0) || (cam->zRotation < 0 && camRollAngle < 0)) && isReturning) cam->zRotation = 0;
+	if (((cam->rotation.z > 0 && camRollAngle > 0) || (cam->rotation.z < 0 && camRollAngle < 0)) && isReturning) cam->rotation.z = 0;
 
 	//prevMousePos.x = mouse->GetPosX();
 	//prevMousePos.y = mouse->GetPosY();

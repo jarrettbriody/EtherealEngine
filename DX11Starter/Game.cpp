@@ -431,11 +431,6 @@ void Game::Update(double deltaTime, double totalTime)
 		sf->CallUpdate();
 	}
 
-	for (size_t i = 0; i < EESceneLoader->SceneEntities.size(); i++)
-	{
-		EESceneLoader->SceneEntities[i]->Update();
-	}
-
 	XMFLOAT4X4 view = EERenderer->GetCamera("main")->GetViewMatrix();
 	for (size_t i = 0; i < ParticleEmitter::EmitterVector.size(); i++)
 	{
@@ -488,7 +483,7 @@ void Game::Update(double deltaTime, double totalTime)
 	{
 		DebugLines* dbl = DebugLines::debugLines[i];
 		if (dbl->willUpdate) {
-			dbl->worldMatrix = EESceneLoader->SceneEntitiesMap[dbl->entityName]->GetCollider(dbl->colliderID)->GetWorldMatrix();
+			dbl->worldMatrix = EESceneLoader->SceneEntitiesMap[dbl->entityName]->GetCollider(dbl->colliderID)->GetTransform().GetWorldMatrix();
 		}
 	}
 
@@ -616,14 +611,14 @@ void Game::EnforcePhysics()
 void Game::AudioStep()
 {
 	// Set our listener position as the camera's position for now
-	listener_pos.x = EECamera->position.x;
-	listener_pos.y = EECamera->position.y;
-	listener_pos.z = EECamera->position.z;
+	listener_pos.x = EECamera->GetTransform().GetPosition().x;
+	listener_pos.y = EECamera->GetTransform().GetPosition().y;
+	listener_pos.z = EECamera->GetTransform().GetPosition().z;
 
 	// Set the listener forward to the camera's forward
-	listener_forward.x = EECamera->direction.x;
-	listener_forward.y = EECamera->direction.y;
-	listener_forward.z = EECamera->direction.z;
+	listener_forward.x = EECamera->GetTransform().GetDirectionVector().x;
+	listener_forward.y = EECamera->GetTransform().GetDirectionVector().y;
+	listener_forward.z = EECamera->GetTransform().GetDirectionVector().z;
 
 	// Set the listener up to the camera's up
 	XMFLOAT3 yAxis = Y_AXIS;

@@ -4,21 +4,13 @@
 
 Camera::Camera()
 {
-	position = XMFLOAT3(-8.13f, 3.83f, -1.05f);
+	transform = Transform((unsigned int)TRANSFORM_FLAGS::POSITION | (unsigned int)TRANSFORM_FLAGS::ROTATION | (unsigned int)TRANSFORM_FLAGS::LOCALAXIS);
 
-	direction = Z_AXIS;
-	XMVECTOR dir = XMLoadFloat3(&direction);
-	dir = XMVector3Normalize(dir);
-	XMStoreFloat3(&direction, dir);
+	transform.SetPosition(XMFLOAT3(-8.13f, 3.83f, -1.05f));
 
-	right = X_AXIS;
-	XMVECTOR rightVec = XMLoadFloat3(&right);
-	rightVec = XMVector3Normalize(rightVec);
-	XMStoreFloat3(&right, rightVec);
+	rotation = XMFLOAT3(0, XMConvertToRadians(90.0f), 0);
+	transform.SetRotationRadians(rotation);
 
-	xRotation = 0.0f;
-	yRotation = XMConvertToRadians(90.0f);
-	zRotation = 0.0f;
 	mouse = Mouse::GetInstance();
 	prevMousePos = { 0, 0 };
 }
@@ -26,6 +18,11 @@ Camera::Camera()
 
 Camera::~Camera()
 {
+}
+
+Transform& Camera::GetTransform()
+{
+	return transform;
 }
 
 XMFLOAT4X4 Camera::GetViewMatrix()
@@ -48,31 +45,6 @@ XMFLOAT4X4 Camera::GetInverseProjMatrix()
 	return invProjMatrix;
 }
 
-XMFLOAT4X4 Camera::GetWorldMatrix()
-{
-	return worldMatrix;
-}
-
-XMFLOAT4X4 Camera::GetInvWorldMatrix()
-{
-	return invWorldMatrix;
-}
-
-XMFLOAT4X4* Camera::GetWorldMatrixPtr()
-{
-	return &worldMatrix;
-}
-
-XMFLOAT4 Camera::GetRotationQuaternion()
-{
-	return quaternion;
-}
-
-void Camera::SetRotationQuaternion(XMFLOAT4 quat)
-{
-	quaternion = quat;
-}
-
 void Camera::SetProjMatrix(XMFLOAT4X4 pm)
 {
 	projMatrix = pm;
@@ -85,22 +57,17 @@ void Camera::SetViewMatrix(XMFLOAT4X4 vm)
 
 void Camera::RotateCamera(float x, float y, float z)
 {
-	xRotation += (float)y;// / 100.0f;
-	yRotation += (float)x;// / 100.0f;
-	zRotation += (float)z;// / 100.0f;
+	rotation.x = rotation.x + y;// / 100.0f;
+	rotation.y = rotation.y + x;// / 100.0f;
+	rotation.z = rotation.z + z;// / 100.0f;
 
-	if (xRotation > (89.0f * XM_PI) / 180.0f) xRotation = (89.0f * XM_PI) / 180.0f;
-	if (xRotation < (-89.0f * XM_PI) / 180.0f) xRotation = (-89.0f * XM_PI) / 180.0f;
-	if (yRotation > XM_2PI) yRotation = yRotation - XM_2PI;
-	if (yRotation < -XM_2PI) yRotation = yRotation + XM_2PI;
+	if (rotation.x > (89.0f * XM_PI) / 180.0f) rotation.x = (89.0f * XM_PI) / 180.0f;
+	if (rotation.x < (-89.0f * XM_PI) / 180.0f) rotation.x = (-89.0f * XM_PI) / 180.0f;
+	if (rotation.y > XM_2PI) rotation.y = rotation.y - XM_2PI;
+	if (rotation.y < -XM_2PI) rotation.y = rotation.y + XM_2PI;
 
+	transform.SetRotationRadians(rotation);
 	CalcViewMatrix();
-	CalcWorldMatrix();
-}
-
-void Camera::SetPosition(XMFLOAT3 pos)
-{
-	position = pos;
 }
 
 void Camera::SetFOV(float degrees)
@@ -124,91 +91,84 @@ void Camera::CalcProjMatrix()
 	XMStoreFloat4x4(&invProjMatrix, XMMatrixTranspose(XMMatrixInverse(nullptr, P)));
 }
 
-void Camera::CalcWorldMatrix()
-{
-	XMVECTOR quat = XMQuaternionNormalize(XMQuaternionRotationRollPitchYaw(xRotation, yRotation, zRotation));
-	XMStoreFloat4(&quaternion, quat);
-	DirectX::XMMATRIX rot = DirectX::XMMatrixRotationQuaternion(quat);
-	DirectX::XMMATRIX trans = DirectX::XMMatrixTranslation(position.x, position.y, position.z);
-	DirectX::XMMATRIX world = rot * trans;
-	DirectX::XMStoreFloat4x4(&worldMatrix, DirectX::XMMatrixTranspose(world));
-	XMStoreFloat4x4(&invWorldMatrix, XMMatrixTranspose(XMMatrixInverse(nullptr, world)));
-}
-
 void Camera::CalcViewMatrix()
 {
-	XMFLOAT3 zAxis(0.0f, 0.0f, 1.0f);
-	XMFLOAT3 yAxis(0.0f, 1.0f, 0.0f);
+	/*
+	XMVECTOR pos = XMLoadFloat3(&transform.GetPosition());
+	XMVECTOR d = XMLoadFloat3(&transform.GetDirectionVector());
+	XMVECTOR u = XMLoadFloat3(&transform.GetUpVector());
 
-	XMVECTOR pos = XMLoadFloat3(&position);
-	XMVECTOR dir = XMLoadFloat3(&direction);
-	XMVECTOR rightVec = XMVector3Cross(XMLoadFloat3(&yAxis), dir);
-
-	XMVECTOR quat = XMQuaternionRotationRollPitchYaw(xRotation, yRotation, zRotation);
-	XMVECTOR newDir = XMVector3Rotate(XMLoadFloat3(&zAxis), quat);
-	XMVECTOR newUp = XMVector3Rotate(XMLoadFloat3(&yAxis), quat);
-	XMMATRIX view = XMMatrixLookToLH(pos, dir, newUp);
+	XMMATRIX view = XMMatrixLookToLH(pos, d, u);
 	XMMATRIX inverseView = XMMatrixInverse(nullptr, view);
 
 	XMStoreFloat4x4(&viewMatrix, XMMatrixTranspose(view));
 	XMStoreFloat4x4(&invViewMatrix, XMMatrixTranspose(inverseView));
-	XMStoreFloat3(&direction, newDir);
-	XMStoreFloat3(&right, rightVec);
-
-	/*
-		void Transform::CalcViewMatrix()
-		{
-			XMVECTOR pos = XMLoadFloat3(&position);
-			XMVECTOR d = XMLoadFloat3(&direction);
-			XMVECTOR u = XMLoadFloat3(&up);
-
-			XMMATRIX view = XMMatrixLookToLH(pos, d, u);
-			XMMATRIX inverseView = XMMatrixInverse(nullptr, view);
-
-			XMStoreFloat4x4(&viewMatrix, XMMatrixTranspose(view));
-			XMStoreFloat4x4(&invViewMatrix, XMMatrixTranspose(inverseView));
-		}
 	*/
 
+	transform.SetRotationRadians(rotation);
+
+	XMFLOAT3 zAxis(0.0f, 0.0f, 1.0f);
+	XMFLOAT3 yAxis(0.0f, 1.0f, 0.0f);
+	XMFLOAT3 newDire;
+	XMFLOAT3 newR;
+	XMFLOAT3 newU;
+
+	XMVECTOR pos = XMLoadFloat3(&transform.GetPosition());
+	XMVECTOR d = XMLoadFloat3(&transform.GetDirectionVector());
+	XMVECTOR rightVec = XMVector3Cross(XMLoadFloat3(&yAxis), d);
+	XMFLOAT4 quater = transform.GetRotationQuaternion();
+	XMVECTOR quat = XMLoadFloat4(&quater);
+	XMVECTOR newDir = XMVector3Rotate(XMLoadFloat3(&zAxis), quat);
+	XMVECTOR newUp = XMVector3Rotate(XMLoadFloat3(&yAxis), quat);
+
+	XMMATRIX view = XMMatrixLookToLH(pos, d, newUp);
+	XMMATRIX inverseView = XMMatrixInverse(nullptr, view);
+
+	XMStoreFloat4x4(&viewMatrix, XMMatrixTranspose(view));
+	XMStoreFloat4x4(&invViewMatrix, XMMatrixTranspose(inverseView));
+	XMStoreFloat3(&newDire, newDir);
+	XMStoreFloat3(&newR, rightVec);
+	XMStoreFloat3(&newU, rightVec);
+	//transform.SetDirectionVectorUR(newDire, newU, newR);
 }
 
 void Camera::Update(double deltaTime)
 {
-	XMFLOAT3 zAxis(0.0f, 0.0f, 1.0f);
-	XMFLOAT3 yAxis(0.0f, 1.0f, 0.0f);
-
-	XMVECTOR pos = XMLoadFloat3(&position);
-	XMVECTOR dir = XMLoadFloat3(&direction);
-	XMVECTOR rightVec = XMVector3Cross(XMLoadFloat3(&yAxis), dir);
+	XMVECTOR pos = XMLoadFloat3(&transform.GetPosition());
+	XMVECTOR dir = XMLoadFloat3(&transform.GetDirectionVector());
+	XMVECTOR right = XMLoadFloat3(&transform.GetRightVector());
+	XMVECTOR up = XMLoadFloat3(&transform.GetUpVector());
 
 	float scalar = Config::DebugCameraSpeed;
+
+	XMFLOAT3 newPos;
 
 	if (Config::DebugCamera) {
 		//* Can now use the new input system instead!
 		if (GetAsyncKeyState('W') & 0x8000) {
 			pos = XMVectorAdd(pos, XMVectorScale(dir, scalar * deltaTime));
-			XMStoreFloat3(&position, pos);
+			XMStoreFloat3(&newPos, pos);
 		}
 		if (GetAsyncKeyState('S') & 0x8000) {
 			pos = XMVectorAdd(pos, XMVectorScale(dir, -scalar * deltaTime));
-			XMStoreFloat3(&position, pos);
+			XMStoreFloat3(&newPos, pos);
 		}
 		if (GetAsyncKeyState('A') & 0x8000) {
-			pos = XMVectorAdd(pos, XMVectorScale(rightVec, -scalar * deltaTime));
-			XMStoreFloat3(&position, pos);
+			pos = XMVectorAdd(pos, XMVectorScale(right, -scalar * deltaTime));
+			XMStoreFloat3(&newPos, pos);
 		}
 		if (GetAsyncKeyState('D') & 0x8000) {
-			pos = XMVectorAdd(pos, XMVectorScale(rightVec, scalar * deltaTime));
-			XMStoreFloat3(&position, pos);
+			pos = XMVectorAdd(pos, XMVectorScale(right, scalar * deltaTime));
+			XMStoreFloat3(&newPos, pos);
 		}
 
 		if (GetAsyncKeyState(VK_SPACE) & 0x8000) {
-			pos = XMVectorAdd(pos, XMVectorScale(XMLoadFloat3(&yAxis), 0.5f * deltaTime));
-			XMStoreFloat3(&position, pos);
+			pos = XMVectorAdd(pos, XMVectorScale(up, 0.5f * deltaTime));
+			XMStoreFloat3(&newPos, pos);
 		}
 		if (GetAsyncKeyState('X') & 0x8000) {
-			pos = XMVectorAdd(pos, XMVectorScale(XMLoadFloat3(&yAxis), -0.5f * deltaTime));
-			XMStoreFloat3(&position, pos);
+			pos = XMVectorAdd(pos, XMVectorScale(up, -0.5f * deltaTime));
+			XMStoreFloat3(&newPos, pos);
 		}
 		if (GetAsyncKeyState('K') & 0x8000) {
 			RotateCamera(0, 0, 1);
@@ -228,10 +188,10 @@ void Camera::Update(double deltaTime)
 			prevMousePos.y = mouse->GetPosY();
 		}
 
+		transform.SetPosition(newPos);
 	}
-	
+
 	CalcViewMatrix();
-	CalcWorldMatrix();
 
 	//cout << "Pos: (" << position.x << ", " << position.y << ", " << position.z << ")" << endl;
 	//cout << "Dir: (" << direction.x << ", " << direction.y << ", " << direction.z << ")" << endl;

@@ -59,9 +59,9 @@ void BloodOrb::Update()
 	Camera* cam = EERenderer->GetCamera("main");
 	Entity* glass = EESceneLoader->SceneEntitiesMap["Blood_Orb_Glass"];
 	cam->CalcViewMatrix();
-	cam->CalcWorldMatrix();
-	XMFLOAT3 camPos = cam->position;
-	XMFLOAT3 camDir = cam->direction;
+	//cam->CalcWorldMatrix();
+	XMFLOAT3 camPos = cam->GetTransform().GetPosition();
+	XMFLOAT3 camDir = cam->GetTransform().GetDirectionVector();
 	XMFLOAT3 newPos = XMFLOAT3(camPos.x + camDir.x * 1.1f, camPos.y + camDir.y - 0.5f, camPos.z + camDir.z * 1.1f);
 	newPos.y = newPos.y + sin(totalTime) * bobMagnitude;
 	entity->GetTransform().SetPosition(newPos);

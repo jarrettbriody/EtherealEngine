@@ -1180,7 +1180,7 @@ void SceneLoader::LoadScene(string sceneName)
 								DebugLines* dl = new DebugLines(entityName, d);
 								XMFLOAT3 c = XMFLOAT3(1.0f, 0.0f, 0.0f);
 								dl->color = c;
-								dl->worldMatrix = colliders[d]->GetWorldMatrix();
+								dl->worldMatrix = colliders[d]->GetTransform().GetWorldMatrix();
 								XMFLOAT3* colliderCorners = colliders[d]->GetPivotShiftedColliderCorners();
 								dl->GenerateCuboidVertexBuffer(colliderCorners, 8);
 							}
@@ -1383,7 +1383,7 @@ Entity* SceneLoader::CreateEntity(EntityCreationParameters& para)
 			DebugLines* dl = new DebugLines(entityName, d);
 			XMFLOAT3 c = XMFLOAT3(1.0f, 0.0f, 0.0f);
 			dl->color = c;
-			dl->worldMatrix = colliders[d]->GetWorldMatrix();
+			dl->worldMatrix = colliders[d]->GetTransform().GetWorldMatrix();
 			XMFLOAT3* colliderCorners = colliders[d]->GetPivotShiftedColliderCorners();
 			dl->GenerateCuboidVertexBuffer(colliderCorners, 8);
 		}

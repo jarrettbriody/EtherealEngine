@@ -422,6 +422,9 @@
     <ClInclude Include="SimpleShader.h">
       <Filter>EECore\Header Files\Rendering</Filter>
     </ClInclude>
+    <ClInclude Include="EEVector.h">
+      <Filter>EECore\Utility</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config">
