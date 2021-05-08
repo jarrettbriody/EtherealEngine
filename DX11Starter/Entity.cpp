@@ -74,6 +74,7 @@ Entity::~Entity()
 	if (colliders != nullptr)
 		delete colliders;
 
+	//eTransform.Cleanup();
 }
 
 void Entity::operator=(const Entity& e)
@@ -717,6 +718,7 @@ void Entity::FreeMemory()
 	if (colliders != nullptr)
 		delete colliders;
 
+	eTransform.Cleanup();
 }
 
 

@@ -960,7 +960,11 @@ void SceneLoader::LoadScene(string sceneName)
 				else
 					meshType = MESH_TYPE::EMPTY_OBJECT;
 
-				Entity someEntity;
+
+				if(meshType == MESH_TYPE::LOAD_FAILURE)
+					continue;
+
+				//Entity someEntity;
 
 				//search for entity name in scene file
 				string originalEntityName = regex_search(line, match, RegexObjects.entityNameRegex) ? match[1] : objName;
@@ -973,33 +977,29 @@ void SceneLoader::LoadScene(string sceneName)
 					sameNameEntityCnt++;
 				}
 
-				//figure out what map to pull from
-				switch (meshType) {
-				case MESH_TYPE::LOAD_FAILURE:
-					continue;
-				case MESH_TYPE::EMPTY_OBJECT:
-					if (entityName == "") continue;
-					someEntity = Entity(entityName);
-					someEntity.isEmptyObj = true;
-					break;
-				case MESH_TYPE::DEFAULT_MESH:
-					someEntity = Entity(entityName, DefaultMeshesMap[objName]);
-					break;
-				case MESH_TYPE::GENERATED_MESH: {
-					someEntity = Entity(entityName, GeneratedMeshesMap[objName]);
-					break;
-				}
-				default:
-					break;
-				}
-
 				//finally add the entity to the appropriate lists
 				bool success = false;
 				Entity* allocatedEntity = (Entity*)EEMemoryAllocator->AllocateToPool((unsigned int)MEMORY_POOL::ENTITY_POOL, sizeof(Entity), success);
 				if (success) {
 					//allocatedEntity->CopyCollections(&someEntity);
 					//allocatedEntity->SetupCollections();
-					*allocatedEntity = someEntity;
+					//figure out what map to pull from
+					switch (meshType) {
+					case MESH_TYPE::EMPTY_OBJECT:
+						if (entityName == "") continue;
+						*allocatedEntity = Entity(entityName);
+						break;
+					case MESH_TYPE::DEFAULT_MESH:
+						*allocatedEntity = Entity(entityName, DefaultMeshesMap[objName]);
+						break;
+					case MESH_TYPE::GENERATED_MESH: {
+						*allocatedEntity = Entity(entityName, GeneratedMeshesMap[objName]);
+						break;
+					}
+					default:
+						break;
+					}
+					//*allocatedEntity = someEntity;
 					SceneEntitiesMap.insert({ entityName, allocatedEntity });
 					SceneEntities.push_back(allocatedEntity);
 				}
@@ -1276,7 +1276,7 @@ Entity* SceneLoader::CreateEntity(EntityCreationParameters& para)
 	}
 	para.entityName = entityName;
 
-	Entity e;
+	//Entity e;
 	Entity* allocatedEntity = nullptr;
 	Mesh* mesh = nullptr;
 	Material* mat = nullptr;
@@ -1284,21 +1284,22 @@ Entity* SceneLoader::CreateEntity(EntityCreationParameters& para)
 	bool success = false;
 
 	if (para.meshName != "") {
-		if (GeneratedMeshesMap.count(para.meshName)) {
-			mesh = GeneratedMeshesMap[para.meshName];
-			e = Entity(para.entityName, mesh);
-		}
-		else if (DefaultMeshesMap.count(para.meshName)) {
-			mesh = DefaultMeshesMap[para.meshName];
-			e = Entity(para.entityName, mesh);
-		}
-		else {
-			return nullptr;
-		}
+		
 
 		allocatedEntity = (Entity*)EEMemoryAllocator->AllocateToPool((unsigned int)MEMORY_POOL::ENTITY_POOL, sizeof(Entity), success);
 		if (success) {
-			*allocatedEntity = e;
+			if (GeneratedMeshesMap.count(para.meshName)) {
+				mesh = GeneratedMeshesMap[para.meshName];
+				*allocatedEntity = Entity(para.entityName, mesh);
+			}
+			else if (DefaultMeshesMap.count(para.meshName)) {
+				mesh = DefaultMeshesMap[para.meshName];
+				*allocatedEntity = Entity(para.entityName, mesh);
+			}
+			else {
+				return nullptr;
+			}
+			//*allocatedEntity = e;
 			SceneEntitiesMap.insert({ para.entityName, allocatedEntity });
 			SceneEntities.push_back(allocatedEntity);
 		}
@@ -1320,12 +1321,13 @@ Entity* SceneLoader::CreateEntity(EntityCreationParameters& para)
 		}
 	}
 	else {
-		e = Entity(para.entityName);
+		//e = Entity(para.entityName);
 		para.drawEntity = false;
 
 		allocatedEntity = (Entity*)EEMemoryAllocator->AllocateToPool((unsigned int)MEMORY_POOL::ENTITY_POOL, sizeof(Entity), success);
 		if (success) {
-			*allocatedEntity = e;
+			*allocatedEntity = Entity(para.entityName);
+			//*allocatedEntity = e;
 			SceneEntitiesMap.insert({ para.entityName, allocatedEntity });
 			SceneEntities.push_back(allocatedEntity);
 		}
@@ -1423,9 +1425,10 @@ std::vector<Entity*> SceneLoader::SplitMeshIntoChildEntities(Entity* e, float co
 	{
 		Mesh* newCenteredMesh = children[i]->GetCenteredMesh();
 		Material* mat = e->GetMaterial(e->GetMeshMaterialName(i));
-		Entity newE(children[i]->GetName(), newCenteredMesh, mat);
+		//Entity newE(children[i]->GetName(), newCenteredMesh, mat);
 		Entity* allocatedEntity = (Entity*)EEMemoryAllocator->AllocateToPool((unsigned int)MEMORY_POOL::ENTITY_POOL, sizeof(Entity), success);
-		*allocatedEntity = newE;
+		*allocatedEntity = Entity(children[i]->GetName(), newCenteredMesh, mat);
+		//*allocatedEntity = newE;
 		//e->AddChildEntity(allocatedEntity);
 		//e->CalcWorldMatrix();
 		XMFLOAT3 newPos = e->GetTransform().GetPosition();

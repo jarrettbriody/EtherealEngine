@@ -55,6 +55,8 @@ public:
 
 	void operator= (const Transform& other);
 
+	void Cleanup();
+
 	void SetUpdateCallback(Callback* cb);
 
 	void SetParent(Transform* parent, bool preserveChild = true);

@@ -10,24 +10,32 @@ private:
 
 public:
 	EEVector(unsigned int preAlloc = 16) {
+		this->buffer = nullptr;
+		this->count = 0;
 		bufferSize = preAlloc;
-		buffer = new T[preAlloc];
-		ZeroMemory(buffer, sizeof(T) * preAlloc);
-	};
-
-	~EEVector() {
-		delete[] buffer;
 	};
 
 	void operator= (const EEVector<T>& other) {
 		bufferSize = other.bufferSize;
 		count = other.count;
-		buffer = new T[bufferSize];
-		memcpy(buffer, other.buffer, sizeof(T) * bufferSize);
+		this->buffer = other.buffer;
 	};
 
 	T& operator[] (const unsigned int index) {
-		return buffer[index];
+		return this->buffer[index];
+	};
+
+	void InitBuffer() {
+		if (this->buffer == nullptr) {
+			this->buffer = new T[bufferSize];
+			ZeroMemory(this->buffer, sizeof(T) * bufferSize);
+		}
+	};
+
+	void Cleanup() {
+		if (this->buffer != nullptr) {
+			delete[] this->buffer;
+		}
 	};
 
 	unsigned int Count() {
@@ -39,20 +47,21 @@ public:
 	};
 
 	void Clear() {
-		ZeroMemory(buffer, sizeof(T) * bufferSize);
+		ZeroMemory(this->buffer, sizeof(T) * bufferSize);
 		count = 0;
 	};
 
 	void Push(T data) {
+		if (this->buffer == nullptr) InitBuffer();
 		if (count >= bufferSize) {
-			T* oldBuffer = buffer;
+			T* oldBuffer = this->buffer;
 			T* newBuffer = new T[(size_t)bufferSize * 2];
 			memcpy(newBuffer, oldBuffer, sizeof(T) * bufferSize);
 			bufferSize *= 2;
-			buffer = newBuffer;
+			this->buffer = newBuffer;
 			delete[] oldBuffer;
 		}
-		buffer[count++] = data;
+		this->buffer[count++] = data;
 	};
 
 	T Pop() {
@@ -60,8 +69,8 @@ public:
 	};
 
 	T Remove(unsigned int index = 0) {
-		T data = buffer[index];
-		buffer[index] = buffer[--count];
+		T data = this->buffer[index];
+		this->buffer[index] = this->buffer[--count];
 		return data;
 	};
 };

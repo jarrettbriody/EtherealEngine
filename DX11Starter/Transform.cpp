@@ -99,6 +99,7 @@ Transform::Transform(unsigned int flags)
 
 Transform::~Transform()
 {
+	children.Cleanup();
 }
 
 void Transform::operator= (const Transform& other) {
@@ -124,6 +125,11 @@ void Transform::operator= (const Transform& other) {
 	right = other.right;
 
 	updateCallback = nullptr;
+}
+
+void Transform::Cleanup()
+{
+	children.Cleanup();
 }
 
 void Transform::SetParent(Transform* parent, bool preserveChild)
@@ -152,6 +158,7 @@ void Transform::SetParent(XMFLOAT4X4* parent, bool preserveChild)
 
 void Transform::AddChild(Transform* child, bool preserveChild)
 {
+	//children.InitBuffer();
 	children.Push(child);
 	child->SetParent(this, preserveChild);
 }
