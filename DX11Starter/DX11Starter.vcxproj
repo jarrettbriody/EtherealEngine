@@ -154,6 +154,7 @@
     <ClCompile Include="Config.cpp" />
     <ClCompile Include="CPUParticleEmitter.cpp" />
     <ClCompile Include="CyclopsEnemy.cpp" />
+    <ClCompile Include="HoundPlayer.cpp" />
     <ClCompile Include="DebugLines.cpp" />
     <ClCompile Include="DecalHandler.cpp" />
     <ClCompile Include="DXCore.cpp" />
@@ -191,6 +192,7 @@
     <ClCompile Include="PlayerIsInRange.cpp" />
     <ClCompile Include="PlayerVisible.cpp" />
     <ClCompile Include="PriorityQueue.cpp" />
+    <ClCompile Include="Projectile.cpp" />
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="SceneLoader.cpp" />
     <ClCompile Include="ScriptManager.cpp" />
@@ -202,6 +204,7 @@
     <ClInclude Include="AmbientParticles.h" />
     <ClInclude Include="AStarSolver.h" />
     <ClInclude Include="Barrel.h" />
+    <ClInclude Include="BaseEnemy.h" />
     <ClInclude Include="BehaviorTree.h" />
     <ClInclude Include="BehaviorTreeBuilder.h" />
     <ClInclude Include="BloodIcicle.h" />
@@ -215,6 +218,7 @@
     <ClInclude Include="Config.h" />
     <ClInclude Include="CPUParticleEmitter.h" />
     <ClInclude Include="CyclopsEnemy.h" />
+    <ClInclude Include="HoundPlayer.h" />
     <ClInclude Include="DebugLines.h" />
     <ClInclude Include="DecalHandler.h" />
     <ClInclude Include="DXCore.h" />
@@ -252,6 +256,7 @@
     <ClInclude Include="PlayerIsInRange.h" />
     <ClInclude Include="PlayerVisible.h" />
     <ClInclude Include="PriorityQueue.h" />
+    <ClInclude Include="Projectile.h" />
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="SceneLoader.h" />
     <ClInclude Include="ScriptManager.h" />

@@ -7,6 +7,7 @@
 #include "ParticleEmitter.h"
 #include "CPUParticleEmitter.h"
 #include "GPUParticleEmitter.h"
+#include "BaseEnemy.h"
 
 struct DashBlurCallback : RendererCallback {
 	int blurAmount = 1;
@@ -19,7 +20,7 @@ struct DashBlurCallback : RendererCallback {
 	}
 };
 
-class EnemyTest; // Forward declaration to avoid circular dependency 
+//class EnemyTest; // Forward declaration to avoid circular dependency 
 
 enum class PlayerState
 {
@@ -33,7 +34,7 @@ class FPSController : public ScriptManager
 	DashBlurCallback dashBlurCallback;
 
 	BloodOrb* bloodOrbScript;
-	EnemyTest* enemyTestScript; 
+	BaseEnemy* enemyScript; 
 
 	// Player Attributes
 	float bloodResource = 100.0f;

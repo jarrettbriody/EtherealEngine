@@ -10,6 +10,8 @@
 #include "FollowPath.h"
 #include "Idle.h"
 #include "FireProjectile.h"
+#include "HoundPlayer.h"
+#include "PlayerIsInRange.h"
 #include "FPSController.h"
 #include "NavmeshHandler.h"
 #include "AStarSolver.h"
@@ -29,13 +31,13 @@ class HornedEnemy : public ScriptManager
 	XMFLOAT3 pos;
 	bool inCombat = false;
 	bool playerIsInRange = false;
-	float movementSpeed = 15.0f;
+	float movementSpeed = 25.0f;
 	float maxSpeed = 40.0f;
 	float dampingScalar = 0.09f;
-	float turnSpeed = 1.0f;
-	float minimumDistance = 10.0f;
-	float visionConeAngle = 30.0f;
-	float visionConeDistance = 30.0f;
+	float turnSpeed = 10.0f;
+	float minimumDistance = 12.5f;
+	float visionConeAngle = 80.0f;
+	float visionConeDistance = 40.0f;
 	float oscillationMagnitude = 0.01f;
 	float totalTime = 0.0f;
 

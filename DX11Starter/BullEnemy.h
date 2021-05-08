@@ -31,14 +31,14 @@ class BullEnemy : public ScriptManager
 	XMFLOAT3 pos;
 	bool inCombat = false;
 	bool playerIsInRange = false;
-	float chargeSpeed = 50.0f;
+	float chargeSpeed = 100.0f;
 	float movementSpeed = 15.0f;
 	float maxSpeed = 40.0f;
 	float dampingScalar = 0.09f;
-	float turnSpeed = 1.0f;
-	float minimumDistance = 30.0f;
-	float visionConeAngle = 30.0f;
-	float visionConeDistance = 50.0f;
+	float turnSpeed = 7.0f;
+	float minimumDistance = 45.0f;
+	float visionConeAngle = 50.0f;
+	float visionConeDistance = 100.0f;
 	float oscillationMagnitude = 0.01f;
 	float totalTime = 0.0f;
 

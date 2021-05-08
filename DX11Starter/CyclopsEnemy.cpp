@@ -27,18 +27,20 @@ void CyclopsEnemy::Init()
 		"fireball",
 		"projectile",
 		"projectile",
-		"spikesmall",
+		"Sphere",
 		"Red",
-		{""},
-		0,
+		{"PROJECTILE"},
+		1,
 		XMFLOAT3(0, 0, 0),
 		XMFLOAT3(0, 0, 0),
 		XMFLOAT3(1, 1, 1),
 		1.0f
 	};
 
+	//entity->GetRBody()->setCollisionFlags(entity->GetRBody()->getCollisionFlags() | btRigidBody::CF_NO_CONTACT_RESPONSE);
 	entity->GetRBody()->setAngularFactor(btVector3(0, 1, 0)); // Constrain rotations on x and z axes
 	entity->GetRBody()->setLinearFactor(btVector3(1, 0, 1)); // Constrain movement on the y axis
+
 
 	bt =	BehaviorTreeBuilder()
 				.Composite<ActiveSelector>()
@@ -48,7 +50,7 @@ void CyclopsEnemy::Init()
 						.Leaf<FacePlayer>(entity, player, turnSpeed, &deltaTime).End()
 						.Leaf<SeekPlayer>(entity, player, movementSpeed, maxSpeed, minimumDistance, &playerIsInRange).End()
 						.Leaf<PlayerIsInRange>(&playerIsInRange).End()
-						.Leaf<FireProjectile>(entity, player, fireballParams, 50.0f).End()
+						.Leaf<FireProjectile>(entity, player, fireballParams, 100.0f).End()
 					.End()
 					.Composite<Sequence>() // Search player's last known location
 						.Leaf<InCombat>(&inCombat).End()

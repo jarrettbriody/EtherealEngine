@@ -1,5 +1,6 @@
 #pragma once
 #include "ScriptManager.h"
+#include "BaseEnemy.h"
 #include "BehaviorTreeBuilder.h"
 #include "EnemySeesPlayer.h"
 #include "InCombat.h"
@@ -15,7 +16,7 @@
 #include "NavmeshHandler.h"
 #include "AStarSolver.h"
 
-class CyclopsEnemy : public ScriptManager
+class CyclopsEnemy : public ScriptManager, BaseEnemy
 {
 	~CyclopsEnemy();
 
@@ -27,16 +28,18 @@ class CyclopsEnemy : public ScriptManager
 	NavmeshHandler* navmesh = nullptr;
 	AStarSolver aStarSolver;
 
+	
+
 	XMFLOAT3 pos;
 	bool inCombat = false;
 	bool playerIsInRange = false;
-	float movementSpeed = 15.0f;
+	float movementSpeed = 20.0f;
 	float maxSpeed = 40.0f;
 	float dampingScalar = 0.09f;
-	float turnSpeed = 3.0f;
-	float minimumDistance = 25.0f;
+	float turnSpeed = 8.0f;
+	float minimumDistance = 40.0f;
 	float visionConeAngle = 40.0f;
-	float visionConeDistance = 30.0f;
+	float visionConeDistance = 80.0f;
 	float oscillationMagnitude = 0.01f;
 	float totalTime = 0.0f;
 

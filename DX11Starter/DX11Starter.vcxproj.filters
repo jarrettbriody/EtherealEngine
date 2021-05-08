@@ -255,6 +255,12 @@
     <ClCompile Include="ChargePlayer.cpp">
       <Filter>EEBehaviors\Source</Filter>
     </ClCompile>
+    <ClCompile Include="Projectile.cpp">
+      <Filter>EEScripts\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="HoundPlayer.cpp">
+      <Filter>EEBehaviors\Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h">
@@ -447,6 +453,15 @@
       <Filter>EEBehaviors\Headers</Filter>
     </ClInclude>
     <ClInclude Include="ChargePlayer.h">
+      <Filter>EEBehaviors\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="BaseEnemy.h">
+      <Filter>EEScripts\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Projectile.h">
+      <Filter>EEScripts\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="HoundPlayer.h">
       <Filter>EEBehaviors\Headers</Filter>
     </ClInclude>
   </ItemGroup>

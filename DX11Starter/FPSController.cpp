@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "FPSController.h"
-#include "EnemyTest.h"
+//#include "EnemyTest.h"
 
 
 void FPSController::Init()
@@ -372,9 +372,9 @@ void FPSController::HookshotThrow()
 			leashSize = playerRBody->getCenterOfMassPosition().distance(leashedEnemy->GetRBody()->getCenterOfMassPosition()); 
 			// cout << leashSize << endl;
 
-			enemyTestScript = (EnemyTest*)scriptFunctionsMap[leashedEnemy->GetName()]["ENEMYTEST"];
+			enemyScript = (BaseEnemy*)scriptFunctionsMap[leashedEnemy->GetName()]["BASEENEMY"];
 
-			if(hookshotAttachedEntity->HasTag("Enemy")) enemyTestScript->IsLeashed(true, 0.0f); // TODO: Figure out how to approach this for different enemy types
+			if(hookshotAttachedEntity->HasTag("Enemy")) enemyScript->IsLeashed(true, 0.0f); // TODO: Figure out how to approach this for different enemy types
 
 			ps = PlayerState::HookshotLeash;
 		}
@@ -452,7 +452,7 @@ void FPSController::HookshotLeash()
 
 	if (keyboard->OnKeyDown(0x45)) // enemy pull cancel after pressing E again
 	{
-		if (hookshotAttachedEntity->HasTag("Enemy")) enemyTestScript->IsLeashed(false, 2.0f);
+		if (hookshotAttachedEntity->HasTag("Enemy")) enemyScript->IsLeashed(false, 2.0f);
 
 		ResetHookshotTransform();
 
@@ -462,7 +462,7 @@ void FPSController::HookshotLeash()
 
 	if (keyboard->OnKeyDown(VK_SPACE)) // pull player to enemy cancel after press space 
 	{
-		if (hookshotAttachedEntity->HasTag("Enemy")) enemyTestScript->IsLeashed(false, 0.5f);
+		if (hookshotAttachedEntity->HasTag("Enemy")) enemyScript->IsLeashed(false, 0.5f);
 
 		ResetHookshotTransform();
 
