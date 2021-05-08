@@ -5,6 +5,7 @@
 #include "Collider.h"
 #include "PhysicsWrapper.h"
 #include "EEString.h"
+#include "Transform.h"
 
 struct ShadowData {
 	DirectX::XMFLOAT4X4 shadowViewMatrix;
@@ -35,22 +36,10 @@ using namespace DirectX;
 class Entity
 {
 private:
-	DirectX::XMFLOAT4X4 worldMatrix = MATRIX_IDENTITY;
-	DirectX::XMFLOAT4X4 invWorldMatrix = MATRIX_IDENTITY;
+	Transform eTransform = Transform();
 
 	Mesh* mesh = nullptr;
 	Material* material = nullptr;
-
-	DirectX::XMFLOAT4 quaternion = QUATERNION_IDENTITY;
-	DirectX::XMFLOAT3 position = ZERO_VECTOR3;
-	DirectX::XMFLOAT3 scale = ONE_VECTOR3;
-	DirectX::XMFLOAT3 rotation = ZERO_VECTOR3;
-	DirectX::XMFLOAT3 rotationInDegrees = ZERO_VECTOR3;
-	XMFLOAT4X4* parentWorld = nullptr;
-
-	XMFLOAT3 direction = Z_AXIS;
-	XMFLOAT3 up = Y_AXIS;
-	XMFLOAT3 right = X_AXIS;
 
 	DirectX::XMFLOAT2 repeatTex = ONE_VECTOR2;
 	XMFLOAT2 uvOffset = ZERO_VECTOR2;
@@ -94,36 +83,11 @@ public:
 	Entity(string entityName, Mesh* entityMesh, Material* mat = nullptr);
 	~Entity();
 	void operator= (const Entity& e);
+
+	Transform& GetTransform();
+
 	void InitRigidBody(BulletColliderShape shape, float entityMass, bool zeroObjects = false);
-	void SetWorldMatrix(XMFLOAT4X4 matrix);
-	DirectX::XMFLOAT4X4 GetWorldMatrix();
-	DirectX::XMFLOAT4X4 GetInverseWorldMatrix();
-	XMFLOAT4X4* GetWorldMatrixPtr();
-	DirectX::XMFLOAT3 GetPosition();
-	DirectX::XMFLOAT3 GetScale();
-	DirectX::XMFLOAT3 GetEulerAngles();
-	DirectX::XMFLOAT3 GetEulerAnglesDegrees();
-	DirectX::XMFLOAT4 GetRotationQuaternion();
-	XMFLOAT3 GetDirectionVector();
-	XMFLOAT3 GetUpVector();
-	XMFLOAT3 GetRightVector();
-	void SetPosition(float x, float y, float z);
-	void SetPosition(XMFLOAT3 p);
 	void SetRigidbodyPosition(btVector3 position, btVector3 orientation);
-	void SetScale(float x, float y, float z);
-	void SetScale(XMFLOAT3 s);
-	void SetRotation(float x, float y, float z);
-	void SetRotation(XMFLOAT4 quat);
-	void SetRotation(XMFLOAT3 rotRadians);
-	void RotateAroundAxis(XMFLOAT3 axis, float scalar);
-	void CalcEulerAngles();
-	void SetDirectionVector(XMFLOAT3 direction);
-	void SetDirectionVectorU(XMFLOAT3 direction, XMFLOAT3 up);
-	void SetDirectionVectorR(XMFLOAT3 direction, XMFLOAT3 right);
-	void SetDirectionVectorUR(XMFLOAT3 direction, XMFLOAT3 up, XMFLOAT3 right);
-	void SetUpVector(XMFLOAT3 up);
-	void SetRightVector(XMFLOAT3 right);
-	void CalcDirectionVector();
 	void SetRepeatTexture(float x, float y);
 	void SetUVOffset(float x, float y);
 	void SetShadowData(ShadowData shadowData);
@@ -131,15 +95,10 @@ public:
 	void SetMeshAndMaterial(Mesh* mesh, Material* mat = nullptr);
 	void ToggleShadows(bool toggle);
 	void ToggleHBAOPlus(bool toggle);
-	void Move(XMFLOAT3 f);
-	void Move(float x, float y, float z);
 	ID3D11Buffer* GetMeshVertexBuffer(int childIndex = -1);
 	ID3D11Buffer* GetMeshIndexBuffer(int childIndex = -1);
 	int GetMeshIndexCount(int childIndex = -1);
 	string GetMeshMaterialName(int childIndex = -1);
-	void CalcWorldMatrix();
-	void SetParentWorldMatrix(XMFLOAT4X4* parentWorld);
-	XMMATRIX CalcWorldToModelMatrix();
 	void PrepareMaterialForDraw(string n, DirectX::XMFLOAT4X4 view, DirectX::XMFLOAT4X4 proj);
 	Material* GetMaterial(string n);
 	bool MeshHasChildren();
@@ -159,7 +118,7 @@ public:
 	EEString<EESTRING_SIZE>* GetLayers();
 	unsigned int GetLayerCount();
 	unsigned int GetLayerMask();
-	void AddChildEntity(Entity* child, XMFLOAT4X4 childWorldMatrix);
+	void AddChild(Entity* child, bool preserveChild = true);
 	void AddAutoBoxCollider();
 	bool CheckSATCollision(Entity* other);
 	bool CheckSATCollisionAndCorrect(Entity* other);
@@ -168,6 +127,7 @@ public:
 	Collider* GetCollider(int index = 0);
 	btCollisionShape* GetBTCollisionShape(int index);
 	btCompoundShape* GetBTCompoundShape(int index);
+	void Update();
 	float GetMass();
 	void RemoveFromPhysicsSimulation();
 	void EmptyEntity();

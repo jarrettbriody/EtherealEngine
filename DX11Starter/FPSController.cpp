@@ -125,9 +125,12 @@ void FPSController::Init()
 
 void FPSController::Update()
 {
+	XMFLOAT3 ePos = entity->GetTransform().GetPosition();
+	XMFLOAT3 eScl = entity->GetTransform().GetScale();
+
 	if (keyboard->KeyIsPressed(0x4A)) // J
 	{
-		cout << "Player POS- X: " << entity->GetPosition().x << " | Y: " << entity->GetPosition().y << " | Z: " << entity->GetPosition().z << endl;
+		cout << "Player POS- X: " << ePos.x << " | Y: " << ePos.y << " | Z: " << ePos.z << endl;
 	}
 
 	if (bloodResource <= 0) // death
@@ -152,7 +155,7 @@ void FPSController::Update()
 		case PlayerState::Normal:
 			Move();
 			MouseLook();
-			cam->SetPosition(XMFLOAT3(entity->GetPosition().x, entity->GetPosition().y + entity->GetScale().y + headbobOffset, entity->GetPosition().z)); // after all updates make sure camera is following the affected entity
+			cam->SetPosition(XMFLOAT3(ePos.x, ePos.y + eScl.y + headbobOffset, ePos.z)); // after all updates make sure camera is following the affected entity
 			UpdateDashRingsTransforms();
 			CheckAllAbilities();
 			UpdateSwordSway();
@@ -161,7 +164,7 @@ void FPSController::Update()
 		case PlayerState::HookshotThrow:
 			HookshotThrow();
 			MouseLook();
-			cam->SetPosition(XMFLOAT3(entity->GetPosition().x, entity->GetPosition().y + entity->GetScale().y + headbobOffset, entity->GetPosition().z)); // after all updates make sure camera is following the affected entity
+			cam->SetPosition(XMFLOAT3(ePos.x, ePos.y + eScl.y + headbobOffset, ePos.z)); // after all updates make sure camera is following the affected entity
 			UpdateHookShotTransform();
 			UpdateDashRingsTransforms();
 			CheckBloodSword();
@@ -173,7 +176,7 @@ void FPSController::Update()
 		case PlayerState::HookshotFlight:
 			HookshotFlight();
 			MouseLook();
-			cam->SetPosition(XMFLOAT3(entity->GetPosition().x, entity->GetPosition().y + entity->GetScale().y + headbobOffset, entity->GetPosition().z)); // after all updates make sure camera is following the affected entity
+			cam->SetPosition(XMFLOAT3(ePos.x, ePos.y + eScl.y + headbobOffset, ePos.z)); // after all updates make sure camera is following the affected entity
 			UpdateHookShotTransform();
 			UpdateDashRingsTransforms();
 			CheckBloodSword();
@@ -186,7 +189,7 @@ void FPSController::Update()
 			HookshotLeash();
 			Move();
 			MouseLook();
-			cam->SetPosition(XMFLOAT3(entity->GetPosition().x, entity->GetPosition().y + entity->GetScale().y + headbobOffset, entity->GetPosition().z)); // after all updates make sure camera is following the affected entity
+			cam->SetPosition(XMFLOAT3(ePos.x, ePos.y + eScl.y + headbobOffset, ePos.z)); // after all updates make sure camera is following the affected entity
 			UpdateHookShotTransform();
 			UpdateDashRingsTransforms();
 			CheckBloodSword();
@@ -203,7 +206,7 @@ void FPSController::Update()
 			// ragdoll the player
 			playerRBody->setAngularFactor(btVector3(1, 1, 1)); // free rotations on x and z axes
 			playerRBody->setGravity(btVector3(0.0f, -25.0f, 0.0f));
-			cam->SetPosition(XMFLOAT3(entity->GetPosition().x, entity->GetPosition().y + entity->GetScale().y + headbobOffset, entity->GetPosition().z)); // after all updates make sure camera is following the affected entity
+			cam->SetPosition(XMFLOAT3(ePos.x, ePos.y + eScl.y + headbobOffset, ePos.z)); // after all updates make sure camera is following the affected entity
 			// TODO: How to set camera to ragdolling body
 			break;
 
@@ -243,7 +246,7 @@ void FPSController::CheckBloodIcicle()
 		bloodResource -= 10;
 
 		// update position and rotation of the EntityCreationParams
-		icicleParams.position = bloodOrb->GetPosition();
+		icicleParams.position = bloodOrb->GetTransform().GetPosition();
 		icicleParams.rotationRadians = XMFLOAT3(cam->xRotation + 1.5708f /* 90 degress in radians */ , cam->yRotation, cam->zRotation);
 
 		Entity* bloodIcicle = ScriptManager::CreateEntity(icicleParams);
@@ -306,7 +309,7 @@ void FPSController::CheckHookshot()
 		Config::DynamicsWorld->computeOverlappingPairs();
 
 		// Redefine our vectors using bullet's types
-		btVector3 from(Utility::Float3ToBulletVector(bloodOrb->GetPosition()));
+		btVector3 from(Utility::Float3ToBulletVector(bloodOrb->GetTransform().GetPosition()));
 		btVector3 to(from.getX() + direction.x * hookshotRangeScalar, from.getY() + direction.y * hookshotRangeScalar, from.getZ() + direction.z * hookshotRangeScalar); // raycast direction the camera is looking
 
 		// debug line
@@ -490,18 +493,17 @@ void FPSController::UpdateHookShotTransform()
 	XMStoreFloat3(&hookshotDirection, direction);
 	XMStoreFloat(&hookshotLength, XMVector3Length(direction));
 
-	hookshot->SetPosition(newPos);
+	hookshot->GetTransform().SetPosition(newPos);
 	//XMFLOAT3 up;
 	//XMStoreFloat3(&up, XMVectorSubtract(XMLoadFloat3(&camPos), XMLoadFloat3(&newPos)));
 	//hookshot->SetDirectionVectorU(hookshotDirection, up);
-	hookshot->SetDirectionVector(hookshotDirection);
-	hookshot->RotateAroundAxis(Z_AXIS, XMConvertToRadians(-45.0f));
+	hookshot->GetTransform().SetDirectionVector(hookshotDirection);
+	hookshot->GetTransform().RotateAroundAxis(Z_AXIS, XMConvertToRadians(-45.0f));
 	
 	hookshot->SetRepeatTexture(1.0f, hookshotZScale);
-	XMFLOAT3 hookshotScale = hookshot->GetScale();
+	XMFLOAT3 hookshotScale = hookshot->GetTransform().GetScale();
 	hookshotScale.z = hookshotZScale;
-	hookshot->SetScale(hookshotScale);
-	hookshot->CalcWorldMatrix();
+	hookshot->GetTransform().SetScale(hookshotScale);
 }
 
 void FPSController::UpdateDashRingsTransforms()
@@ -517,33 +519,27 @@ void FPSController::UpdateDashRingsTransforms()
 	float zDegrees;
 
 	// dash ring updating position and spinning
-	dashRings[0]->SetPosition(XMFLOAT3(camPos.x + camDir.x * 1.1f, camPos.y + camDir.y - 0.5f, camPos.z + camDir.z * 1.1f));
-	xDegrees = dashRings[0]->GetEulerAngles().x;
-	dashRings[0]->SetRotation(Utility::FloatLerp(xDegrees, xDegrees + 10, 0.05 * deltaTime), 0, 0);
+	dashRings[0]->GetTransform().SetPosition(XMFLOAT3(camPos.x + camDir.x * 1.1f, camPos.y + camDir.y - 0.5f, camPos.z + camDir.z * 1.1f));
+	xDegrees = dashRings[0]->GetTransform().GetEulerAnglesRadians().x;
+	dashRings[0]->GetTransform().SetRotationRadians(Utility::FloatLerp(xDegrees, xDegrees + 10, 0.05 * deltaTime), 0, 0);
 	
-	dashRings[1]->SetPosition(XMFLOAT3(camPos.x + camDir.x * 1.1f, camPos.y + camDir.y - 0.5f, camPos.z + camDir.z * 1.1f));
-	xDegrees = dashRings[1]->GetEulerAngles().x;
-	dashRings[1]->SetRotation(Utility::FloatLerp(xDegrees, xDegrees - 10, 0.15 * deltaTime), 0, 0);
+	dashRings[1]->GetTransform().SetPosition(XMFLOAT3(camPos.x + camDir.x * 1.1f, camPos.y + camDir.y - 0.5f, camPos.z + camDir.z * 1.1f));
+	xDegrees = dashRings[1]->GetTransform().GetEulerAnglesRadians().x;
+	dashRings[1]->GetTransform().SetRotationRadians(Utility::FloatLerp(xDegrees, xDegrees - 10, 0.15 * deltaTime), 0, 0);
 	
-	dashRings[2]->SetPosition(XMFLOAT3(camPos.x + camDir.x * 1.1f, camPos.y + camDir.y - 0.5f, camPos.z + camDir.z * 1.1f));
-	zDegrees = dashRings[2]->GetEulerAngles().z;
-	dashRings[2]->SetRotation(0, 0, Utility::FloatLerp(zDegrees, zDegrees + 10, 0.05 * deltaTime));
+	dashRings[2]->GetTransform().SetPosition(XMFLOAT3(camPos.x + camDir.x * 1.1f, camPos.y + camDir.y - 0.5f, camPos.z + camDir.z * 1.1f));
+	zDegrees = dashRings[2]->GetTransform().GetEulerAnglesRadians().z;
+	dashRings[2]->GetTransform().SetRotationRadians(0, 0, Utility::FloatLerp(zDegrees, zDegrees + 10, 0.05 * deltaTime));
 	
-	dashRings[3]->SetPosition(XMFLOAT3(camPos.x + camDir.x * 1.1f, camPos.y + camDir.y - 0.5f, camPos.z + camDir.z * 1.1f));
-	zDegrees = dashRings[3]->GetEulerAngles().z;
-	dashRings[3]->SetRotation(0, 0, Utility::FloatLerp(zDegrees, zDegrees - 10, 0.15 * deltaTime));
-
-	for each (Entity* ring in dashRings)
-	{
-		ring->CalcWorldMatrix();
-	}
+	dashRings[3]->GetTransform().SetPosition(XMFLOAT3(camPos.x + camDir.x * 1.1f, camPos.y + camDir.y - 0.5f, camPos.z + camDir.z * 1.1f));
+	zDegrees = dashRings[3]->GetTransform().GetEulerAnglesRadians().z;
+	dashRings[3]->GetTransform().SetRotationRadians(0, 0, Utility::FloatLerp(zDegrees, zDegrees - 10, 0.15 * deltaTime));
 }
 
 void FPSController::ResetHookshotTransform()
 {
 	hookshotZScale = 0.0;
-	hookshot->SetScale(1, 1, hookshotZScale);
-	hookshot->CalcWorldMatrix();
+	hookshot->GetTransform().SetScale(1, 1, hookshotZScale);
 	ps = PlayerState::Normal;
 }
 
@@ -717,9 +713,9 @@ void FPSController::Move()
 	// cout << "Vel: (" << controllerVelocity.getX() << ", " << controllerVelocity.getY() << ", " << controllerVelocity.getZ() << ")" << endl;
 
 	// set Ethereal Engine rotations
-	XMFLOAT3 eulers = entity->GetEulerAngles();
+	XMFLOAT3 eulers = entity->GetTransform().GetEulerAnglesRadians();
 	eulers = XMFLOAT3(0.0f, eulers.y, 0.0f);
-	entity->SetRotation(eulers);
+	entity->GetTransform().SetRotationRadians(eulers);
 
 	// cout << deltaTime << endl;
 	// cout << "Controller Velocity: (" << controllerVelocity.getX() << ", " << controllerVelocity.getY() << ", " << controllerVelocity.getZ() << ")" << endl;
@@ -732,7 +728,7 @@ void FPSController::GroundCheck()
 	Config::DynamicsWorld->computeOverlappingPairs();
 
 	// Redefine our vectors using bullet's silly types
-	XMFLOAT3 pos = entity->GetPosition();
+	XMFLOAT3 pos = entity->GetTransform().GetPosition();
 	//cout << pos.x << "|" << pos.y << "|" << pos.z << endl;
 	//XMFLOAT3 dir = entity->GetDirectionVector();
 	btVector3 from(pos.x, pos.y, pos.z);
@@ -843,8 +839,7 @@ void FPSController::UpdateSwordSway()
 	XMVECTOR resultQuat = XMVector4Normalize(XMQuaternionMultiply(XMQuaternionMultiply(yawQuat, tiltQuat), rollQuat));
 	XMFLOAT4 quat;
 	XMStoreFloat4(&quat, resultQuat);
-	sword->SetRotation(quat);
-	sword->CalcWorldMatrix();
+	sword->GetTransform().SetRotationQuaternion(quat);
 }
 
 btVector3 FPSController::JumpForceFromInput()

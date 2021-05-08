@@ -18,8 +18,7 @@ Status EnemySeesPlayer::Update()
 	//enemy->RotateAroundAxis(Y_AXIS, 0.05f);
 
 	// Base values for calculating the vision cone
-	enemy->CalcDirectionVector();
-	XMFLOAT3 forward = enemy->GetDirectionVector();
+	XMFLOAT3 forward = enemy->GetTransform().GetDirectionVector();
 	float currentAngle = atan2(forward.z, forward.x);
 	float halfViewAngle = (XM_PI / 180.0f) * viewAngle / 2.0f;
 	float hypotenuse = viewDistance / cos(halfViewAngle);
@@ -37,7 +36,7 @@ Status EnemySeesPlayer::Update()
 	XMFLOAT4X4 wm;
 	XMStoreFloat4x4(&wm, XMMatrixTranspose(DirectX::XMMatrixIdentity()));
 
-	XMFLOAT3 start = enemy->GetPosition();
+	XMFLOAT3 start = enemy->GetTransform().GetPosition();
 	XMFLOAT3 p1 = XMFLOAT3(start.x + XMVectorGetX(viewLeft), start.y + XMVectorGetY(viewLeft), start.z + XMVectorGetZ(viewLeft));
 	XMFLOAT3 p2 = XMFLOAT3(start.x + XMVectorGetX(viewRight), start.y + XMVectorGetY(viewRight), start.z + XMVectorGetZ(viewRight));
 
@@ -65,11 +64,11 @@ Status EnemySeesPlayer::Update()
 	//------
 
 	// Get the floored (y = 0) positions of both the enemy and player
-	XMFLOAT3 pos = enemy->GetPosition();
+	XMFLOAT3 pos = enemy->GetTransform().GetPosition();
 	pos.y = 0.0f;
 	XMVECTOR flooredEnemyPos = XMLoadFloat3(&pos);
 
-	pos = player->GetPosition();
+	pos = player->GetTransform().GetPosition();
 	pos.y = 0.0f;
 	XMVECTOR flooredPlayerPos = XMLoadFloat3(&pos);
 
@@ -96,8 +95,8 @@ Status EnemySeesPlayer::Update()
 				Config::DynamicsWorld->updateAabbs();
 				Config::DynamicsWorld->computeOverlappingPairs();
 
-				btVector3 from(enemy->GetPosition().x, enemy->GetPosition().y, enemy->GetPosition().z);
-				btVector3 to(player->GetPosition().x, player->GetPosition().y, player->GetPosition().z);
+				btVector3 from(enemy->GetTransform().GetPosition().x, enemy->GetTransform().GetPosition().y, enemy->GetTransform().GetPosition().z);
+				btVector3 to(player->GetTransform().GetPosition().x, player->GetTransform().GetPosition().y, player->GetTransform().GetPosition().z);
 
 				// Create variable to store the ray hit and set flags
 				btCollisionWorld::ClosestRayResultCallback closestResult(from, to);

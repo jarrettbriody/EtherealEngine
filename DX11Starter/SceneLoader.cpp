@@ -1085,23 +1085,22 @@ void SceneLoader::LoadScene(string sceneName)
 						}
 						counter++;
 					}
-					allocatedEntity->SetPosition(parsedNumbers[0], parsedNumbers[1], parsedNumbers[2]);
+					allocatedEntity->GetTransform().SetPosition(parsedNumbers[0], parsedNumbers[1], parsedNumbers[2]);
 
 					if (regex_search(line, match, RegexObjects.raaRegex)) {
 						if (match[1] == "true" || match[1] == "TRUE") {
-							allocatedEntity->RotateAroundAxis(Z_AXIS, DirectX::XMConvertToRadians(parsedNumbers[5]));
-							allocatedEntity->RotateAroundAxis(Y_AXIS, DirectX::XMConvertToRadians(parsedNumbers[4]));
-							allocatedEntity->RotateAroundAxis(X_AXIS, DirectX::XMConvertToRadians(parsedNumbers[3]));
+							allocatedEntity->GetTransform().RotateAroundAxis(Z_AXIS, DirectX::XMConvertToRadians(parsedNumbers[5]));
+							allocatedEntity->GetTransform().RotateAroundAxis(Y_AXIS, DirectX::XMConvertToRadians(parsedNumbers[4]));
+							allocatedEntity->GetTransform().RotateAroundAxis(X_AXIS, DirectX::XMConvertToRadians(parsedNumbers[3]));
 						}
 						else {
-							allocatedEntity->SetRotation(DirectX::XMConvertToRadians(parsedNumbers[3]), DirectX::XMConvertToRadians(parsedNumbers[4]), DirectX::XMConvertToRadians(parsedNumbers[5]));
+							allocatedEntity->GetTransform().SetRotationRadians(DirectX::XMConvertToRadians(parsedNumbers[3]), DirectX::XMConvertToRadians(parsedNumbers[4]), DirectX::XMConvertToRadians(parsedNumbers[5]));
 						}
 					}
 					else {
-						allocatedEntity->SetRotation(DirectX::XMConvertToRadians(parsedNumbers[3]), DirectX::XMConvertToRadians(parsedNumbers[4]), DirectX::XMConvertToRadians(parsedNumbers[5]));
+						allocatedEntity->GetTransform().SetRotationRadians(DirectX::XMConvertToRadians(parsedNumbers[3]), DirectX::XMConvertToRadians(parsedNumbers[4]), DirectX::XMConvertToRadians(parsedNumbers[5]));
 					}
-					allocatedEntity->SetScale(parsedNumbers[6], parsedNumbers[7], parsedNumbers[8]);
-					allocatedEntity->CalcWorldMatrix();
+					allocatedEntity->GetTransform().SetScale(parsedNumbers[6], parsedNumbers[7], parsedNumbers[8]);
 				}
 
 				if (regex_search(line, match, RegexObjects.quaternionRegex)) {
@@ -1115,8 +1114,7 @@ void SceneLoader::LoadScene(string sceneName)
 						}
 						counter++;
 					}
-					allocatedEntity->SetRotation(XMFLOAT4(parsedNumbers[0], parsedNumbers[1], parsedNumbers[2], parsedNumbers[3]));
-					allocatedEntity->CalcWorldMatrix();
+					allocatedEntity->GetTransform().SetRotationQuaternion(XMFLOAT4(parsedNumbers[0], parsedNumbers[1], parsedNumbers[2], parsedNumbers[3]));
 				}
 
 				//check if object is collision enabled
@@ -1333,11 +1331,9 @@ Entity* SceneLoader::CreateEntity(EntityCreationParameters& para)
 		}
 	}
 
-	allocatedEntity->SetPosition(para.position);
-	allocatedEntity->SetRotation(para.rotationRadians);
-	allocatedEntity->SetScale(para.scale);
-
-	allocatedEntity->CalcWorldMatrix();
+	allocatedEntity->GetTransform().SetPosition(para.position);
+	allocatedEntity->GetTransform().SetRotationRadians(para.rotationRadians);
+	allocatedEntity->GetTransform().SetScale(para.scale);
 
 	if (para.collisionsEnabled) {
 		allocatedEntity->collisionsEnabled = true;
@@ -1432,15 +1428,14 @@ std::vector<Entity*> SceneLoader::SplitMeshIntoChildEntities(Entity* e, float co
 		*allocatedEntity = newE;
 		//e->AddChildEntity(allocatedEntity);
 		//e->CalcWorldMatrix();
-		XMFLOAT3 newPos = e->GetPosition();
+		XMFLOAT3 newPos = e->GetTransform().GetPosition();
 		XMFLOAT3 collCenter = colls[i]->GetCenterGlobal();
 		XMStoreFloat3(&newPos, XMVectorAdd(XMLoadFloat3(&newPos), XMVectorScale(XMLoadFloat3(&collCenter), 1.0f)));
-		allocatedEntity->SetPosition(newPos); // TODO: this informs the rigidbody creation, so is the cause of not having centered rotations? Could create offset in the Mesh class by creating a new mesh but this effects everything. 
-		XMFLOAT4 r = e->GetRotationQuaternion();
-		allocatedEntity->SetRotation(r);
+		allocatedEntity->GetTransform().SetPosition(newPos); // TODO: this informs the rigidbody creation, so is the cause of not having centered rotations? Could create offset in the Mesh class by creating a new mesh but this effects everything. 
+		XMFLOAT4 r = e->GetTransform().GetRotationQuaternion();
+		allocatedEntity->GetTransform().SetRotationQuaternion(r);
 		//allocatedEntity->SetRotation(e->GetRotationQuaternion());
-		allocatedEntity->SetScale(e->GetScale());
-		allocatedEntity->CalcWorldMatrix();
+		allocatedEntity->GetTransform().SetScale(e->GetTransform().GetScale());
 		allocatedEntity->AddAutoBoxCollider();
 		allocatedEntity->InitRigidBody(BulletColliderShape::BOX, componentMass, true);
 		// allocatedEntity->GetRBody()->getWorldTransform().setOrigin(allocatedEntity->GetRBody()->getCenterOfMassPosition());

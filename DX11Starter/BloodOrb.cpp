@@ -11,14 +11,14 @@ void BloodOrb::Init()
 	fluidCallback.prepassPShader = EESceneLoader->PixelShadersMap["FluidPrepass"];
 	fluidCallback.fillLineY = -0.25f;
 	//fluidCallback.waveHeight = 0.02f;
-	fluidCallback.radius = entity->GetScale().x;
+	fluidCallback.radius = entity->GetTransform().GetScale().x;
 
 	EERenderer->SetRenderObjectCallback(entity, &fluidCallback);
 	fluidCallback.active = true;
 
 	ParticleEmitterDescription orbEmitDesc;
 	orbEmitDesc.parentName = "Blood_Orb";
-	orbEmitDesc.parentWorld = entity->GetWorldMatrixPtr();
+	orbEmitDesc.parentWorld = entity->GetTransform().GetWorldMatrixPtr();
 	orbEmitDesc.emitterPosition = XMFLOAT3(0, -0.25f, 0);
 	orbEmitDesc.emissionStartRadius = 0.75f;
 	orbEmitDesc.emissionEndRadius = 0.75f;
@@ -64,10 +64,8 @@ void BloodOrb::Update()
 	XMFLOAT3 camDir = cam->direction;
 	XMFLOAT3 newPos = XMFLOAT3(camPos.x + camDir.x * 1.1f, camPos.y + camDir.y - 0.5f, camPos.z + camDir.z * 1.1f);
 	newPos.y = newPos.y + sin(totalTime) * bobMagnitude;
-	entity->SetPosition(newPos);
-	glass->SetPosition(newPos);
-	entity->CalcWorldMatrix();
-	glass->CalcWorldMatrix();
+	entity->GetTransform().SetPosition(newPos);
+	glass->GetTransform().SetPosition(newPos);
 
 	if (fluidCallback.fillLineY != fillLineMark)
 	{

@@ -18,7 +18,7 @@ Status Idle::Update()
 	
 	if (currentSpeed > 0.001f)
 	{
-		directionVector = enemy->GetDirectionVector();
+		directionVector = enemy->GetTransform().GetDirectionVector();
 		movementDirection = btVector3(directionVector.x, directionVector.y, directionVector.z);
 		currentSpeed = enemy->GetRBody()->getLinearVelocity().length() * dampingScalar;
 

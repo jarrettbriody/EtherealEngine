@@ -11,9 +11,9 @@ void FacePlayer::OnTerminate(Status s)
 
 Status FacePlayer::Update()
 {
-	XMVECTOR dir = XMLoadFloat3(&enemy->GetDirectionVector());
-	XMFLOAT3 pos = enemy->GetPosition();
-	XMFLOAT3 playerPos = player->GetPosition();
+	XMVECTOR dir = XMLoadFloat3(&enemy->GetTransform().GetDirectionVector());
+	XMFLOAT3 pos = enemy->GetTransform().GetPosition();
+	XMFLOAT3 playerPos = player->GetTransform().GetPosition();
 	XMVECTOR diff = XMVectorSubtract(XMLoadFloat3(&playerPos), XMLoadFloat3(&pos));
 	diff.m128_f32[1] = 0.0f;
 	diff.m128_f32[3] = 0.0f;
@@ -21,8 +21,7 @@ Status FacePlayer::Update()
 	XMVECTOR newVec = XMVector3Normalize(XMVectorLerp(dir, tarDir, speed * (*deltaTime)));
 	XMFLOAT3 newDirection;
 	XMStoreFloat3(&newDirection, newVec);
-	enemy->SetDirectionVector(newDirection);
-	enemy->CalcWorldMatrix();
+	enemy->GetTransform().SetDirectionVector(newDirection);
 
 	return SUCCESS;
 }

@@ -16,7 +16,7 @@ void BloodIcicle::Update()
 {
 	if (bodyPartPinned)
 	{
-		closestChild->SetPosition(entity->GetPosition());
+		closestChild->GetTransform().SetPosition(entity->GetTransform().GetPosition());
 	}
 }
 

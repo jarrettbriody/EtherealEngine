@@ -11,8 +11,8 @@ void SeekPlayer::OnTerminate(Status s)
 
 Status SeekPlayer::Update()
 {
-	DirectX::XMFLOAT3 playerPos = player->GetPosition();
-	DirectX::XMFLOAT3 enemyPos = enemy->GetPosition();
+	DirectX::XMFLOAT3 playerPos = player->GetTransform().GetPosition();
+	DirectX::XMFLOAT3 enemyPos = enemy->GetTransform().GetPosition();
 
 	float distance = sqrt(pow(playerPos.x - enemyPos.x, 2) + pow(playerPos.z - enemyPos.z, 2));
 

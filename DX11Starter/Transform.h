@@ -6,7 +6,7 @@ using namespace DirectX;
 using namespace std;
 
 enum class TRANSFORM_FLAGS {
-	ALL = 0,
+	ALL = 0 - 1,
 	POSITION = 1 << 31,
 	ROTATION = 1 << 30,
 	SCALE = 1 << 29,
@@ -21,7 +21,7 @@ private:
 
 	Transform* parent = nullptr;
 	XMFLOAT4X4* parentWorld = nullptr;
-	vector<Transform*>* children = nullptr;
+	//vector<Transform*>* children = nullptr;
 
 	XMFLOAT4X4 worldMatrix = MATRIX_IDENTITY;
 	XMFLOAT4X4 invWorldMatrix = MATRIX_IDENTITY;
@@ -56,7 +56,7 @@ public:
 
 	void SetParent(Transform* parent, bool preserveChild = true);
 	void SetParent(XMFLOAT4X4* parent, bool preserveChild = true);
-	void AddChild(Transform* child, bool preserveChild = true);
+	//void AddChild(Transform* child, bool preserveChild = true);
 
 	void SetWorldMatrix(XMFLOAT4X4 matrix);
 	XMFLOAT4X4 GetWorldMatrix();

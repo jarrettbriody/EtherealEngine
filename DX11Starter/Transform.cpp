@@ -82,21 +82,21 @@ void Transform::CalcWorldMatrix()
 
 	XMStoreFloat4x4(&invWorldMatrix, XMMatrixTranspose(XMMatrixInverse(nullptr, world)));
 
-	for (size_t i = 0; i < children->size(); i++)
-	{
-		(*children)[i]->CalcWorldMatrix();
-	}
+	//for (size_t i = 0; i < children->size(); i++)
+	//{
+	//	(*children)[i]->CalcWorldMatrix();
+	//}
 }
 
 Transform::Transform(TRANSFORM_FLAGS flags)
 {
 	this->flags = (unsigned int)flags;
-	children = new vector<Transform*>();
+	//children = new vector<Transform*>();
 }
 
 Transform::~Transform()
 {
-	delete children;
+	//delete children;
 }
 
 void Transform::SetParent(Transform* parent, bool preserveChild)
@@ -123,11 +123,11 @@ void Transform::SetParent(XMFLOAT4X4* parent, bool preserveChild)
 	CalcWorldMatrix();
 }
 
-void Transform::AddChild(Transform* child, bool preserveChild)
-{
-	(*children).push_back(child);
-	child->SetParent(this, preserveChild);
-}
+//void Transform::AddChild(Transform* child, bool preserveChild)
+//{
+//	(*children).push_back(child);
+//	child->SetParent(this, preserveChild);
+//}
 
 void Transform::SetWorldMatrix(XMFLOAT4X4 matrix)
 {

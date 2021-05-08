@@ -9,7 +9,7 @@ void BloodPool::Init()
 
 	btTransform transform;
 	transform.setIdentity();
-	transform.setOrigin(Utility::Float3ToBulletVector(entity->GetPosition()));
+	transform.setOrigin(Utility::Float3ToBulletVector(entity->GetTransform().GetPosition()));
 	btQuaternion qx = btQuaternion(btVector3(1.0f, 0.0f, 0.0f), 0.0f);
 	btQuaternion qy = btQuaternion(btVector3(0.0f, 1.0f, 0.0f), 0.0f);
 	btQuaternion qz = btQuaternion(btVector3(0.0f, 0.0f, 1.0f), 0.0f);
@@ -27,12 +27,11 @@ void BloodPool::Init()
 void BloodPool::Update()
 {
 	// lerping the scale
-	XMFLOAT3 currentScale = entity->GetScale();
+	XMFLOAT3 currentScale = entity->GetTransform().GetScale();
 	XMFLOAT3 newScale;
-	XMStoreFloat3(&newScale, XMVectorLerp(XMLoadFloat3(&entity->GetScale()), XMLoadFloat3(&finalScale), growthScalar * deltaTime));
+	XMStoreFloat3(&newScale, XMVectorLerp(XMLoadFloat3(&entity->GetTransform().GetScale()), XMLoadFloat3(&finalScale), growthScalar * deltaTime));
 
-	entity->SetScale(newScale);
-	entity->CalcWorldMatrix();
+	entity->GetTransform().SetScale(newScale);
 }
 
 void BloodPool::OnCollision(btCollisionObject* other)

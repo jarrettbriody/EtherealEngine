@@ -7,7 +7,7 @@ void AmbientParticles::Init()
 	ParticleEmitterDescription emitDesc;
 	emitDesc.emitterPosition = XMFLOAT3(0.0f, 10.0f, 0.0f);
 	emitDesc.parentName = "Blood_Orb";
-	emitDesc.parentWorld = EESceneLoader->SceneEntitiesMap["Blood_Orb"]->GetWorldMatrixPtr();
+	emitDesc.parentWorld = EESceneLoader->SceneEntitiesMap["Blood_Orb"]->GetTransform().GetWorldMatrixPtr();
 	emitDesc.emitterDirection = NEG_Y_AXIS;
 	emitDesc.colorCount = 3;
 	ParticleColor particleColors[3] = {

@@ -17,7 +17,7 @@ void EnemyTest::Init()
 
 	Entity* player = eMap->find("FPSController")->second;
 
-	pos = entity->GetPosition();
+	pos = entity->GetTransform().GetPosition();
 
 	/*bt = BehaviorTreeBuilder()
 			.Leaf<EnemySeesPlayer>(entity, player, 30.0f, 30.0f).End()
@@ -61,7 +61,7 @@ void EnemyTest::Update()
 
 	if (keyboard->KeyIsPressed(0x4A)) // J
 	{
-		XMFLOAT3 ePos = entity->GetPosition();
+		XMFLOAT3 ePos = entity->GetTransform().GetPosition();
 		Node* closest = navmesh->GetGridAtPosition(ePos)->FindNearestNode(ePos);
 		XMFLOAT3 nodePos = closest->GetPos();
 		cout << "Enemy position- X: " << ePos.x << "| Z: " << ePos.z << endl;
@@ -70,7 +70,7 @@ void EnemyTest::Update()
 		clock_t t;
 		Entity* player = eMap->find("FPSController")->second;
 		t = clock();
-		path = aStarSolver.FindPath(entity->GetPosition(), player->GetPosition());
+		path = aStarSolver.FindPath(entity->GetTransform().GetPosition(), player->GetTransform().GetPosition());
 		t = clock() - t;
 		printf("It took me %d clicks (%f seconds).\n", t, ((float)t) / CLOCKS_PER_SEC);
 

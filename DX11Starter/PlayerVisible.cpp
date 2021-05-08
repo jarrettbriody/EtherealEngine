@@ -17,8 +17,8 @@ Status PlayerVisible::Update()
 	Config::DynamicsWorld->updateAabbs();
 	Config::DynamicsWorld->computeOverlappingPairs();
 
-	btVector3 from(enemy->GetPosition().x, enemy->GetPosition().y, enemy->GetPosition().z);
-	btVector3 to(player->GetPosition().x, player->GetPosition().y, player->GetPosition().z);
+	btVector3 from(enemy->GetTransform().GetPosition().x, enemy->GetTransform().GetPosition().y, enemy->GetTransform().GetPosition().z);
+	btVector3 to(player->GetTransform().GetPosition().x, player->GetTransform().GetPosition().y, player->GetTransform().GetPosition().z);
 
 	// Create variable to store the ray hits and set flags
 	btCollisionWorld::AllHitsRayResultCallback allResults(from, to);

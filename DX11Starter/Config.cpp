@@ -15,8 +15,8 @@ unsigned int Config::ViewPortHeight = 900;
 bool Config::Fullscreen = false;
 bool Config::WindowedBorderless = false;
 bool Config::ShowCursor = false;
-bool Config::CaptureMouse = false;
-bool Config::DebugCamera = true;
+bool Config::CaptureMouse = true;
+bool Config::DebugCamera = false;
 float Config::DebugCameraSpeed = 3.0f;
 float Config::MouseSensitivity = 0.001f;
 

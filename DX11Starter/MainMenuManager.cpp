@@ -19,7 +19,7 @@ void MainMenuManager::Init()
 	Entity* bloodsword = EESceneLoader->SceneEntitiesMap["bloodswordlowpoly2"];
 
 	ParticleEmitterDescription emitDesc;
-	emitDesc.emitterPosition = bloodsword->GetPosition();
+	emitDesc.emitterPosition = bloodsword->GetTransform().GetPosition();
 	emitDesc.emitterPosition.x = emitDesc.emitterPosition.x + 3.5f;
 	emitDesc.emitterDirection = NEG_Y_AXIS; 
 	emitDesc.colorCount = 1;
@@ -62,7 +62,7 @@ void MainMenuManager::Init()
 	//CANDLE FLAME
 	emitDesc = {};
 	emitDesc.emitterDirection = Y_AXIS;
-	emitDesc.emitterPosition = candle->GetPosition();
+	emitDesc.emitterPosition = candle->GetTransform().GetPosition();
 	emitDesc.emitterPosition.y = emitDesc.emitterPosition.y + 0.8f;
 	emitDesc.maxParticles = 100;
 	emitDesc.emissionRate = 3.0f;
@@ -96,11 +96,11 @@ void MainMenuManager::Init()
 	GPUParticleEmitter* gpuEmitter = new GPUParticleEmitter(emitDesc);
 	gpuEmitter->SetBlendingEnabled(true);
 
-	emitDesc.emitterPosition = candle2->GetPosition();
+	emitDesc.emitterPosition = candle2->GetTransform().GetPosition();
 	emitDesc.emitterPosition.y = emitDesc.emitterPosition.y + 0.8f;
 	gpuEmitter = new GPUParticleEmitter(emitDesc);
 
-	emitDesc.emitterPosition = candle->GetPosition();
+	emitDesc.emitterPosition = candle->GetTransform().GetPosition();
 	emitDesc.emitterPosition.y = emitDesc.emitterPosition.y + 0.8f;
 	emitDesc.fadeOutStartTime = -1.0f;
 	emitDesc.fadeInEndTime = 0.05f;
@@ -124,7 +124,7 @@ void MainMenuManager::Init()
 	gpuEmitter = new GPUParticleEmitter(emitDesc);
 	gpuEmitter->SetBlendingEnabled(true);
 
-	emitDesc.emitterPosition = candle2->GetPosition();
+	emitDesc.emitterPosition = candle2->GetTransform().GetPosition();
 	emitDesc.emitterPosition.y = emitDesc.emitterPosition.y + 0.8f;
 	gpuEmitter = new GPUParticleEmitter(emitDesc);
 

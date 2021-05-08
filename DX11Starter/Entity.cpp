@@ -85,6 +85,7 @@ void Entity::operator=(const Entity& e)
 	ZeroMemory(layers, MAX_ENTITY_LAYER_COUNT * sizeof(EEString<EESTRING_SIZE>));
 
 	name = e.name;
+	eTransform = e.eTransform;
 	tagCount = e.tagCount;
 	layerCount = e.layerCount;
 	layerMask = e.layerMask;
@@ -93,17 +94,7 @@ void Entity::operator=(const Entity& e)
 	*children = vector<Entity*>(*e.children);
 	*colliders = vector<Collider*>(*e.colliders);
 	*materialMap = map<string, Material*>(*e.materialMap);
-	worldMatrix = e.worldMatrix;
-	parentWorld = e.parentWorld;
 	mesh = e.mesh;
-	quaternion = e.quaternion;
-	position = e.position;
-	scale = e.scale;
-	rotation = e.rotation;
-	rotationInDegrees = e.rotationInDegrees;
-	direction = e.direction;
-	up = e.up;
-	right = e.right;
 	repeatTex = e.repeatTex;
 	uvOffset = e.uvOffset;
 	parent = e.parent;
@@ -123,6 +114,11 @@ void Entity::operator=(const Entity& e)
 	renderObject = e.renderObject;
 	pWrap = e.pWrap;
 	hbaoPlusEnabled = e.hbaoPlusEnabled;
+}
+
+Transform& Entity::GetTransform()
+{
+	return eTransform;
 }
 
 void Entity::InitRigidBody(BulletColliderShape shape, float entityMass, bool zeroObjects)
@@ -173,7 +169,8 @@ void Entity::InitRigidBody(BulletColliderShape shape, float entityMass, bool zer
 			this->compoundShape->addChildShape(localTransform, this->collShape[i]);
 		}
 		else {
-			collShape[i]->setLocalScaling(btVector3(scale.x, scale.y, scale.z));
+			XMFLOAT3 scl = eTransform.GetScale();
+			collShape[i]->setLocalScaling(btVector3(scl.x, scl.y, scl.z));
 		}
 	}
 
@@ -183,6 +180,11 @@ void Entity::InitRigidBody(BulletColliderShape shape, float entityMass, bool zer
 	//XMFLOAT3 scale = GetScale();
 	//centerLocal = XMFLOAT3(centerLocal.x * scale.x, centerLocal.y * scale.y, centerLocal.z * scale.z);
 	//transform.setOrigin(btVector3(position.x + centerLocal.x, position.y + centerLocal.y, position.z + centerLocal.z));
+
+	XMFLOAT3 position = eTransform.GetPosition();
+	XMFLOAT3 rotation = eTransform.GetEulerAnglesRadians();
+	XMFLOAT3 scale = eTransform.GetScale();
+
 	transform.setOrigin(btVector3(position.x, position.y, position.z));
 	btQuaternion qx = btQuaternion(btVector3(1.0f, 0.0f, 0.0f), rotation.x);
 	btQuaternion qy = btQuaternion(btVector3(0.0f, 1.0f, 0.0f), rotation.y);
@@ -252,58 +254,6 @@ void Entity::InitRigidBody(BulletColliderShape shape, float entityMass, bool zer
 	Config::DynamicsWorld->addRigidBody(rBody);
 }
 
-void Entity::SetWorldMatrix(XMFLOAT4X4 matrix)
-{
-	worldMatrix = matrix;
-}
-
-DirectX::XMFLOAT4X4 Entity::GetWorldMatrix()
-{
-	return worldMatrix;
-}
-
-DirectX::XMFLOAT4X4 Entity::GetInverseWorldMatrix()
-{
-	return invWorldMatrix;
-}
-
-DirectX::XMFLOAT3 Entity::GetPosition()
-{
-	return position;
-}
-
-DirectX::XMFLOAT3 Entity::GetScale()
-{
-	return scale;
-}
-
-DirectX::XMFLOAT3 Entity::GetEulerAngles()
-{
-	return rotation;
-}
-
-DirectX::XMFLOAT3 Entity::GetEulerAnglesDegrees()
-{
-	return rotationInDegrees;
-}
-
-DirectX::XMFLOAT4 Entity::GetRotationQuaternion()
-{
-	return quaternion;
-}
-
-void Entity::SetPosition(float x, float y, float z)
-{
-	position.x = x;
-	position.y = y;
-	position.z = z;
-}
-
-void Entity::SetPosition(XMFLOAT3 p)
-{
-	position = p;
-}
-
 // TODO: Make sure this method works properly
 void Entity::SetRigidbodyPosition(btVector3 position, btVector3 orientation)
 {
@@ -314,109 +264,6 @@ void Entity::SetRigidbodyPosition(btVector3 position, btVector3 orientation)
 
 		rBody->setWorldTransform(initialTransform);
 		rBody->getMotionState()->setWorldTransform(initialTransform);
-}
-
-void Entity::SetScale(float x, float y, float z)
-{
-	scale.x = x;
-	scale.y = y;
-	scale.z = z;
-}
-
-void Entity::SetScale(XMFLOAT3 s)
-{
-	scale = s;
-}
-
-///<summary>
-///Rotation in Radians
-///</summary>
-void Entity::SetRotation(float x, float y, float z)
-{
-	rotation.x = x;
-	rotation.y = y;
-	rotation.z = z;
-
-	rotationInDegrees.x = DirectX::XMConvertToDegrees(x);
-	rotationInDegrees.y = DirectX::XMConvertToDegrees(y);
-	rotationInDegrees.z = DirectX::XMConvertToDegrees(z);
-
-	XMVECTOR quat = XMQuaternionRotationRollPitchYaw(x, y, z);
-	XMStoreFloat4(&quaternion, XMQuaternionNormalize(quat));
-	CalcDirectionVector();
-}
-
-void Entity::SetRotation(XMFLOAT4 quat)
-{
-	quaternion = quat;
-	CalcEulerAngles();
-	CalcDirectionVector();
-}
-
-///<summary>
-///Rotation in Radians
-///</summary>
-void Entity::SetRotation(XMFLOAT3 rotRadians)
-{
-	rotation = rotRadians;
-
-	rotationInDegrees.x = DirectX::XMConvertToDegrees(rotation.x);
-	rotationInDegrees.y = DirectX::XMConvertToDegrees(rotation.y);
-	rotationInDegrees.z = DirectX::XMConvertToDegrees(rotation.z);
-
-	XMVECTOR quat = XMQuaternionRotationRollPitchYaw(rotation.x, rotation.y, rotation.z);
-	XMStoreFloat4(&quaternion, XMQuaternionNormalize(quat));
-	CalcDirectionVector();
-}
-
-XMFLOAT4X4* Entity::GetWorldMatrixPtr()
-{
-	return &worldMatrix;
-}
-
-void Entity::RotateAroundAxis(XMFLOAT3 axis, float scalar)
-{
-	XMVECTOR a = XMLoadFloat3(&axis);
-	XMVECTOR quat = XMQuaternionRotationAxis(a, scalar);
-	XMVECTOR existingQuat = XMLoadFloat4(&quaternion);
-	XMVECTOR result = XMQuaternionMultiply(XMQuaternionNormalize(quat), existingQuat);
-	XMStoreFloat4(&quaternion, XMQuaternionNormalize(result));
-	CalcEulerAngles();
-	CalcDirectionVector();
-}
-
-XMFLOAT3 Entity::GetDirectionVector()
-{
-	return direction;
-}
-
-XMFLOAT3 Entity::GetUpVector()
-{
-	return up;
-}
-
-XMFLOAT3 Entity::GetRightVector()
-{
-	return right;
-}
-
-void Entity::CalcEulerAngles()
-{
-	XMVECTOR q = XMLoadFloat4(&quaternion);
-
-	XMFLOAT3 x = X_AXIS;
-	XMFLOAT3 y = Y_AXIS;
-	XMFLOAT3 z = Z_AXIS;
-
-	XMVECTOR xs = XMLoadFloat3(&x);
-	XMVECTOR ys = XMLoadFloat3(&y);
-	XMVECTOR zs = XMLoadFloat3(&z);
-
-	XMQuaternionToAxisAngle(&xs, &rotation.x, q);
-	XMQuaternionToAxisAngle(&ys, &rotation.y, q);
-	XMQuaternionToAxisAngle(&zs, &rotation.z, q);
-
-	rotationInDegrees = XMFLOAT3(DirectX::XMConvertToDegrees(rotation.x), DirectX::XMConvertToDegrees(rotation.y), DirectX::XMConvertToDegrees(rotation.z));
 }
 
 void Entity::SetRepeatTexture(float x, float y)
@@ -456,47 +303,6 @@ void Entity::ToggleHBAOPlus(bool toggle)
 	hbaoPlusEnabled = toggle;
 }
 
-void Entity::Move(XMFLOAT3 f)
-{
-	position.x += f.x;
-	position.y += f.y;
-	position.z += f.z;
-	CalcWorldMatrix();
-}
-
-void Entity::Move(float x, float y, float z)
-{
-	position.x += x;
-	position.y += y;
-	position.z += z;
-	CalcWorldMatrix();
-}
-
-void Entity::SetDirectionVector(XMFLOAT3 direction)
-{
-	XMVECTOR dir = XMLoadFloat3(&direction);
-	dir = XMVector3Normalize(dir);
-	XMStoreFloat3(&this->direction, dir);
-
-	XMFLOAT3 y = Y_AXIS;
-	XMVECTOR up = XMLoadFloat3(&y);
-	XMVECTOR right = XMVector3Cross(up, dir);
-	right = XMVector3Normalize(right);
-	XMStoreFloat3(&this->right, right);
-	up = XMVector3Cross(dir, right);
-	up = XMVector3Normalize(up);
-	XMStoreFloat3(&this->up, up);
-	XMFLOAT4 botRow(0.0f, 0.0f, 0.0f, 1.0f);
-	XMVECTOR trans = XMLoadFloat4(&botRow);
-	XMMATRIX rotation = XMMATRIX(right, up, dir, trans);
-
-	XMVECTOR quat = XMQuaternionRotationMatrix(rotation);
-
-	XMStoreFloat4(&quaternion, XMQuaternionNormalize(quat));
-
-	CalcEulerAngles();
-}
-
 ID3D11Buffer * Entity::GetMeshVertexBuffer(int childIndex)
 {
 	if(childIndex == -1)
@@ -511,23 +317,6 @@ ID3D11Buffer * Entity::GetMeshIndexBuffer(int childIndex)
 		return mesh->GetIndexBuffer();
 	else
 		return mesh->GetChildren()[childIndex]->GetIndexBuffer();
-}
-
-void Entity::CalcDirectionVector()
-{
-	XMFLOAT3 zAxis = Z_AXIS;
-	XMFLOAT3 yAxis = Y_AXIS;
-	XMFLOAT3 xAxis = X_AXIS;
-	XMVECTOR dir = XMLoadFloat3(&zAxis);
-	XMVECTOR u = XMLoadFloat3(&yAxis);
-	XMVECTOR r = XMLoadFloat3(&xAxis);
-	XMVECTOR quat = XMLoadFloat4(&quaternion);
-	dir = XMVector3Transform(dir, XMMatrixRotationQuaternion(quat));
-	u = XMVector3Transform(u, XMMatrixRotationQuaternion(quat));
-	r = XMVector3Transform(r, XMMatrixRotationQuaternion(quat));
-	XMStoreFloat3(&direction, dir);
-	XMStoreFloat3(&up, u);
-	XMStoreFloat3(&right, r);
 }
 
 int Entity::GetMeshIndexCount(int childIndex)
@@ -546,57 +335,6 @@ string Entity::GetMeshMaterialName(int childIndex)
 		return mesh->GetChildren()[childIndex]->GetMaterialName();
 }
 
-//Calculate after every transformation
-void Entity::CalcWorldMatrix()
-{
-	DirectX::XMMATRIX trans = DirectX::XMMatrixTranslation(position.x, position.y, position.z);
-	//DirectX::XMMATRIX rot   = DirectX::XMMatrixRotationRollPitchYaw(rotation.x, rotation.y, rotation.z);
-	XMVECTOR quat = XMLoadFloat4(&quaternion);
-	DirectX::XMMATRIX rot = DirectX::XMMatrixRotationQuaternion(quat);
-	DirectX::XMMATRIX scl   = DirectX::XMMatrixScaling(scale.x, scale.y, scale.z);
-	DirectX::XMMATRIX world = scl * rot * trans;
-	if (parent != nullptr) {
-		DirectX::XMMATRIX parentWorld = DirectX::XMMatrixTranspose(DirectX::XMLoadFloat4x4(&parent->worldMatrix));
-		world = DirectX::XMMatrixMultiply(world, parentWorld);
-	}
-	else if (parentWorld != nullptr) {
-		XMFLOAT4X4 parentW = *parentWorld;
-		DirectX::XMMATRIX parentWorld = DirectX::XMMatrixTranspose(DirectX::XMLoadFloat4x4(&parentW));
-		world = DirectX::XMMatrixMultiply(world, parentWorld);
-	}
-	DirectX::XMStoreFloat4x4(&worldMatrix, DirectX::XMMatrixTranspose(world));
-	for (size_t i = 0; i < children->size(); i++)
-	{
-		(*children)[i]->CalcWorldMatrix();
-	}
-	for (size_t i = 0; i < colliders->size(); i++)
-	{
-		(*colliders)[i]->SetWorldMatrix(worldMatrix);
-	} 
-
-	XMStoreFloat4x4(&invWorldMatrix, XMMatrixTranspose(XMMatrixInverse(nullptr, world)));
-}
-
-XMMATRIX Entity::CalcWorldToModelMatrix()
-{
-	XMMATRIX worldToModel;
-	XMVECTOR t = XMLoadFloat3(&position);
-	XMVECTOR r = XMLoadFloat4(&quaternion);
-	XMVECTOR s = XMLoadFloat3(&scale);
-	t = XMVectorScale(t, -1.0f);
-	s = XMVectorReciprocal(s);
-
-	XMMATRIX trans = XMMatrixTranslationFromVector(t);
-
-	XMMATRIX rot = XMMatrixRotationQuaternion(r);
-	rot = XMMatrixTranspose(rot);
-
-	XMMATRIX scl = XMMatrixScalingFromVector(s);
-
-	worldToModel = scl * rot * trans;
-	return worldToModel;
-}
-
 void Entity::PrepareMaterialForDraw(string n, DirectX::XMFLOAT4X4 view, DirectX::XMFLOAT4X4 proj)
 {
 	SimpleVertexShader* vs = (*materialMap)[n]->GetVertexShader();
@@ -607,7 +345,7 @@ void Entity::PrepareMaterialForDraw(string n, DirectX::XMFLOAT4X4 view, DirectX:
 		//  - This is actually a complex process of copying data to a local buffer
 		//    and then copying that entire buffer to the GPU.  
 		//  - The "SimpleShader" class handles all of that for you.
-	vs->SetMatrix4x4("world", GetWorldMatrix());
+	vs->SetMatrix4x4("world", eTransform.GetWorldMatrix());
 	vs->SetMatrix4x4("view", view);
 	vs->SetMatrix4x4("projection", proj);
 
@@ -682,153 +420,18 @@ void Entity::AddMaterial(Material * mat, bool addToMesh)
 		meshMaterialIndex = mesh->AddMaterialName(nm);
 }
 
-void Entity::SetDirectionVectorU(XMFLOAT3 direction, XMFLOAT3 up)
-{
-	XMVECTOR dir = XMLoadFloat3(&direction);
-	dir = XMVector3Normalize(dir);
-	XMStoreFloat3(&this->direction, dir);
-
-	XMVECTOR upC = XMLoadFloat3(&up);
-	upC = XMVector3Normalize(upC);
-	XMStoreFloat3(&this->up, upC);
-
-	XMVECTOR right = XMVector3Cross(upC, dir);
-	right = XMVector3Normalize(right);
-	XMStoreFloat3(&this->right, right);
-
-	XMFLOAT4 botRow(0.0f, 0.0f, 0.0f, 1.0f);
-	XMVECTOR trans = XMLoadFloat4(&botRow);
-	XMMATRIX rotation = XMMATRIX(right, upC, dir, trans);
-
-	XMVECTOR quat = XMQuaternionRotationMatrix(rotation);
-
-	XMStoreFloat4(&quaternion, XMQuaternionNormalize(quat));
-
-	CalcEulerAngles();
-}
-
-void Entity::SetDirectionVectorR(XMFLOAT3 direction, XMFLOAT3 right) 
-{
-	XMVECTOR dir = XMLoadFloat3(&direction);
-	dir = XMVector3Normalize(dir);
-	XMStoreFloat3(&this->direction, dir);
-
-	XMVECTOR rightC = XMLoadFloat3(&right);
-	rightC = XMVector3Normalize(rightC);
-	XMStoreFloat3(&this->right, rightC);
-
-	XMVECTOR up = XMVector3Cross(dir, rightC);
-	up = XMVector3Normalize(up);
-	XMStoreFloat3(&this->up, up);
-
-	XMFLOAT4 botRow(0.0f, 0.0f, 0.0f, 1.0f);
-	XMVECTOR trans = XMLoadFloat4(&botRow);
-	XMMATRIX rotation = XMMATRIX(rightC, up, dir, trans);
-
-	XMVECTOR quat = XMQuaternionRotationMatrix(rotation);
-
-	XMStoreFloat4(&quaternion, XMQuaternionNormalize(quat));
-
-	CalcEulerAngles();
-}
-
-void Entity::SetDirectionVectorUR(XMFLOAT3 direction, XMFLOAT3 up, XMFLOAT3 right)
-{
-	XMVECTOR dir = XMLoadFloat3(&direction);
-	dir = XMVector3Normalize(dir);
-	XMStoreFloat3(&this->direction, dir);
-
-	XMVECTOR upC = XMLoadFloat3(&up);
-	upC = XMVector3Normalize(upC);
-	XMStoreFloat3(&this->up, upC);
-
-	XMVECTOR rightC = XMLoadFloat3(&right);
-	rightC = XMVector3Normalize(rightC);
-	XMStoreFloat3(&this->right, rightC);
-
-	XMFLOAT4 botRow(0.0f, 0.0f, 0.0f, 1.0f);
-	XMVECTOR trans = XMLoadFloat4(&botRow);
-	XMMATRIX rotation = XMMATRIX(rightC, upC, dir, trans);
-
-	XMVECTOR quat = XMQuaternionRotationMatrix(rotation);
-
-	XMStoreFloat4(&quaternion, XMQuaternionNormalize(quat));
-
-	CalcEulerAngles();
-}
-
-void Entity::SetUpVector(XMFLOAT3 up)
-{
-	XMVECTOR upC = XMLoadFloat3(&up);
-	upC = XMVector3Normalize(upC);
-	XMStoreFloat3(&this->up, upC);
-
-	XMFLOAT3 z = Z_AXIS;
-	XMVECTOR dir = XMLoadFloat3(&z);
-	XMVECTOR right = XMVector3Cross(upC, dir);
-	right = XMVector3Normalize(right);
-	XMStoreFloat3(&this->right, right);
-	dir = XMVector3Cross(upC, right);
-	dir = XMVector3Normalize(dir);
-	XMStoreFloat3(&this->direction, dir);
-	XMFLOAT4 botRow(0.0f, 0.0f, 0.0f, 1.0f);
-	XMVECTOR trans = XMLoadFloat4(&botRow);
-	XMMATRIX rotation = XMMATRIX(right, upC, dir, trans);
-
-	XMVECTOR quat = XMQuaternionRotationMatrix(rotation);
-
-	XMStoreFloat4(&quaternion, XMQuaternionNormalize(quat));
-
-	CalcEulerAngles();
-}
-
-void Entity::SetRightVector(XMFLOAT3 right) {
-	XMVECTOR rightC = XMLoadFloat3(&right);
-	rightC = XMVector3Normalize(rightC);
-	XMStoreFloat3(&this->right, rightC);
-
-	XMFLOAT3 z = Z_AXIS;
-	XMVECTOR dir = XMLoadFloat3(&z);
-	XMVECTOR up = XMVector3Cross(dir, rightC);
-	up = XMVector3Normalize(up);
-	XMStoreFloat3(&this->up, up);
-	dir = XMVector3Cross(up, rightC);
-	dir = XMVector3Normalize(dir);
-	XMStoreFloat3(&this->direction, dir);
-	XMFLOAT4 botRow(0.0f, 0.0f, 0.0f, 1.0f);
-	XMVECTOR trans = XMLoadFloat4(&botRow);
-	XMMATRIX rotation = XMMATRIX(rightC, up, dir, trans);
-
-	XMVECTOR quat = XMQuaternionRotationMatrix(rotation);
-
-	XMStoreFloat4(&quaternion, XMQuaternionNormalize(quat));
-
-	CalcEulerAngles();
-}
-
 string Entity::GetName()
 {
 	return name.STDStr();
 }
 
-void Entity::AddChildEntity(Entity* child, XMFLOAT4X4 childWorldMatrix)
+void Entity::AddChild(Entity* child, bool preserveChild)
 {
 	children->push_back(child);
 	child->parent = this;
 
-	// add boolean to only copy the translation
-
-	
-
-	// Scaling
-	// child world matrix of body part multiplied by inverse world matrix of parent 
-	// may have to play around with ordering with multiplication
-	CalcWorldMatrix();
-	XMMATRIX parentInvWorldMatrixTranspose = XMMatrixTranspose(XMLoadFloat4x4(&invWorldMatrix));
-	XMMATRIX childWorldMatrixTranspose = XMMatrixTranspose(XMLoadFloat4x4(&childWorldMatrix)); // multiply this by the inverse scale matrix of the icicle
-	XMFLOAT4X4 scalingMatrix; 
-	XMStoreFloat4x4(&scalingMatrix, XMMatrixTranspose(XMMatrixMultiply(parentInvWorldMatrixTranspose, childWorldMatrixTranspose)));
-	child->SetWorldMatrix(scalingMatrix);
+	child->eTransform.SetParent(&eTransform, preserveChild);
+	//eTransform.AddChild(&child->eTransform, preserveChild);
 }
 
 void Entity::AddAutoBoxCollider()
@@ -885,8 +488,8 @@ bool Entity::CheckSATCollisionAndCorrect(Entity* other)
 	if (isColliding) {
 		XMVECTOR modifiedVec = XMLoadFloat3(&result);
 		XMVECTOR dist;
-		XMVECTOR thisPos = XMLoadFloat3(&position);
-		XMVECTOR otherPos = XMLoadFloat3(&other->position);
+		XMVECTOR thisPos = XMLoadFloat3(&eTransform.GetPosition());
+		XMVECTOR otherPos = XMLoadFloat3(&other->eTransform.GetPosition());
 		dist = XMVectorSubtract(thisPos, otherPos);
 		XMVECTOR dotV = XMVector3Dot(modifiedVec, dist);
 		float dot;
@@ -899,11 +502,11 @@ bool Entity::CheckSATCollisionAndCorrect(Entity* other)
 			modifiedVec = XMVectorScale(modifiedVec, 0.5f);
 			XMVECTOR otherResultVec = XMVectorScale(modifiedVec, -1.0f);
 			XMStoreFloat3(&otherResult, otherResultVec);
-			other->Move(otherResult);
+			other->eTransform.Move(otherResult);
 		}
 		XMFLOAT3 modifiedResult;
 		XMStoreFloat3(&modifiedResult, modifiedVec);
-		Move(modifiedResult);
+		eTransform.Move(modifiedResult);
 		return true;
 	}
 	else return false;
@@ -934,6 +537,14 @@ btCompoundShape* Entity::GetBTCompoundShape(int index)
 {
 	if(compoundShape == nullptr || index >= colliderCnt || index < 0) return nullptr;
 	return compoundShape;
+}
+
+void Entity::Update()
+{
+	for (size_t i = 0; i < colliders->size(); i++)
+	{
+		(*colliders)[i]->SetWorldMatrix(eTransform.GetWorldMatrix());
+	}
 }
 
 float Entity::GetMass()
@@ -1050,11 +661,6 @@ void Entity::EmptyEntity()
 	}
 		
 	this->isEmptyObj = true;
-}
-
-void Entity::SetParentWorldMatrix(XMFLOAT4X4* parentWorld)
-{
-	this->parentWorld = parentWorld;
 }
 
 void Entity::Destroy()

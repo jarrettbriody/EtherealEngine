@@ -166,8 +166,8 @@ void Game::Init()
 
 	//EESceneLoader->LoadScene("ArenaV2");
 
-	EESceneLoader->SetModelPath("../../Assets/Models/MainMenu/");
-	EESceneLoader->LoadScene("MainMenu");
+	EESceneLoader->SetModelPath("../../Assets/Models/Kamchatka/");
+	EESceneLoader->LoadScene("Kamchatka");
 
 	EERenderer->SetShadowCascadeInfo(0, 4096, 0.1f, 2000.0f, 100.0f, 100.0f);
 	EERenderer->SetShadowCascadeInfo(1, 4096, 0.1f, 2000.0f, 250.0f, 250.0f);
@@ -431,6 +431,11 @@ void Game::Update(double deltaTime, double totalTime)
 		sf->CallUpdate();
 	}
 
+	for (size_t i = 0; i < EESceneLoader->SceneEntities.size(); i++)
+	{
+		EESceneLoader->SceneEntities[i]->Update();
+	}
+
 	XMFLOAT4X4 view = EERenderer->GetCamera("main")->GetViewMatrix();
 	for (size_t i = 0; i < ParticleEmitter::EmitterVector.size(); i++)
 	{
@@ -535,9 +540,8 @@ void Game::PhysicsStep(double deltaTime)
 			XMFLOAT3 pos = XMFLOAT3(p.getX(), p.getY(), p.getZ());
 
 			btQuaternion q = transform.getRotation();
-			entity->SetPosition(pos);
-			entity->SetRotation(XMFLOAT4(q.getX(), q.getY(), q.getZ(), q.getW()));
-			entity->CalcWorldMatrix();
+			entity->GetTransform().SetPosition(pos);
+			entity->GetTransform().SetRotationQuaternion(XMFLOAT4(q.getX(), q.getY(), q.getZ(), q.getW()));
 		}
 	}
 
@@ -565,16 +569,15 @@ void Game::EnforcePhysics()
 
 			if (wrapper->type == PHYSICS_WRAPPER_TYPE::ENTITY) {
 				entity = (Entity*)wrapper->objectPointer;
-				entity->CalcWorldMatrix();
 
-				XMFLOAT3 pos = entity->GetPosition();
+				XMFLOAT3 pos = entity->GetTransform().GetPosition();
 				//XMFLOAT3 centerLocal = entity->GetCollider()->GetCenterLocal();
 				//XMFLOAT3 scale = entity->GetScale();
 				//centerLocal = XMFLOAT3(centerLocal.x * scale.x, centerLocal.y * scale.y, centerLocal.z * scale.z);
 				//pos = XMFLOAT3(pos.x + centerLocal.x, pos.y + centerLocal.y, pos.z + centerLocal.z);
 				pos = XMFLOAT3(pos.x, pos.y, pos.z);
 
-				XMFLOAT4 rot = entity->GetRotationQuaternion();
+				XMFLOAT4 rot = entity->GetTransform().GetRotationQuaternion();
 
 				btVector3 transformPos = btVector3(pos.x, pos.y, pos.z);
 				transform.setOrigin(transformPos);

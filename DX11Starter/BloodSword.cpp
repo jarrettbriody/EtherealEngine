@@ -16,7 +16,7 @@ void BloodSword::Init()
 	ss = SwordState::Idle;
 	
 	// starting positioning
-	entity->SetParentWorldMatrix(cam->GetWorldMatrixPtr());
+	entity->GetTransform().SetParent(cam->GetWorldMatrixPtr());
 	
 	finalLerpPos = originalLerpPos;
 	lerpPositionFrom = finalLerpPos; 
@@ -54,10 +54,9 @@ void BloodSword::Init()
 	finalLerpRot = idleQuat;
 	lerpRotationFrom = finalLerpRot;
 
-	entity->SetPosition(lerpPositionFrom); 
-	entity->SetRotation(lerpRotationFrom);
-	entity->SetScale(0.4f, 0.4f, 0.4f);
-	entity->CalcWorldMatrix();
+	entity->GetTransform().SetPosition(lerpPositionFrom);
+	entity->GetTransform().SetRotationQuaternion(lerpRotationFrom);
+	entity->GetTransform().SetScale(0.4f, 0.4f, 0.4f);
 
 	/*slashPointsRight = {
 		XMFLOAT3(5, 0, 3),
@@ -107,7 +106,7 @@ void BloodSword::Init()
 	ParticleEmitterDescription emitDesc;
 	emitDesc.emitterPosition = XMFLOAT3(0.0f, 0.0f, 0.0f);
 	emitDesc.parentName = entity->GetName();
-	emitDesc.parentWorld = entity->GetWorldMatrixPtr();//&emitterTransform;//
+	emitDesc.parentWorld = entity->GetTransform().GetWorldMatrixPtr();//&emitterTransform;//
 	emitDesc.emitterDirection = Z_AXIS;
 	emitDesc.colorCount = 1;
 	ParticleColor particleColors[1] = {
@@ -193,19 +192,18 @@ void BloodSword::Update()
 	// Update blood sword position with local coordinate lerping data relative to camera 
 	//if(XMVector3Length(XMVectorSubtract(XMLoadFloat3(&originalLerpRot), XMLoadFloat3(&finalLerpRot))).m128_f32[0] > 0.05f) 
 	if (ss != SwordState::Idle)
-		entity->SetRotation(finalLerpRot);
-	entity->SetPosition(finalLerpPos);
+		entity->GetTransform().SetRotationQuaternion(finalLerpRot);
+	entity->GetTransform().SetPosition(finalLerpPos);
 	
 
 	// Calc world matrix of the sword
 	cam->CalcViewMatrix();
 	cam->CalcWorldMatrix();
-	entity->CalcWorldMatrix();
 	//cam->CalcWorldMatrix(); // Putting camera world matrix calc after the entity makes the sword jitter much less severe...not sure why?
 
 	totalTime += deltaTime;
 
-	XMFLOAT4X4 world = entity->GetWorldMatrix();
+	XMFLOAT4X4 world = entity->GetTransform().GetWorldMatrix();
 	XMMATRIX transMat = XMMatrixTranslation(world._14, world._24, world._34);
 	XMStoreFloat4x4(&emitterTransform, XMMatrixTranspose(transMat));
 }

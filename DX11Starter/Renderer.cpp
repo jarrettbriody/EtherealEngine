@@ -692,7 +692,7 @@ void Renderer::RenderDecals()
 		for (size_t i = 0; i < DecalHandler::decalsVec.size(); i++)
 		{
 			DecalBucket* db = DecalHandler::decalsVec[i];
-			ownerWorld = XMMatrixTranspose(XMLoadFloat4x4(&db->owner->GetWorldMatrix()));
+			ownerWorld = XMMatrixTranspose(XMLoadFloat4x4(&db->owner->GetTransform().GetWorldMatrix()));
 			for (size_t j = 0; j < db->count; j++)
 			{
 				localWorld = XMMatrixTranspose(XMLoadFloat4x4(&db->decals[j].localTransform));
@@ -855,19 +855,19 @@ void Renderer::RenderShadowMap()
 			if (callback != nullptr) {
 				if (callback->active && callback->prepassVShader) {
 					callback->prepassVShader->SetShader();
-					callback->prepassVShader->SetMatrix4x4("world", e->GetWorldMatrix());
+					callback->prepassVShader->SetMatrix4x4("world", e->GetTransform().GetWorldMatrix());
 					callback->prepassVShader->SetMatrix4x4("view", shadowComponents.view);
 					callback->prepassVShader->SetMatrix4x4("projection", shadowComponents.shadowCascades[j].proj);
 					callback->PrePrepassVertexShaderCallback();
 					callback->prepassVShader->CopyAllBufferData();
 				}
 				else {
-					shaders.depthStencilVS->SetMatrix4x4("world", e->GetWorldMatrix());
+					shaders.depthStencilVS->SetMatrix4x4("world", e->GetTransform().GetWorldMatrix());
 					shaders.depthStencilVS->CopyAllBufferData();
 				}
 			}
 			else {
-				shaders.depthStencilVS->SetMatrix4x4("world", e->GetWorldMatrix());
+				shaders.depthStencilVS->SetMatrix4x4("world", e->GetTransform().GetWorldMatrix());
 				shaders.depthStencilVS->CopyAllBufferData();
 			}
 
@@ -952,19 +952,19 @@ void Renderer::RenderDepthStencil()
 		if (callback != nullptr) {
 			if (callback->active && callback->prepassVShader) {
 				callback->prepassVShader->SetShader();
-				callback->prepassVShader->SetMatrix4x4("world", e->GetWorldMatrix());
+				callback->prepassVShader->SetMatrix4x4("world", e->GetTransform().GetWorldMatrix());
 				callback->prepassVShader->SetMatrix4x4("view", camera->GetViewMatrix());
 				callback->prepassVShader->SetMatrix4x4("projection", camera->GetProjMatrix());
 				callback->PrePrepassVertexShaderCallback();
 				callback->prepassVShader->CopyAllBufferData();
 			}
 			else {
-				shaders.depthStencilVS->SetMatrix4x4("world", e->GetWorldMatrix());
+				shaders.depthStencilVS->SetMatrix4x4("world", e->GetTransform().GetWorldMatrix());
 				shaders.depthStencilVS->CopyAllBufferData();
 			}
 		}
 		else {
-			shaders.depthStencilVS->SetMatrix4x4("world", e->GetWorldMatrix());
+			shaders.depthStencilVS->SetMatrix4x4("world", e->GetTransform().GetWorldMatrix());
 			shaders.depthStencilVS->CopyAllBufferData();
 		}
 

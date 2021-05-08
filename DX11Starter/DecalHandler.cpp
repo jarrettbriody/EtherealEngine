@@ -64,7 +64,7 @@ void DecalHandler::GenerateDecal(Entity* owner, XMFLOAT3 rayDirection, XMFLOAT3 
 	//XMVECTOR calculableOwnerCenter = XMLoadFloat3(&owner->GetPosition());
 	XMVECTOR calculableDecalCenter = XMLoadFloat3(&rayHitPosition);
 	//calculableDecalCenter = XMVectorSubtract(calculableDecalCenter, calculableOwnerCenter);
-	XMMATRIX worldToModel = XMMatrixTranspose(XMLoadFloat4x4(&owner->GetInverseWorldMatrix()));
+	XMMATRIX worldToModel = XMMatrixTranspose(XMLoadFloat4x4(&owner->GetTransform().GetInverseWorldMatrix()));
 	//calculableDecalCenter = DirectX::XMVector3Transform(calculableDecalCenter, worldToModel);
 
 	XMMATRIX translation = XMMatrixTranslationFromVector(calculableDecalCenter);
