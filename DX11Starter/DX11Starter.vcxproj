@@ -140,6 +140,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="AbilityAvailable.cpp" />
     <ClCompile Include="AmbientParticles.cpp" />
     <ClCompile Include="AStarSolver.cpp" />
     <ClCompile Include="Barrel.cpp" />
@@ -196,11 +197,13 @@
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="SceneLoader.cpp" />
     <ClCompile Include="ScriptManager.cpp" />
+    <ClCompile Include="SeekAndFleePlayer.cpp" />
     <ClCompile Include="SeekPlayer.cpp" />
     <ClCompile Include="SimpleShader.cpp" />
     <ClCompile Include="TowerEnemy.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AbilityAvailable.h" />
     <ClInclude Include="AmbientParticles.h" />
     <ClInclude Include="AStarSolver.h" />
     <ClInclude Include="Barrel.h" />
@@ -262,6 +265,7 @@
     <ClInclude Include="ScriptManager.h" />
     <ClInclude Include="Scripts.h" />
     <ClInclude Include="RendererStructs.h" />
+    <ClInclude Include="SeekAndFleePlayer.h" />
     <ClInclude Include="SeekPlayer.h" />
     <ClInclude Include="SimpleShader.h" />
     <ClInclude Include="TestBehavior.h" />

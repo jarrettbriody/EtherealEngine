@@ -16,12 +16,14 @@
 #include "NavmeshHandler.h"
 #include "AStarSolver.h"
 
-class BullEnemy : public ScriptManager
+class BullEnemy : public ScriptManager, public BaseEnemy
 {
 	~BullEnemy();
 
 	map<string, Entity*>* eMap;
 	map<string, vector<ScriptManager*>> sMap;
+
+	FPSController* fpsControllerScript;
 
 	//Grid* grid;
 	std::vector<Node*> path;
@@ -57,4 +59,5 @@ class BullEnemy : public ScriptManager
 
 public:
 	void IsLeashed(bool leashed, float delay);
+	void CheckPlayerState();
 };

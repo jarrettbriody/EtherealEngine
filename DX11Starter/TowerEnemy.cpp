@@ -12,8 +12,10 @@ void TowerEnemy::Init()
 	sMap = ScriptManager::scriptFunctionsMapVector;
 
 	//sMap["FPSCONTROLLER"].front()
-	FPSController* controller = (FPSController*)(scriptFunctionsMap["FPSController"]["FPSCONTROLLER"]);;
+	fpsControllerScript = (FPSController*)(scriptFunctionsMap["FPSController"]["FPSCONTROLLER"]);
 	//grid = &controller->grid;
+
+	entity->AddTag(std::string("Tower"));
 
 	Entity* player = eMap->find("FPSController")->second;
 
@@ -22,6 +24,20 @@ void TowerEnemy::Init()
 	/*bt = BehaviorTreeBuilder()
 			.Leaf<EnemySeesPlayer>(entity, player, 30.0f, 30.0f).End()
 		.End();*/
+
+	EntityCreationParameters projParams = {
+		"towerProjectile",
+		"towerProjectile",
+		"projectile",
+		"spikefat",
+		"Red",
+		{"PROJECTILE"},
+		1,
+		XMFLOAT3(0, 0, 0),
+		XMFLOAT3(0, 0, 0),
+		XMFLOAT3(1, 1, 1),
+		1.0f
+	};
 
 	entity->GetRBody()->setAngularFactor(btVector3(0, 1, 0)); // Constrain rotations on x and z axes
 	entity->GetRBody()->setLinearFactor(btVector3(1, 0, 1)); // Constrain movement on the y axis
@@ -32,7 +48,10 @@ void TowerEnemy::Init()
 						.Leaf<InCombat>(&inCombat).End()
 						.Leaf<PlayerVisible>(entity, player).End()
 						.Leaf<FacePlayer>(entity, player, turnSpeed, &deltaTime).End()
-						.Leaf<SeekPlayer>(entity, player, movementSpeed, maxSpeed, minimumDistance, &playerIsInRange).End()
+						.Leaf<SeekAndFleePlayer>(entity, player, movementSpeed, maxSpeed, minimumDistance, &playerIsInRange).End()
+						.Leaf<PlayerIsInRange>(&playerIsInRange).End()
+						.Leaf<AbilityAvailable>(&projectileCooldownTimer).End()
+						.Leaf<FireProjectile>(entity, player, projParams, projectileSpeed, &projectileCooldownTimer, PROJECTILE_COOLDOWN_MAX).End()
 					.End()
 					.Composite<Sequence>() // Search player's last known location
 						.Leaf<InCombat>(&inCombat).End()
@@ -58,6 +77,13 @@ void TowerEnemy::Update()
 	//pos.y = pos.y + sin(totalTime) * oscillationMagnitude;
 	//entity->SetPosition(pos);
 	//entity->CalcWorldMatrix();
+
+	if (projectileCooldownTimer > 0)
+	{
+		projectileCooldownTimer -= deltaTime;
+	}
+
+	CheckPlayerState();
 
 	// TODO: Reset the enemy transformation properly after leash is over
 	if (delay <= 0)
@@ -92,4 +118,9 @@ void TowerEnemy::IsLeashed(bool leashed, float delay)
 {
 	this->leashed = leashed;
 	this->delay = delay;
+}
+
+void TowerEnemy::CheckPlayerState()
+{
+	if (fpsControllerScript->GetPlayerState() == PlayerState::Death) inCombat = false;
 }

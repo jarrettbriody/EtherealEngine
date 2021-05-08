@@ -18,6 +18,9 @@ void Projectile::OnCollision(btCollisionObject* other)
 	{
 		Entity* otherE = (Entity*)wrapper->objectPointer;
 
-		// entity->Destroy(); // destroy projectile when it hits anything
+		if (otherE->HasTag("Environment"))
+		{
+			entity->Destroy();
+		}
 	}
 }

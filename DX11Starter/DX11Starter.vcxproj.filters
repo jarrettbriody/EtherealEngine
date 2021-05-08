@@ -261,6 +261,12 @@
     <ClCompile Include="HoundPlayer.cpp">
       <Filter>EEBehaviors\Source</Filter>
     </ClCompile>
+    <ClCompile Include="AbilityAvailable.cpp">
+      <Filter>EEBehaviors\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="SeekAndFleePlayer.cpp">
+      <Filter>EEBehaviors\Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h">
@@ -462,6 +468,12 @@
       <Filter>EEScripts\Headers</Filter>
     </ClInclude>
     <ClInclude Include="HoundPlayer.h">
+      <Filter>EEBehaviors\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="AbilityAvailable.h">
+      <Filter>EEBehaviors\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="SeekAndFleePlayer.h">
       <Filter>EEBehaviors\Headers</Filter>
     </ClInclude>
   </ItemGroup>

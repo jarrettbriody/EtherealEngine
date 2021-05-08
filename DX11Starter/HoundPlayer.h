@@ -7,10 +7,13 @@ class HoundPlayer : public Behavior
 {
 private:
 	Entity* enemy;
+	Entity* player;
 	float pounceSpeed;
+	float* cooldownTimer;
+	float maxCooldownTime;
 
 public:
-	HoundPlayer(Entity* e, float pSpeed) : enemy(e), pounceSpeed(pSpeed) {}
+	HoundPlayer(Entity* e, Entity* p, float pSpeed, float* cdTime, float maxCdTime) : enemy(e), player(p), pounceSpeed(pSpeed), cooldownTimer(cdTime), maxCooldownTime(maxCdTime) {}
 	~HoundPlayer() {}
 
 	void OnInitialize();

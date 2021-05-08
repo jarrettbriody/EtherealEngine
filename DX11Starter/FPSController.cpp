@@ -1,6 +1,9 @@
 #include "pch.h"
 #include "FPSController.h"
-//#include "EnemyTest.h"
+#include "CyclopsEnemy.h"
+#include "BullEnemy.h"
+#include "HornedEnemy.h"
+#include "TowerEnemy.h"
 
 
 void FPSController::Init()
@@ -201,11 +204,43 @@ void FPSController::Update()
 			break;
 
 		case PlayerState::Death:
-			// ragdoll the player
-			playerRBody->setAngularFactor(btVector3(1, 1, 1)); // free rotations on x and z axes
-			playerRBody->setGravity(btVector3(0.0f, -25.0f, 0.0f));
+			// get rid of all tools
+			if (sword->renderObject) // simple check because if the sword is rendered then death is just starting and we only want to do some state things once
+			{
+				sword->renderObject = false;
+				hookshot->renderObject = false;
+				bloodOrb->renderObject = false;
+				EESceneLoader->SceneEntitiesMap["Blood_Orb_Glass"]->renderObject = false;
+
+				for each (Entity * ring in dashRings)
+				{
+					ring->renderObject = false;
+				}
+
+				// ragdoll the player
+				playerRBody->setAngularFactor(btVector3(1, 1, 1)); // free rotations on x and z axes
+				playerRBody->setGravity(btVector3(0.0f, -25.0f, 0.0f));
+				playerRBody->setMassProps(10, btVector3(0, 0, 0));
+				playerRBody->setFriction(1.0f);
+				//playerRBody->applyImpulse(btVector3(5, 2, 10), btVector3(0, playerRBody->getCenterOfMassPosition().getY() - entity->GetScale().y, 0));
+				playerRBody->applyTorqueImpulse(btVector3(0,-2, 0)); // fall back
+
+				DXCore::deltaTimeScalar = 0.75;
+				/*sword->InitRigidBody(BulletColliderShape::BOX, 1.0f);
+				sword->GetRBody()->setGravity(btVector3(0, -25, 0));
+
+				bloodOrb->InitRigidBody(BulletColliderShape::CAPSULE, 1.0f);
+				bloodOrb->GetRBody()->setGravity(btVector3(0, -25, 0));*/
+			}
+
 			cam->SetPosition(XMFLOAT3(entity->GetPosition().x, entity->GetPosition().y + entity->GetScale().y + headbobOffset, entity->GetPosition().z)); // after all updates make sure camera is following the affected entity
-			// TODO: How to set camera to ragdolling body
+			float rotX;
+			float rotY;
+			float rotZ;
+			playerRBody->getCenterOfMassTransform().getRotation().getEulerZYX(rotX, rotY, rotZ);
+
+			cam->RotateCamera(rotX * deltaTime, rotY * deltaTime, rotZ * deltaTime);
+	
 			break;
 
 		case PlayerState::Victory:
@@ -372,9 +407,31 @@ void FPSController::HookshotThrow()
 			leashSize = playerRBody->getCenterOfMassPosition().distance(leashedEnemy->GetRBody()->getCenterOfMassPosition()); 
 			// cout << leashSize << endl;
 
-			enemyScript = (BaseEnemy*)scriptFunctionsMap[leashedEnemy->GetName()]["BASEENEMY"];
+			// handle each specific enemy scripts response to leashing if it alive by storing it in a simple abstract base type they all inherit
+			if (hookshotAttachedEntity->HasTag("Enemy"))
+			{
+				if (hookshotAttachedEntity->HasTag("Cyclops"))
+				{
+					enemyScript = (CyclopsEnemy*)scriptFunctionsMap[leashedEnemy->GetName()]["CYCLOPSENEMY"];
+				}
 
-			if(hookshotAttachedEntity->HasTag("Enemy")) enemyScript->IsLeashed(true, 0.0f); // TODO: Figure out how to approach this for different enemy types
+				if (hookshotAttachedEntity->HasTag("Bull"))
+				{
+					enemyScript = (BullEnemy*)scriptFunctionsMap[leashedEnemy->GetName()]["BULLENEMY"];
+				}
+
+				if (hookshotAttachedEntity->HasTag("Horned"))
+				{
+					enemyScript = (HornedEnemy*)scriptFunctionsMap[leashedEnemy->GetName()]["HORNEDENEMY"];
+				}
+
+				if (hookshotAttachedEntity->HasTag("Tower"))
+				{
+					enemyScript = (TowerEnemy*)scriptFunctionsMap[leashedEnemy->GetName()]["TOWERENEMY"];
+				}
+
+				enemyScript->IsLeashed(true, 0.0f);
+			}
 
 			ps = PlayerState::HookshotLeash;
 		}
@@ -935,7 +992,7 @@ btVector3 FPSController::DashImpulseFromInput()
 
 void FPSController::DampForces()
 {
-	if (dashDampTimer <= 0 && leashJumpCancelDampTimer <= 0 && bloodIcicleRecoilDampTimer <= 0) // always damp the impulse vec unless player is the player just initiated a dash or a leash jump cancel or blood icicle shot
+	if (dashDampTimer <= 0 && leashJumpCancelDampTimer <= 0 && bloodIcicleRecoilDampTimer <= 0 && onHitDampTimer <= 0) // always damp the impulse vec unless player is the player just initiated a dash or a leash jump cancel or blood icicle shot
 	{
 		dashBlurCallback.active = false;
 		impulseSumVec -= impulseSumVec * dampingScalar;
@@ -952,6 +1009,7 @@ void FPSController::DampForces()
 	{
 		if (leashJumpCancelDampTimer > 0) leashJumpCancelDampTimer -= deltaTime;
 		if (bloodIcicleRecoilDampTimer > 0) bloodIcicleRecoilDampTimer -= deltaTime;
+		if (onHitDampTimer > 0) onHitDampTimer -= deltaTime;
 		if (dashDampTimer > 0)
 		{
 			dashDampTimer -= deltaTime;
@@ -1040,5 +1098,41 @@ void FPSController::OnCollision(btCollisionObject* other)
 	{
 		bloodResource += 10;
 		otherE->Destroy();
+	}
+
+	if (otherE->HasTag(std::string("cyclopsProjectile")))
+	{
+		bloodResource -= 10;
+		impulseSumVec += Utility::Float3ToBulletVector(otherE->GetDirectionVector()).normalized() * 100.0f;
+		otherE->Destroy();
+	}
+
+	if (otherE->HasTag(std::string("towerProjectile")))
+	{
+		bloodResource -= 25;
+		impulseSumVec += Utility::Float3ToBulletVector(otherE->GetDirectionVector()).normalized() * 500.0f;
+		otherE->Destroy();
+	}
+
+	if (otherE->HasTag(std::string("Enemy")) && onHitDampTimer <= 0)
+	{
+		
+		if (otherE->HasTag(std::string("Horned")))
+		{
+			bloodResource -= 10;
+			impulseSumVec += Utility::Float3ToBulletVector(otherE->GetDirectionVector()).normalized() * 40.0f;
+		}
+
+		if (otherE->HasTag(std::string("Bull")))
+		{
+			bloodResource -= 10; // this is a more constant ten because the bull keeps on the player
+		}
+
+		if (otherE->HasTag(std::string("Cyclops")))
+		{
+			bloodResource -= 3;
+		}
+
+		onHitDampTimer = ON_HIT_DAMP_TIMER_MAX;
 	}
 }

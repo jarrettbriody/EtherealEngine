@@ -9,6 +9,7 @@
 #include "FindPlayer.h"
 #include "FollowPath.h"
 #include "Idle.h"
+#include "AbilityAvailable.h"
 #include "FireProjectile.h"
 #include "HoundPlayer.h"
 #include "PlayerIsInRange.h"
@@ -16,12 +17,14 @@
 #include "NavmeshHandler.h"
 #include "AStarSolver.h"
 
-class HornedEnemy : public ScriptManager
+class HornedEnemy : public ScriptManager, public BaseEnemy
 {
 	~HornedEnemy();
 
 	map<string, Entity*>* eMap;
 	map<string, vector<ScriptManager*>> sMap;
+
+	FPSController* fpsControllerScript;
 
 	//Grid* grid;
 	std::vector<Node*> path;
@@ -36,10 +39,13 @@ class HornedEnemy : public ScriptManager
 	float dampingScalar = 0.09f;
 	float turnSpeed = 10.0f;
 	float minimumDistance = 12.5f;
-	float visionConeAngle = 80.0f;
+	float visionConeAngle = 100.0f;
 	float visionConeDistance = 40.0f;
 	float oscillationMagnitude = 0.01f;
 	float totalTime = 0.0f;
+	float houndSpeed = 60.0f;
+	float houndCooldownTimer = 0.0f;
+	const float HOUND_COOLDOWN_MAX = 0.1f;
 
 	bool leashed;
 	float delay;
@@ -56,4 +62,5 @@ class HornedEnemy : public ScriptManager
 
 public:
 	void IsLeashed(bool leashed, float delay);
+	void CheckPlayerState();
 };

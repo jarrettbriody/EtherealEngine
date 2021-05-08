@@ -12,8 +12,10 @@ void CyclopsEnemy::Init()
 	sMap = ScriptManager::scriptFunctionsMapVector;
 
 	//sMap["FPSCONTROLLER"].front()
-	FPSController* controller = (FPSController*)(scriptFunctionsMap["FPSController"]["FPSCONTROLLER"]);;
+	fpsControllerScript = (FPSController*)(scriptFunctionsMap["FPSController"]["FPSCONTROLLER"]);
 	//grid = &controller->grid;
+
+	entity->AddTag(std::string("Cyclops"));
 
 	Entity* player = eMap->find("FPSController")->second;
 
@@ -23,9 +25,9 @@ void CyclopsEnemy::Init()
 			.Leaf<EnemySeesPlayer>(entity, player, 30.0f, 30.0f).End()
 		.End();*/
 
-	EntityCreationParameters fireballParams = {
-		"fireball",
-		"projectile",
+	EntityCreationParameters projParams = {
+		"cyclopsProjectile",
+		"cyclopsProjectile",
 		"projectile",
 		"Sphere",
 		"Red",
@@ -50,7 +52,8 @@ void CyclopsEnemy::Init()
 						.Leaf<FacePlayer>(entity, player, turnSpeed, &deltaTime).End()
 						.Leaf<SeekPlayer>(entity, player, movementSpeed, maxSpeed, minimumDistance, &playerIsInRange).End()
 						.Leaf<PlayerIsInRange>(&playerIsInRange).End()
-						.Leaf<FireProjectile>(entity, player, fireballParams, 100.0f).End()
+						.Leaf<AbilityAvailable>(&projectileCooldownTimer).End()
+						.Leaf<FireProjectile>(entity, player, projParams, projectileSpeed, &projectileCooldownTimer, PROJECTILE_COOLDOWN_MAX).End()
 					.End()
 					.Composite<Sequence>() // Search player's last known location
 						.Leaf<InCombat>(&inCombat).End()
@@ -71,6 +74,13 @@ void CyclopsEnemy::Init()
 
 void CyclopsEnemy::Update()
 {
+	if (projectileCooldownTimer > 0)
+	{
+		projectileCooldownTimer -= deltaTime;
+	}
+
+	CheckPlayerState();
+	
 	// TODO: Reset the enemy transformation properly after leash is over
 	if (delay <= 0)
 	{
@@ -104,4 +114,9 @@ void CyclopsEnemy::IsLeashed(bool leashed, float delay)
 {
 	this->leashed = leashed;
 	this->delay = delay;
+}
+
+void CyclopsEnemy::CheckPlayerState()
+{
+	if (fpsControllerScript->GetPlayerState() == PlayerState::Death) inCombat = false;
 }

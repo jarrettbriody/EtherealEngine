@@ -12,8 +12,10 @@ void HornedEnemy::Init()
 	sMap = ScriptManager::scriptFunctionsMapVector;
 
 	//sMap["FPSCONTROLLER"].front()
-	FPSController* controller = (FPSController*)(scriptFunctionsMap["FPSController"]["FPSCONTROLLER"]);;
+	fpsControllerScript = (FPSController*)(scriptFunctionsMap["FPSController"]["FPSCONTROLLER"]);
 	//grid = &controller->grid;
+
+	entity->AddTag(std::string("Horned"));
 
 	Entity* player = eMap->find("FPSController")->second;
 
@@ -34,7 +36,8 @@ void HornedEnemy::Init()
 						.Leaf<FacePlayer>(entity, player, turnSpeed, &deltaTime).End()
 						.Leaf<SeekPlayer>(entity, player, movementSpeed, maxSpeed, minimumDistance, &playerIsInRange).End()
 						.Leaf<PlayerIsInRange>(&playerIsInRange).End()
-						.Leaf<HoundPlayer>(entity, 12.0f).End()
+						.Leaf<AbilityAvailable>(&houndCooldownTimer).End()
+						.Leaf<HoundPlayer>(entity, player, houndSpeed, &houndCooldownTimer, HOUND_COOLDOWN_MAX).End()
 					.End()
 					.Composite<Sequence>() // Search player's last known location
 						.Leaf<InCombat>(&inCombat).End()
@@ -60,6 +63,13 @@ void HornedEnemy::Update()
 	//pos.y = pos.y + sin(totalTime) * oscillationMagnitude;
 	//entity->SetPosition(pos);
 	//entity->CalcWorldMatrix();
+
+	if (houndCooldownTimer > 0)
+	{
+		houndCooldownTimer -= deltaTime;
+	}
+
+	CheckPlayerState();
 
 	// TODO: Reset the enemy transformation properly after leash is over
 	if (delay <= 0)
@@ -94,4 +104,9 @@ void HornedEnemy::IsLeashed(bool leashed, float delay)
 {
 	this->leashed = leashed;
 	this->delay = delay;
+}
+
+void HornedEnemy::CheckPlayerState()
+{
+	if (fpsControllerScript->GetPlayerState() == PlayerState::Death) inCombat = false;
 }

@@ -113,6 +113,5 @@ void BloodOrb::SetFillLinePercentage(float percentage)
 	}
 	// value=min+(max−min)×percentage
 	fillLineMark = -fluidCallback.radius + (fluidCallback.radius - (-fluidCallback.radius)) * (fillLinePercentage/100);
-
 	// cout << "Percentage: " << percentage << " fillLineMark: " << fillLineMark << " Max: " << fluidCallback.radius << " Min: " << -fluidCallback.radius << endl;
 }

@@ -11,9 +11,12 @@ private:
 	Entity* enemy;
 	EntityCreationParameters projectileParams;
 	float projectileSpeed;
+	float* cooldownTimer;
+	float maxCooldownTime;
 
+	Entity* projectile;
 public:
-	FireProjectile(Entity* e, Entity* p, EntityCreationParameters projParams, float pSpeed) : enemy(e), player(p), projectileParams(projParams), projectileSpeed(pSpeed) {}
+	FireProjectile(Entity* e, Entity* p, EntityCreationParameters projParams, float pSpeed, float* cdTime, float maxCdTime) : enemy(e), player(p), projectileParams(projParams), projectileSpeed(pSpeed), cooldownTimer(cdTime), maxCooldownTime(maxCdTime) {}
 	~FireProjectile() {}
 
 	void OnInitialize();

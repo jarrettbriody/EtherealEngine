@@ -12,8 +12,10 @@ void BullEnemy::Init()
 	sMap = ScriptManager::scriptFunctionsMapVector;
 
 	//sMap["FPSCONTROLLER"].front()
-	FPSController* controller = (FPSController*)(scriptFunctionsMap["FPSController"]["FPSCONTROLLER"]);;
+	fpsControllerScript = (FPSController*)(scriptFunctionsMap["FPSController"]["FPSCONTROLLER"]);
 	//grid = &controller->grid;
+
+	entity->AddTag(std::string("Bull"));
 
 	Entity* player = eMap->find("FPSController")->second;
 
@@ -61,6 +63,8 @@ void BullEnemy::Update()
 	//entity->SetPosition(pos);
 	//entity->CalcWorldMatrix();
 
+	CheckPlayerState();
+
 	// TODO: Reset the enemy transformation properly after leash is over
 	if (delay <= 0)
 	{
@@ -94,4 +98,9 @@ void BullEnemy::IsLeashed(bool leashed, float delay)
 {
 	this->leashed = leashed;
 	this->delay = delay;
+}
+
+void BullEnemy::CheckPlayerState()
+{
+	if (fpsControllerScript->GetPlayerState() == PlayerState::Death) inCombat = false;
 }
