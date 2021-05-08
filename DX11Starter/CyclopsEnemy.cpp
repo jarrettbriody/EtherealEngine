@@ -13,6 +13,7 @@ void CyclopsEnemy::Init()
 
 	//sMap["FPSCONTROLLER"].front()
 	fpsControllerScript = (FPSController*)(scriptFunctionsMap["FPSController"]["FPSCONTROLLER"]);
+	gameManagerScript = (GameManager*)(scriptFunctionsMap["GameManager"]["GAMEMANAGER"]);
 	//grid = &controller->grid;
 
 	entity->AddTag(std::string("Cyclops"));
@@ -105,9 +106,43 @@ void CyclopsEnemy::Update()
 
 void CyclopsEnemy::OnCollision(btCollisionObject* other)
 {
-	//Entity* otherE = (Entity*)((PhysicsWrapper*)other->getUserPointer())->objectPointer;
+	Entity* otherE = (Entity*)((PhysicsWrapper*)other->getUserPointer())->objectPointer;
 
-	//cout << "Enemy collides with: " << otherE->GetName() << endl;
+	// cout << "Enemy collides with: " << otherE->GetName() << endl;
+
+	// kill if slamming into the wall while leashed
+	if (otherE->HasTag(std::string("Environment")) && !otherE->HasTag(std::string("street")) && entity->GetRBody()->getLinearVelocity().length() > 25)
+	{
+		// Store the old enemy position for later use in case the enemy was killed while leashed
+		btVector3 oldEnemyPos = entity->GetRBody()->getCenterOfMassPosition();
+
+		// enemy is in the triangle, split it apart
+		std::vector<Entity*> childEntities = EESceneLoader->SplitMeshIntoChildEntities(entity, 25.0f);
+
+		// Update the game manager attribute for enemies alive
+		gameManagerScript->DecrementEnemiesAlive();
+
+		Entity* newLeashedEntity = childEntities[0];
+		for each (Entity * e in childEntities)
+		{
+			e->AddTag(std::string("Body Part"));
+
+			e->GetRBody()->activate();
+			e->GetRBody()->applyCentralImpulse(btVector3(100, 100, 100));
+			e->GetRBody()->applyTorqueImpulse(btVector3(100, 100, 100));
+
+			if (leashed)
+			{
+				if (e->GetRBody()->getCenterOfMassPosition().distance(oldEnemyPos) < newLeashedEntity->GetRBody()->getCenterOfMassPosition().distance(oldEnemyPos))
+				{
+					newLeashedEntity = e;
+				}
+			}
+		}
+
+		gameManagerScript->AddRangeToTotalSplitMeshEntities(childEntities);
+		if(leashed) fpsControllerScript->SetLeashedEntity(newLeashedEntity);		
+	}
 }
 
 void CyclopsEnemy::IsLeashed(bool leashed, float delay)

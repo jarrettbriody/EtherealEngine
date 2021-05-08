@@ -24,6 +24,7 @@ class CyclopsEnemy : public ScriptManager, public BaseEnemy
 	map<string, vector<ScriptManager*>> sMap;
 
 	FPSController* fpsControllerScript;
+	GameManager* gameManagerScript;
 
 	//Grid* grid;
 	std::vector<Node*> path;
