@@ -111,7 +111,7 @@ void CyclopsEnemy::OnCollision(btCollisionObject* other)
 	// cout << "Enemy collides with: " << otherE->GetName() << endl;
 
 	// kill if slamming into the wall while leashed
-	if (otherE->HasTag(std::string("Environment")) && !otherE->HasTag(std::string("street")) && entity->GetRBody()->getLinearVelocity().length() > 25)
+	if (otherE->HasTag(std::string("Environment")) && !otherE->HasTag(std::string("street")) && entity->GetRBody()->getLinearVelocity().length() > killSpeedWhileLeashed)
 	{
 		// Store the old enemy position for later use in case the enemy was killed while leashed
 		btVector3 oldEnemyPos = entity->GetRBody()->getCenterOfMassPosition();

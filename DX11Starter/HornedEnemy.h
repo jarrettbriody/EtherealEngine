@@ -48,6 +48,7 @@ class HornedEnemy : public ScriptManager, public BaseEnemy
 	float houndCooldownTimer = 0.0f;
 	const float HOUND_COOLDOWN_MAX = 0.1f;
 
+	float killSpeedWhileLeashed = 35.0f;
 	bool leashed;
 	float delay;
 

@@ -116,12 +116,12 @@ void TowerEnemy::OnCollision(btCollisionObject* other)
 	// cout << "Enemy collides with: " << otherE->GetName() << endl;
 
 	// kill if slamming into the wall while leashed
-	if (otherE->HasTag(std::string("Environment")) && !otherE->HasTag(std::string("street")) && entity->GetRBody()->getLinearVelocity().length() > 25)
+	if (otherE->HasTag(std::string("Environment")) && !otherE->HasTag(std::string("street")) && entity->GetRBody()->getLinearVelocity().length() > killSpeedWhileLeashed)
 	{
 		// Store the old enemy position for later use in case the enemy was killed while leashed
 		btVector3 oldEnemyPos = entity->GetRBody()->getCenterOfMassPosition();
 
-		// enemy is in the triangle, split it apart
+		// split it apart
 		std::vector<Entity*> childEntities = EESceneLoader->SplitMeshIntoChildEntities(entity, 25.0f);
 
 		// Update the game manager attribute for enemies alive

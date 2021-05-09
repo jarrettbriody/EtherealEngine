@@ -48,6 +48,7 @@ class TowerEnemy : public ScriptManager, public BaseEnemy
 	float projectileCooldownTimer = 0.0f;
 	const float PROJECTILE_COOLDOWN_MAX = 2.0f;
 
+	float killSpeedWhileLeashed = 35.0f;
 	bool leashed;
 	float delay;
 

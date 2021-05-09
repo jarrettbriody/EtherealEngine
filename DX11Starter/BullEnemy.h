@@ -45,6 +45,7 @@ class BullEnemy : public ScriptManager, public BaseEnemy
 	float oscillationMagnitude = 0.01f;
 	float totalTime = 0.0f;
 
+	float killSpeedWhileLeashed = 35.0f;
 	bool leashed;
 	float delay;
 
