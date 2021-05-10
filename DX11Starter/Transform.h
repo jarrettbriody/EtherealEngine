@@ -48,6 +48,7 @@ private:
 	void CalcQuaternion();
 	void CalcDirectionVector();
 	void CalcWorldMatrix();
+	void CalcInverseWorldMatrix();
 
 public:
 	Transform(unsigned int flags = -1);
@@ -67,6 +68,9 @@ public:
 	XMFLOAT4X4 GetWorldMatrix();
 	XMFLOAT4X4 GetInverseWorldMatrix();
 	XMFLOAT4X4* GetWorldMatrixPtr();
+	XMFLOAT3 GetInversePosition();
+	XMFLOAT4 GetInverseRotationQuaternion();
+	XMFLOAT3 GetInverseScale();
 
 	XMFLOAT3 GetPosition();
 	void SetPosition(XMFLOAT3 p);

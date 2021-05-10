@@ -72,8 +72,8 @@ void Transform::CalcWorldMatrix()
 		XMMATRIX parentWorld = XMMatrixTranspose(XMLoadFloat4x4(&parent->worldMatrix));
 		world = XMMatrixMultiply(world, parentWorld);
 	}
-	else if (parentWorld != nullptr) {
-		XMFLOAT4X4 parentW = *parentWorld;
+	else if (this->parentWorld != nullptr) {
+		XMFLOAT4X4 parentW = *this->parentWorld;
 		XMMATRIX parentWorld = XMMatrixTranspose(XMLoadFloat4x4(&parentW));
 		world = XMMatrixMultiply(world, parentWorld);
 	}
@@ -81,6 +81,7 @@ void Transform::CalcWorldMatrix()
 	XMStoreFloat4x4(&worldMatrix, XMMatrixTranspose(world));
 
 	XMStoreFloat4x4(&invWorldMatrix, XMMatrixTranspose(XMMatrixInverse(nullptr, world)));
+	//CalcInverseWorldMatrix();
 
 	for (size_t i = 0; i < children.Count(); i++)
 	{
@@ -90,6 +91,26 @@ void Transform::CalcWorldMatrix()
 	if (updateCallback != nullptr) {
 		updateCallback->Call();
 	}
+}
+
+void Transform::CalcInverseWorldMatrix()
+{
+	XMMATRIX inverse;
+	XMVECTOR t = XMLoadFloat3(&position);
+	XMVECTOR r = XMLoadFloat4(&quaternion);
+	XMVECTOR s = XMLoadFloat3(&scale);
+	t = XMVectorScale(t, -1.0f);
+	s = XMVectorReciprocal(s);
+
+	XMMATRIX trans = XMMatrixTranslationFromVector(t);
+
+	XMMATRIX rot = XMMatrixRotationQuaternion(r);
+	rot = XMMatrixTranspose(rot);
+
+	XMMATRIX scl = XMMatrixScalingFromVector(s);
+
+	inverse = trans * rot * scl;
+	XMStoreFloat4x4(&invWorldMatrix, XMMatrixTranspose(inverse));
 }
 
 Transform::Transform(unsigned int flags)
@@ -135,32 +156,41 @@ void Transform::Cleanup()
 void Transform::SetParent(Transform* parent, bool preserveChild)
 {
 	this->parent = parent;
+	/*
 	if (preserveChild) {
-		XMMATRIX invParentWorld = XMMatrixTranspose(XMLoadFloat4x4(&parent->invWorldMatrix));
+		XMMATRIX parentWorld = XMMatrixTranspose(XMLoadFloat4x4(&(parent->worldMatrix)));
+		XMMATRIX invParentWorld = XMMatrixTranspose(XMLoadFloat4x4(&(parent->invWorldMatrix)));
 		XMFLOAT4X4 newMat;
-		XMStoreFloat4x4(&newMat, XMMatrixTranspose(XMMatrixMultiply(XMMatrixTranspose(XMLoadFloat4x4(&worldMatrix)), invParentWorld)));
+		XMMATRIX localWorld = XMMatrixTranspose(XMLoadFloat4x4(&worldMatrix));
+		localWorld = XMMatrixMultiply(localWorld, invParentWorld);
+		XMStoreFloat4x4(&newMat, XMMatrixTranspose(localWorld));//parentWorld
 		SetWorldMatrix(newMat);
 	}
+	*/
 	CalcWorldMatrix();
 }
 
 void Transform::SetParent(XMFLOAT4X4* parent, bool preserveChild)
 {
 	this->parentWorld = parent;
+	/*
 	if (preserveChild) {
 		XMMATRIX invParentWorld = XMMatrixInverse(nullptr, XMMatrixTranspose(XMLoadFloat4x4(parent)));
 		XMFLOAT4X4 newMat;
 		XMStoreFloat4x4(&newMat, XMMatrixTranspose(XMMatrixMultiply(XMMatrixTranspose(XMLoadFloat4x4(&worldMatrix)), invParentWorld)));
 		SetWorldMatrix(newMat);
 	}
+	*/
 	CalcWorldMatrix();
 }
 
 void Transform::AddChild(Transform* child, bool preserveChild)
 {
-	//children.InitBuffer();
+	CalcWorldMatrix();
+	child->CalcWorldMatrix();
 	children.Push(child);
 	child->SetParent(this, preserveChild);
+	CalcWorldMatrix();
 }
 
 void Transform::SetUpdateCallback(Callback* cb)
@@ -211,6 +241,33 @@ void Transform::SetPosition(float x, float y, float z)
 		position = XMFLOAT3(x, y, z);
 		CalcWorldMatrix();
 	}
+}
+
+XMFLOAT3 Transform::GetInversePosition()
+{
+	XMVECTOR t = XMLoadFloat3(&position);
+	t = XMVectorScale(t, -1.0f);
+	XMFLOAT3 invPos;
+	XMStoreFloat3(&invPos, t);
+	return invPos;
+}
+
+XMFLOAT4 Transform::GetInverseRotationQuaternion()
+{
+	XMVECTOR r = XMLoadFloat4(&quaternion);
+	r = XMQuaternionInverse(r);
+	XMFLOAT4 invRot;
+	XMStoreFloat4(&invRot, r);
+	return invRot;
+}
+
+XMFLOAT3 Transform::GetInverseScale()
+{
+	XMVECTOR s = XMLoadFloat3(&scale);
+	s = XMVectorReciprocal(s);
+	XMFLOAT3 invScl;
+	XMStoreFloat3(&invScl, s);
+	return invScl;
 }
 
 void Transform::Move(XMFLOAT3 f)

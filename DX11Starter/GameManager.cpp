@@ -87,6 +87,10 @@ void GameManager::Init()
 
 void GameManager::Update()
 {
+	if (Keyboard::GetInstance()->KeyIsPressed((unsigned int)'T')) {
+		EESceneLoader->SceneEntitiesMap["graveyard"]->GetTransform().RotateAroundAxis(Y_AXIS, 1.0f * deltaTime);
+	}
+
 	switch (gs)
 	{
 	case GameState::Intro:
@@ -126,7 +130,7 @@ void GameManager::Update()
 
 void GameManager::BloodPoolSpawner()
 {
-	for (int i = 0; i < totalSplitMeshEntities.size(); i++)
+	for (int i = totalSplitMeshEntities.size() - 1; i >= 0; i--)
 	{
 		btVector3 from = totalSplitMeshEntities[i]->GetRBody()->getCenterOfMassPosition();
 		btVector3 to = btVector3(from.getX(), from.getY() - 3.0f, from.getZ());

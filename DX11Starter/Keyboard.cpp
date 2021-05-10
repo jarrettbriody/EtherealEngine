@@ -140,3 +140,8 @@ bool Keyboard::IsKeysAutoRepeat()
 {
 	return this->autoRepeatKeys;
 }
+
+void Keyboard::PurgeBuffers()
+{
+	keyBuffer.clear();
+}

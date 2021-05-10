@@ -1285,7 +1285,7 @@ Entity* SceneLoader::CreateEntity(EntityCreationParameters& para)
 		entityName = para.entityName + " (" + to_string(sameNameEntityCnt) + ")";
 		sameNameEntityCnt++;
 	}
-	para.entityName = entityName;
+	//para.entityName = entityName;
 
 	//Entity e;
 	Entity* allocatedEntity = nullptr;
@@ -1301,17 +1301,17 @@ Entity* SceneLoader::CreateEntity(EntityCreationParameters& para)
 		if (success) {
 			if (GeneratedMeshesMap.count(para.meshName)) {
 				mesh = GeneratedMeshesMap[para.meshName];
-				*allocatedEntity = Entity(para.entityName, mesh);
+				*allocatedEntity = Entity(entityName, mesh);
 			}
 			else if (DefaultMeshesMap.count(para.meshName)) {
 				mesh = DefaultMeshesMap[para.meshName];
-				*allocatedEntity = Entity(para.entityName, mesh);
+				*allocatedEntity = Entity(entityName, mesh);
 			}
 			else {
 				return nullptr;
 			}
 			//*allocatedEntity = e;
-			SceneEntitiesMap.insert({ para.entityName, allocatedEntity });
+			SceneEntitiesMap.insert({ entityName, allocatedEntity });
 			SceneEntities.push_back(allocatedEntity);
 		}
 
@@ -1337,9 +1337,9 @@ Entity* SceneLoader::CreateEntity(EntityCreationParameters& para)
 
 		allocatedEntity = (Entity*)EEMemoryAllocator->AllocateToPool((unsigned int)MEMORY_POOL::ENTITY_POOL, sizeof(Entity), success);
 		if (success) {
-			*allocatedEntity = Entity(para.entityName);
+			*allocatedEntity = Entity(entityName);
 			//*allocatedEntity = e;
-			SceneEntitiesMap.insert({ para.entityName, allocatedEntity });
+			SceneEntitiesMap.insert({ entityName, allocatedEntity });
 			SceneEntities.push_back(allocatedEntity);
 		}
 	}
@@ -1451,7 +1451,7 @@ std::vector<Entity*> SceneLoader::SplitMeshIntoChildEntities(Entity* e, float co
 		//allocatedEntity->SetRotation(e->GetRotationQuaternion());
 		allocatedEntity->GetTransform().SetScale(e->GetTransform().GetScale());
 		allocatedEntity->AddAutoBoxCollider();
-		allocatedEntity->InitRigidBody(BulletColliderShape::BOX, componentMass, true);
+		allocatedEntity->InitRigidBody(BulletColliderShape::BOX, componentMass);
 		// allocatedEntity->GetRBody()->getWorldTransform().setOrigin(allocatedEntity->GetRBody()->getCenterOfMassPosition());
 		SceneEntitiesMap.insert({ children[i]->GetName(), allocatedEntity });
 		SceneEntities.push_back(allocatedEntity);
@@ -1459,7 +1459,7 @@ std::vector<Entity*> SceneLoader::SplitMeshIntoChildEntities(Entity* e, float co
 
 		childEntities.push_back(allocatedEntity);
 
-		allocatedEntity->GetRBody()->applyCentralImpulse(Utility::Float3ToBulletVector(collCenter) * 15.0f);
+		//allocatedEntity->GetRBody()->applyCentralImpulse(Utility::Float3ToBulletVector(collCenter) * 15.0f);
 	}
 	//e->EmptyEntity();
 	e->Destroy();

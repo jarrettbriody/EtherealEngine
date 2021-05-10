@@ -38,6 +38,8 @@ public:
 	int GetPosY();
 	MousePoint GetPos();
 
+	void PurgeBuffers();
+
 private:
 	static Mouse* instance;
 

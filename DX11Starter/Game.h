@@ -24,6 +24,7 @@
 #include "Scripts.h"
 #include "LightHandler.h"
 #include "NavmeshHandler.h"
+#include <dxgidebug.h>
 
 using namespace std;
 
@@ -37,7 +38,7 @@ struct SceneLoaderGarbageCallback : SceneLoaderCallback{
 
 		ParticleEmitter::DestroyEmittersByOwner(name);
 
-		if (Config::EtherealDebugLinesEnabled) {
+		if (Config::EtherealDebugLinesEnabled && e->colliderDebugLinesEnabled) {
 			DebugLines::debugLinesMap[name]->destroyed = true;
 			DebugLines::debugLinesMap.erase(name);
 		}

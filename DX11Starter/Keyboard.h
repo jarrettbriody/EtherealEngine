@@ -23,6 +23,8 @@ public:
 	void DisableAutoRepeatKeys();
 	bool IsKeysAutoRepeat();
 
+	void PurgeBuffers();
+
 private:
 	static Keyboard* instance;
 

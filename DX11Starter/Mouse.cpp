@@ -181,3 +181,8 @@ MousePoint Mouse::GetPos()
 {
 	return { this->x, this->y };
 }
+
+void Mouse::PurgeBuffers()
+{
+	eventBuffer.clear();
+}

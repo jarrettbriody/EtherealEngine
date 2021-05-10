@@ -123,7 +123,11 @@ Transform& Entity::GetTransform()
 	return eTransform;
 }
 
-void Entity::InitRigidBody(BulletColliderShape shape, float entityMass, bool zeroObjects)
+Transform* Entity::GetTransformPtr() {
+	return &eTransform;
+}
+
+void Entity::InitRigidBody(BulletColliderShape shape, float entityMass)
 {
 	assert(colliderCnt > 0);
 
@@ -211,6 +215,7 @@ void Entity::InitRigidBody(BulletColliderShape shape, float entityMass, bool zer
 
 	btDefaultMotionState* myMotionState = new btDefaultMotionState(transform);
 
+	/*
 	if (colliderCnt == 1 && compoundShape != nullptr && zeroObjects) {
 		XMFLOAT3 centerLocal = (*colliders)[0]->GetCenterLocal();
 		btTransform localTransform;
@@ -218,6 +223,7 @@ void Entity::InitRigidBody(BulletColliderShape shape, float entityMass, bool zer
 		localTransform.setOrigin(btVector3(centerLocal.x * scale.x, centerLocal.y * scale.y, centerLocal.z * scale.z));
 		myMotionState->m_centerOfMassOffset = localTransform;
 	}
+	*/
 
 	if (compoundShape == nullptr) {
 		for (size_t i = 0; i < colliderCnt; i++)
@@ -445,13 +451,13 @@ void Entity::AddAutoBoxCollider()
 			{
 				Collider* coll = new Collider(children[i], children[i]->GetVertices());
 				colliders->push_back(coll);
-				eTransform.AddChild(&coll->GetTransform(), false);
+				eTransform.AddChild(coll->GetTransformPtr(), false);
 			}
 		}
 		else {
 			Collider* coll = new Collider(mesh, mesh->GetVertices());
 			colliders->push_back(coll);
-			eTransform.AddChild(&coll->GetTransform(), false);
+			eTransform.AddChild(coll->GetTransformPtr(), false);
 		}
 	}
 	else {

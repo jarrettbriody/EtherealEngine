@@ -56,5 +56,6 @@ public:
 	XMFLOAT3 GetCenterGlobal();
 	string GetName();
 	Transform& GetTransform();
+	Transform* GetTransformPtr();
 };
 

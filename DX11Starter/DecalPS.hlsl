@@ -77,6 +77,7 @@ SamplerComparisonState ShadowSampler	: register(s1);
 // --------------------------------------------------------
 float4 main(VertexToPixel input) : SV_TARGET
 {
+	//return float4(1,0,0,1);
 	float3 pixelIndex = float3(input.position.xy, 0);
 
 	unsigned int layer = EntityInfoBuffer.Load(pixelIndex).r;

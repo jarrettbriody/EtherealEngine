@@ -34,6 +34,9 @@ void SceneChangeCallback::Call() {
 	ScriptManager::scriptFunctionsMap.clear();
 	ScriptManager::scriptFunctionsMapVector.clear();
 
+	Keyboard::GetInstance()->PurgeBuffers();
+	Mouse::GetInstance()->PurgeBuffers();
+
 	//((Game*)game)->GarbageCollect();
 }
 
@@ -199,10 +202,11 @@ void Game::Init()
 	EERenderer->InitPostProcessRTV();
 	EESceneLoader->EERenderer = EERenderer;
 
-	//EESceneLoader->LoadScene("ArenaV2");
+	//EESceneLoader->SetModelPath("../../Assets/Models/MainMenu/");
+	//EESceneLoader->LoadScene("MainMenu");
 
-	EESceneLoader->SetModelPath("../../Assets/Models/MainMenu/");
-	EESceneLoader->LoadScene("MainMenu");
+	EESceneLoader->SetModelPath("../../Assets/Models/Kamchatka/");
+	EESceneLoader->LoadScene("Kamchatka");
 
 	EERenderer->SetShadowCascadeInfo(0, 4096, 0.1f, 2000.0f, 100.0f, 100.0f);
 	EERenderer->SetShadowCascadeInfo(1, 4096, 0.1f, 2000.0f, 250.0f, 250.0f);
@@ -245,7 +249,6 @@ void Game::Init()
 	cpuParticleShaders.particlePS = EESceneLoader->PixelShadersMap["CPUParticle"];
 	CPUParticleEmitter::SetDefaultShaders(cpuParticleShaders);
 
-	/*
 	ParticleEmitterDescription emitDesc;
 	//emitDesc.parentName = "FPSController";
 	//emitDesc.parentWorld = EESceneLoader->sceneEntitiesMap["FPSController"]->GetWorldMatrixPtr();
@@ -259,7 +262,7 @@ void Game::Init()
 	emitDesc.colors = partColors;
 	emitDesc.colorCount = 3;
 	emitDesc.maxParticles = 100;
-	emitDesc.emissionRate = 3.0f;
+	emitDesc.emissionRate = 0.5f;
 	//emitDesc.emissionRotation = XMFLOAT3(-XM_PIDIV2,0.0f,0.0f);
 	emitDesc.emitterDirection = Y_AXIS;
 	emitDesc.particleInitMinSpeed = 10.0f;
@@ -319,14 +322,13 @@ void Game::Init()
 		}
 	});
 
-	emitDesc.maxParticles = 30000;
-	emitDesc.emissionRate = 3000.0f;
-	emitDesc.particleInitMinSpeed = 10.0f;
-	emitDesc.particleInitMaxSpeed = 15.0f;
-	emitDesc.particleMinLifetime = 2.0f;
-	emitDesc.particleMaxLifetime = 3.0f;
-	new GPUParticleEmitter(emitDesc);
-	*/
+	//emitDesc.maxParticles = 30000;
+	//emitDesc.emissionRate = 3000.0f;
+	//emitDesc.particleInitMinSpeed = 10.0f;
+	//emitDesc.particleInitMaxSpeed = 15.0f;
+	//emitDesc.particleMinLifetime = 2.0f;
+	//emitDesc.particleMaxLifetime = 3.0f;
+	//new GPUParticleEmitter(emitDesc);
 
 	/*
 	Entity* e;
@@ -610,6 +612,10 @@ void Game::EnforcePhysics()
 			if (wrapper->type == PHYSICS_WRAPPER_TYPE::ENTITY) {
 				entity = (Entity*)wrapper->objectPointer;
 
+				if (entity->HasTag("Body Part")) {
+					cout << "here" << endl;
+				}
+
 				XMFLOAT3 pos = entity->GetTransform().GetPosition();
 				//XMFLOAT3 centerLocal = entity->GetCollider()->GetCenterLocal();
 				//XMFLOAT3 scale = entity->GetScale();
@@ -625,11 +631,13 @@ void Game::EnforcePhysics()
 				btQuaternion res = btQuaternion(rot.x, rot.y, rot.z, rot.w);
 				transform.setRotation(res);
 
-				//TODO: ENFORCE LOCAL SCALING OF COLLIDER
+				XMFLOAT3 scale = entity->GetTransform().GetScale();
+				btVector3 scl = Utility::Float3ToBulletVector(scale);
+				body->getCollisionShape()->setLocalScaling(scl);
 
 				body->setCenterOfMassTransform(transform);
 
-				// body->getMotionState()->setWorldTransform(transform);
+				//body->setWorldTransform(transform);
 
 				// body->getMotionState()->getWorldTransform(transform);
 			}
