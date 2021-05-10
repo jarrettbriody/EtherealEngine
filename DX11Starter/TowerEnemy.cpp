@@ -21,7 +21,7 @@ void TowerEnemy::Init()
 
 	Entity* player = eMap->find("FPSController")->second;
 
-	pos = entity->GetPosition();
+	pos = entity->GetTransform().GetPosition();
 
 	/*bt = BehaviorTreeBuilder()
 			.Leaf<EnemySeesPlayer>(entity, player, 30.0f, 30.0f).End()

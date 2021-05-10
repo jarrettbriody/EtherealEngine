@@ -266,38 +266,7 @@ void MainMenuManager::Update()
 		((ParticleEmitter*)splatter)->SetIsActive(false);
 	}
 
-	/*
-	if (GetAsyncKeyState(VK_UP))
-	{
-		if (!bloodFired) {
-			((ParticleEmitter*)splatter)->SetIsActive(true);
-			bloodFired = true;
-			firedTime = totalTime;
-		}
-
-		menuLight->light.Intensity += scalar * deltaTime;
-		if (menuLight->light.Intensity > 0.75f) menuLight->light.Intensity = 0.75f;
-
-		uiCb.transparency += scalar * deltaTime;
-		if (uiCb.transparency > 1.0f) uiCb.transparency = 1.0f;
-		if(uiCb.transparency == 1.0f && ((totalTime - firedTime) > 2.0f)) {
-			uiCb.otherTransparency += scalar * deltaTime;
-			if (uiCb.otherTransparency > 1.0f) uiCb.otherTransparency = 1.0f;
-		}
-	}
-	if (GetAsyncKeyState(VK_DOWN))
-	{
-		menuLight->light.Intensity -= scalar * deltaTime;
-		if (menuLight->light.Intensity < 0.0001f) menuLight->light.Intensity = 0.0001f; 
-		
-		uiCb.transparency -= scalar * deltaTime;
-		if (uiCb.transparency < 0.0f) uiCb.transparency = 0.0f;
-		uiCb.otherTransparency -= scalar * deltaTime;
-		if (uiCb.otherTransparency < 0.0f) uiCb.otherTransparency = 0.0f;
-	}
-	*/
-
-	if (totalTime >= 5.0f && !tooltipOn) {
+	if (totalTime >= 5.0f && !tooltipOn && !tooltipClosing) {
 		uiCb.skipTooltipTransparency += 1.0f * deltaTime;
 		if (uiCb.skipTooltipTransparency > 1.0f) {
 			uiCb.skipTooltipTransparency = 1.0f;
@@ -309,7 +278,8 @@ void MainMenuManager::Update()
 		lerpingPaperSide = true;
 		originalPaperPos = papers[paperCounter]->GetTransform().GetPosition();
 		paperLerpSpd = 0.0f;
-		tooltipClosing = true;
+		if(uiCb.skipTooltipTransparency == 1.0f)
+			tooltipClosing = true;
 	}
 
 	if (tooltipClosing) {

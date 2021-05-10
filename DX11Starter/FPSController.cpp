@@ -244,7 +244,7 @@ void FPSController::Update()
 				bloodOrb->GetRBody()->setGravity(btVector3(0, -25, 0));*/
 			}
 
-			cam->SetPosition(XMFLOAT3(entity->GetPosition().x, entity->GetPosition().y + entity->GetScale().y + headbobOffset, entity->GetPosition().z)); // after all updates make sure camera is following the affected entity
+			cam->GetTransform().SetPosition(XMFLOAT3(entity->GetTransform().GetPosition().x, entity->GetTransform().GetPosition().y + entity->GetTransform().GetScale().y + headbobOffset, entity->GetTransform().GetPosition().z)); // after all updates make sure camera is following the affected entity
 			float rotX;
 			float rotY;
 			float rotZ;
@@ -1106,14 +1106,14 @@ void FPSController::OnCollision(btCollisionObject* other)
 	if (otherE->HasTag(std::string("cyclopsProjectile")))
 	{
 		bloodResource -= 10;
-		impulseSumVec += Utility::Float3ToBulletVector(otherE->GetDirectionVector()).normalized() * 100.0f;
+		impulseSumVec += Utility::Float3ToBulletVector(otherE->GetTransform().GetDirectionVector()).normalized() * 100.0f;
 		otherE->Destroy();
 	}
 
 	if (otherE->HasTag(std::string("towerProjectile")))
 	{
 		bloodResource -= 25;
-		impulseSumVec += Utility::Float3ToBulletVector(otherE->GetDirectionVector()).normalized() * 500.0f;
+		impulseSumVec += Utility::Float3ToBulletVector(otherE->GetTransform().GetDirectionVector()).normalized() * 500.0f;
 		otherE->Destroy();
 	}
 
@@ -1123,7 +1123,7 @@ void FPSController::OnCollision(btCollisionObject* other)
 		if (otherE->HasTag(std::string("Horned")))
 		{
 			bloodResource -= 10;
-			impulseSumVec += Utility::Float3ToBulletVector(otherE->GetDirectionVector()).normalized() * 40.0f;
+			impulseSumVec += Utility::Float3ToBulletVector(otherE->GetTransform().GetDirectionVector()).normalized() * 40.0f;
 		}
 
 		if (otherE->HasTag(std::string("Bull")))

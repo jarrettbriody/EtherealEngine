@@ -17,7 +17,7 @@ Status FireProjectile::Update()
 {	
 	btVector3 shootingPos = enemy->GetRBody()->getCenterOfMassPosition();
 	shootingPos.setY(shootingPos.getY() + 6.0f); // Offset to shoot from mouth
-	projectile->SetPosition(Utility::BulletVectorToFloat3(shootingPos));
+	projectile->GetTransform().SetPosition(Utility::BulletVectorToFloat3(shootingPos));
 
 	btVector3 direction = player->GetRBody()->getCenterOfMassPosition() - shootingPos;
 	projectile->GetRBody()->setLinearVelocity(direction.normalized() * projectileSpeed);

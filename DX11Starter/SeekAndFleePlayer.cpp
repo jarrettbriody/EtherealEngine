@@ -11,8 +11,8 @@ void SeekAndFleePlayer::OnTerminate(Status s)
 
 Status SeekAndFleePlayer::Update()
 {
-	DirectX::XMFLOAT3 playerPos = player->GetPosition();
-	DirectX::XMFLOAT3 enemyPos = enemy->GetPosition();
+	DirectX::XMFLOAT3 playerPos = player->GetTransform().GetPosition();
+	DirectX::XMFLOAT3 enemyPos = enemy->GetTransform().GetPosition();
 
 	float distance = sqrt(pow(playerPos.x - enemyPos.x, 2) + pow(playerPos.z - enemyPos.z, 2));
 
@@ -28,13 +28,13 @@ Status SeekAndFleePlayer::Update()
 
 		XMFLOAT3 directionOffsetPos;
 
-		XMStoreFloat3(&directionOffsetPos, XMVectorMultiply(XMVector3Normalize(XMLoadFloat3(&player->GetDirectionVector())), XMLoadFloat3(&XMFLOAT3(-minimumDistance, 0, -minimumDistance))));
+		XMStoreFloat3(&directionOffsetPos, XMVectorMultiply(XMVector3Normalize(XMLoadFloat3(&player->GetTransform().GetDirectionVector())), XMLoadFloat3(&XMFLOAT3(-minimumDistance, 0, -minimumDistance))));
 
 		XMStoreFloat3(&teleportPos, XMVectorAdd(XMLoadFloat3(&playerPos), XMLoadFloat3(&directionOffsetPos)));
 
 		teleportPos.y = enemyPos.y;
 
-		enemy->SetPosition(teleportPos);
+		enemy->GetTransform().SetPosition(teleportPos);
 
 		*inRange = true;
 	}
