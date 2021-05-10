@@ -4,17 +4,29 @@
 void MainMenuManager::Init()
 {
 	cam = EERenderer->GetCamera("main");
+	cam->GetTransform().SetPosition(positions[0]);
+	cam->GetTransform().SetRotationRadians(rotations[0]);
+	cam->rotation = rotations[0];
+	cam->CalcViewMatrix();
 
 	uiCb.spriteBatch = new SpriteBatch(Config::Context);
 	uiCb.font = new SpriteFont(Config::Device, L"../../Assets/Fonts/Bloodlust.spritefont");
+	uiCb.EEMouse = Mouse::GetInstance();
+	uiCb.EESceneLoader = EESceneLoader;
 	EERenderer->SetRenderUICallback(true, &uiCb, 0);
 
 	lights = LightHandler::GetInstance();
 	hearthLight = lights->GetLight("hearth");
+	hearthPtLight = lights->GetLight("hearthpoint");
 	menuLight = lights->GetLight("menulight");
 
 	originalHearth = hearthLight->light;
 	originalMenu = menuLight->light;
+
+	papers = EESceneLoader->SceneEntitiesTagMap["paper"];
+	numPapers = papers.size();
+
+	mouse = Mouse::GetInstance();
 
 	Entity* bloodsword = EESceneLoader->SceneEntitiesMap["bloodswordlowpoly2"];
 
@@ -58,6 +70,7 @@ void MainMenuManager::Init()
 
 	Entity* candle = EESceneLoader->SceneEntitiesMap["candle"];
 	Entity* candle2 = EESceneLoader->SceneEntitiesMap["candle (1)"];
+	Entity* fireplace = EESceneLoader->SceneEntitiesMap["fireplace"];
 
 	//CANDLE FLAME
 	emitDesc = {};
@@ -100,10 +113,23 @@ void MainMenuManager::Init()
 	emitDesc.emitterPosition.y = emitDesc.emitterPosition.y + 0.8f;
 	gpuEmitter = new GPUParticleEmitter(emitDesc);
 
+	emitDesc.emitterPosition = fireplace->GetTransform().GetPosition();
+	emitDesc.emitterPosition.y = emitDesc.emitterPosition.y + 1.0f;
+	emitDesc.particleMinLifetime = 5.0f;
+	emitDesc.particleMaxLifetime = 10.0f;
+	emitDesc.emissionRate = 5.0f;
+	emitDesc.particleInitMinScale = 1.0f;
+	emitDesc.particleInitMaxScale = 1.2f;
+	emitDesc.emissionStartRadius = 0.75f;
+	emitDesc.emissionEndRadius = 0.75f;
+	gpuEmitter = new GPUParticleEmitter(emitDesc);
+
 	emitDesc.emitterPosition = candle->GetTransform().GetPosition();
 	emitDesc.emitterPosition.y = emitDesc.emitterPosition.y + 0.8f;
 	emitDesc.fadeOutStartTime = -1.0f;
 	emitDesc.fadeInEndTime = 0.05f;
+	emitDesc.emissionStartRadius = 0.03f;
+	emitDesc.emissionEndRadius = 0.07f;
 	ParticleTexture partTexFire[3] = {
 		{EESceneLoader->Texture2DMap["fire2"], 3.0f, 0.3f},
 		{EESceneLoader->Texture2DMap["fire3"], 1.0f, 0.2f},
@@ -126,6 +152,15 @@ void MainMenuManager::Init()
 
 	emitDesc.emitterPosition = candle2->GetTransform().GetPosition();
 	emitDesc.emitterPosition.y = emitDesc.emitterPosition.y + 0.8f;
+	gpuEmitter = new GPUParticleEmitter(emitDesc);
+
+	emitDesc.emitterPosition = fireplace->GetTransform().GetPosition();
+	emitDesc.emitterPosition.y = emitDesc.emitterPosition.y + 1.0f;
+	emitDesc.emissionRate = 25.0f;
+	emitDesc.particleInitMinScale = 0.2f;
+	emitDesc.particleInitMaxScale = 0.5f;
+	emitDesc.emissionStartRadius = 0.75f;
+	emitDesc.emissionEndRadius = 0.75f;
 	gpuEmitter = new GPUParticleEmitter(emitDesc);
 
 	emitDesc = {};
@@ -220,8 +255,8 @@ void MainMenuManager::Update()
 		}
 	}
 
-	hearthLight->light.Intensity = originalHearth.Intensity + (cos(totalTime * (static_cast <float> ((rand()) / static_cast <float> (RAND_MAX)))) - 0.5f) * (static_cast <float> ((rand()) / static_cast <float> (RAND_MAX)) * 0.02f);
-	hearthLight->light.Range = originalHearth.Range + (sin(totalTime / 2.0)) * 1.0f;
+	hearthPtLight->light.Intensity = originalHearth.Intensity + (cos(totalTime * (static_cast <float> ((rand()) / static_cast <float> (RAND_MAX)))) - 0.5f) * (static_cast <float> ((rand()) / static_cast <float> (RAND_MAX)) * 0.1f);
+	hearthLight->light.Range = originalHearth.Range + (sin(totalTime)) * 3.0f;
 	if (hearthLight->light.Intensity < originalHearth.Intensity / 3.0f) hearthLight->light.Intensity = originalHearth.Intensity / 3.0f;
 	//menuLight->light.Intensity = originalMenu.Intensity + sin(totalTime / 10.0);
 
@@ -231,6 +266,7 @@ void MainMenuManager::Update()
 		((ParticleEmitter*)splatter)->SetIsActive(false);
 	}
 
+	/*
 	if (GetAsyncKeyState(VK_UP))
 	{
 		if (!bloodFired) {
@@ -259,13 +295,105 @@ void MainMenuManager::Update()
 		uiCb.otherTransparency -= scalar * deltaTime;
 		if (uiCb.otherTransparency < 0.0f) uiCb.otherTransparency = 0.0f;
 	}
-	
-	if (rotCounter < 5) {
-		if ((totalTime - rotTimeStamp) > timeOffsetsRotation[rotCounter]) {
-			rotCounter++;
+	*/
+
+	if (totalTime >= 5.0f && !tooltipOn) {
+		uiCb.skipTooltipTransparency += 1.0f * deltaTime;
+		if (uiCb.skipTooltipTransparency > 1.0f) {
+			uiCb.skipTooltipTransparency = 1.0f;
+			tooltipOn = true;
 		}
 	}
+
+	if (mouse->OnLMBDown() && !lerpingPaperSide && !lerpingPaperBottom && paperCounter != numPapers) {
+		lerpingPaperSide = true;
+		originalPaperPos = papers[paperCounter]->GetTransform().GetPosition();
+		paperLerpSpd = 0.0f;
+		tooltipClosing = true;
+	}
+
+	if (tooltipClosing) {
+		uiCb.skipTooltipTransparency -= 1.0f * deltaTime;
+		if (uiCb.skipTooltipTransparency < 0.0f) uiCb.skipTooltipTransparency = 0.0f;
+	}
+
+	if ((lerpingPaperSide || lerpingPaperBottom) && paperCounter != numPapers) {
+		XMFLOAT3 currentPaperPos = papers[paperCounter]->GetTransform().GetPosition();
+		XMVECTOR currentPos = XMLoadFloat3(&currentPaperPos);
+		XMFLOAT3 lerpPos;
+		XMVECTOR posTo = XMVectorAdd(XMLoadFloat3(&originalPaperPos), (lerpingPaperSide) ? XMLoadFloat3(&paperSidePos) : XMVectorAdd(XMLoadFloat3(&paperBottomPos), XMVectorSet(0, paperYOffset * (numPapers - paperCounter),0,0)));
+		XMStoreFloat3(&lerpPos, XMVectorLerp(currentPos, posTo, paperLerpSpd * deltaTime));
+		papers[paperCounter]->GetTransform().SetPosition(lerpPos);
+		if (XMVector3NearEqual(currentPos, posTo, XMVectorSet(0.1f, 0.1f, 0.1f, 0.1f))) {
+			if (lerpingPaperSide) {
+				lerpingPaperSide = false;
+				lerpingPaperBottom = true;
+				paperLerpSpd /= 6.0f;
+			}
+			else {
+				lerpingPaperBottom = false;
+				paperCounter++;
+			}
+		}
+		paperLerpSpd += 1.0f * deltaTime;
+		if (paperLerpSpd > 3.0f) paperLerpSpd = 3.0f;
+	}
+
+	if (Keyboard::GetInstance()->KeyIsPressed(32)) {
+		paperCounter = numPapers;
+		tooltipClosing = true;
+	}
 	
+	if ((((totalTime - rotTimeStamp) > timeOffsetsRotation[rotCounter]) && nearRot) && rotCounter < 4 && paperCounter == numPapers) {// || (nearRot && rotCounter != 0)  && paperCounter == numPapers
+		rotCounter++;
+		rotTimeStamp = totalTime;
+		rotSpd = 0.0f;
+	}
+
+	rotSpd += 0.1f * deltaTime;
+	if (rotSpd > 0.4f) rotSpd = 0.4f;
+
+	XMFLOAT3 currentCamRot = cam->GetTransform().GetEulerAnglesRadians();
+	XMVECTOR current = XMLoadFloat3(&currentCamRot);
+	XMFLOAT3 lerpRot;
+	XMVECTOR rotTo = XMLoadFloat3(&rotations[rotCounter]);
+	XMStoreFloat3(&lerpRot, XMVectorLerp(current, rotTo, rotSpd * deltaTime));
+	nearRot = XMVector3NearEqual(current, rotTo, XMVectorSet(0.1f, 0.1f, 0.1f, 0.1f));
+	cam->GetTransform().SetRotationRadians(lerpRot);
+	cam->rotation = lerpRot;
+	
+	if (rotCounter > 3) {
+		XMFLOAT3 currentCamPos = cam->GetTransform().GetPosition();
+		XMVECTOR currentPos = XMLoadFloat3(&currentCamPos);
+		XMFLOAT3 lerpPos;
+		XMVECTOR posTo = XMLoadFloat3(&positions[posCounter]);
+		XMStoreFloat3(&lerpPos, XMVectorLerp(currentPos, posTo, posSpd * deltaTime));
+		cam->GetTransform().SetPosition(lerpPos);
+		if (XMVector3NearEqual(currentPos, posTo, XMVectorSet(0.5f, 0.5f, 0.5f, 0.5f)) && posCounter == 1) {
+			if (!bloodFired) {
+				((ParticleEmitter*)splatter)->SetIsActive(true);
+				bloodFired = true;
+				firedTime = totalTime;
+			}
+
+			menuLight->light.Intensity += scalar * deltaTime;
+			if (menuLight->light.Intensity > 0.75f) menuLight->light.Intensity = 0.75f;
+
+			uiCb.transparency += scalar * deltaTime;
+			if (uiCb.transparency > 1.0f) uiCb.transparency = 1.0f;
+			if (uiCb.transparency == 1.0f && ((totalTime - firedTime) > 2.0f)) {
+				uiCb.otherTransparency += scalar * deltaTime;
+				if (uiCb.otherTransparency > 1.0f) uiCb.otherTransparency = 1.0f;
+			}
+		}
+		if (XMVector3NearEqual(currentPos, posTo, XMVectorSet(0.3f, 0.3f, 0.3f, 0.3f)) && posCounter < 1) {
+			posCounter++;
+			posSpd = 0.0f;
+		}
+		posSpd += 0.1f * deltaTime;
+
+		if (posSpd > 0.7f) posSpd = 0.7f;
+	}
 }
 
 MainMenuManager::~MainMenuManager()

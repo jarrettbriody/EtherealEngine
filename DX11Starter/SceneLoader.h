@@ -9,6 +9,7 @@
 #include "Config.h"
 #include "MemoryAllocator.h"
 #include "Renderer.h"
+#include "ParticleEmitter.h"
 
 using namespace Utility;
 
@@ -173,6 +174,8 @@ private:
 
 	SceneLoader();
 	~SceneLoader();
+	void CleanupScenePreOperation();
+	void CleanupScenePostOperation();
 
 	XMFLOAT3 Float3FromString(string str);
 
@@ -211,6 +214,7 @@ public:
 	vector<Entity*> SceneEntities;
 
 	SceneLoaderCallback* garbageCollectCallback;
+	Utility::Callback* sceneChangeCallback;
 
 	static bool SetupInstance();
 	static SceneLoader* GetInstance();

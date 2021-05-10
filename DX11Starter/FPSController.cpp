@@ -4,6 +4,10 @@
 
 void FPSController::Init()
 {
+	Config::ShowCursor = false;
+	Config::CaptureMouse = true;
+	Config::DebugCamera = false;
+
 	if (Config::CaptureMouse) {
 		RECT rect;
 		if (GetWindowRect(Config::hWnd, &rect)) {
@@ -13,10 +17,14 @@ void FPSController::Init()
 		}
 	}
 
+	while (ShowCursor(Config::ShowCursor) >= 0);
+
 	eMap = ScriptManager::sceneEntitiesMap;
 	bloodOrb = eMap->find("Blood_Orb")->second;
 	bloodOrbScript = (BloodOrb*)scriptFunctionsMap[(*eMap)["Blood_Orb"]->GetName()]["BLOODORB"];
 	cam = ScriptManager::EERenderer->GetCamera("main");
+	cam->GetTransform().SetRotationDegrees(0, 90, 0);
+	cam->rotation = cam->GetTransform().GetEulerAnglesRadians();
 	direction = cam->GetTransform().GetDirectionVector();
 	cam->SetFOV(fov);
 

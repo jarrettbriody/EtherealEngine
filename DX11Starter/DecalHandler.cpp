@@ -4,7 +4,6 @@
 DecalHandler* DecalHandler::instance = nullptr;
 map<string, DecalBucket*> DecalHandler::decalsMap;
 vector<DecalBucket*> DecalHandler::decalsVec;
-map<DecalBucket*, bool> DecalHandler::bucketIsDeadMap;
 //vector<DecalDrawInfo> DecalHandler::decalDrawList;
 
 DecalHandler::DecalHandler()
@@ -47,10 +46,9 @@ void DecalHandler::GarbageCollect()
 	for (int i = count - 1; i >= 0; i--)
 	{
 		currentBucket = decalsVec[i];
-		if (bucketIsDeadMap.count(currentBucket)) {
+		if (!currentBucket->alive) {
 			decalsVec.erase(decalsVec.begin() + i);
-			bucketIsDeadMap.erase(currentBucket);
-			memAlloc->DeallocateFromPool((unsigned int)MEMORY_POOL::LIGHT_POOL, currentBucket, sizeof(DecalBucket));
+			memAlloc->DeallocateFromPool((unsigned int)MEMORY_POOL::DECAL_POOL, currentBucket, sizeof(DecalBucket));
 		}
 	}
 }
@@ -106,6 +104,7 @@ void DecalHandler::GenerateDecal(Entity* owner, XMFLOAT3 rayDirection, XMFLOAT3 
 		b->owner = owner;
 		decalsMap.insert({ ownerName, b });
 		b->index = decalsVec.size();
+		b->alive = true;
 		decalsVec.push_back(b);
 	}
 	DecalBucket* bucket = decalsMap[ownerName];
@@ -121,7 +120,7 @@ bool DecalHandler::DestroyDecalsByOwner(string owner)
 {
 	if(!decalsMap.count(owner)) return false;
 	DecalBucket* db = decalsMap[owner];
-	bucketIsDeadMap.insert({ db, true });
+	db->alive = false;
 	decalsMap.erase(owner);
 	return true;
 }

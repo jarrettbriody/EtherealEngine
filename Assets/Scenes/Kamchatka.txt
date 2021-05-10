@@ -1,5 +1,6 @@
 TYPE="DIRLIGHT" name="Sun" intensity="0.4" P(200,500,25)D(-0.37099,-0.92748,-0.046374)C(1.0,1.0,1.0)
 TYPE="AMBIENTOCCLUSION" enabled="true" unitsPerMeter="3.0" radius="1.0" power="4.0" blurEnabled="true" blurSharpness="8.0" blurRadius="0"
+TYPE="AMBIENTLIGHT" intensity="0.05"
 TYPE="SKYBOX" dds="nightred"
 
 name="GameManager" colliders="false" scripts="GAMEMANAGER" P(0, 0, 0)R(0,0,0)S(0.0, 0.0, 0.0)

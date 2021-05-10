@@ -38,6 +38,7 @@ struct DecalBucket {
 	unsigned int index = 0;
 	int counter = 0;
 	int count = 0;
+	bool alive = true;
 };
 
 class DecalHandler
@@ -51,7 +52,6 @@ private:
 public:
 	static map<string, DecalBucket*> decalsMap;
 	static vector<DecalBucket*> decalsVec;
-	static map<DecalBucket*, bool> bucketIsDeadMap;
 	//static vector<DecalDrawInfo> decalDrawList;
 
 	static bool SetupInstance();

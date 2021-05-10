@@ -30,5 +30,6 @@ struct LightContainer {
 	EEString<64> parentName = ""; //Optional
 	XMFLOAT4X4* parentWorld = nullptr; //Optional
 	XMFLOAT4X4 world;
+	bool alive = true;
 	//LightShaders shaders; //Optional
 };

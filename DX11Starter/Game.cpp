@@ -4,6 +4,39 @@
 
 using namespace DirectX;
 
+void SceneChangeCallback::Call() {
+	cancelDraw = true;
+
+	for (size_t i = 0; i < DecalHandler::GetInstance()->decalsVec.size(); i++)
+	{
+		DecalHandler::GetInstance()->decalsVec[i]->alive = false;
+	}
+	DecalHandler::GetInstance()->decalsMap.clear();
+
+	for (size_t i = 0; i < ParticleEmitter::EmitterVector.size(); i++)
+	{
+		ParticleEmitter::EmitterVector[i]->Destroy();
+	}
+	ParticleEmitter::EntityEmitterMap.clear();
+
+	for (size_t i = 0; i < LightHandler::GetInstance()->lightsVec.size(); i++)
+	{
+		LightHandler::GetInstance()->lightsVec[i]->alive = false;
+	}
+	LightHandler::GetInstance()->lightsMap.clear();
+	LightHandler::GetInstance()->entityLightMap.clear();
+	LightHandler::GetInstance()->dirLight = nullptr;
+
+	for (size_t i = 0; i < ScriptManager::scriptFunctions.size(); i++)
+	{
+		ScriptManager::scriptFunctions[i]->destroyed = true;
+	}
+	ScriptManager::scriptFunctionsMap.clear();
+	ScriptManager::scriptFunctionsMapVector.clear();
+
+	//((Game*)game)->GarbageCollect();
+}
+
 Game::Game(HINSTANCE hInstance)
 	: DXCore(
 		hInstance,					// The application's handle
@@ -77,6 +110,7 @@ void Game::Init()
 	//_CrtSetBreakAlloc(49892);
 
 	Config::hWnd = hWnd;
+	sceneChangeCallback.game = (void*)this;
 
 	srand(static_cast <unsigned> (time(0)));
 	// Input 
@@ -141,6 +175,7 @@ void Game::Init()
 
 	sceneLoaderGarbageCallback.EEDecalHandler = EEDecalHandler;
 	EESceneLoader->garbageCollectCallback = (SceneLoaderCallback*)(&sceneLoaderGarbageCallback);
+	EESceneLoader->sceneChangeCallback = (Utility::Callback*)(&sceneChangeCallback);
 
 	Renderer::SetupInstance();
 	EERenderer = Renderer::GetInstance();
@@ -166,8 +201,8 @@ void Game::Init()
 
 	//EESceneLoader->LoadScene("ArenaV2");
 
-	EESceneLoader->SetModelPath("../../Assets/Models/Kamchatka/");
-	EESceneLoader->LoadScene("Kamchatka");
+	EESceneLoader->SetModelPath("../../Assets/Models/MainMenu/");
+	EESceneLoader->LoadScene("MainMenu");
 
 	EERenderer->SetShadowCascadeInfo(0, 4096, 0.1f, 2000.0f, 100.0f, 100.0f);
 	EERenderer->SetShadowCascadeInfo(1, 4096, 0.1f, 2000.0f, 250.0f, 250.0f);
@@ -210,6 +245,7 @@ void Game::Init()
 	cpuParticleShaders.particlePS = EESceneLoader->PixelShadersMap["CPUParticle"];
 	CPUParticleEmitter::SetDefaultShaders(cpuParticleShaders);
 
+	/*
 	ParticleEmitterDescription emitDesc;
 	//emitDesc.parentName = "FPSController";
 	//emitDesc.parentWorld = EESceneLoader->sceneEntitiesMap["FPSController"]->GetWorldMatrixPtr();
@@ -290,7 +326,9 @@ void Game::Init()
 	emitDesc.particleMinLifetime = 2.0f;
 	emitDesc.particleMaxLifetime = 3.0f;
 	new GPUParticleEmitter(emitDesc);
+	*/
 
+	/*
 	Entity* e;
 	for (size_t i = 0; i < EESceneLoader->SceneEntities.size(); i++)
 	{
@@ -298,6 +336,7 @@ void Game::Init()
 		if(!e->isEmptyObj)
 			EERenderer->AddRenderObject(e, e->GetMesh(), e->GetMaterial(e->GetMeshMaterialName()));
 	}
+	*/
 
 	ScriptManager::EERenderer = EERenderer;
 
@@ -388,10 +427,20 @@ void Game::OnResize()
 
 void Game::Update(double deltaTime, double totalTime)
 {
+	if (sceneChangeCallback.cancelDraw) {
+		EERenderer->InitDepthStencil();
+		EERenderer->InitHBAOPlus();
+		EERenderer->InitPostProcessRTV();
+		EERenderer->InitShadows(4);
+		sceneChangeCallback.cancelDraw = false;
+	}
+
 	if (GetAsyncKeyState(VK_ESCAPE)) {
 		Config::SwapChain->SetFullscreenState(false, NULL);
 		Quit();
 	}
+
+	GarbageCollect();
 
 	for (size_t i = 0; i < ScriptManager::scriptFunctions.size(); i++)
 	{
@@ -399,8 +448,6 @@ void Game::Update(double deltaTime, double totalTime)
 		if(!sf->GetIsInitialized())
 			sf->CallInit();
 	}
-
-	GarbageCollect();
 
 	EECamera->Update(deltaTime);
 
@@ -632,6 +679,8 @@ void Game::AudioStep()
 
 void Game::Draw(double deltaTime, double totalTime)
 {
+	if (sceneChangeCallback.cancelDraw) return;
+
 	EERenderer->ClearFrame();
 
 	//EERenderer->SendAllLightsToShader(EESceneLoader->pixelShadersMap["DEFAULT"]);

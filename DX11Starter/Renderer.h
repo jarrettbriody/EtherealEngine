@@ -101,6 +101,7 @@ public:
 
 	void AddRenderObject(Entity* e, Mesh* mesh, Material* mat = nullptr);
 	void AddTransparentObject(Entity* e, Mesh* mesh, Material* mat = nullptr);
+	void ClearRenderer();
 
 	void SetRenderObjectCallback(Entity* e, RendererCallback* callback);
 	void SetPostProcess(bool toggle, RendererCallback* callback = nullptr, unsigned int index = 0);

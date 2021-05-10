@@ -18,13 +18,11 @@ private:
 	LightHandler();
 	~LightHandler();
 
-	map<LightContainer*, bool> lightIsDeadMap;
-	LightContainer* dirLight;
+public:
 	vector<LightContainer*> lightsVec;
 	map<string, LightContainer*> lightsMap;
+	LightContainer* dirLight;
 	map<string, map<string, LightContainer*>> entityLightMap;
-
-public:
 	Light DrawList[MAX_LIGHTS];
 	unsigned int DrawCount = 0;
 

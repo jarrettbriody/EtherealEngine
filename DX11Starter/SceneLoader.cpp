@@ -648,10 +648,9 @@ MESH_TYPE SceneLoader::AutoLoadOBJMTL(string name)
 				line = regex_replace(line, RegexObjects.ambientTextureRgx, "");
 				if (!GeneratedTexturesMap.count(line)) {
 					GeneratedTexturesMap.insert({ line, Utility::LoadSRV(line) });
-
-					//record texture as utilized
-					utilizedTexturesMap.insert({ line,true });
 				}
+				//record texture as utilized
+				utilizedTexturesMap.insert({ line,true });
 				matData.AmbientTextureMapSRV = GeneratedTexturesMap[line];
 				materialTextureAssociationMap[ongoingMatName].push_back(line);
 			}
@@ -660,10 +659,9 @@ MESH_TYPE SceneLoader::AutoLoadOBJMTL(string name)
 				line = regex_replace(line, RegexObjects.diffuseTextureRgx, "");
 				if (!GeneratedTexturesMap.count(line)) {
 					GeneratedTexturesMap.insert({ line, Utility::LoadSRV(line) });
-
-					//record texture as utilized
-					utilizedTexturesMap.insert({ line,true });
 				}
+				//record texture as utilized
+				utilizedTexturesMap.insert({ line,true });
 				matData.DiffuseTextureMapSRV = GeneratedTexturesMap[line];
 				materialTextureAssociationMap[ongoingMatName].push_back(line);
 			}
@@ -672,10 +670,9 @@ MESH_TYPE SceneLoader::AutoLoadOBJMTL(string name)
 				line = regex_replace(line, RegexObjects.specularColorTextureRgx, "");
 				if (!GeneratedTexturesMap.count(line)) {
 					GeneratedTexturesMap.insert({ line, Utility::LoadSRV(line) });
-
-					//record texture as utilized
-					utilizedTexturesMap.insert({ line,true });
 				}
+				//record texture as utilized
+				utilizedTexturesMap.insert({ line,true });
 				matData.SpecularColorTextureMapSRV = GeneratedTexturesMap[line];
 				materialTextureAssociationMap[ongoingMatName].push_back(line);
 			}
@@ -684,10 +681,9 @@ MESH_TYPE SceneLoader::AutoLoadOBJMTL(string name)
 				line = regex_replace(line, RegexObjects.specularHighlightTextureRgx, "");
 				if (!GeneratedTexturesMap.count(line)) {
 					GeneratedTexturesMap.insert({ line, Utility::LoadSRV(line) });
-
-					//record texture as utilized
-					utilizedTexturesMap.insert({ line,true });
 				}
+				//record texture as utilized
+				utilizedTexturesMap.insert({ line,true });
 				matData.SpecularHighlightTextureMapSRV = GeneratedTexturesMap[line];
 				materialTextureAssociationMap[ongoingMatName].push_back(line);
 			}
@@ -696,10 +692,9 @@ MESH_TYPE SceneLoader::AutoLoadOBJMTL(string name)
 				line = regex_replace(line, RegexObjects.alphaTextureRgx, "");
 				if (!GeneratedTexturesMap.count(line)) {
 					GeneratedTexturesMap.insert({ line, Utility::LoadSRV(line) });
-
-					//record texture as utilized
-					utilizedTexturesMap.insert({ line,true });
 				}
+				//record texture as utilized
+				utilizedTexturesMap.insert({ line,true });
 				matData.AlphaTextureMapSRV = GeneratedTexturesMap[line];
 				materialTextureAssociationMap[ongoingMatName].push_back(line);
 			}
@@ -708,10 +703,9 @@ MESH_TYPE SceneLoader::AutoLoadOBJMTL(string name)
 				line = regex_replace(line, RegexObjects.normalTextureRgx, "");
 				if (!GeneratedTexturesMap.count(line)) {
 					GeneratedTexturesMap.insert({ line, Utility::LoadSRV(line) });
-
-					//record texture as utilized
-					utilizedTexturesMap.insert({ line,true });
 				}
+				//record texture as utilized
+				utilizedTexturesMap.insert({ line,true });
 				matData.NormalTextureMapSRV = GeneratedTexturesMap[line];
 				materialTextureAssociationMap[ongoingMatName].push_back(line);
 			}
@@ -747,7 +741,7 @@ MESH_TYPE SceneLoader::AutoLoadOBJMTL(string name)
 	return MESH_TYPE::GENERATED_MESH;
 }
 
-void SceneLoader::LoadScene(string sceneName)
+void SceneLoader::CleanupScenePreOperation()
 {
 	//remove all current entities loaded
 	for (size_t i = 0; i < SceneEntities.size(); i++)
@@ -761,6 +755,63 @@ void SceneLoader::LoadScene(string sceneName)
 	utilizedMeshesMap.clear();
 	utilizedMaterialsMap.clear();
 	utilizedTexturesMap.clear();
+
+	EERenderer->ClearRenderer();
+
+	sceneChangeCallback->Call();
+}
+
+void SceneLoader::CleanupScenePostOperation()
+{
+	//clean up memory from prior scene, wont reload any resources that already exist and that
+	//are needed, but will remove unused resources in the current scene
+	vector<string> meshesToDelete;
+	for (auto meshMapIter = GeneratedMeshesMap.begin(); meshMapIter != GeneratedMeshesMap.end(); ++meshMapIter)
+	{
+		if (!utilizedMeshesMap.count(meshMapIter->first)) {
+			meshesToDelete.push_back(meshMapIter->first);
+		}
+	}
+	for (size_t i = 0; i < meshesToDelete.size(); i++)
+	{
+		Mesh* toDelete = GeneratedMeshesMap[meshesToDelete[i]];
+		toDelete->FreeMemory();
+		EEMemoryAllocator->DeallocateFromPool((unsigned int)MEMORY_POOL::MESH_POOL, toDelete, sizeof(Mesh));
+		GeneratedMeshesMap.erase(meshesToDelete[i]);
+	}
+
+	vector<string> texturesToDelete;
+	for (auto texMapIter = GeneratedTexturesMap.begin(); texMapIter != GeneratedTexturesMap.end(); ++texMapIter)
+	{
+		if (!utilizedTexturesMap.count(texMapIter->first)) {
+			texturesToDelete.push_back(texMapIter->first);
+		}
+	}
+	for (size_t i = 0; i < texturesToDelete.size(); i++)
+	{
+		GeneratedTexturesMap[texturesToDelete[i]]->Release();
+		GeneratedTexturesMap.erase(texturesToDelete[i]);
+	}
+
+	vector<string> materialsToDelete;
+	for (auto matMapIter = GeneratedMaterialsMap.begin(); matMapIter != GeneratedMaterialsMap.end(); ++matMapIter)
+	{
+		if (!utilizedMaterialsMap.count(matMapIter->first)) {
+			materialsToDelete.push_back(matMapIter->first);
+		}
+	}
+	for (size_t i = 0; i < materialsToDelete.size(); i++)
+	{
+		Material* toDelete = GeneratedMaterialsMap[materialsToDelete[i]];
+		toDelete->FreeMemory();
+		EEMemoryAllocator->DeallocateFromPool((unsigned int)MEMORY_POOL::MATERIAL_POOL, toDelete, sizeof(Material));
+		GeneratedMaterialsMap.erase(materialsToDelete[i]);
+	}
+}
+
+void SceneLoader::LoadScene(string sceneName)
+{
+	CleanupScenePreOperation();
 
 	ifstream infile("../../Assets/Scenes/" + sceneName + ".txt");
 	string line;
@@ -1195,60 +1246,20 @@ void SceneLoader::LoadScene(string sceneName)
 					for (; iter != std::sregex_iterator(); ++iter) {
 						match = *iter;
 						string script = match.str();
-						//scriptCallback(allocatedEntity, script);
-						scriptPairs.push_back({ allocatedEntity, script });
+						scriptCallback(allocatedEntity, script);
+						//scriptPairs.push_back({ allocatedEntity, script });
 					}
 				}
+
+				if (!allocatedEntity->isEmptyObj)
+					EERenderer->AddRenderObject(allocatedEntity, allocatedEntity->GetMesh(), allocatedEntity->GetMaterial(allocatedEntity->GetMeshMaterialName()));
 			}
 		}
 	}
 
 	infile.close();
 
-	//clean up memory from prior scene, wont reload any resources that already exist and that
-	//are needed, but will remove unused resources in the current scene
-	vector<string> meshesToDelete;
-	for (auto meshMapIter = GeneratedMeshesMap.begin(); meshMapIter != GeneratedMeshesMap.end(); ++meshMapIter)
-	{
-		if (!utilizedMeshesMap.count(meshMapIter->first)) {
-			meshesToDelete.push_back(meshMapIter->first);
-		}
-	}
-	for (size_t i = 0; i < meshesToDelete.size(); i++)
-	{
-		Mesh* toDelete = GeneratedMeshesMap[meshesToDelete[i]];
-		toDelete->FreeMemory();
-		EEMemoryAllocator->DeallocateFromPool((unsigned int)MEMORY_POOL::MESH_POOL, toDelete, sizeof(Mesh));
-		GeneratedMeshesMap.erase(meshesToDelete[i]);
-	}
-
-	vector<string> texturesToDelete;
-	for (auto texMapIter = GeneratedTexturesMap.begin(); texMapIter != GeneratedTexturesMap.end(); ++texMapIter)
-	{
-		if (!utilizedTexturesMap.count(texMapIter->first)) {
-			texturesToDelete.push_back(texMapIter->first);
-		}
-	}
-	for (size_t i = 0; i < texturesToDelete.size(); i++)
-	{
-		GeneratedTexturesMap[texturesToDelete[i]]->Release();
-		GeneratedTexturesMap.erase(texturesToDelete[i]);
-	}
-
-	vector<string> materialsToDelete;
-	for (auto matMapIter = GeneratedMaterialsMap.begin(); matMapIter != GeneratedMaterialsMap.end(); ++matMapIter)
-	{
-		if (!utilizedMaterialsMap.count(matMapIter->first)) {
-			materialsToDelete.push_back(matMapIter->first);
-		}
-	}
-	for (size_t i = 0; i < materialsToDelete.size(); i++)
-	{
-		Material* toDelete = GeneratedMaterialsMap[materialsToDelete[i]];
-		toDelete->FreeMemory();
-		EEMemoryAllocator->DeallocateFromPool((unsigned int)MEMORY_POOL::MATERIAL_POOL, toDelete, sizeof(Material));
-		GeneratedMaterialsMap.erase(materialsToDelete[i]);
-	}
+	CleanupScenePostOperation();
 }
 
 void SceneLoader::SetModelPath(string path)

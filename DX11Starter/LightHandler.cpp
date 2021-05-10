@@ -50,9 +50,8 @@ void LightHandler::GarbageCollect()
 	for (int i = count - 1; i >= 0; i--)
 	{
 		currentLight = lightsVec[i];
-		if (lightIsDeadMap.count(currentLight)) {
+		if (!currentLight->alive) {
 			lightsVec.erase(lightsVec.begin() + i);
-			lightIsDeadMap.erase(currentLight);
 			memAlloc->DeallocateFromPool((unsigned int)MEMORY_POOL::LIGHT_POOL, currentLight, sizeof(LightContainer));
 		}
 	}
@@ -162,8 +161,8 @@ bool LightHandler::DestroyLight(std::string name)
 {
 	if (!lightsMap.count(name)) return false;
 	LightContainer* lightPtr = lightsMap[name];
+	lightPtr->alive = false;
 	lightsMap.erase(name);
-	lightIsDeadMap.insert({ lightPtr, true });
 	for (auto Iter = entityLightMap.begin(); Iter != entityLightMap.end(); ++Iter)
 	{
 		if (Iter->second.count(name)) {
@@ -179,7 +178,7 @@ bool LightHandler::DestroyLightsByOwner(string name)
 	if(!entityLightMap.count(name)) return false;
 	for (auto Iter = entityLightMap[name].begin(); Iter != entityLightMap[name].end(); ++Iter)
 	{
-		lightIsDeadMap.insert({ Iter->second, true });
+		Iter->second->alive = false;
 		lightsMap.erase(Iter->second->lightName.STDStr());
 	}
 	entityLightMap.erase(name);

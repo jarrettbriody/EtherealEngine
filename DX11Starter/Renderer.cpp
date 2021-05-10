@@ -6,6 +6,11 @@ Renderer* Renderer::instance = nullptr;
 Renderer::Renderer()
 {
 	EELightHandler = LightHandler::GetInstance();
+
+	maxRenderObjects = 512;
+	maxTransparentObjects = maxRenderObjects;
+	renderObjects = new RenderObject[maxRenderObjects];
+	transparentObjects = new RenderObject[maxTransparentObjects];
 }
 
 Renderer::~Renderer()
@@ -123,10 +128,6 @@ bool Renderer::DestroyInstance()
 void Renderer::SetEntities(vector<Entity*>* entities)
 {
 	this->entities = entities;
-	maxRenderObjects = entities->size() + 100;
-	maxTransparentObjects = maxRenderObjects;
-	renderObjects = new RenderObject[maxRenderObjects];
-	transparentObjects = new RenderObject[maxTransparentObjects];
 }
 
 void Renderer::SetRendererShaders(RendererShaders rShaders)
@@ -1282,6 +1283,20 @@ void Renderer::AddRenderObject(Entity* e, Mesh* mesh, Material* mat)
 				delete[] oldObjects;
 			}
 		}
+	}
+}
+
+void Renderer::ClearRenderer()
+{
+	renderObjectCount = 0;
+	transparentObjectCount = 0;
+	for (size_t i = 0; i < MAX_POST_PROCESS_EFFECTS; i++)
+	{
+		postProcessComponents.callbacks[i] = nullptr;
+	}
+	for (size_t i = 0; i < MAX_UI_CALLBACKS; i++)
+	{
+		uiComponents.UICallbacks[i] = nullptr;
 	}
 }
 

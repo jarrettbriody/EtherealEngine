@@ -46,6 +46,12 @@ struct SceneLoaderGarbageCallback : SceneLoaderCallback{
 	}
 };
 
+struct SceneChangeCallback : Utility::Callback {
+	bool cancelDraw = false;
+	void* game = nullptr;
+	void Call();
+};
+
 class Game 
 	: public DXCore
 {
@@ -108,6 +114,7 @@ private:
 	FMOD_VECTOR listener_up = FMOD_VECTOR();
 
 	SceneLoaderGarbageCallback sceneLoaderGarbageCallback;
+	SceneChangeCallback sceneChangeCallback;
 
 	// AI
 	
