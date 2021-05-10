@@ -2,6 +2,7 @@
 #include "ScriptManager.h"
 #include "BehaviorTreeBuilder.h"
 #include "EnemySeesPlayer.h"
+#include "Invert.h"
 #include "InCombat.h"
 #include "PlayerVisible.h"
 #include "FacePlayer.h"

@@ -11,10 +11,17 @@ void PlayerIsInRange::OnTerminate(Status s)
 
 Status PlayerIsInRange::Update()
 {
-	if (*inRange)
+	DirectX::XMFLOAT3 playerPos = player->GetPosition();
+	DirectX::XMFLOAT3 enemyPos = enemy->GetPosition();
+
+	float distance = sqrt(pow(playerPos.x - enemyPos.x, 2) + pow(playerPos.z - enemyPos.z, 2));
+
+	if (distance <= minimumDistance)
 	{
+		*inRange = true;
 		return SUCCESS;
 	}
 
+	*inRange = false;
 	return FAILURE;
 }

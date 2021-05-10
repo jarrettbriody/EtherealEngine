@@ -172,6 +172,7 @@
     <ClCompile Include="GPUParticleEmitter.cpp" />
     <ClCompile Include="Grid.cpp" />
     <ClCompile Include="HornedEnemy.cpp" />
+    <ClCompile Include="Invert.cpp" />
     <ClCompile Include="NavmeshHandler.cpp" />
     <ClCompile Include="Idle.cpp" />
     <ClCompile Include="InCombat.cpp" />
@@ -239,6 +240,7 @@
     <ClInclude Include="GPUParticleEmitter.h" />
     <ClInclude Include="Grid.h" />
     <ClInclude Include="HornedEnemy.h" />
+    <ClInclude Include="Invert.h" />
     <ClInclude Include="NavmeshHandler.h" />
     <ClInclude Include="Idle.h" />
     <ClInclude Include="InCombat.h" />

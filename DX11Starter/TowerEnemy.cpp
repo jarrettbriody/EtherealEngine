@@ -46,22 +46,33 @@ void TowerEnemy::Init()
 
 	bt =	BehaviorTreeBuilder()
 				.Composite<ActiveSelector>()
+					.Composite<Sequence>() // Attack the player if they are visible/in range
+						.Leaf<InCombat>(&inCombat).End()
+						.Leaf<PlayerVisible>(entity, player).End()
+						.Leaf<PlayerIsInRange>(entity, player, minimumDistance, &playerIsInRange).End()
+						.Leaf<AbilityAvailable>(&projectileCooldownTimer).End()
+						.Leaf<FacePlayer>(entity, player, turnSpeed, &deltaTime).End()
+						.Leaf<FireProjectile>(entity, player, projParams, projectileSpeed, &projectileCooldownTimer, PROJECTILE_COOLDOWN_MAX).End()
+					.End()
 					.Composite<Sequence>() // Seek the player if they are visible
 						.Leaf<InCombat>(&inCombat).End()
 						.Leaf<PlayerVisible>(entity, player).End()
 						.Leaf<FacePlayer>(entity, player, turnSpeed, &deltaTime).End()
-						.Leaf<SeekAndFleePlayer>(entity, player, movementSpeed, maxSpeed, minimumDistance, &playerIsInRange).End()
-						.Leaf<PlayerIsInRange>(&playerIsInRange).End()
-						.Leaf<AbilityAvailable>(&projectileCooldownTimer).End()
-						.Leaf<FireProjectile>(entity, player, projParams, projectileSpeed, &projectileCooldownTimer, PROJECTILE_COOLDOWN_MAX).End()
+						.Leaf<SeekAndFleePlayer>(entity, player, &aStarSolver, &teleportCooldownTimer, TELEPORT_COOLDOWN_MAX, minimumDistance, &playerIsInRange).End()
 					.End()
 					.Composite<Sequence>() // Search player's last known location
 						.Leaf<InCombat>(&inCombat).End()
+						.Decorator<Invert>()
+							.Leaf<PlayerVisible>(entity, player).End()
+						.End()
 						.Leaf<FindPlayer>(entity, player, &aStarSolver, &path).End()
 						.Leaf<FollowPath>(&path, entity, movementSpeed, minimumDistance, turnSpeed, &deltaTime).End()
 						.Leaf<Idle>(entity, &inCombat).End()
 					.End()
 					.Composite<Sequence>() // Enemy idle
+						.Decorator<Invert>()
+							.Leaf<InCombat>(&inCombat).End()
+						.End()
 						.Leaf<Idle>(entity, &inCombat).End()
 						.Leaf<EnemySeesPlayer>(entity, player, visionConeAngle, visionConeDistance, &inCombat).End()
 					.End()
@@ -83,6 +94,11 @@ void TowerEnemy::Update()
 	if (projectileCooldownTimer > 0)
 	{
 		projectileCooldownTimer -= deltaTime;
+	}
+
+	if (teleportCooldownTimer > 0)
+	{
+		teleportCooldownTimer -= deltaTime;
 	}
 
 	CheckPlayerState();

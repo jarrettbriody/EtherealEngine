@@ -2,6 +2,7 @@
 #include "ScriptManager.h"
 #include "BehaviorTreeBuilder.h"
 #include "EnemySeesPlayer.h"
+#include "Invert.h"
 #include "InCombat.h"
 #include "PlayerVisible.h"
 #include "FacePlayer.h"
@@ -47,6 +48,8 @@ class TowerEnemy : public ScriptManager, public BaseEnemy
 	float projectileSpeed = 50.0f;
 	float projectileCooldownTimer = 0.0f;
 	const float PROJECTILE_COOLDOWN_MAX = 2.0f;
+	float teleportCooldownTimer = 0.0f;
+	const float TELEPORT_COOLDOWN_MAX = 2.5f;
 
 	float killSpeedWhileLeashed = 35.0f;
 	bool leashed;

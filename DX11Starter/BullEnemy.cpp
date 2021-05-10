@@ -32,21 +32,34 @@ void BullEnemy::Init()
 
 	bt =	BehaviorTreeBuilder()
 				.Composite<ActiveSelector>()
+					.Composite<Sequence>() // Charge the player if they are in range
+						.Leaf<InCombat>(&inCombat).End()
+						.Leaf<PlayerVisible>(entity, player).End()
+						.Leaf<PlayerIsInRange>(entity, player, minimumDistance, &playerIsInRange).End()
+						.Leaf<AbilityAvailable>(&chargeCooldownTimer).End()
+						.Leaf<FacePlayer>(entity, player, turnSpeed, &deltaTime).End()
+						.Leaf<ChargePlayer>(entity, player, chargeSpeed).End()
+					.End()
 					.Composite<Sequence>() // Seek the player if they are visible
 						.Leaf<InCombat>(&inCombat).End()
 						.Leaf<PlayerVisible>(entity, player).End()
 						.Leaf<FacePlayer>(entity, player, turnSpeed, &deltaTime).End()
+						.Leaf<AbilityAvailable>(&chargeCooldownTimer).End()
 						.Leaf<SeekPlayer>(entity, player, movementSpeed, maxSpeed, minimumDistance, &playerIsInRange).End()
-						.Leaf<PlayerIsInRange>(&playerIsInRange).End()
-						.Leaf<ChargePlayer>(entity, player, chargeSpeed).End()
 					.End()
 					.Composite<Sequence>() // Search player's last known location
 						.Leaf<InCombat>(&inCombat).End()
+						.Decorator<Invert>()
+							.Leaf<PlayerVisible>(entity, player).End()
+						.End()
 						.Leaf<FindPlayer>(entity, player, &aStarSolver, &path).End()
 						.Leaf<FollowPath>(&path, entity, movementSpeed, minimumDistance, turnSpeed, &deltaTime).End()
 						.Leaf<Idle>(entity, &inCombat).End()
 					.End()
 					.Composite<Sequence>() // Enemy idle
+						.Decorator<Invert>()
+							.Leaf<InCombat>(&inCombat).End()
+						.End()
 						.Leaf<Idle>(entity, &inCombat).End()
 						.Leaf<EnemySeesPlayer>(entity, player, visionConeAngle, visionConeDistance, &inCombat).End()
 					.End()
@@ -66,6 +79,11 @@ void BullEnemy::Update()
 	//entity->CalcWorldMatrix();
 
 	CheckPlayerState();
+
+	if (chargeCooldownTimer > 0)
+	{
+		chargeCooldownTimer -= deltaTime;
+	}
 
 	// TODO: Reset the enemy transformation properly after leash is over
 	if (delay <= 0)
@@ -127,6 +145,14 @@ void BullEnemy::OnCollision(btCollisionObject* other)
 
 		gameManagerScript->AddRangeToTotalSplitMeshEntities(childEntities);
 		if (leashed) fpsControllerScript->SetLeashedEntity(newLeashedEntity);
+	}
+
+	if (otherE->GetName().c_str() == std::string("FPSController") && chargeCooldownTimer <= 0)
+	{
+		entity->GetRBody()->activate();
+		entity->GetRBody()->setLinearVelocity(btVector3(0, 0, 0));
+
+		chargeCooldownTimer = CHARGE_COOLDOWN_MAX;
 	}
 }
 

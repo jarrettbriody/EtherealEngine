@@ -267,6 +267,9 @@
     <ClCompile Include="SeekAndFleePlayer.cpp">
       <Filter>EEBehaviors\Source</Filter>
     </ClCompile>
+    <ClCompile Include="Invert.cpp">
+      <Filter>EEBehaviors\Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h">
@@ -474,6 +477,9 @@
       <Filter>EEBehaviors\Headers</Filter>
     </ClInclude>
     <ClInclude Include="SeekAndFleePlayer.h">
+      <Filter>EEBehaviors\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Invert.h">
       <Filter>EEBehaviors\Headers</Filter>
     </ClInclude>
   </ItemGroup>
