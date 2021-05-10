@@ -461,7 +461,45 @@ void BloodSword::CheckSwordSlashHit()
 			Entity* newLeashedEntity = childEntities[0];
 			for each (Entity * e in childEntities)
 			{
-				e->HasTag("Body Part");
+				e->AddTag(std::string("Body Part"));
+
+				/*ParticleEmitterDescription emitDesc;
+				emitDesc.parentName = e->GetName();
+				emitDesc.parentWorld = e->GetWorldMatrixPtr();
+				emitDesc.emitterPosition = XMFLOAT3(0, 0, 0);
+				emitDesc.emissionStartRadius = 0.75f;
+				emitDesc.emissionEndRadius = 0.75f;
+
+				ParticleColor partColors[1] = {
+					{XMFLOAT4(1.0f,0,0,0.0f),5.0f}
+				};
+				emitDesc.colors = partColors;
+				emitDesc.colorCount = 3;
+				emitDesc.maxParticles = 100;
+				emitDesc.emissionRate = 15.0f;
+				emitDesc.emissionRotation = XMFLOAT3(-XM_PIDIV2,0.0f,0.0f);
+				emitDesc.emitterDirection = Y_AXIS;
+				emitDesc.particleInitMinSpeed = 0.5f;
+				emitDesc.particleInitMaxSpeed = 1.0f;
+				emitDesc.particleMinLifetime = 0.5f;
+				emitDesc.particleMaxLifetime = 1.0f;
+				emitDesc.particleInitMinScale = 0.1f;
+				emitDesc.particleInitMaxScale = 0.2f;
+				emitDesc.particleInitMinScale = 0.005f;
+				emitDesc.particleInitMaxScale = 0.01f;
+				emitDesc.particleInitMinAngularVelocity = -1.0f;
+				emitDesc.particleInitMaxAngularVelocity = 1.0f;
+				emitDesc.particleAcceleration = XMFLOAT3(0.0f, 0.0f, -20.0f);
+				emitDesc.fadeIn = true;
+				emitDesc.fadeOut = true;
+				emitDesc.fadeInEndTime = 0.2f;
+				emitDesc.fadeOutStartTime = 0.25f;
+
+				bodyPartEmitter = new GPUParticleEmitter(emitDesc);
+				bodyPartEmitter->SetBlendingEnabled(true);*/
+				e->GetRBody()->activate();
+				e->GetRBody()->applyCentralImpulse(btVector3(100, 100, 100));
+				e->GetRBody()->applyTorqueImpulse(btVector3(100, 100, 100));
 
 				if (leashedWhenKilled) // if the enemy is leashed while they are killed transfer the leash to the next closest body part
 				{
@@ -470,6 +508,7 @@ void BloodSword::CheckSwordSlashHit()
 						newLeashedEntity = e;
 					}
 				}
+
 			}
 
 			gameManagerScript->AddRangeToTotalSplitMeshEntities(childEntities);

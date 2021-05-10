@@ -50,6 +50,8 @@ class BloodSword : public ScriptManager
 {
 	map<string, Entity*>* eMap;
 
+	GPUParticleEmitter* bodyPartEmitter;
+
 	GPUParticleEmitter* emitters[SWORD_EMITTERS];
 	XMFLOAT4X4 emitterTransform;
 

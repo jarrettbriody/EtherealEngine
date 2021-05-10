@@ -3,7 +3,7 @@
 #include "BehaviorTree.h"
 #include "Entity.h"
 
-class SeekPlayer : public Behavior
+class SeekAndFleePlayer : public Behavior
 {
 private:
 	Entity* enemy;
@@ -17,10 +17,11 @@ private:
 	btVector3 impulseVector;
 	bool* inRange;
 public:
-	SeekPlayer(Entity* e, Entity* p, float speed, float max, float distance, bool* isPlayerInRange) : enemy(e), player(p), movementSpeed(speed), maxSpeed(max), minimumDistance(distance), inRange(isPlayerInRange) {}
-	~SeekPlayer() {}
+	SeekAndFleePlayer(Entity* e, Entity* p, float speed, float max, float distance, bool* isPlayerInRange) : enemy(e), player(p), movementSpeed(speed), maxSpeed(max), minimumDistance(distance), inRange(isPlayerInRange) {}
+	~SeekAndFleePlayer() {}
 
 	void OnInitialize();
 	void OnTerminate(Status s);
 	Status Update();
 };
+

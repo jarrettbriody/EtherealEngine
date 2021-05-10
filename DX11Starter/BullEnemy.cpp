@@ -1,23 +1,27 @@
 #include "pch.h"
-#include "EnemyTest.h"
+#include "BullEnemy.h"
 
-EnemyTest::~EnemyTest()
+BullEnemy::~BullEnemy()
 {
 	delete bt;
 }
 
-void EnemyTest::Init()
+void BullEnemy::Init()
 {
 	eMap = ScriptManager::sceneEntitiesMap;
 	sMap = ScriptManager::scriptFunctionsMapVector;
 
 	//sMap["FPSCONTROLLER"].front()
-	FPSController* controller = (FPSController*)(scriptFunctionsMap["FPSController"]["FPSCONTROLLER"]);;
+	fpsControllerScript = (FPSController*)(scriptFunctionsMap["FPSController"]["FPSCONTROLLER"]);
+	gameManagerScript = (GameManager*)(scriptFunctionsMap["GameManager"]["GAMEMANAGER"]);
+
 	//grid = &controller->grid;
+
+	entity->AddTag(std::string("Bull"));
 
 	Entity* player = eMap->find("FPSController")->second;
 
-	pos = entity->GetTransform().GetPosition();
+	pos = entity->GetPosition();
 
 	/*bt = BehaviorTreeBuilder()
 			.Leaf<EnemySeesPlayer>(entity, player, 30.0f, 30.0f).End()
@@ -29,10 +33,12 @@ void EnemyTest::Init()
 	bt =	BehaviorTreeBuilder()
 				.Composite<ActiveSelector>()
 					.Composite<Sequence>() // Seek the player if they are visible
-						.Leaf<InCombat>(&inCombat).End()						
+						.Leaf<InCombat>(&inCombat).End()
 						.Leaf<PlayerVisible>(entity, player).End()
 						.Leaf<FacePlayer>(entity, player, turnSpeed, &deltaTime).End()
 						.Leaf<SeekPlayer>(entity, player, movementSpeed, maxSpeed, minimumDistance, &playerIsInRange).End()
+						.Leaf<PlayerIsInRange>(&playerIsInRange).End()
+						.Leaf<ChargePlayer>(entity, player, chargeSpeed).End()
 					.End()
 					.Composite<Sequence>() // Search player's last known location
 						.Leaf<InCombat>(&inCombat).End()
@@ -51,7 +57,7 @@ void EnemyTest::Init()
 	navmesh = NavmeshHandler::GetInstance();
 }
 
-void EnemyTest::Update()
+void BullEnemy::Update()
 {
 	// Hover
 	//totalTime += deltaTime;
@@ -59,54 +65,7 @@ void EnemyTest::Update()
 	//entity->SetPosition(pos);
 	//entity->CalcWorldMatrix();
 
-	if (keyboard->KeyIsPressed(0x4A)) // J
-	{
-		XMFLOAT3 ePos = entity->GetTransform().GetPosition();
-		Node* closest = navmesh->GetGridAtPosition(ePos)->FindNearestNode(ePos);
-		XMFLOAT3 nodePos = closest->GetPos();
-		cout << "Enemy position- X: " << ePos.x << "| Z: " << ePos.z << endl;
-		cout << "Node position- X: " << nodePos.x << "| Z: " << nodePos.z << endl;
-		
-		clock_t t;
-		Entity* player = eMap->find("FPSController")->second;
-		t = clock();
-		path = aStarSolver.FindPath(entity->GetTransform().GetPosition(), player->GetTransform().GetPosition());
-		t = clock() - t;
-		printf("It took me %d clicks (%f seconds).\n", t, ((float)t) / CLOCKS_PER_SEC);
-
-		//cout << "A* took " << t << " second(s)" << endl;
-		cout << "Path was actually " << path.size() << " node(s) long. Whoops!" << endl;
-
-		if (path.size() > 0)
-		{
-			XMFLOAT4X4 wm;
-			XMStoreFloat4x4(&wm, XMMatrixTranspose(DirectX::XMMatrixIdentity()));
-
-			// Create debug line
-			DebugLines* dl = new DebugLines("TestRay", 0, false);
-			XMFLOAT3 c;
-			c = XMFLOAT3(0.0f, 1.0f, 0.0f);
-
-			dl->color = c;
-			dl->worldMatrix = wm;
-
-			XMFLOAT3 start = XMFLOAT3(path.back()->GetPos().x, 10.0f, path.back()->GetPos().z);
-			XMFLOAT3 end = XMFLOAT3(start.x, 0.0f, start.z);
-
-			// Draw the debug line to show the raycast
-			XMFLOAT3* rayPoints = new XMFLOAT3[8];
-			rayPoints[0] = start;
-			rayPoints[1] = start;
-			rayPoints[2] = start;
-			rayPoints[3] = start;
-			rayPoints[4] = end;
-			rayPoints[5] = end;
-			rayPoints[6] = end;
-			rayPoints[7] = end;
-			dl->GenerateCuboidVertexBuffer(rayPoints, 8);
-			delete[] rayPoints;
-		}
-	}
+	CheckPlayerState();
 
 	// TODO: Reset the enemy transformation properly after leash is over
 	if (delay <= 0)
@@ -130,15 +89,54 @@ void EnemyTest::Update()
 	}
 }
 
-void EnemyTest::OnCollision(btCollisionObject* other)
+void BullEnemy::OnCollision(btCollisionObject* other)
 {
-	//Entity* otherE = (Entity*)((PhysicsWrapper*)other->getUserPointer())->objectPointer;
+	Entity* otherE = (Entity*)((PhysicsWrapper*)other->getUserPointer())->objectPointer;
 
-	//cout << "Enemy collides with: " << otherE->GetName() << endl;
+	// cout << "Enemy collides with: " << otherE->GetName() << endl;
+
+	// kill if slamming into the wall while leashed
+	if (otherE->HasTag(std::string("Environment")) && !otherE->HasTag(std::string("street")) && entity->GetRBody()->getLinearVelocity().length() > killSpeedWhileLeashed)
+	{
+		// Store the old enemy position for later use in case the enemy was killed while leashed
+		btVector3 oldEnemyPos = entity->GetRBody()->getCenterOfMassPosition();
+
+		// enemy is in the triangle, split it apart
+		std::vector<Entity*> childEntities = EESceneLoader->SplitMeshIntoChildEntities(entity, 25.0f);
+
+		// Update the game manager attribute for enemies alive
+		gameManagerScript->DecrementEnemiesAlive();
+
+		Entity* newLeashedEntity = childEntities[0];
+		for each (Entity * e in childEntities)
+		{
+			e->AddTag(std::string("Body Part"));
+
+			e->GetRBody()->activate();
+			e->GetRBody()->applyCentralImpulse(btVector3(100, 100, 100));
+			e->GetRBody()->applyTorqueImpulse(btVector3(100, 100, 100));
+
+			if (leashed)
+			{
+				if (e->GetRBody()->getCenterOfMassPosition().distance(oldEnemyPos) < newLeashedEntity->GetRBody()->getCenterOfMassPosition().distance(oldEnemyPos))
+				{
+					newLeashedEntity = e;
+				}
+			}
+		}
+
+		gameManagerScript->AddRangeToTotalSplitMeshEntities(childEntities);
+		if (leashed) fpsControllerScript->SetLeashedEntity(newLeashedEntity);
+	}
 }
 
-void EnemyTest::IsLeashed(bool leashed, float delay)
+void BullEnemy::IsLeashed(bool leashed, float delay)
 {
 	this->leashed = leashed;
 	this->delay = delay;
+}
+
+void BullEnemy::CheckPlayerState()
+{
+	if (fpsControllerScript->GetPlayerState() == PlayerState::Death) inCombat = false;
 }

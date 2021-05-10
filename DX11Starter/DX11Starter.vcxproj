@@ -140,6 +140,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="AbilityAvailable.cpp" />
     <ClCompile Include="AmbientParticles.cpp" />
     <ClCompile Include="AStarSolver.cpp" />
     <ClCompile Include="Barrel.cpp" />
@@ -147,10 +148,14 @@
     <ClCompile Include="BloodOrb.cpp" />
     <ClCompile Include="BloodPool.cpp" />
     <ClCompile Include="BloodSword.cpp" />
+    <ClCompile Include="BullEnemy.cpp" />
     <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="ChargePlayer.cpp" />
     <ClCompile Include="Collider.cpp" />
     <ClCompile Include="Config.cpp" />
     <ClCompile Include="CPUParticleEmitter.cpp" />
+    <ClCompile Include="CyclopsEnemy.cpp" />
+    <ClCompile Include="HoundPlayer.cpp" />
     <ClCompile Include="DebugLines.cpp" />
     <ClCompile Include="DecalHandler.cpp" />
     <ClCompile Include="DXCore.cpp" />
@@ -159,6 +164,7 @@
     <ClCompile Include="Entity.cpp" />
     <ClCompile Include="FacePlayer.cpp" />
     <ClCompile Include="FindPlayer.cpp" />
+    <ClCompile Include="FireProjectile.cpp" />
     <ClCompile Include="FollowPath.cpp" />
     <ClCompile Include="FPSController.cpp" />
     <ClCompile Include="Game.cpp" />
@@ -166,6 +172,7 @@
     <ClCompile Include="GPUParticleEmitter.cpp" />
     <ClCompile Include="Grid.cpp" />
     <ClCompile Include="MainMenuManager.cpp" />
+    <ClCompile Include="HornedEnemy.cpp" />
     <ClCompile Include="NavmeshHandler.cpp" />
     <ClCompile Include="Idle.cpp" />
     <ClCompile Include="InCombat.cpp" />
@@ -184,29 +191,39 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="PlayerIsInRange.cpp" />
     <ClCompile Include="PlayerVisible.cpp" />
     <ClCompile Include="PriorityQueue.cpp" />
+    <ClCompile Include="Projectile.cpp" />
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="SceneLoader.cpp" />
     <ClCompile Include="ScriptManager.cpp" />
+    <ClCompile Include="SeekAndFleePlayer.cpp" />
     <ClCompile Include="SeekPlayer.cpp" />
     <ClCompile Include="SimpleShader.cpp" />
     <ClCompile Include="Transform.cpp" />
+    <ClCompile Include="TowerEnemy.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AbilityAvailable.h" />
     <ClInclude Include="AmbientParticles.h" />
     <ClInclude Include="AStarSolver.h" />
     <ClInclude Include="Barrel.h" />
+    <ClInclude Include="BaseEnemy.h" />
     <ClInclude Include="BehaviorTree.h" />
     <ClInclude Include="BehaviorTreeBuilder.h" />
     <ClInclude Include="BloodIcicle.h" />
     <ClInclude Include="BloodOrb.h" />
     <ClInclude Include="BloodPool.h" />
     <ClInclude Include="BloodSword.h" />
+    <ClInclude Include="BullEnemy.h" />
     <ClInclude Include="Camera.h" />
+    <ClInclude Include="ChargePlayer.h" />
     <ClInclude Include="Collider.h" />
     <ClInclude Include="Config.h" />
     <ClInclude Include="CPUParticleEmitter.h" />
+    <ClInclude Include="CyclopsEnemy.h" />
+    <ClInclude Include="HoundPlayer.h" />
     <ClInclude Include="DebugLines.h" />
     <ClInclude Include="DecalHandler.h" />
     <ClInclude Include="DXCore.h" />
@@ -217,6 +234,7 @@
     <ClInclude Include="Entity.h" />
     <ClInclude Include="FacePlayer.h" />
     <ClInclude Include="FindPlayer.h" />
+    <ClInclude Include="FireProjectile.h" />
     <ClInclude Include="FollowPath.h" />
     <ClInclude Include="FPSController.h" />
     <ClInclude Include="Game.h" />
@@ -224,6 +242,7 @@
     <ClInclude Include="GPUParticleEmitter.h" />
     <ClInclude Include="Grid.h" />
     <ClInclude Include="MainMenuManager.h" />
+    <ClInclude Include="HornedEnemy.h" />
     <ClInclude Include="NavmeshHandler.h" />
     <ClInclude Include="Idle.h" />
     <ClInclude Include="InCombat.h" />
@@ -241,17 +260,21 @@
     <ClInclude Include="Particles.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="PhysicsWrapper.h" />
+    <ClInclude Include="PlayerIsInRange.h" />
     <ClInclude Include="PlayerVisible.h" />
     <ClInclude Include="PriorityQueue.h" />
+    <ClInclude Include="Projectile.h" />
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="SceneLoader.h" />
     <ClInclude Include="ScriptManager.h" />
     <ClInclude Include="Scripts.h" />
     <ClInclude Include="RendererStructs.h" />
+    <ClInclude Include="SeekAndFleePlayer.h" />
     <ClInclude Include="SeekPlayer.h" />
     <ClInclude Include="SimpleShader.h" />
     <ClInclude Include="TestBehavior.h" />
     <ClInclude Include="Transform.h" />
+    <ClInclude Include="TowerEnemy.h" />
     <ClInclude Include="Utility.h" />
     <ClInclude Include="Vertex.h" />
   </ItemGroup>

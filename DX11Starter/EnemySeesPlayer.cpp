@@ -32,43 +32,43 @@ Status EnemySeesPlayer::Update()
 	// Debug line shit
 	//------
 
-	// Create the world matrix for the debug line
-	XMFLOAT4X4 wm;
-	XMStoreFloat4x4(&wm, XMMatrixTranspose(DirectX::XMMatrixIdentity()));
+	//// Create the world matrix for the debug line
+	//XMFLOAT4X4 wm;
+	//XMStoreFloat4x4(&wm, XMMatrixTranspose(DirectX::XMMatrixIdentity()));
 
-	XMFLOAT3 start = enemy->GetTransform().GetPosition();
-	XMFLOAT3 p1 = XMFLOAT3(start.x + XMVectorGetX(viewLeft), start.y + XMVectorGetY(viewLeft), start.z + XMVectorGetZ(viewLeft));
-	XMFLOAT3 p2 = XMFLOAT3(start.x + XMVectorGetX(viewRight), start.y + XMVectorGetY(viewRight), start.z + XMVectorGetZ(viewRight));
+	//XMFLOAT3 start = enemy->GetPosition();
+	//XMFLOAT3 p1 = XMFLOAT3(start.x + XMVectorGetX(viewLeft), start.y + XMVectorGetY(viewLeft), start.z + XMVectorGetZ(viewLeft));
+	//XMFLOAT3 p2 = XMFLOAT3(start.x + XMVectorGetX(viewRight), start.y + XMVectorGetY(viewRight), start.z + XMVectorGetZ(viewRight));
 
-	// Create debug line
-	DebugLines* dl = new DebugLines("TestRay", 0, false);
-	XMFLOAT3 c = XMFLOAT3(0.0f, 1.0f, 0.0f);
-	dl->color = c;
-	dl->worldMatrix = wm;
+	//// Create debug line
+	//DebugLines* dl = new DebugLines("TestRay", 0, false);
+	//XMFLOAT3 c = XMFLOAT3(0.0f, 1.0f, 0.0f);
+	//dl->color = c;
+	//dl->worldMatrix = wm;
 
-	// Draw the debug line to show the raycast
-	XMFLOAT3* rayPoints = new XMFLOAT3[8];
-	rayPoints[0] = start;
-	rayPoints[1] = p1;
-	rayPoints[2] = p2;
-	rayPoints[3] = start;
-	rayPoints[4] = p1;
-	rayPoints[5] = p2;
-	rayPoints[6] = start;
-	rayPoints[7] = p1;
-	dl->GenerateCuboidVertexBuffer(rayPoints, 8);
-	delete[] rayPoints;
+	//// Draw the debug line to show the raycast
+	//XMFLOAT3* rayPoints = new XMFLOAT3[8];
+	//rayPoints[0] = start;
+	//rayPoints[1] = p1;
+	//rayPoints[2] = p2;
+	//rayPoints[3] = start;
+	//rayPoints[4] = p1;
+	//rayPoints[5] = p2;
+	//rayPoints[6] = start;
+	//rayPoints[7] = p1;
+	//dl->GenerateCuboidVertexBuffer(rayPoints, 8);
+	//delete[] rayPoints;
 	
 	//------
 	// Back to vison calculations
 	//------
 
 	// Get the floored (y = 0) positions of both the enemy and player
-	XMFLOAT3 pos = enemy->GetTransform().GetPosition();
+	XMFLOAT3 pos = Utility::BulletVectorToFloat3(enemy->GetRBody()->getCenterOfMassPosition()); //enemy->GetPosition();
 	pos.y = 0.0f;
 	XMVECTOR flooredEnemyPos = XMLoadFloat3(&pos);
 
-	pos = player->GetTransform().GetPosition();
+	pos = Utility::BulletVectorToFloat3(player->GetRBody()->getCenterOfMassPosition()); //player->GetPosition();
 	pos.y = 0.0f;
 	XMVECTOR flooredPlayerPos = XMLoadFloat3(&pos);
 

@@ -7,6 +7,7 @@
 #include "ParticleEmitter.h"
 #include "CPUParticleEmitter.h"
 #include "GPUParticleEmitter.h"
+#include "BaseEnemy.h"
 
 struct DashBlurCallback : RendererCallback {
 	int blurAmount = 1;
@@ -18,6 +19,8 @@ struct DashBlurCallback : RendererCallback {
 		pShader->SetShaderResourceView("LayerMasks", layerMask);
 	}
 };
+
+//class EnemyTest; // Forward declaration to avoid circular dependency 
 
 enum class PlayerState
 {
@@ -31,9 +34,10 @@ class FPSController : public ScriptManager
 	DashBlurCallback dashBlurCallback;
 
 	BloodOrb* bloodOrbScript;
+	BaseEnemy* enemyScript; 
 
 	// Player Attributes
-	float bloodResource = 100.0f;
+	float bloodResource = 100.0f; // this is always out of 100 
 
 	// Camera related attributes
 	Camera* cam;
@@ -97,10 +101,10 @@ class FPSController : public ScriptManager
 
 	// Blood Icicle
 	EntityCreationParameters icicleParams;
-	float bloodIcicleScalar = 60.0f;
-	float bloodIcicleRecoilScalar = 45.0f;
+	float bloodIcicleScalar = 200.0f;
+	float bloodIcicleRecoilScalar = 65.0f;
 	float bloodIcicleCooldownTimer = 0.0f;
-	const float BLOOD_ICICLE_MAX_COOLDOWN_TIME = 1.0f;
+	const float BLOOD_ICICLE_MAX_COOLDOWN_TIME = 2.0f;
 	float bloodIcicleRecoilDampTimer = 0.0f;
 	const float BLOOD_ICICLE_RECOIL_DAMP_TIMER_MAX = 0.3f;
 	
@@ -120,7 +124,7 @@ class FPSController : public ScriptManager
 	Entity* leashedEnemy;
 	float leashSize = 0.0f; 
 	float leashedScalar = 10.0f;
-	float leashCancelScalar = 50.0f;
+	float leashCancelScalar = 100.0f;
 	float leashJumpCancelScalar = 150.0f;
 	float leashJumpCancelDampTimer = 0.0f;
 	const float LEASH_JUMP_DAMP_TIMER_MAX = 0.5f;
@@ -143,6 +147,10 @@ class FPSController : public ScriptManager
 	bool swordRollRight = false;
 	bool swordRollForwards = false;
 	bool swordRollBackwards = false;
+
+	//player hit
+	float onHitDampTimer = 0.0f;
+	const float ON_HIT_DAMP_TIMER_MAX = 1.0f;
 
 	PlayerState ps;
 

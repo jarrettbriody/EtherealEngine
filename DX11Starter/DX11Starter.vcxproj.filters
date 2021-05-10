@@ -243,6 +243,39 @@
     <ClCompile Include="SimpleShader.cpp">
       <Filter>EECore\Source Files\Rendering</Filter>
     </ClCompile>
+    <ClCompile Include="FireProjectile.cpp">
+      <Filter>EEBehaviors\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="BullEnemy.cpp">
+      <Filter>EEScripts\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="CyclopsEnemy.cpp">
+      <Filter>EEScripts\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="HornedEnemy.cpp">
+      <Filter>EEScripts\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="TowerEnemy.cpp">
+      <Filter>EEScripts\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="PlayerIsInRange.cpp">
+      <Filter>EEBehaviors\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="ChargePlayer.cpp">
+      <Filter>EEBehaviors\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Projectile.cpp">
+      <Filter>EEScripts\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="HoundPlayer.cpp">
+      <Filter>EEBehaviors\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="AbilityAvailable.cpp">
+      <Filter>EEBehaviors\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="SeekAndFleePlayer.cpp">
+      <Filter>EEBehaviors\Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DXCore.h">
@@ -424,6 +457,42 @@
     </ClInclude>
     <ClInclude Include="EEVector.h">
       <Filter>EECore\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="FireProjectile.h">
+      <Filter>EEBehaviors\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="BullEnemy.h">
+      <Filter>EEScripts\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="CyclopsEnemy.h">
+      <Filter>EEScripts\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="HornedEnemy.h">
+      <Filter>EEScripts\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="TowerEnemy.h">
+      <Filter>EEScripts\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="PlayerIsInRange.h">
+      <Filter>EEBehaviors\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="ChargePlayer.h">
+      <Filter>EEBehaviors\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="BaseEnemy.h">
+      <Filter>EEScripts\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Projectile.h">
+      <Filter>EEScripts\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="HoundPlayer.h">
+      <Filter>EEBehaviors\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="AbilityAvailable.h">
+      <Filter>EEBehaviors\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="SeekAndFleePlayer.h">
+      <Filter>EEBehaviors\Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
