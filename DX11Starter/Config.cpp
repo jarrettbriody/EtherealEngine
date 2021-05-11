@@ -20,9 +20,9 @@ bool Config::DebugCamera = false;
 float Config::DebugCameraSpeed = 3.0f;
 float Config::MouseSensitivity = 0.001f;
 
-unsigned int Config::MemoryAllocatorSize = MEGABYTE * 512;
+unsigned int Config::MemoryAllocatorSize = MEGABYTE * 1024;
 unsigned int Config::MemoryAllocatorAlignment = 16; //16 byte boundary
-unsigned int Config::MemoryAllocatorEntityPoolSize = MEGABYTE * 32; //128 MB
+unsigned int Config::MemoryAllocatorEntityPoolSize = MEGABYTE * 256; //128 MB
 unsigned int Config::MemoryAllocatorMeshPoolSize = MEGABYTE * 128; //256 MB
 unsigned int Config::MemoryAllocatorMaterialPoolSize = MEGABYTE * 32; //320 MB
 unsigned int Config::MemoryAllocatorDecalPoolSize = MEGABYTE * 64; //384 MB

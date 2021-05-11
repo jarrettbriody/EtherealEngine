@@ -6,7 +6,7 @@ enum class PHYSICS_WRAPPER_TYPE {
 };
 
 struct PhysicsWrapper {
-	PHYSICS_WRAPPER_TYPE type;
-	void* objectPointer;
-	void (*callback)(void* objPointer);
+	PHYSICS_WRAPPER_TYPE type = PHYSICS_WRAPPER_TYPE::ENTITY;
+	void* objectPointer = nullptr;
+	void (*callback)(void* objPointer) = nullptr;
 };

@@ -6,6 +6,11 @@
 using namespace DirectX;
 using namespace std;
 
+enum class PARTICLESYSTYPE {
+	CPU,
+	GPU,
+};
+
 struct ParticleEmitterDescription {
 	string emitterName = "DEFAULT";
 
@@ -50,17 +55,15 @@ struct ParticleEmitterDescription {
 class ParticleEmitter
 {
 public:
+	PARTICLESYSTYPE particleSysType = PARTICLESYSTYPE::CPU;
+
 	static vector<ParticleEmitter*> EmitterVector;
 	static map<string, ParticleEmitter*> EmitterMap;
 	static map<string, map<string, ParticleEmitter*>> EntityEmitterMap;
 
 	virtual ~ParticleEmitter();
-	static void GarbageCollect();
 
-	static void DestroyEmittersByOwner(string entityName);
-	static void DestroyEmitter(string emitterName);
-
-	void Destroy();
+	virtual void Destroy();
 	void SetIsActive(bool toggle);
 
 	void CalcWorldMatrix();
@@ -103,6 +106,8 @@ public:
 	void SetParticleTextures(unsigned int textureCount, ParticleTexture* textures);
 
 	string GetName();
+	string GetParentName();
+	bool GetIsAlive();
 
 	virtual void Update(double deltaTime, double totalTime, XMFLOAT4X4 view = XMFLOAT4X4());
 	virtual void Draw(XMFLOAT4X4 view, XMFLOAT4X4 proj) = 0;
@@ -116,9 +121,9 @@ protected:
 	bool isActive = true;
 	bool isAlive = true;
 
-	string name;
-	string parentName;
-	XMFLOAT4X4* parentWorld;
+	string name = "";
+	string parentName = "";
+	XMFLOAT4X4* parentWorld = nullptr;
 
 	float lifetime = 0.0f;
 	float maxLifetime = 0.0f;
@@ -129,7 +134,7 @@ protected:
 	XMFLOAT3 position = ZERO_VECTOR3;
 	XMFLOAT3 rotationDegrees = ZERO_VECTOR3;
 	XMFLOAT3 rotationRadians = ZERO_VECTOR3;
-	XMFLOAT4 rotationQuaternion;
+	XMFLOAT4 rotationQuaternion = QUATERNION_IDENTITY;
 	XMFLOAT3 direction = Y_AXIS;
 	XMFLOAT3 scale = ONE_VECTOR3;
 

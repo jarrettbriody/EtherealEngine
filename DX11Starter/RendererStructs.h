@@ -74,6 +74,7 @@ struct DepthStencilComponents {
 	ID3D11ShaderResourceView* normalSRV = nullptr;
 
 	ID3D11BlendState* decalBlendState = nullptr;
+	ID3D11RasterizerState* Rasterizer = nullptr;
 };
 
 struct HBAOPlusComponents {

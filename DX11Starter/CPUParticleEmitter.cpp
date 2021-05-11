@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "CPUParticleEmitter.h"
 
-DefaultCPUParticleShaders CPUParticleEmitter::defaultShaders;
+DefaultCPUParticleShaders CPUParticleEmitter::defaultShaders = {};
 
 using namespace DirectX;
 
@@ -13,12 +13,14 @@ void CPUParticleEmitter::SetDefaultShaders(DefaultCPUParticleShaders s)
 CPUParticleEmitter::CPUParticleEmitter() : ParticleEmitter()
 {
 	InitBuffers();
+	ParticleEmitter::particleSysType = PARTICLESYSTYPE::CPU;
 }
 
 CPUParticleEmitter::CPUParticleEmitter(ParticleEmitterDescription d, bool blendingEnabled) : ParticleEmitter(d)
 {
 	this->blendingEnabled = blendingEnabled;
 	InitBuffers();
+	ParticleEmitter::particleSysType = PARTICLESYSTYPE::CPU;
 }
 
 CPUParticleEmitter::~CPUParticleEmitter()
@@ -27,21 +29,27 @@ CPUParticleEmitter::~CPUParticleEmitter()
 	vertexBuffer->Release();
 	additiveBlend->Release();
 	depthWriteOff->Release();
+	if (collisionsEnabled) {
+		//ghostCallback.
+		//delete ghostCallback;
+		for (size_t i = 0; i < maxParticles; i++)
+		{
+			if (particlePhysicsPool[i].enabled) {
+				Config::DynamicsWorld->removeCollisionObject((btCollisionObject*)particlePhysicsPool[i].ghostObject);
+				//Config::DynamicsWorld->updateSingleAabb(particlePhysicsPool[i].ghostObject);
+			}
+			delete particlePhysicsPool[i].collShape;
+			particlePhysicsPool[i].collShape = nullptr;
+			particlePhysicsPool[i].ghostObject->setUserPointer(nullptr);
+			delete particlePhysicsPool[i].ghostObject;
+			particlePhysicsPool[i].ghostObject = nullptr;
+		}
+		delete[] particlePhysicsPool;
+	}
 	delete[] particlePool;
 	delete[] particleVertices;
 	delete[] deadList;
 	delete[] indices;
-	if (collisionsEnabled) {
-		for (size_t i = 0; i < maxParticles; i++)
-		{
-			if(particlePhysicsPool[i].enabled)
-				Config::DynamicsWorld->removeCollisionObject(particlePhysicsPool[i].ghostObject);
-			delete particlePhysicsPool[i].ghostObject;
-			delete particlePhysicsPool[i].collShape;
-		}
-	}
-	delete ghostCallback;
-	delete[] particlePhysicsPool;
 }
 
 void CPUParticleEmitter::InitBuffers()
@@ -81,7 +89,7 @@ void CPUParticleEmitter::InitBuffers()
 	ZeroMemory(particlePool, sizeof(Particle) * maxParticles);
 	deadList = new unsigned int[maxParticles];
 	particleVertices = new ParticleVertex[4 * (size_t)maxParticles];
-	particlePhysicsPool = new ParticlePhysics[maxParticles];
+	ZeroMemory(particleVertices, sizeof(ParticleVertex) * 4 * maxParticles);
 	particleVertCount = 0;
 	drawCount = 0;
 	deadListCount = maxParticles;
@@ -180,45 +188,39 @@ void CPUParticleEmitter::SetBlendingEnabled(bool toggle)
 
 void CPUParticleEmitter::SetCollisionsEnabled(void(*collisionCallback)(void* ptr))
 {
+	if (collisionsEnabled) {
+		this->collisionCallback = collisionCallback;
+		return;
+	};
+
 	collisionsEnabled = true;
-	this->collisionCallback = collisionCallback;
+
+	particlePhysicsPool = new ParticlePhysics[maxParticles];
+	ZeroMemory(particlePhysicsPool, sizeof(ParticlePhysics) * maxParticles);
+
 	for (unsigned int i = 0; i < maxParticles; i++)
 	{
 		Particle p = particlePool[i];
-		if (collisionsEnabled) {
-			if (particlePhysicsPool[i].collShape != nullptr) delete particlePhysicsPool[i].collShape;
-			if (particlePhysicsPool[i].ghostObject != nullptr) delete particlePhysicsPool[i].ghostObject;
-			if (particlePhysicsPool[i].ghostCallback != nullptr) delete particlePhysicsPool[i].ghostCallback;
+		particlePhysicsPool[i].collShape = new btBoxShape(btVector3(0.01f, 0.01f, 0.01f));//btVector3(btScalar(p.scale), btScalar(p.scale), btScalar(p.scale)));
 
-			particlePhysicsPool[i].collShape = new btBoxShape(btVector3(0.01f, 0.01f, 0.01f));//btVector3(btScalar(p.scale), btScalar(p.scale), btScalar(p.scale)));
+		btTransform transform;
+		transform.setIdentity();
 
-			btTransform transform;
-			transform.setIdentity();
-
-			/*
-			transform.setOrigin(btVector3(0.0f, 0.0f, 0.0f));
-			btQuaternion qx = btQuaternion(btVector3(1.0f, 0.0f, 0.0f), 0.0f);
-			btQuaternion qy = btQuaternion(btVector3(0.0f, 1.0f, 0.0f), 0.0f);
-			btQuaternion qz = btQuaternion(btVector3(0.0f, 0.0f, 1.0f), 0.0f);
-			btQuaternion res = qz * qy * qx;
-			transform.setRotation(res);
-			*/
-
-			particlePhysicsPool[i].ghostObject = new btGhostObject();
-			particlePhysicsPool[i].ghostObject->setCollisionFlags(particlePhysicsPool[i].ghostObject->getCollisionFlags() | btCollisionObject::CF_NO_CONTACT_RESPONSE);
-			particlePhysicsPool[i].ghostObject->setCollisionShape(particlePhysicsPool[i].collShape);
-			particlePhysicsPool[i].ghostObject->setWorldTransform(transform);
+		particlePhysicsPool[i].ghostObject = new btGhostObject();
+		particlePhysicsPool[i].ghostObject->setCollisionFlags(particlePhysicsPool[i].ghostObject->getCollisionFlags() | btCollisionObject::CF_NO_CONTACT_RESPONSE);//
+		particlePhysicsPool[i].ghostObject->setCollisionShape(particlePhysicsPool[i].collShape);
+		particlePhysicsPool[i].ghostObject->setWorldTransform(transform);
 
 
-			particlePhysicsPool[i].particleWrapper = { i, (void*)&particlePool[i], (void*)this };
-			particlePhysicsPool[i].wrapper = { PHYSICS_WRAPPER_TYPE::PARTICLE, &particlePhysicsPool[i].particleWrapper, collisionCallback };
-			particlePhysicsPool[i].ghostObject->setUserPointer(&particlePhysicsPool[i].wrapper);
-		}
+		particlePhysicsPool[i].particleWrapper = { i, (void*)&particlePool[i], (void*)this };
+		particlePhysicsPool[i].wrapper = { PHYSICS_WRAPPER_TYPE::PARTICLE, &particlePhysicsPool[i].particleWrapper, collisionCallback };
+		particlePhysicsPool[i].ghostObject->setUserPointer(&particlePhysicsPool[i].wrapper);
+		particlePhysicsPool[i].enabled = false;
 	}
-	ghostCallback = new btGhostPairCallback();
+	//ghostCallback = new btGhostPairCallback();
+	//Config::DynamicsWorld->getBroadphase()->getOverlappingPairCache()->setInternalGhostPairCallback(ghostCallback);
 
 	/*
-	Config::DynamicsWorld->getBroadphase()->getOverlappingPairCache()->setInternalGhostPairCallback(ghostCallback);
 
 	Config::DynamicsWorld->setInternalTickCallback([](btDynamicsWorld* world, btScalar timeStep) {
 		btGhostObject* ghost = (btGhostObject*)world->getWorldUserInfo();
@@ -251,6 +253,29 @@ void CPUParticleEmitter::KillParticle(unsigned int index)
 	particlePool[index].remainingLife = 0.0f;
 	particlePool[index].transparency = 0.0f;
 	particlePool[index].color.w = 0.0f;
+	if (collisionsEnabled) {
+		if (particlePhysicsPool[index].enabled) {
+			Config::DynamicsWorld->removeCollisionObject((btCollisionObject*)particlePhysicsPool[index].ghostObject);
+			particlePhysicsPool[index].enabled = false;
+			deadList[deadListCount] = index;
+			deadListCount++;
+		}
+	}
+}
+
+void CPUParticleEmitter::Destroy()
+{
+	if (collisionsEnabled) {
+		for (size_t i = 0; i < maxParticles; i++)
+		{
+			if (particlePhysicsPool[i].enabled) {
+				Config::DynamicsWorld->removeCollisionObject((btCollisionObject*)particlePhysicsPool[i].ghostObject);
+				//Config::DynamicsWorld->updateSingleAabb(particlePhysicsPool[i].ghostObject);
+				particlePhysicsPool[i].enabled = false;
+			}
+		}
+	}
+	ParticleEmitter::Destroy();
 }
 
 void CPUParticleEmitter::Update(double deltaTime, double totalTime, XMFLOAT4X4 view)
@@ -262,7 +287,7 @@ void CPUParticleEmitter::Update(double deltaTime, double totalTime, XMFLOAT4X4 v
 	drawCount = 0;
 
 	// Track time
-	while ((emitTimeCounter >= emissionRate) && isActive)
+	while ((emitTimeCounter >= emissionRate) && isActive && isAlive)
 	{
 		// How many to emit?
 		int emitCount = (int)(emitTimeCounter / emissionRate);
@@ -372,7 +397,7 @@ void CPUParticleEmitter::Update(double deltaTime, double totalTime, XMFLOAT4X4 v
 			// Put it back
 			particlePool[newParticleIndex] = newParticle;
 
-			if (collisionsEnabled && !particlePhysicsPool[newParticleIndex].enabled) {
+			if (collisionsEnabled) {
 				btTransform transform;
 				transform.setIdentity();
 				XMVECTOR particlePos = XMLoadFloat3(&newParticle.position);
@@ -383,99 +408,112 @@ void CPUParticleEmitter::Update(double deltaTime, double totalTime, XMFLOAT4X4 v
 
 				particlePhysicsPool[newParticleIndex].ghostObject->setWorldTransform(transform);
 
-				if (particlePhysicsPool[newParticleIndex].ghostObject->getBroadphaseHandle())
-					Config::DynamicsWorld->updateSingleAabb(particlePhysicsPool[newParticleIndex].ghostObject);
+				//if (particlePhysicsPool[newParticleIndex].ghostObject->getBroadphaseHandle())
+					//Config::DynamicsWorld->updateSingleAabb(particlePhysicsPool[newParticleIndex].ghostObject);
 
-				Config::DynamicsWorld->addCollisionObject(particlePhysicsPool[newParticleIndex].ghostObject);
-				particlePhysicsPool[newParticleIndex].enabled = true;
+				if (!particlePhysicsPool[newParticleIndex].enabled) {
+					Config::DynamicsWorld->addCollisionObject(particlePhysicsPool[newParticleIndex].ghostObject);
+					particlePhysicsPool[newParticleIndex].enabled = true;
+				}
 			}
 			//drawList[drawListCount] = newParticleIndex;
 			//drawListCount++;
 		}
 	}
 
-	for (size_t i = 0; i < maxParticles; i++)
-	{
-		Particle particle = particlePool[i];
+	if (isAlive) {
+		for (size_t i = 0; i < maxParticles; i++)
+		{
+			Particle particle = particlePool[i];
 
-		bool isDead = particle.remainingLife <= 0.0f;
+			bool isDead = particle.remainingLife <= 0.0f;
 
-		// Early out for ALREADY DEAD particles (so they don't go back on dead list)
-		if (isDead) {
-			if (particlePhysicsPool[i].enabled) {
-				deadList[deadListCount] = i;
-				deadListCount++;
-				Config::DynamicsWorld->removeCollisionObject(particlePhysicsPool[i].ghostObject);
-				particlePhysicsPool[i].enabled = false;
+			// Early out for ALREADY DEAD particles (so they don't go back on dead list)
+			if (isDead) {
+				if (collisionsEnabled) {
+					if (particlePhysicsPool[i].enabled) {
+						deadList[deadListCount] = i;
+						deadListCount++;
+						Config::DynamicsWorld->removeCollisionObject((btCollisionObject*)particlePhysicsPool[i].ghostObject);
+						//Config::DynamicsWorld->updateSingleAabb(particlePhysicsPool[i].ghostObject);
+						particlePhysicsPool[i].enabled = false;
+					}
+				}
+				//continue;
 			}
-			//continue;
+			else {
+				// Update the particle
+				particle.remainingLife -= deltaTime;
+				XMVECTOR vel = XMLoadFloat3(&particle.velocity);
+				DirectX::XMStoreFloat3(&particle.velocity, XMVectorAdd(vel, XMVectorScale(XMLoadFloat3(&particle.acceleration), deltaTime)));
+				DirectX::XMStoreFloat3(&particle.position, XMVectorAdd(XMLoadFloat3(&particle.position), XMVectorScale(vel, deltaTime)));
+				particle.rotationRadians += particle.angularVelocity * deltaTime;
+
+				if (fadeIn) {
+					float totalLifetime = particle.originalRemainingLife - particle.remainingLife;
+					if (fadeInEndTime > 0.0f && (totalLifetime < fadeInEndTime)) {
+						particle.transparency = min((totalLifetime / fadeInEndTime), 1.0f) * particle.originalTransparency;
+						particle.color.w = particle.transparency;
+					}
+				}
+
+				if (fadeOut) {
+					if (fadeOutStartTime > 0.0f && (particle.remainingLife < fadeOutStartTime)) {
+						particle.transparency = (particle.remainingLife / fadeOutStartTime) * particle.originalTransparency;
+					}
+					else if (fadeOutStartTime <= 0.0f) {
+						particle.transparency = (particle.remainingLife / particleAvgLifetime) * particle.originalTransparency;
+						particle.color.w = particle.transparency;
+					}
+				}
+
+				// Put the particle back
+				particlePool[i] = particle;
+
+				// Newly dead?
+				if (particle.remainingLife <= 0.0f)
+				{
+					deadList[deadListCount] = i;
+					deadListCount++;
+
+					if (collisionsEnabled) {
+						if (particlePhysicsPool[i].enabled) {
+							Config::DynamicsWorld->removeCollisionObject((btCollisionObject*)particlePhysicsPool[i].ghostObject);
+							//Config::DynamicsWorld->updateSingleAabb(particlePhysicsPool[i].ghostObject);
+							particlePhysicsPool[i].enabled = false;
+						}
+					}
+				}
+				else if (collisionsEnabled)
+				{
+					if (particlePhysicsPool[i].enabled) {
+						btTransform transform;
+						transform.setIdentity();
+						XMVECTOR particlePos = XMLoadFloat3(&particle.position);
+						particlePos.m128_f32[3] = 1.0f;
+						XMVECTOR pos = (particle.worldMatBaked) ? particlePos : XMVector4Transform(particlePos, XMMatrixTranspose(XMLoadFloat4x4(&worldMatrix)));
+						btVector3 transformPos = btVector3(pos.m128_f32[0], pos.m128_f32[1], pos.m128_f32[2]);
+						transform.setOrigin(transformPos);
+
+						particlePhysicsPool[i].ghostObject->setWorldTransform(transform);
+					}
+					
+					//particlePhysicsPool[i].collShape->setLocalScaling(btVector3(particle.scale, particle.scale, particle.scale));
+
+					//if (particlePhysicsPool[i].ghostObject->getBroadphaseHandle())
+						//Config::DynamicsWorld->updateSingleAabb(particlePhysicsPool[i].ghostObject);
+
+					//if (i == 0) {
+					//	//std::cout << pos.m128_f32[0] << " | " << pos.m128_f32[1] << " | " << pos.m128_f32[2] << std::endl;
+					//	btTransform trans = particlePhysicsPool[i].rigidBody->getWorldTransform();
+					//	btVector3 p = trans.getOrigin();
+					//	std::cout << p.getX() << " | " << p.getY() << " | " << p.getZ() << std::endl;
+					//}
+				}
+			}
+			CalcVertex(particle, view);
+			drawCount++;
 		}
-		else {
-			// Update the particle
-			particle.remainingLife -= deltaTime;
-			XMVECTOR vel = XMLoadFloat3(&particle.velocity);
-			DirectX::XMStoreFloat3(&particle.velocity, XMVectorAdd(vel, XMVectorScale(XMLoadFloat3(&particle.acceleration), deltaTime)));
-			DirectX::XMStoreFloat3(&particle.position, XMVectorAdd(XMLoadFloat3(&particle.position), XMVectorScale(vel, deltaTime)));
-			particle.rotationRadians += particle.angularVelocity * deltaTime;
-
-			if (fadeIn) {
-				float totalLifetime = particle.originalRemainingLife - particle.remainingLife;
-				if (fadeInEndTime > 0.0f && (totalLifetime < fadeInEndTime)) {
-					particle.transparency = min((totalLifetime / fadeInEndTime), 1.0f) * particle.originalTransparency;
-					particle.color.w = particle.transparency;
-				}
-			}
-
-			if (fadeOut) {
-				if (fadeOutStartTime > 0.0f && (particle.remainingLife < fadeOutStartTime)) {
-					particle.transparency = (particle.remainingLife / fadeOutStartTime) * particle.originalTransparency;
-				}
-				else if (fadeOutStartTime <= 0.0f) {
-					particle.transparency = (particle.remainingLife / particleAvgLifetime) * particle.originalTransparency;
-					particle.color.w = particle.transparency;
-				}
-			}
-
-			// Put the particle back
-			particlePool[i] = particle;
-
-			// Newly dead?
-			if (particle.remainingLife <= 0.0f)
-			{
-				deadList[deadListCount] = i;
-				deadListCount++;
-
-				if (particlePhysicsPool[i].enabled) {
-					Config::DynamicsWorld->removeCollisionObject(particlePhysicsPool[i].ghostObject);
-					particlePhysicsPool[i].enabled = false;
-				}
-			}
-			else if(collisionsEnabled)
-			{
-				btTransform transform;
-				transform.setIdentity();
-				XMVECTOR particlePos = XMLoadFloat3(&particle.position);
-				particlePos.m128_f32[3] = 1.0f;
-				XMVECTOR pos = (particle.worldMatBaked) ? particlePos : XMVector4Transform(particlePos, XMMatrixTranspose(XMLoadFloat4x4(&worldMatrix)));
-				btVector3 transformPos = btVector3(pos.m128_f32[0], pos.m128_f32[1], pos.m128_f32[2]);
-				transform.setOrigin(transformPos);
-
-				particlePhysicsPool[i].ghostObject->setWorldTransform(transform);
-				//particlePhysicsPool[i].collShape->setLocalScaling(btVector3(particle.scale, particle.scale, particle.scale));
-
-				if (particlePhysicsPool[i].ghostObject->getBroadphaseHandle())
-					Config::DynamicsWorld->updateSingleAabb(particlePhysicsPool[i].ghostObject);
-
-				//if (i == 0) {
-				//	//std::cout << pos.m128_f32[0] << " | " << pos.m128_f32[1] << " | " << pos.m128_f32[2] << std::endl;
-				//	btTransform trans = particlePhysicsPool[i].rigidBody->getWorldTransform();
-				//	btVector3 p = trans.getOrigin();
-				//	std::cout << p.getX() << " | " << p.getY() << " | " << p.getZ() << std::endl;
-				//}
-			}
-		}
-		CalcVertex(particle, view);
-		drawCount++;
 	}
 }
 

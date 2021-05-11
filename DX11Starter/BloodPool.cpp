@@ -41,8 +41,8 @@ void BloodPool::OnCollision(btCollisionObject* other)
 
 BloodPool::~BloodPool()
 {
-	Config::DynamicsWorld->removeCollisionObject(poolGhostObject);
-
+	Config::DynamicsWorld->removeCollisionObject((btCollisionObject*)poolGhostObject);
+	//Config::DynamicsWorld->updateSingleAabb(poolGhostObject);
 	delete poolGhostObject->getCollisionShape();
 	delete poolGhostObject;
 }

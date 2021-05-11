@@ -85,8 +85,9 @@ public:
 	void operator= (const Entity& e);
 
 	Transform& GetTransform();
+	Transform* GetTransformPtr();
 
-	void InitRigidBody(BulletColliderShape shape, float entityMass, bool zeroObjects = false);
+	void InitRigidBody(BulletColliderShape shape, float entityMass);
 	void SetRigidbodyPosition(btVector3 position, btVector3 orientation);
 	void SetRepeatTexture(float x, float y);
 	void SetUVOffset(float x, float y);

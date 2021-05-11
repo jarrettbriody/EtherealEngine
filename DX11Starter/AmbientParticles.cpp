@@ -86,14 +86,14 @@ void AmbientParticles::Init()
 	//partTex[0] = { EESceneLoader->texture2DMap["fire"], 1.0f, 0.1f };
 	emitDesc.textures = partTexFire;
 	emitDesc.textureCount = 3;
-	emitDesc.maxParticles = 10000;
-	emitDesc.emissionRate = 1000.0f;
+	emitDesc.maxParticles = 30000;
+	emitDesc.emissionRate = 3000.0f;
 	emitDesc.particleInitMinSpeed = 0.1f;
 	emitDesc.particleInitMaxSpeed = 0.2f;
 	emitDesc.particleMinLifetime = 0.5f;
 	emitDesc.particleMaxLifetime = 0.6f;
-	emitDesc.particleInitMinScale = 0.5f;
-	emitDesc.particleInitMaxScale = 2.0f;
+	emitDesc.particleInitMinScale = 2.0f;
+	emitDesc.particleInitMaxScale = 2.5f;
 	emitDesc.particleAcceleration = XMFLOAT3(0.0f, 0.0f, 0.0f);
 	gpuEmitter = new GPUParticleEmitter(emitDesc);
 	gpuEmitter->SetBlendingEnabled(true);

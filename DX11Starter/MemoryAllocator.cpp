@@ -109,6 +109,8 @@ void* MemoryAllocator::AllocateToPool(unsigned int pool, unsigned int slugSize, 
 	pools[pool].usedMemory += pools[pool].blockSize;
 	success = true;
 
+	//std::cout << pool << " | " << ((float)pools[pool].usedMemory / (float)pools[pool].size) << std::endl;
+
 	return (void*)writeMemoryLoc;
 }
 

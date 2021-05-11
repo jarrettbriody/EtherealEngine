@@ -1,0 +1,56 @@
+newmtl updated_moratorium:initialShadingGroup
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+Ni 1.00
+newmtl updated_moratorium:initialShadingGroup2
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+Ni 1.00
+newmtl updated_moratorium:moratoriumfloors
+map_Kd oldFactoryDiffuse.png
+map_Bump oldFactoryNormal.png
+repeatTexture="3,3"
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+Ni 1.00
+newmtl updated_moratorium:moratoriumouterwalls
+map_Kd damagedConcreteDiffuse.png
+map_Bump damagedConcreteDiffuse.png
+repeatTexture="3,3"
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+Ni 1.00
+newmtl updated_moratorium:moratoriumshelves
+map_Kd OldMetalDiffuse.png
+map_Bump OldMetalNormal.png
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+Ni 1.00
+newmtl updated_moratorium:moratoriumwalls
+map_Kd damagedConcreteDiffuse.png
+map_Bump damagedConcreteDiffuse.png
+repeatTexture="3,3"
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+Ni 1.00
+newmtl updated_moratorium:outsideGround
+map_Kd rockSoil.png
+map_Bump rockSoil_N.png
+repeatTexture="3,3"
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+Ni 1.00

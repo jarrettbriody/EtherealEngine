@@ -5,7 +5,7 @@
 #include "LightHandler.h"
 
 struct EnemyOutlineCallback : RendererCallback {
-	int sampleSize = 1;
+	int sampleSize = 2;
 	unsigned int outlineLayerMask = Config::EntityLayers["outline"];
 	void PrePixelShaderCallback() {
 		pShader->SetShaderResourceView("LayerMap", Renderer::GetInstance()->depthStencilComponents.entityInfoSRV);

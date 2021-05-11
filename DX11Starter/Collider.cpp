@@ -378,3 +378,8 @@ Transform& Collider::GetTransform()
 {
 	return transform;
 }
+
+Transform* Collider::GetTransformPtr()
+{
+	return &transform;
+}

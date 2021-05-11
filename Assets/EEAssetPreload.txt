@@ -79,7 +79,6 @@ TYPE="TEXTURE" array="true" name="smoke1" path="Default/Fire/smoke1.png"
 TYPE="TEXTURE" array="true" name="smoke2" path="Default/Fire/smoke2.png"
 TYPE="TEXTURE" array="true" name="smoke3" path="Default/Fire/smoke3.png"
 TYPE="TEXTURE" name="Blood" path="Blood.png"
-TYPE="TEXTURE" name="Blud" path="blud.jpeg"
 TYPE="TEXTURE" name="BloodRed" path="Default/bloodred.png"
 TYPE="TEXTURE" name="bloodsword" path="bloodsword.png"
 TYPE="TEXTURE" name="bloodsword_N" path="bloodsword_N.png"
@@ -92,6 +91,8 @@ TYPE="TEXTURE" name="plaster" path="plaster-texture.png"
 TYPE="TEXTURE" name="plaster_N" path="plaster-texture_N.png"
 TYPE="TEXTURE" name="woodfloor" path="woodfloor.png"
 TYPE="TEXTURE" name="woodfloor_N" path="woodfloor_N.png"
+TYPE="TEXTURE" name="bloodpool" path="bloodpool.png"
+TYPE="TEXTURE" name="bloodpool_N" path="bloodpool_N.png"
 
 //TYPE="MATERIAL" name="" vShader="" pShader="" ambientTexture="" diffuseTexture="" specularColorTexture="" specularHighlightTexture="" alphaTexture="" normalTexture="" ambientColor(0,0,0) diffuseColor(0,0,0) specularColor(0,0,0) specularExponent="0.0" transparency="1.0" illumination="1" ssao="false" hbaoPlus="true"
 TYPE="MATERIAL" name="DEFAULT" vShader="DEFAULT" pShader="DEFAULT"
@@ -110,6 +111,7 @@ TYPE="MATERIAL" name="bloodsword" vShader="BloodSword" pShader="Normal" diffuseT
 TYPE="MATERIAL" name="chimney" vShader="Normal" pShader="Normal" diffuseTexture="bricks" normalTexture="bricks_N"
 TYPE="MATERIAL" name="plaster" vShader="Normal" pShader="Normal" diffuseTexture="plaster" normalTexture="plaster_N"
 TYPE="MATERIAL" name="woodfloor" vShader="Normal" pShader="Normal" diffuseTexture="woodfloor" normalTexture="woodfloor_N"
+TYPE="MATERIAL" name="bloodpool" vShader="Normal" pShader="Normal" diffuseTexture="bloodpool" normalTexture="bloodpool_N"
 
 
 

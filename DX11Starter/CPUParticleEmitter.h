@@ -12,25 +12,25 @@ struct DefaultCPUParticleShaders {
 };
 
 struct ParticlePhysicsWrapper {
-	unsigned int particleIndex;
-	void* particle;
-	void* emitter;
+	unsigned int particleIndex = 0;
+	void* particle = nullptr;
+	void* emitter = nullptr;
 };
 
 struct ParticlePhysics {
-	PhysicsWrapper wrapper;
-	ParticlePhysicsWrapper particleWrapper;
+	PhysicsWrapper wrapper = {};
+	ParticlePhysicsWrapper particleWrapper = {};
 	btGhostObject* ghostObject = nullptr;
-	btGhostPairCallback* ghostCallback = nullptr;
+	//btGhostPairCallback* ghostCallback = nullptr;
 	btCollisionShape* collShape = nullptr;
 	bool enabled = false;
 };
 
 struct ParticleCollision {
-	unsigned int particleIndex;
-	void* particle;
-	void* emitter;
-	void* hitEntity;
+	unsigned int particleIndex = 0;
+	void* particle = nullptr;
+	void* emitter = nullptr;
+	void* hitEntity = nullptr;
 };
 
 class CPUParticleEmitter : ParticleEmitter
@@ -46,6 +46,8 @@ public:
 	void SetCollisionsEnabled(void (*collisionCallback)(void* ptr));
 	void KillParticle(unsigned int index);
 
+	void Destroy();
+
 	void Update(double deltaTime, double totalTime, XMFLOAT4X4 view = XMFLOAT4X4());
 	void Draw(XMFLOAT4X4 view, XMFLOAT4X4 proj);
 
@@ -57,19 +59,19 @@ private:
 
 	bool blendingEnabled = true;
 
-	ID3D11Buffer* indexBuffer;
-	ID3D11Buffer* vertexBuffer;
-	ID3D11BlendState* additiveBlend;
-	ID3D11DepthStencilState* depthWriteOff;
+	ID3D11Buffer* indexBuffer = nullptr;
+	ID3D11Buffer* vertexBuffer = nullptr;
+	ID3D11BlendState* additiveBlend = nullptr;
+	ID3D11DepthStencilState* depthWriteOff = nullptr;
 
-	Particle* particlePool;
-	ParticlePhysics* particlePhysicsPool;
-	unsigned int* deadList;
-	unsigned int deadListCount;
-	ParticleVertex* particleVertices;
-	unsigned int* indices;
-	unsigned int particleVertCount;
-	unsigned int drawCount;
+	Particle* particlePool = nullptr;
+	ParticlePhysics* particlePhysicsPool = nullptr;
+	unsigned int* deadList = nullptr;
+	unsigned int deadListCount = 0;
+	ParticleVertex* particleVertices = nullptr;
+	unsigned int* indices = nullptr;
+	unsigned int particleVertCount = 0;
+	unsigned int drawCount = 0;
 
 	btGhostPairCallback* ghostCallback = nullptr;
 

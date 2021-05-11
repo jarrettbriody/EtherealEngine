@@ -11,12 +11,14 @@ void GPUParticleEmitter::SetDefaultShaders(DefaultGPUParticleShaders s)
 GPUParticleEmitter::GPUParticleEmitter() : ParticleEmitter()
 {
 	InitBuffers();
+	ParticleEmitter::particleSysType = PARTICLESYSTYPE::GPU;
 }
 
 GPUParticleEmitter::GPUParticleEmitter(ParticleEmitterDescription d, bool blendingEnabled) : ParticleEmitter(d)
 {
 	this->blendingEnabled = blendingEnabled;
 	InitBuffers();
+	ParticleEmitter::particleSysType = PARTICLESYSTYPE::GPU;
 }
 
 GPUParticleEmitter::~GPUParticleEmitter()

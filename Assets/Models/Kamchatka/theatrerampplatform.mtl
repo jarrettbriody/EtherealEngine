@@ -1,5 +1,8 @@
-newmtl Wood_Debree_1
-map_Kd prototype_512x512_white.png
-Kd 0.3018867 0.2317459 0.1409754
-d 1
-
+newmtl theatrerampplatform:Wood_Debree_1
+illum 4
+map_Kd woodfloor.png
+map_Bump woodfloor_N.png
+Kd 0.00 0.00 0.00
+Ka 0.40 0.40 0.40
+Tf 1.00 1.00 1.00
+Ni 1.00

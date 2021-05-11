@@ -25,6 +25,7 @@
 #include "LightHandler.h"
 #include "NavmeshHandler.h"
 #include "AudioManager.h"
+#include <dxgidebug.h>
 
 using namespace std;
 
@@ -36,14 +37,27 @@ struct SceneLoaderGarbageCallback : SceneLoaderCallback{
 
 		EEDecalHandler->DestroyDecalsByOwner(name);
 
-		ParticleEmitter::DestroyEmittersByOwner(name);
+		if (ParticleEmitter::EntityEmitterMap.count(name)) {
+			for (auto iter = ParticleEmitter::EntityEmitterMap[name].begin(); iter != ParticleEmitter::EntityEmitterMap[name].end(); ++iter)
+			{
+				iter->second->Destroy();
+			}
+			ParticleEmitter::EntityEmitterMap.erase(name);
+		}
 
-		if (Config::EtherealDebugLinesEnabled) {
+		if (Config::EtherealDebugLinesEnabled && e->colliderDebugLinesEnabled) {
 			DebugLines::debugLinesMap[name]->destroyed = true;
 			DebugLines::debugLinesMap.erase(name);
 		}
 
-		ScriptManager::DestroyScriptsByOwner(name);
+		vector<ScriptManager*> scriptFuncs = ScriptManager::scriptFunctionsMapVector[name];
+		size_t cnt = scriptFuncs.size();
+		for (size_t j = cnt; j > 0; j--)
+		{
+			scriptFuncs[j - 1]->destroyed = true;
+		}
+		ScriptManager::scriptFunctionsMap.erase(name);
+		ScriptManager::scriptFunctionsMapVector.erase(name);
 	}
 };
 
@@ -74,6 +88,9 @@ public:
 
 	void FmodErrorCheck(FMOD_RESULT result); // Define it here because current file structure wont let me put it in utility
 	void GarbageCollect();
+	void ScriptGarbageCollect();
+	void ParticleSystemGarbageCollect();
+	void DebugLineGarbageCollect();
 
 private:
 	// Keeps track of the old mouse position for determining how far the mouse moved in a single frame
