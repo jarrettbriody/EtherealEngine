@@ -14,6 +14,8 @@ class BloodIcicle : public ScriptManager
 
 	bool bodyPartPinned = false;
 
+	XMFLOAT4X4 translation;
+
 	void Init();
 
 	void Update();

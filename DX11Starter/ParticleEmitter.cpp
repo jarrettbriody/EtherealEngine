@@ -82,31 +82,7 @@ ParticleEmitter::~ParticleEmitter()
 	if (texturesSRV != nullptr) texturesSRV->Release();
 }
 
-void ParticleEmitter::GarbageCollect()
-{
-	unsigned int start = EmitterVector.size();
-	for (unsigned int i = start; i > 0; i--)
-	{
-		ParticleEmitter* e = EmitterVector[i - 1];
-		if (!e->isAlive) {
-			EmitterVector.erase(EmitterVector.begin() + i - 1);
-			EmitterMap.erase(e->GetName());
-			delete e;
-		}
-	}
-}
-
-void ParticleEmitter::DestroyEmittersByOwner(string entityName)
-{
-	if (EntityEmitterMap.count(entityName)) {
-		for (auto iter = EntityEmitterMap[entityName].begin(); iter != EntityEmitterMap[entityName].end(); ++iter)
-		{
-			iter->second->isAlive = false;
-		}
-		EntityEmitterMap.erase(entityName);
-	}
-}
-
+/*
 void ParticleEmitter::DestroyEmitter(string emitterName)
 {
 	if (EmitterMap.count(emitterName)) {
@@ -116,15 +92,11 @@ void ParticleEmitter::DestroyEmitter(string emitterName)
 		}
 	}
 }
+*/
 
 void ParticleEmitter::Destroy()
 {
-	if (EmitterMap.count(name)) {
-		isAlive = false;
-		if (EntityEmitterMap.count(parentName)) {
-			EntityEmitterMap[parentName].erase(name);
-		}
-	}
+	isAlive = false;
 }
 
 void ParticleEmitter::SetIsActive(bool toggle)
@@ -442,12 +414,22 @@ string ParticleEmitter::GetName()
 	return name;
 }
 
+string ParticleEmitter::GetParentName()
+{
+	return parentName;
+}
+
+bool ParticleEmitter::GetIsAlive()
+{
+	return isAlive;
+}
+
 void ParticleEmitter::Update(double deltaTime, double totalTime, XMFLOAT4X4 view)
 {
-	if (isActive) {
+	if (isActive && isAlive) {
 		lifetime += deltaTime;
 		emitTimeCounter += deltaTime;
-		isAlive = (maxLifetime == 0.0f || lifetime < maxLifetime);
+		if (maxLifetime != 0.0f && lifetime > maxLifetime) Destroy();
 		CalcWorldMatrix();
 	}
 }

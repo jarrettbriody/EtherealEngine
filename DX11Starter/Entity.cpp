@@ -464,7 +464,9 @@ void Entity::AddAutoBoxCollider()
 		vector<XMFLOAT3> v;
 		v.push_back(XMFLOAT3(0.5f, 0.5f, 0.5f));
 		v.push_back(XMFLOAT3(-0.5f, -0.5f, -0.5f));
-		colliders->push_back(new Collider(nullptr, v));
+		Collider* coll = new Collider(nullptr, v);
+		colliders->push_back(coll);
+		eTransform.AddChild(coll->GetTransformPtr(), false);
 	}
 
 	colliderCnt = colliders->size();
@@ -724,7 +726,7 @@ void Entity::FreeMemory()
 	if (colliders != nullptr)
 		delete colliders;
 
-	eTransform.Cleanup();
+	eTransform.~Transform();
 }
 
 

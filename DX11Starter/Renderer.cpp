@@ -349,6 +349,14 @@ void Renderer::InitHBAOPlus()
 
 void Renderer::InitShadows(unsigned int cascadeCount)
 {
+	for (size_t i = 0; i < shadowComponents.cascadeCount; i++)
+	{
+		if (shadowComponents.shadowCascades[i].DSV)shadowComponents.shadowCascades[i].DSV->Release();
+		if (shadowComponents.shadowCascades[i].SRV)shadowComponents.shadowCascades[i].SRV->Release();
+	}
+	if (shadowComponents.Rasterizer) shadowComponents.Rasterizer->Release();
+	if (shadowComponents.Sampler) shadowComponents.Sampler->Release();
+
 	shadowComponents.cascadeCount = cascadeCount;
 	for (size_t i = 0; i < cascadeCount; i++)
 	{
@@ -766,7 +774,7 @@ void Renderer::RenderDebugLines()
 		Config::Context->IASetVertexBuffers(0, 1, &DebugLines::debugLines[i]->vertexBuffer, &stride, &offset);
 		Config::Context->IASetIndexBuffer(DebugLines::debugLines[i]->indexBuffer, DXGI_FORMAT_R32_UINT, 0);
 
-		shaders.debugLineVS->SetMatrix4x4("world", DebugLines::debugLines[i]->worldMatrix);
+		shaders.debugLineVS->SetMatrix4x4("world", *DebugLines::debugLines[i]->worldMatrixPtr);
 		shaders.debugLineVS->SetMatrix4x4("view", camera->GetViewMatrix());
 		shaders.debugLineVS->SetMatrix4x4("projection", camera->GetProjMatrix());
 

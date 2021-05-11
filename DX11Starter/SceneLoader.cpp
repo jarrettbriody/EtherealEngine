@@ -1231,9 +1231,10 @@ void SceneLoader::LoadScene(string sceneName)
 								DebugLines* dl = new DebugLines(entityName, d);
 								XMFLOAT3 c = XMFLOAT3(1.0f, 0.0f, 0.0f);
 								dl->color = c;
-								dl->worldMatrix = colliders[d]->GetTransform().GetWorldMatrix();
+								dl->worldMatrixPtr = colliders[d]->GetTransform().GetWorldMatrixPtr();
 								XMFLOAT3* colliderCorners = colliders[d]->GetPivotShiftedColliderCorners();
 								dl->GenerateCuboidVertexBuffer(colliderCorners, 8);
+								dl->willUpdate = true;
 							}
 						}
 					}
@@ -1422,7 +1423,7 @@ Entity* SceneLoader::CreateEntity(EntityCreationParameters& para)
 	return allocatedEntity;
 }
 
-std::vector<Entity*> SceneLoader::SplitMeshIntoChildEntities(Entity* e, float componentMass)
+std::vector<Entity*> SceneLoader::SplitMeshIntoChildEntities(Entity* e, float componentMass, string scriptName)
 {
 	std::vector<Entity*> childEntities;
 
@@ -1459,7 +1460,16 @@ std::vector<Entity*> SceneLoader::SplitMeshIntoChildEntities(Entity* e, float co
 
 		childEntities.push_back(allocatedEntity);
 
-		//allocatedEntity->GetRBody()->applyCentralImpulse(Utility::Float3ToBulletVector(collCenter) * 15.0f);
+		btVector3 torque = btVector3(
+			(static_cast <float> (rand()) / static_cast <float> (RAND_MAX) * 15.0f),
+			(static_cast <float> (rand()) / static_cast <float> (RAND_MAX) * 15.0f),
+			(static_cast <float> (rand()) / static_cast <float> (RAND_MAX) * 15.0f));
+		allocatedEntity->GetRBody()->applyCentralImpulse(Utility::Float3ToBulletVector(collCenter) * (20.0f + static_cast <float> ((rand()) / static_cast <float> (RAND_MAX) * 15.0f)));
+		allocatedEntity->GetRBody()->applyTorqueImpulse(torque);
+
+		if (scriptName != "") {
+			scriptCallback(allocatedEntity, scriptName);
+		}
 	}
 	//e->EmptyEntity();
 	e->Destroy();

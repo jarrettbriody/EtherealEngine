@@ -230,7 +230,7 @@ void FPSController::Update()
 
 				// ragdoll the player
 				playerRBody->setAngularFactor(btVector3(1, 1, 1)); // free rotations on x and z axes
-				playerRBody->setGravity(btVector3(0.0f, -25.0f, 0.0f));
+				playerRBody->setGravity(btVector3(0.0f, -30.0f, 0.0f));
 				playerRBody->setMassProps(10, btVector3(0, 0, 0));
 				playerRBody->setFriction(1.0f);
 				//playerRBody->applyImpulse(btVector3(5, 2, 10), btVector3(0, playerRBody->getCenterOfMassPosition().getY() - entity->GetScale().y, 0));
@@ -833,7 +833,7 @@ void FPSController::GroundCheck()
 	else
 	{
 		midAir = true;
-		playerRBody->setGravity(btVector3(0.0f, -25.0f, 0.0f));
+		playerRBody->setGravity(btVector3(0.0f, -30.0f, 0.0f));
 	}
 }
 
@@ -1095,8 +1095,12 @@ void FPSController::MouseLook()
 
 void FPSController::OnCollision(btCollisionObject* other)
 {
+	PhysicsWrapper* pWrap = (PhysicsWrapper*)other->getUserPointer();
+
+	if (pWrap->type != PHYSICS_WRAPPER_TYPE::ENTITY) return;
+
 	Entity* otherE = (Entity*)((PhysicsWrapper*)other->getUserPointer())->objectPointer;
-	
+
 	if (otherE->HasTag(std::string("Blood Pool")))
 	{
 		bloodResource += 10;

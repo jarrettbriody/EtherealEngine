@@ -102,7 +102,7 @@ void BullEnemy::OnCollision(btCollisionObject* other)
 		btVector3 oldEnemyPos = entity->GetRBody()->getCenterOfMassPosition();
 
 		// enemy is in the triangle, split it apart
-		std::vector<Entity*> childEntities = EESceneLoader->SplitMeshIntoChildEntities(entity, 25.0f);
+		std::vector<Entity*> childEntities = EESceneLoader->SplitMeshIntoChildEntities(entity, 10.0f, "BODYPART");
 
 		// Update the game manager attribute for enemies alive
 		gameManagerScript->DecrementEnemiesAlive();
@@ -113,8 +113,8 @@ void BullEnemy::OnCollision(btCollisionObject* other)
 			e->AddTag(std::string("Body Part"));
 
 			e->GetRBody()->activate();
-			e->GetRBody()->applyCentralImpulse(btVector3(100, 100, 100));
-			e->GetRBody()->applyTorqueImpulse(btVector3(100, 100, 100));
+			//e->GetRBody()->applyCentralImpulse(btVector3(100, 100, 100));
+			//e->GetRBody()->applyTorqueImpulse(btVector3(100, 100, 100));
 
 			if (leashed)
 			{

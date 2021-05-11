@@ -30,6 +30,7 @@ public:
 	int vertexCount = 0;
 	int indexCount = 0;
 	XMFLOAT3 color;
+	XMFLOAT4X4* worldMatrixPtr;
 	XMFLOAT4X4 worldMatrix;
 	string entityName;
 	int colliderID;

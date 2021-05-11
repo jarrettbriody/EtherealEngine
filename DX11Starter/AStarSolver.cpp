@@ -55,6 +55,7 @@ AStarSolver::~AStarSolver()
 
 vector<Node*> AStarSolver::FindPath(XMFLOAT3 start, XMFLOAT3 end)
 {
+	navmesh = NavmeshHandler::GetInstance();
 	Reset();
 	std::vector<Node*> closedNodes;
 	PriorityQueue openNodes;

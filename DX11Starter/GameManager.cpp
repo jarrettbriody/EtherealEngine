@@ -14,7 +14,7 @@ void GameManager::Init()
 			"Blood Pool",					// tag
 			"Blood Pool",					// layer
 			"bloodpool",							// mesh
-			"Red",							// material
+			"bloodpool",							// material
 			{"BLOODPOOL"},				// script names
 			1,								// script count
 			XMFLOAT3(0.0f, 0.0f, 0.0f),		// position
@@ -87,9 +87,9 @@ void GameManager::Init()
 
 void GameManager::Update()
 {
-	if (Keyboard::GetInstance()->KeyIsPressed((unsigned int)'T')) {
-		EESceneLoader->SceneEntitiesMap["graveyard"]->GetTransform().RotateAroundAxis(Y_AXIS, 1.0f * deltaTime);
-	}
+	//if (Keyboard::GetInstance()->KeyIsPressed((unsigned int)'T')) {
+	//	EESceneLoader->SceneEntitiesMap["graveyard"]->GetTransform().RotateAroundAxis(Y_AXIS, 1.0f * deltaTime);
+	//}
 
 	switch (gs)
 	{
@@ -130,7 +130,8 @@ void GameManager::Update()
 
 void GameManager::BloodPoolSpawner()
 {
-	for (int i = totalSplitMeshEntities.size() - 1; i >= 0; i--)
+	int cnt = totalSplitMeshEntities.size();
+	for (int i = cnt - 1; i >= 0; i--)
 	{
 		btVector3 from = totalSplitMeshEntities[i]->GetRBody()->getCenterOfMassPosition();
 		btVector3 to = btVector3(from.getX(), from.getY() - 3.0f, from.getZ());
@@ -145,7 +146,8 @@ void GameManager::BloodPoolSpawner()
 				if (e->HasTag(std::string("Environment")))
 				{
 					bloodPoolParams.position = Utility::BulletVectorToFloat3(closestResult.m_hitPointWorld);
-					ScriptManager::CreateEntity(bloodPoolParams);
+					Entity* pool = ScriptManager::CreateEntity(bloodPoolParams);
+					pool->AddLayer("outline");
 					totalSplitMeshEntities.erase(totalSplitMeshEntities.begin() + i); // remove the body part from the list if it already was close enough to the ground to leave a blood puddle
 				}
 			}

@@ -276,6 +276,9 @@
     <ClCompile Include="SeekAndFleePlayer.cpp">
       <Filter>EEBehaviors\Source</Filter>
     </ClCompile>
+    <ClCompile Include="BodyPart.cpp">
+      <Filter>EEScripts\Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DXCore.h">
@@ -493,6 +496,9 @@
     </ClInclude>
     <ClInclude Include="SeekAndFleePlayer.h">
       <Filter>EEBehaviors\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="BodyPart.h">
+      <Filter>EEScripts\Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

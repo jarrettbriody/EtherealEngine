@@ -57,12 +57,17 @@ Game::Game(HINSTANCE hInstance)
 
 Game::~Game()
 {
-	SceneLoader::DestroyInstance();
-
 	for (size_t i = 0; i < ParticleEmitter::EmitterVector.size(); i++)
 	{
 		delete ParticleEmitter::EmitterVector[i];
 	}
+
+	for (size_t i = 0; i < ScriptManager::scriptFunctions.size(); i++)
+	{
+		delete ScriptManager::scriptFunctions[i];
+	}
+
+	SceneLoader::DestroyInstance();
 
 	Config::Sampler->Release();
 	Config::ClampSampler->Release();
@@ -72,24 +77,7 @@ Game::~Game()
 
 	// delete physicsDraw;
 
-	Keyboard::DestroyInstance();
-	Mouse::DestroyInstance();
-
 	//delete EECamera;
-	Renderer::DestroyInstance();
-
-	for (size_t i = 0; i < ScriptManager::scriptFunctions.size(); i++)
-	{
-		delete ScriptManager::scriptFunctions[i];
-	}
-
-	delete collisionConfiguration;
-	delete dispatcher;
-	delete broadphase;
-	delete solver;
-	delete Config::DynamicsWorld;
-
-	MemoryAllocator::DestroyInstance();
 
 	DecalHandler::DestroyInstance();
 
@@ -97,12 +85,26 @@ Game::~Game()
 
 	NavmeshHandler::DestroyInstance();
 
+	Renderer::DestroyInstance();
+
+	MemoryAllocator::DestroyInstance();
+
+	Keyboard::DestroyInstance();
+
+	Mouse::DestroyInstance();
+
 	// FMOD
 	sound[0]->release(); // For now just release the one sound we have assigned
 	backgroundMusic->release();
 	sfxGroup->release();
 	Config::FMODSystem->close();
 	Config::FMODSystem->release();
+
+	delete collisionConfiguration;
+	delete dispatcher;
+	delete broadphase;
+	delete solver;
+	delete Config::DynamicsWorld;
 }
 
 void Game::Init()
@@ -111,6 +113,8 @@ void Game::Init()
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 	//_CrtSetBreakAlloc(527625);
 	//_CrtSetBreakAlloc(49892);
+
+	//gContactBreakingThreshold = 0.1f;
 
 	Config::hWnd = hWnd;
 	sceneChangeCallback.game = (void*)this;
@@ -129,11 +133,11 @@ void Game::Init()
 
 	// Physics -----------------
 	collisionConfiguration = new btDefaultCollisionConfiguration();
-	dispatcher = new  btCollisionDispatcher(collisionConfiguration);
-	broadphase = new  btDbvtBroadphase();
+	dispatcher = new btCollisionDispatcher(collisionConfiguration);
+	broadphase = new btDbvtBroadphase();
 	solver = new  btSequentialImpulseConstraintSolver;
 	Config::DynamicsWorld = new btDiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
-	Config::DynamicsWorld->setGravity(btVector3(0, -10.0f, 0));
+	Config::DynamicsWorld->setGravity(btVector3(0, -20.0f, 0));
 
 	D3D11_SAMPLER_DESC samplerDesc = {};
 	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
@@ -249,6 +253,7 @@ void Game::Init()
 	cpuParticleShaders.particlePS = EESceneLoader->PixelShadersMap["CPUParticle"];
 	CPUParticleEmitter::SetDefaultShaders(cpuParticleShaders);
 
+	/*
 	ParticleEmitterDescription emitDesc;
 	//emitDesc.parentName = "FPSController";
 	//emitDesc.parentWorld = EESceneLoader->sceneEntitiesMap["FPSController"]->GetWorldMatrixPtr();
@@ -329,6 +334,7 @@ void Game::Init()
 	//emitDesc.particleMinLifetime = 2.0f;
 	//emitDesc.particleMaxLifetime = 3.0f;
 	//new GPUParticleEmitter(emitDesc);
+	*/
 
 	/*
 	Entity* e;
@@ -442,7 +448,7 @@ void Game::Update(double deltaTime, double totalTime)
 		Quit();
 	}
 
-	GarbageCollect();
+	EECamera->Update(deltaTime);
 
 	for (size_t i = 0; i < ScriptManager::scriptFunctions.size(); i++)
 	{
@@ -450,8 +456,6 @@ void Game::Update(double deltaTime, double totalTime)
 		if(!sf->GetIsInitialized())
 			sf->CallInit();
 	}
-
-	EECamera->Update(deltaTime);
 
 	PhysicsStep(deltaTime);
 
@@ -469,25 +473,13 @@ void Game::Update(double deltaTime, double totalTime)
 		masterGroup->getMute(&mute);
 		masterGroup->setMute(!mute);
 	}
-	
-	ScriptManager::deltaTime = deltaTime;
-
-	for (size_t i = 0; i < ScriptManager::scriptFunctions.size(); i++)
-	{
-		ScriptManager* sf = ScriptManager::scriptFunctions[i];
-		sf->CallUpdate();
-	}
-
-	XMFLOAT4X4 view = EERenderer->GetCamera("main")->GetViewMatrix();
-	for (size_t i = 0; i < ParticleEmitter::EmitterVector.size(); i++)
-	{
-		ParticleEmitter::EmitterVector[i]->Update(deltaTime, totalTime, view);
-	}
 
 	int numManifolds = Config::DynamicsWorld->getDispatcher()->getNumManifolds();
-	for (int i = 0; i < numManifolds; i++)
+	//btPersistentManifold** manifolds = Config::DynamicsWorld->getDispatcher()->getInternalManifoldPointer();
+	for (int i = numManifolds - 1; i >= 0 ; i--)
 	{
-		btPersistentManifold* contactManifold = Config::DynamicsWorld->getDispatcher()->getManifoldByIndexInternal(i);
+		btPersistentManifold* contactManifold = Config::DynamicsWorld->getDispatcher()->getManifoldByIndexInternal(i);//manifolds[i];//
+		//if (contactManifold->getNumContacts() == 0) continue;
 		btCollisionObject* obA = (btCollisionObject*)(contactManifold->getBody0());
 		btCollisionObject* obB = (btCollisionObject*)(contactManifold->getBody1());
 
@@ -522,7 +514,23 @@ void Game::Update(double deltaTime, double totalTime)
 		if (wrapperB->type == PHYSICS_WRAPPER_TYPE::PARTICLE && wrapperA->type == PHYSICS_WRAPPER_TYPE::ENTITY) {
 			wrapperB->callback(contactManifold);
 		}
+
+		//Config::DynamicsWorld->getDispatcher()->releaseManifold(contactManifold);
 	}
+
+	for (size_t i = 0; i < ScriptManager::scriptFunctions.size(); i++)
+	{
+		ScriptManager* sf = ScriptManager::scriptFunctions[i];
+		if (!sf->destroyed) sf->CallUpdate();
+	}
+
+	XMFLOAT4X4 view = EERenderer->GetCamera("main")->GetViewMatrix();
+	for (size_t i = 0; i < ParticleEmitter::EmitterVector.size(); i++)
+	{
+		if (ParticleEmitter::EmitterVector[i]->GetIsAlive()) ParticleEmitter::EmitterVector[i]->Update(deltaTime, totalTime, view);
+	}
+
+	ScriptManager::deltaTime = deltaTime;
 
 	EnforcePhysics();
 
@@ -548,6 +556,7 @@ void Game::Update(double deltaTime, double totalTime)
 		testLight->Direction = camera->direction;
 	}*/
 
+	GarbageCollect();
 }
 
 void Game::PhysicsStep(double deltaTime)
@@ -560,9 +569,12 @@ void Game::PhysicsStep(double deltaTime)
 	Config::DynamicsWorld->applyGravity();
 	Config::DynamicsWorld->stepSimulation((deltaTime * deltaTimeScalar), 10, 1.f / 60.f); // Config::DynamicsWorld->stepSimulation(deltaTime, 1, btScalar(1.0) / btScalar(60.0)); --> don't believe this framerate independent, needed to add max steps variable
 
-	for (int i = 0; i < Config::DynamicsWorld->getNumCollisionObjects(); i++)
+	int numCollisionObjects = Config::DynamicsWorld->getNumCollisionObjects();
+	for (int i = numCollisionObjects - 1; i >= 0; i--)
 	{
 		obj = Config::DynamicsWorld->getCollisionObjectArray()[i];
+
+		//if (!obj->isActive()) return;
 
 		if (obj->getInternalType() == btCollisionObject::CO_RIGID_BODY) {
 			body = btRigidBody::upcast(obj);
@@ -598,9 +610,12 @@ void Game::EnforcePhysics()
 	btTransform transform;
 	Entity* entity = nullptr;
 
-	for (int i = 0; i < Config::DynamicsWorld->getNumCollisionObjects(); i++)
+	int numCollisionObjects = Config::DynamicsWorld->getNumCollisionObjects();
+	for (int i = numCollisionObjects - 1; i >= 0; i--)
 	{
 		obj = Config::DynamicsWorld->getCollisionObjectArray()[i];
+
+		//if (!obj->isActive()) return;
 
 		if (obj->getInternalType() == btCollisionObject::CO_RIGID_BODY) {
 			body = btRigidBody::upcast(obj);
@@ -612,9 +627,9 @@ void Game::EnforcePhysics()
 			if (wrapper->type == PHYSICS_WRAPPER_TYPE::ENTITY) {
 				entity = (Entity*)wrapper->objectPointer;
 
-				if (entity->HasTag("Body Part")) {
-					cout << "here" << endl;
-				}
+				//if (entity->HasTag("Body Part")) {
+				//	cout << "here" << endl;
+				//}
 
 				XMFLOAT3 pos = entity->GetTransform().GetPosition();
 				//XMFLOAT3 centerLocal = entity->GetCollider()->GetCenterLocal();
@@ -644,19 +659,7 @@ void Game::EnforcePhysics()
 		}
 
 		else if (obj->getInternalType() == btCollisionObject::CO_GHOST_OBJECT) {
-			ghost = btGhostObject::upcast(obj);
 
-			transform = ghost->getWorldTransform();
-
-			PhysicsWrapper* wrapper = (PhysicsWrapper*)ghost->getUserPointer();
-
-			//if (wrapper->type == PHYSICS_WRAPPER_TYPE::PARTICLE) {
-			//	ParticlePhysicsWrapper* particleWrap = (ParticlePhysicsWrapper*)wrapper->objectPointer;
-			//	if (particleWrap->particleIndex == 4) {
-			//		btVector3 p = transform.getOrigin();
-			//		std::cout << p.getX() << " | " << p.getY() << " | " << p.getZ() << std::endl;
-			//	}
-			//}
 		}
 	}
 }
@@ -726,11 +729,30 @@ void Game::Draw(double deltaTime, double totalTime)
 
 void Game::GarbageCollect()
 {
-	EESceneLoader->GarbageCollect();
+	int start = ParticleEmitter::EmitterVector.size();
+	for (int i = start - 1; i >= 0; i--)
+	{
+		ParticleEmitter* e = ParticleEmitter::EmitterVector[i];
+		if (!e->GetIsAlive()) {
+			string parentName = e->GetParentName();
+			string name = e->GetName();
+			if (parentName != "") {
+				if (ParticleEmitter::EntityEmitterMap.count(parentName)) {
+					if (ParticleEmitter::EntityEmitterMap[parentName].count(name)) {
+						ParticleEmitter::EntityEmitterMap[parentName].erase(name);
+					}
+				}
+			}
+			ParticleEmitter::EmitterVector.erase(ParticleEmitter::EmitterVector.begin() + i);
+			ParticleEmitter::EmitterMap.erase(e->GetName());
+			delete e;
+		}
+	}
 
-	ScriptManager::GarbageCollect();
+	EELightHandler->GarbageCollect();
+	EEDecalHandler->GarbageCollect();
 
-	size_t start = DebugLines::debugLines.size();
+	start = DebugLines::debugLines.size();
 	for (size_t i = start; i > 0; i--)
 	{
 		DebugLines* d = DebugLines::debugLines[i - 1];
@@ -740,9 +762,17 @@ void Game::GarbageCollect()
 		}
 	}
 
-	ParticleEmitter::GarbageCollect();
-	EELightHandler->GarbageCollect();
-	EEDecalHandler->GarbageCollect();
+	EESceneLoader->GarbageCollect();
+
+	start = ScriptManager::scriptFunctions.size();
+	for (int i = start - 1; i >= 0; i--)
+	{
+		ScriptManager* s = ScriptManager::scriptFunctions[i];
+		if (s->destroyed) {
+			ScriptManager::scriptFunctions.erase(ScriptManager::scriptFunctions.begin() + i);
+			delete s;
+		}
+	}
 }
 
 /*

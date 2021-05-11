@@ -157,29 +157,30 @@ float4 main(VertexToPixel input) : SV_TARGET
 
 	float3 toCameraVector = normalize(cameraPos - input.worldPos);
 
-	//float3 finalColor = (surfaceColor * 0.1f) * shadowAmount + (surfaceColor * 0.01f);
+	//float3 finalColor = (surfaceColor * brightness); //* shadowAmount + (surfaceColor * 0.01f);
 
 	float3 ddxWp = ddx_fine(worldPos);
 	float3 ddyWp = ddy_fine(worldPos);
 	float3 normal = normalize(cross(ddxWp, ddyWp));
 
+	float newBrightness = brightness;// / 10.0f;
 	float3 finalColor = float3(0.f, 0.f, 0.f);
 	for (int i = 0; i < lightCount; i++)
 	{
 		switch (lights[i].Type) {
 		case LIGHT_TYPE_DIR:
-			finalColor += (CalcDirectionalLight(surfaceColor, normal, lights[i], toCameraVector, specularValue, shadowAmount, brightness));
+			finalColor += (CalcDirectionalLight(surfaceColor, normal, lights[i], toCameraVector, specularValue, shadowAmount, newBrightness));
 			break;
 		case LIGHT_TYPE_POINT:
-			finalColor += (CalcPointLight(surfaceColor, normal, lights[i], toCameraVector, specularValue, worldPos, brightness));
+			finalColor += (CalcPointLight(surfaceColor, normal, lights[i], toCameraVector, specularValue, worldPos, newBrightness));
 			break;
 		case LIGHT_TYPE_SPOT:
-			finalColor += (CalcSpotLight(surfaceColor, normal, lights[i], toCameraVector, specularValue, worldPos, brightness));
+			finalColor += (CalcSpotLight(surfaceColor, normal, lights[i], toCameraVector, specularValue, worldPos, newBrightness));
 			break;
 		}
 	}
 
-	finalColor += (surfaceColor * 0.01f);
+	finalColor /= 2.0f;
 
 	float3 gammaCorrect = pow(abs(finalColor), 1.0f / 2.2f);
 

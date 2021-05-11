@@ -72,7 +72,7 @@ void DebugLines::GenerateCuboidVertexBuffer(XMFLOAT3* verts, int vertCount)
 void DebugLines::drawLine(const btVector3& from, const btVector3& to, const btVector3& color)
 {
 	DebugLines* physicsDebugLines = new DebugLines("PhysicsDebugLines", 0, false); // cannot turn on the willUpdate paramater currently because not sure how to figure out which lines to update via the input Bullet gives 
-	XMFLOAT4X4 wm;
+	XMFLOAT4X4 wm = *worldMatrixPtr;
 	XMStoreFloat4x4(&wm, XMMatrixTranspose(DirectX::XMMatrixIdentity()));
 	physicsDebugLines->worldMatrix = wm;
 	physicsDebugLines->color = XMFLOAT3(0.0f, 0.0f, 1.0f);

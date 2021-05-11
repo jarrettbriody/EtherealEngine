@@ -453,7 +453,7 @@ void BloodSword::CheckSwordSlashHit()
 			bool leashedWhenKilled = fpsControllerScript->GetPlayerState() == PlayerState::HookshotLeash && fpsControllerScript->GetLeashedEntity() == enemy;
 
 			// enemy is in the triangle, split it apart
-			std::vector<Entity*> childEntities = EESceneLoader->SplitMeshIntoChildEntities(enemy, 10.0f);
+			std::vector<Entity*> childEntities = EESceneLoader->SplitMeshIntoChildEntities(enemy, 10.0f, "BODYPART");
 
 			// Update the game manager attribute for enemies alive
 			gameManagerScript->DecrementEnemiesAlive();
@@ -498,8 +498,8 @@ void BloodSword::CheckSwordSlashHit()
 				bodyPartEmitter = new GPUParticleEmitter(emitDesc);
 				bodyPartEmitter->SetBlendingEnabled(true);*/
 				e->GetRBody()->activate();
-				e->GetRBody()->applyCentralImpulse(btVector3(100, 100, 100));
-				e->GetRBody()->applyTorqueImpulse(btVector3(100, 100, 100));
+				//e->GetRBody()->applyCentralImpulse(btVector3(100, 100, 100));
+				//e->GetRBody()->applyTorqueImpulse(btVector3(100, 100, 100));
 
 				if (leashedWhenKilled) // if the enemy is leashed while they are killed transfer the leash to the next closest body part
 				{
@@ -592,7 +592,7 @@ void BloodSword::OnCollision(btCollisionObject* other)
 		
 		if (otherE->HasTag("Enemy"))
 		{
-			std::vector<Entity*> childEntities = EESceneLoader->SplitMeshIntoChildEntities(otherE, 1.0f);
+			std::vector<Entity*> childEntities = EESceneLoader->SplitMeshIntoChildEntities(otherE, 10.0f, "BODYPART");
 		}
 	}
 }

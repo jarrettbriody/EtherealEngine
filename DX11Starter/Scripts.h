@@ -14,6 +14,7 @@
 #include "BullEnemy.h"
 #include "CyclopsEnemy.h"
 #include "Projectile.h"
+#include "BodyPart.h"
 
 namespace Scripts {
 	enum class SCRIPT_NAMES {
@@ -31,7 +32,8 @@ namespace Scripts {
 		HORNEDENEMY,
 		BULLENEMY,
 		CYCLOPSENEMY,
-		PROJECTILE
+		PROJECTILE,
+		BODYPART,
 	};
 
 	static map<string, SCRIPT_NAMES> scriptNameMap = {
@@ -49,7 +51,8 @@ namespace Scripts {
 		{"HORNEDENEMY", SCRIPT_NAMES::HORNEDENEMY},
 		{"BULLENEMY", SCRIPT_NAMES::BULLENEMY},
 		{"CYCLOPSENEMY", SCRIPT_NAMES::CYCLOPSENEMY},
-		{"PROJECTILE", SCRIPT_NAMES::PROJECTILE}
+		{"PROJECTILE", SCRIPT_NAMES::PROJECTILE},
+		{"BODYPART", SCRIPT_NAMES::BODYPART},
 	};
 
 	static map<SCRIPT_NAMES, string> scriptStringNameMap = {
@@ -67,7 +70,8 @@ namespace Scripts {
 		{SCRIPT_NAMES::HORNEDENEMY, "HORNEDENEMY"},
 		{SCRIPT_NAMES::BULLENEMY, "BULLENEMY"},
 		{SCRIPT_NAMES::CYCLOPSENEMY, "CYCLOPSENEMY"},
-		{SCRIPT_NAMES::PROJECTILE, "PROJECTILE"}
+		{SCRIPT_NAMES::PROJECTILE, "PROJECTILE"},
+		{SCRIPT_NAMES::BODYPART, "BODYPART"},
 
 	};
 
@@ -121,6 +125,9 @@ namespace Scripts {
 				break;
 			case Scripts::SCRIPT_NAMES::PROJECTILE:
 				script = new Projectile();
+				break;
+			case Scripts::SCRIPT_NAMES::BODYPART:
+				script = new BodyPart();
 				break;
 			default:
 				break;

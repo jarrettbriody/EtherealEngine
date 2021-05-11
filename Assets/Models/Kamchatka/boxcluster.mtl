@@ -1,5 +1,7 @@
 newmtl Box
-map_Kd prototype_512x512_white.png
+map_Kd woodfloor.png
+map_Bump woodfloor_N.png
 Kd 0.4811321 0.3502413 0.1747507
+repeatTexture="0.5,0.5"
 d 1
 

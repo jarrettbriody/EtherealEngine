@@ -14,6 +14,7 @@ void BloodIcicle::Init()
 
 void BloodIcicle::Update()
 {
+	XMStoreFloat4x4(&translation, XMMatrixTranspose(XMMatrixTranslationFromVector(XMLoadFloat3(&entity->GetTransform().GetPosition()))));
 	//if (bodyPartPinned)
 	//{
 	//	closestChild->GetTransform().SetPosition(entity->GetTransform().GetPosition());
@@ -39,15 +40,15 @@ void BloodIcicle::OnCollision(btCollisionObject* other)
 		}
 
 		// if this icicle hits an enemy and there is not already a body part pinned to the icicle then split the enemy mesh and give each of the child entities the tag "Body Part" to detect the next necessary collision to accurately pin a body part
-		if (otherE->HasTag("Enemy") && !bodyPartPinned)
+		if (otherE->HasTag("Enemy") && !bodyPartPinned && !otherE->destroyed)
 		{
 			// Update the game manager attribute for enemies alive
 			gameManagerScript->DecrementEnemiesAlive();
 
 			// if an enemy is currently leashed when hit by a blood icicle reset the hookshot
 			if(fpsControllerScript->GetPlayerState() == PlayerState::HookshotLeash && fpsControllerScript->GetLeashedEntity() == otherE) fpsControllerScript->ResetHookshotTransform();
-
-			std::vector<Entity*> childEntities = EESceneLoader->SplitMeshIntoChildEntities(otherE, 1.0f);  
+			otherE->RemoveFromPhysicsSimulation();
+			std::vector<Entity*> childEntities = EESceneLoader->SplitMeshIntoChildEntities(otherE, 10.0f, "BODYPART");  
 
 			for each (Entity* e in childEntities)
 			{
@@ -64,19 +65,33 @@ void BloodIcicle::OnCollision(btCollisionObject* other)
 		}
 
 		// if this icicle hits a child entity of a recently split enemy and there is not already a body part pinned to the icicle then pin the collided body part
-		if (otherE->HasTag("Body Part"))
+		if (otherE->HasTag("Body Part") && !bodyPartPinned)
 		{
 			closestChild = otherE;
 
 			//closestChild->RemoveFromPhysicsSimulation(); //---> works better without this right now
 			bodyPartPinned = true;
 
-			//closestChild->GetRBody()->activate();
-			closestChild->GetRBody()->clearForces();
-			closestChild->GetRBody()->setAngularFactor(btVector3(0, 0, 0)); // do not allow the child to rotate after pinned TODO: Why doesn't this work
-			closestChild->GetRBody()->setGravity(btVector3(0, 0, 0));
-			closestChild->GetRBody()->setCollisionFlags(entity->GetRBody()->getCollisionFlags() | btRigidBody::CF_NO_CONTACT_RESPONSE);
+			btRigidBody* rb = closestChild->GetRBody();
+			Config::DynamicsWorld->removeRigidBody(closestChild->GetRBody());
+			btVector3 localInertia(0, 0, 0);
+			rb->setMassProps(0.0f, localInertia);
+			rb->activate();
+			rb->clearForces();
+			btVector3 zeroVector(0, 0, 0);
+			rb->setLinearVelocity(zeroVector);
+			rb->setAngularVelocity(zeroVector);
+			rb->setAngularFactor(btVector3(0, 0, 0)); // do not allow the child to rotate after pinned TODO: Why doesn't this work
+			rb->setGravity(btVector3(0, 0, 0));
+			rb->setCollisionFlags(entity->GetRBody()->getCollisionFlags() | btRigidBody::CF_NO_CONTACT_RESPONSE);
+			Config::DynamicsWorld->addRigidBody(closestChild->GetRBody());
 
+			XMFLOAT3 closestPos = closestChild->GetTransform().GetPosition();
+			XMFLOAT3 entityPos = entity->GetTransform().GetPosition();
+			closestChild->GetTransform().SetParent(&translation);
+			closestChild->GetTransform().SetPosition(XMFLOAT3(closestPos.x - entityPos.x, closestPos.y - entityPos.y, closestPos.z - entityPos.z));
+
+			/*
 			XMFLOAT3 closestPos = closestChild->GetTransform().GetPosition();
 			XMFLOAT3 entityPos = entity->GetTransform().GetPosition();
 			XMFLOAT4 closestRot = closestChild->GetTransform().GetRotationQuaternion();
@@ -95,6 +110,7 @@ void BloodIcicle::OnCollision(btCollisionObject* other)
 			closestChild->GetTransform().SetScale(newScl);
 
 			entity->GetTransformPtr()->AddChild(closestChild->GetTransformPtr(), true);
+			*/
 
 			/*
 			btTransform trans;

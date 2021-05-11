@@ -29,7 +29,7 @@ private:
 
 	map<SimplePixelShader*, bool> lightsSentToShader;
 
-	RendererShaders shaders;
+	RendererShaders shaders = {};
 
 	Mesh* cube = nullptr;
 	Mesh* invCube = nullptr;
@@ -55,13 +55,13 @@ public:
 	static Renderer* GetInstance();
 	static bool DestroyInstance();
 
-	ID3D11BlendState* blendState;
-	ShadowComponents shadowComponents;
-	DepthStencilComponents depthStencilComponents;
-	HBAOPlusComponents hbaoPlusComponents;
-	SkyboxComponents skyboxComponents;
-	PostProcessComponents postProcessComponents;
-	UIComponents uiComponents;
+	ID3D11BlendState* blendState = nullptr;
+	ShadowComponents shadowComponents = {};
+	DepthStencilComponents depthStencilComponents = {};
+	HBAOPlusComponents hbaoPlusComponents = {};
+	SkyboxComponents skyboxComponents = {};
+	PostProcessComponents postProcessComponents = {};
+	UIComponents uiComponents = {};
 
 	void SetEntities(vector<Entity*>* entities);
 	void SetRendererShaders(RendererShaders rShaders);

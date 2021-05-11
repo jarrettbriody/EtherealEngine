@@ -148,6 +148,7 @@
     <ClCompile Include="BloodOrb.cpp" />
     <ClCompile Include="BloodPool.cpp" />
     <ClCompile Include="BloodSword.cpp" />
+    <ClCompile Include="BodyPart.cpp" />
     <ClCompile Include="BullEnemy.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="ChargePlayer.cpp" />
@@ -216,6 +217,7 @@
     <ClInclude Include="BloodOrb.h" />
     <ClInclude Include="BloodPool.h" />
     <ClInclude Include="BloodSword.h" />
+    <ClInclude Include="BodyPart.h" />
     <ClInclude Include="BullEnemy.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="ChargePlayer.h" />

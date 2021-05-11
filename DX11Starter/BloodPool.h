@@ -1,5 +1,6 @@
 #pragma once
 #include "ScriptManager.h"
+#include "AmbientParticles.h"
 
 class BloodPool : public ScriptManager
 {
@@ -8,7 +9,7 @@ class BloodPool : public ScriptManager
 	btGhostObject* poolGhostObject;
 	
 	float growthScalar = 5.0f;
-	XMFLOAT3 finalScale = XMFLOAT3(1.0f, 1.0f, 1.0f);
+	XMFLOAT3 finalScale = XMFLOAT3(2.5f, 4.0f, 2.5f);
 
 	void Init();
 
