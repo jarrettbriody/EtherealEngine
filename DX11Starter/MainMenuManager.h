@@ -7,6 +7,7 @@
 #include "SpriteBatch.h"
 #include "DecalHandler.h"
 #include "Mouse.h"
+#include "AudioManager.h"
 
 struct uiCallback : Utility::Callback {
 	DirectX::SpriteFont* font;
@@ -102,6 +103,32 @@ struct uiCallback : Utility::Callback {
 
 		if (AABB(posFront, origin, scaleFront) && otherTransparency >= 0.3f) {
 			if (EEMouse->LMBIsPressed()) {
+				/*
+				// Variable for sound scheduling
+				int outputrate = 0;
+
+				// Get the output rate of the mixer for scheduling
+				Config::FMODResult = Config::FMODSystem->getSoftwareFormat(&outputrate, 0, 0);
+				AudioManager::FMODErrorCheck(Config::FMODResult);
+
+				static unsigned long long clock_start = 0;
+
+				Config::FMODResult = Config::MusicChannel->getDSPClock(0, &clock_start);
+				AudioManager::FMODErrorCheck(Config::FMODResult);
+
+				// Fade out the main theme
+				Config::FMODResult = Config::MusicGroup->addFadePoint(clock_start, 1.0f);
+				AudioManager::FMODErrorCheck(Config::FMODResult);
+				clock_start += (outputrate * 1);
+				Config::FMODResult = Config::MusicGroup->addFadePoint(clock_start, 0.0f);
+				AudioManager::FMODErrorCheck(Config::FMODResult);
+
+				Config::FMODResult = Config::MusicGroup->setDelay(0, clock_start, true); // Stop the main theme after we fade out
+				AudioManager::FMODErrorCheck(Config::FMODResult);*/
+
+				Config::FMODResult = Config::MusicGroup->stop();
+				AudioManager::FMODErrorCheck(Config::FMODResult);
+
 				EESceneLoader->SetModelPath("../../Assets/Models/Kamchatka/");
 				EESceneLoader->LoadScene("Kamchatka");
 				//return;

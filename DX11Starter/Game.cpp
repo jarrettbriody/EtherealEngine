@@ -95,9 +95,13 @@ Game::~Game()
 	NavmeshHandler::DestroyInstance();
 
 	// FMOD
-	sound[0]->release(); // For now just release the one sound we have assigned
-	backgroundMusic->release();
-	sfxGroup->release();
+	unsigned int count;
+	for (count = 0; count < 4; count++)
+		Config::MainTheme[count]->release();
+	for (count = 0; count < 3; count++)
+		Config::CombatTheme[count]->release();
+	Config::MasterGroup->release();
+	Config::MusicGroup->release();
 	Config::FMODSystem->close();
 	Config::FMODSystem->release();
 }
@@ -345,47 +349,75 @@ void Game::Init()
 	Config::Context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	// Audio -----------------
-	fmodResult = FMOD::System_Create(&Config::FMODSystem); // Create the Studio System object
-	if (fmodResult != FMOD_OK)
+	Config::FMODResult = FMOD::System_Create(&Config::FMODSystem); // Create the Studio System object
+	if (Config::FMODResult != FMOD_OK)
 	{
-		printf("FMOD error! (%d) %s\n", fmodResult, FMOD_ErrorString(fmodResult));
+		printf("FMOD error! (%d) %s\n", Config::FMODResult, FMOD_ErrorString(Config::FMODResult));
 		exit(-1);
 	}
 
-	fmodResult = Config::FMODSystem->init(32, FMOD_INIT_NORMAL, 0); // Initialize FMOD with 32 max channels
-	if (fmodResult != FMOD_OK)
+	Config::FMODResult = Config::FMODSystem->init(32, FMOD_INIT_NORMAL, 0); // Initialize FMOD with 32 max channels
+	if (Config::FMODResult != FMOD_OK)
 	{
-		printf("FMOD error! (%d) %s\n", fmodResult, FMOD_ErrorString(fmodResult));
+		printf("FMOD error! (%d) %s\n", Config::FMODResult, FMOD_ErrorString(Config::FMODResult));
 		exit(-1);
 	}
 
 	// Test to see if 3D/2D audio works - EXAMPLE CODE
 
-	fmodResult = Config::FMODSystem->createSound("../../Assets/Audio/CityofDawn.wav", FMOD_3D | FMOD_3D_LINEARROLLOFF | FMOD_LOOP_NORMAL, 0, &backgroundMusic); // Create a 3D/Looping sound with linear roll off
-	FmodErrorCheck(fmodResult);
+	//fmodResult = Config::FMODSystem->createSound("../../Assets/Audio/CityofDawn.wav", FMOD_3D | FMOD_3D_LINEARROLLOFF | FMOD_LOOP_NORMAL, 0, &Config::BackgroundMusic); // Create a 3D/Looping sound with linear roll off
+	//FmodErrorCheck(fmodResult);
 
-	fmodResult = Config::FMODSystem->createSound("../../Assets/Audio/wow.wav", FMOD_2D | FMOD_LOOP_OFF, 0, &sound[0]); // Create a non-looping 2D sound in the first slot
-	FmodErrorCheck(fmodResult);
+	//fmodResult = Config::FMODSystem->createSound("../../Assets/Audio/wow.wav", FMOD_2D | FMOD_LOOP_OFF, 0, &sound[0]); // Create a non-looping 2D sound in the first slot
+	//FmodErrorCheck(fmodResult);
 
-	fmodResult = Config::FMODSystem->createChannelGroup("SFX Group", &sfxGroup); // Create a channel group for sound effects
-	FmodErrorCheck(fmodResult);
-
-	fmodResult = Config::FMODSystem->getMasterChannelGroup(&masterGroup); // Assign masterGroup as the master channel
-	FmodErrorCheck(fmodResult);
+	//fmodResult = Config::FMODSystem->createChannelGroup("SFX Group", &sfxGroup); // Create a channel group for sound effects
+	//FmodErrorCheck(fmodResult);
 
 	// Add the SFX group as a child of the master group as an example. Technically doesn't need to be done because the master group already controls everything
-	fmodResult = masterGroup->addGroup(sfxGroup); 
-	FmodErrorCheck(fmodResult);
+	//fmodResult = masterGroup->addGroup(sfxGroup);
+	//FmodErrorCheck(fmodResult);
 
 	//fmodResult = Config::FMODSystem->playSound(backgroundMusic, 0, false, &musicChannel); // Start playing the 3D sound
-	FmodErrorCheck(fmodResult);
+	//FmodErrorCheck(fmodResult);
 
-	FMOD_VECTOR pos = { 1.0f, 50.0f, 1.0f };
-	FMOD_VECTOR vel = { 0, 0, 0 };
+	//FMOD_VECTOR pos = { 1.0f, 50.0f, 1.0f };
+	//FMOD_VECTOR vel = { 0, 0, 0 };
 
 	// Set the 3D values for the channel
-	musicChannel->set3DAttributes(&pos, &vel);
-	musicChannel->set3DMinMaxDistance(0, 15.0f);
+	//Config::MusicChannel->set3DAttributes(&pos, &vel);
+	//Config::MusicChannel->set3DMinMaxDistance(0, 15.0f);
+
+	// Load in our music here for now. We can do some regex stuff later
+	Config::FMODResult = Config::FMODSystem->createSound("../../Assets/Audio/Music/Track 1/Section 1 (Loop).wav", FMOD_2D | FMOD_LOOP_OFF, 0, &Config::MainTheme[0]);
+	AudioManager::FMODErrorCheck(Config::FMODResult);
+
+	Config::FMODResult = Config::FMODSystem->createSound("../../Assets/Audio/Music/Track 1/Section 2 (Build Up (Play Once)).wav", FMOD_2D | FMOD_LOOP_OFF, 0, &Config::MainTheme[1]);
+	AudioManager::FMODErrorCheck(Config::FMODResult);
+
+	Config::FMODResult = Config::FMODSystem->createSound("../../Assets/Audio/Music/Track 1/Section 3 (Action Loop).wav", FMOD_2D | FMOD_LOOP_NORMAL, 0, &Config::MainTheme[2]);
+	AudioManager::FMODErrorCheck(Config::FMODResult);
+
+	Config::FMODResult = Config::FMODSystem->createSound("../../Assets/Audio/Music/Track 1/Section 4 (Outro).wav", FMOD_2D | FMOD_LOOP_OFF, 0, &Config::MainTheme[3]);
+	AudioManager::FMODErrorCheck(Config::FMODResult);
+
+	Config::FMODResult = Config::FMODSystem->createSound("../../Assets/Audio/Music/Track 2/Section 1.wav", FMOD_2D | FMOD_LOOP_OFF, 0, &Config::CombatTheme[0]);
+	AudioManager::FMODErrorCheck(Config::FMODResult);
+
+	Config::FMODResult = Config::FMODSystem->createSound("../../Assets/Audio/Music/Track 2/Section 2 (Loop).wav", FMOD_2D | FMOD_LOOP_NORMAL, 0, &Config::CombatTheme[1]);
+	AudioManager::FMODErrorCheck(Config::FMODResult);
+
+	Config::FMODResult = Config::FMODSystem->createSound("../../Assets/Audio/Music/Track 2/Section 3 (Outro).wav", FMOD_2D | FMOD_LOOP_OFF, 0, &Config::CombatTheme[2]);
+	AudioManager::FMODErrorCheck(Config::FMODResult);
+
+	Config::FMODResult = Config::FMODSystem->createChannelGroup("Music Group", &Config::MusicGroup); // Create a channel group for playing music
+	AudioManager::FMODErrorCheck(Config::FMODResult);
+
+	Config::FMODResult = Config::FMODSystem->getMasterChannelGroup(&Config::MasterGroup); // Assign MasterGroup as the master channel
+	AudioManager::FMODErrorCheck(Config::FMODResult);
+
+	Config::FMODResult = Config::MasterGroup->addGroup(Config::MusicGroup);
+	AudioManager::FMODErrorCheck(Config::FMODResult);
 
 
 	if (Config::Fullscreen) {
@@ -454,18 +486,19 @@ void Game::Update(double deltaTime, double totalTime)
 	PhysicsStep(deltaTime);
 
 	// Play the 2D sound only if the channel group is not playing something
-	sfxGroup->isPlaying(&isPlaying);
-	//if (GetAsyncKeyState('P') & 0x8000 && !isPlaying) {
-		//fmodResult = fmodSystem->playSound(sound[0], sfxGroup, false, 0); // Play the sound using any channel in the sfx group (free channels are used first)
-		//FmodErrorCheck(fmodResult);
-	//}
+	/*sfxGroup->isPlaying(&isPlaying);
+	if (GetAsyncKeyState('P') & 0x8000 && !isPlaying) {
+		//fmodResult = Config::FMODSystem->playSound(sound[0], sfxGroup, false, 0); // Play the sound using any channel in the sfx group (free channels are used first)
+		fmodResult = Config::FMODSystem->playSound(Config::BackgroundMusic, sfxGroup, false, &Config::MusicChannel);
+		FmodErrorCheck(fmodResult);
+	}*/
 
 	// Mute/unmute the master group
 	if (GetAsyncKeyState('M') & 0x8000)
 	{
 		bool mute = true;
-		masterGroup->getMute(&mute);
-		masterGroup->setMute(!mute);
+		Config::MasterGroup->getMute(&mute);
+		Config::MasterGroup->setMute(!mute);
 	}
 	
 	ScriptManager::deltaTime = deltaTime;

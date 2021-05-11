@@ -236,6 +236,66 @@ void MainMenuManager::Init()
 			}
 		}
 		});
+
+	// Variables for sound scheduling
+	unsigned int dsp_block_len, count;
+	int outputrate = 0;
+
+	// Get information needed later for scheduling.  The mixer block size, and the output rate of the mixer.
+	Config::FMODResult = Config::FMODSystem->getDSPBufferSize(&dsp_block_len, 0);
+	AudioManager::FMODErrorCheck(Config::FMODResult);
+
+	Config::FMODResult = Config::FMODSystem->getSoftwareFormat(&outputrate, 0, 0);
+	AudioManager::FMODErrorCheck(Config::FMODResult);
+
+	// Play the main theme
+	for (count = 0; count < 3; count++)
+	{
+		static unsigned long long clock_start = 0;
+		unsigned int slen;
+
+		Config::FMODResult = Config::FMODSystem->playSound(Config::MainTheme[count], Config::MusicGroup, true, &Config::MusicChannel); // Start a part of the main theme, but leave it paused
+		AudioManager::FMODErrorCheck(Config::FMODResult);
+
+		if (!clock_start)
+		{
+			Config::FMODResult = Config::MusicChannel->setChannelGroup(Config::MusicGroup);
+			AudioManager::FMODErrorCheck(Config::FMODResult);
+
+			Config::FMODResult = Config::MusicChannel->getDSPClock(0, &clock_start);
+			AudioManager::FMODErrorCheck(Config::FMODResult);
+
+			clock_start += (dsp_block_len * 2); // Set the first delay to something small, just so we can finish setting up the timing
+			// Have the first section of the main theme fade in
+			Config::FMODResult = Config::MusicGroup->addFadePoint(clock_start, 0.0f);
+			AudioManager::FMODErrorCheck(Config::FMODResult);
+			Config::FMODResult = Config::MusicGroup->addFadePoint(clock_start + (outputrate * 5), 1.0f);
+			AudioManager::FMODErrorCheck(Config::FMODResult);
+
+			//Config::FMODResult = Config::MusicChannel->setCallback(AudioManager::ChannelCallback);
+		}
+		else
+		{
+			float freq;
+			FMOD::Sound* previousSound = Config::MainTheme[count - 1];
+
+			Config::FMODResult = previousSound->getLength(&slen, FMOD_TIMEUNIT_PCM);
+			AudioManager::FMODErrorCheck(Config::FMODResult);
+
+			Config::FMODResult = previousSound->getDefaults(&freq, 0);
+			AudioManager::FMODErrorCheck(Config::FMODResult);
+
+			slen = (unsigned int)((float)slen / freq * outputrate); // Calculate the length of the previously played sound
+
+			clock_start += slen; // Set the new delay to after the previous sound finishes
+		}
+
+		Config::FMODResult = Config::MusicChannel->setDelay(clock_start, 0, false); // Set a delay for the currently playing sound
+		AudioManager::FMODErrorCheck(Config::FMODResult);
+
+		Config::FMODResult = Config::MusicChannel->setPaused(false); // Unpause this section of the main theme so it will play after the delay passes
+		AudioManager::FMODErrorCheck(Config::FMODResult);
+	}
 }
 
 void MainMenuManager::Update()

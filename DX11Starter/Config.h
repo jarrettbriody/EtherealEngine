@@ -106,7 +106,14 @@ public:
 	static unsigned int InitialDecalVectorSize;
 
 	static btDiscreteDynamicsWorld* DynamicsWorld;
+	
+	static FMOD_RESULT FMODResult;
 	static FMOD::System* FMODSystem;
+	static FMOD::Sound* MainTheme[4];
+	static FMOD::Sound* CombatTheme[3];
+	static FMOD::Channel* MusicChannel;
+	static FMOD::ChannelGroup* MasterGroup;
+	static FMOD::ChannelGroup* MusicGroup;
 
 	static unsigned int SSAOSampleCount;
 	static float SSAOKernelRadius;

@@ -83,6 +83,59 @@ void GameManager::Init()
 	desc.position = XMFLOAT3(420.0f, 100.0f, 2370.0f);
 	desc.size = XMFLOAT3(590.0f, 1000.0f, 420.0f);
 	navmesh->AddGrid(desc, true);
+
+	// Variables for sound scheduling
+	unsigned int dsp_block_len, count;
+	int outputrate = 0;
+
+	// Get information needed later for scheduling.  The mixer block size, and the output rate of the mixer.
+	Config::FMODResult = Config::FMODSystem->getDSPBufferSize(&dsp_block_len, 0);
+	AudioManager::FMODErrorCheck(Config::FMODResult);
+
+	Config::FMODResult = Config::FMODSystem->getSoftwareFormat(&outputrate, 0, 0);
+	AudioManager::FMODErrorCheck(Config::FMODResult);
+
+	// Play the combat theme
+	for (count = 0; count < 2; count++)
+	{
+		static unsigned long long clock_start = 0;
+		unsigned int slen;
+
+		Config::FMODResult = Config::FMODSystem->playSound(Config::CombatTheme[count], Config::MusicGroup, true, &Config::MusicChannel); // Start a part of the combat theme, but leave it paused
+		AudioManager::FMODErrorCheck(Config::FMODResult);
+
+		if (!clock_start)
+		{
+			Config::FMODResult = Config::MusicChannel->setChannelGroup(Config::MusicGroup);
+			AudioManager::FMODErrorCheck(Config::FMODResult);
+
+			Config::FMODResult = Config::MusicChannel->getDSPClock(0, &clock_start);
+			AudioManager::FMODErrorCheck(Config::FMODResult);
+
+			clock_start += (dsp_block_len * 2); // Set the first delay to something small, just so we can finish setting up the timing
+		}
+		else
+		{
+			float freq;
+			FMOD::Sound* previousSound = Config::CombatTheme[count - 1];
+
+			Config::FMODResult = previousSound->getLength(&slen, FMOD_TIMEUNIT_PCM);
+			AudioManager::FMODErrorCheck(Config::FMODResult);
+
+			Config::FMODResult = previousSound->getDefaults(&freq, 0);
+			AudioManager::FMODErrorCheck(Config::FMODResult);
+
+			slen = (unsigned int)((float)slen / freq * outputrate); // Calculate the length of the previously played sound
+
+			clock_start += slen; // Set the new delay to after the previous sound finishes
+		}
+
+		Config::FMODResult = Config::MusicChannel->setDelay(clock_start, 0, false); // Set a delay for the currently playing sound
+		AudioManager::FMODErrorCheck(Config::FMODResult);
+
+		Config::FMODResult = Config::MusicChannel->setPaused(false); // Unpause this section of the combat theme so it will play after the delay passes
+		AudioManager::FMODErrorCheck(Config::FMODResult);
+	}
 }
 
 void GameManager::Update()

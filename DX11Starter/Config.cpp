@@ -49,7 +49,14 @@ bool Config::DecalsEnabled = true;
 unsigned int Config::InitialDecalVectorSize = 3000;
 
 btDiscreteDynamicsWorld* Config::DynamicsWorld = nullptr;
+
+FMOD_RESULT Config::FMODResult = FMOD_RESULT();
 FMOD::System* Config::FMODSystem = nullptr;
+FMOD::Sound* Config::MainTheme[4];
+FMOD::Sound* Config::CombatTheme[3];
+FMOD::Channel* Config::MusicChannel;
+FMOD::ChannelGroup* Config::MasterGroup = nullptr;
+FMOD::ChannelGroup* Config::MusicGroup = nullptr;
 
 unsigned int Config::SSAOSampleCount = 32;
 float Config::SSAOKernelRadius = 1.0f;

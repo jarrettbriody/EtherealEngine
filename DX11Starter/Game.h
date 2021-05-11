@@ -24,6 +24,7 @@
 #include "Scripts.h"
 #include "LightHandler.h"
 #include "NavmeshHandler.h"
+#include "AudioManager.h"
 
 using namespace std;
 
@@ -96,18 +97,7 @@ private:
 	// DebugLines* physicsDraw;
 	
 	// Audio
-	FMOD_RESULT fmodResult = FMOD_RESULT();
-
-	FMOD::Sound* backgroundMusic = nullptr;
-	FMOD::Sound* sound[12];
-
-	FMOD::Channel* musicChannel = 0;
-	FMOD::Channel* channel[12];
-	FMOD::ChannelGroup* masterGroup = nullptr;
-	FMOD::ChannelGroup* sfxGroup = nullptr;
-
 	bool isPlaying = 0;
-
 	FMOD_VECTOR listener_pos = FMOD_VECTOR();
 	//FMOD_VECTOR listener_vel; // If we want a doppler effect
 	FMOD_VECTOR listener_forward = FMOD_VECTOR();
@@ -115,7 +105,4 @@ private:
 
 	SceneLoaderGarbageCallback sceneLoaderGarbageCallback;
 	SceneChangeCallback sceneChangeCallback;
-
-	// AI
-	
 };
