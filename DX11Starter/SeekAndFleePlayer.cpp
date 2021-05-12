@@ -3,7 +3,7 @@
 
 void SeekAndFleePlayer::OnInitialize()
 {
-	currentGrid = aStarSolver->GetCurrentGrid(enemy->GetPosition());
+	currentGrid = aStarSolver->GetCurrentGrid(enemy->GetTransform().GetPosition());
 }
 
 void SeekAndFleePlayer::OnTerminate(Status s)
@@ -43,12 +43,12 @@ Status SeekAndFleePlayer::Update()
 
 			//enemy->SetPosition(teleportPos);
 
-			Node* teleportNode = currentGrid->FindNearestNode(enemy->GetPosition());
+			Node* teleportNode = currentGrid->FindNearestNode(enemy->GetTransform().GetPosition());
 
 			vector<Node*> possibleTeleports;
 			int adjacentCount;
 
-			currentGrid->GetUnobstructedMoves(currentGrid->FindNearestNode(player->GetPosition()), possibleTeleports, adjacentCount);
+			currentGrid->GetUnobstructedMoves(currentGrid->FindNearestNode(player->GetTransform().GetPosition()), possibleTeleports, adjacentCount);
 
 			if (!possibleTeleports.empty())
 			{
@@ -71,8 +71,7 @@ Status SeekAndFleePlayer::Update()
 			XMFLOAT3 teleportPos = teleportNode->GetPos();
 			teleportPos.y = enemyPos.y;
 
-			enemy->SetPosition(teleportPos);
-			enemy->CalcWorldMatrix();
+			enemy->GetTransform().SetPosition(teleportPos);
 
 			*cooldownTimer = maxCooldownTime;
 		}

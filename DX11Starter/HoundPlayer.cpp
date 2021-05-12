@@ -18,7 +18,7 @@ Status HoundPlayer::Update()
 	// enemy->SetDirectionVector(Utility::BulletVectorToFloat3(direction.normalized()));
 
 	enemy->GetRBody()->activate();
-	enemy->GetRBody()->setLinearVelocity(Utility::Float3ToBulletVector(enemy->GetDirectionVector()).normalized() * pounceSpeed);
+	enemy->GetRBody()->setLinearVelocity(Utility::Float3ToBulletVector(enemy->GetTransform().GetDirectionVector()).normalized() * pounceSpeed);
 	//enemy->GetRBody()->applyCentralImpulse(Utility::Float3ToBulletVector(enemy->GetDirectionVector()).normalized() * pounceSpeed);
 
 	*cooldownTimer = maxCooldownTime;
