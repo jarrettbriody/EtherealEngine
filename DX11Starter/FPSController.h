@@ -8,6 +8,10 @@
 #include "CPUParticleEmitter.h"
 #include "GPUParticleEmitter.h"
 #include "BaseEnemy.h"
+#include "SpriteFont.h"
+#include "SpriteBatch.h"
+
+// struct in script from utility callback
 
 struct DashBlurCallback : RendererCallback {
 	int blurAmount = 1;
@@ -20,7 +24,46 @@ struct DashBlurCallback : RendererCallback {
 	}
 };
 
-//class EnemyTest; // Forward declaration to avoid circular dependency 
+struct uiDebugCallback : Utility::Callback {
+	DirectX::SpriteFont* font;
+	DirectX::SpriteBatch* spriteBatch;
+	string playerPos;
+	float windowWidthRatio;
+	float windowHeightRatio;
+	POINT windowCenter;
+	float transparency = 0.0f;
+	float otherTransparency = 0.0f;
+
+	void DrawPlayerPos() {
+		spriteBatch->Begin(SpriteSortMode_Deferred, Renderer::GetInstance()->blendState);
+
+		XMVECTOR titleLen = font->MeasureString(Utility::StringToWideString(playerPos));
+		font->DrawString(
+			spriteBatch,
+			Utility::StringToWideString(playerPos),
+			XMVectorSet(windowCenter.x, windowCenter.y - 60.0f * windowHeightRatio, 0, 0),
+			XMVectorSet(1, 1, 1, 1),
+			0.0f,
+			XMVectorSet(0.751f, 0.751f, 0, 0),
+			XMVectorSet(1.001f, 1.001f, 0, 0),
+			SpriteEffects::SpriteEffects_None,
+			0.0f
+		);
+
+		spriteBatch->End();
+
+		// Reset render states, since sprite batch changes these!
+		Config::Context->OMSetBlendState(0, 0, 0xFFFFFFFF);
+		Config::Context->OMSetDepthStencilState(0, 0);
+	}
+
+	void Call()
+	{
+		DrawPlayerPos();
+	}
+};
+
+
 
 enum class PlayerState
 {
@@ -35,6 +78,7 @@ class FPSController : public ScriptManager
 	XMFLOAT4 ringRandomQuats[4];
 
 	DashBlurCallback dashBlurCallback;
+	uiDebugCallback uiDebugCb;
 
 	BloodOrb* bloodOrbScript;
 	BaseEnemy* enemyScript; 
