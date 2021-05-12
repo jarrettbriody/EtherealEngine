@@ -143,6 +143,7 @@
     <ClCompile Include="AbilityAvailable.cpp" />
     <ClCompile Include="AmbientParticles.cpp" />
     <ClCompile Include="AStarSolver.cpp" />
+    <ClCompile Include="AudioManager.cpp" />
     <ClCompile Include="Barrel.cpp" />
     <ClCompile Include="BloodIcicle.cpp" />
     <ClCompile Include="BloodOrb.cpp" />
@@ -209,6 +210,7 @@
     <ClInclude Include="AbilityAvailable.h" />
     <ClInclude Include="AmbientParticles.h" />
     <ClInclude Include="AStarSolver.h" />
+    <ClInclude Include="AudioManager.h" />
     <ClInclude Include="Barrel.h" />
     <ClInclude Include="BaseEnemy.h" />
     <ClInclude Include="BehaviorTree.h" />

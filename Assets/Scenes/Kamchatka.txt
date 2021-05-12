@@ -4,8 +4,7 @@ TYPE="AMBIENTLIGHT" intensity="0.05"
 TYPE="SKYBOX" dds="nightred"
 
 name="GameManager" colliders="false" scripts="GAMEMANAGER" P(0, 0, 0)R(0,0,0)S(0.0, 0.0, 0.0)
-//10,2.21638,0
-name="FPSController" colliders="true" mass="1.0" colliderType="CAPSULE" scripts="FPSCONTROLLER" P(358.2338,34.16,2568.44)R(0,0,0)S(3.0, 3.0, 3.0)
+name="FPSController" colliders="true" mass="1.0" colliderType="CAPSULE" scripts="FPSCONTROLLER" P(10,2.21638,0)R(0,0,0)S(3.0, 3.0, 3.0)
 
 name="Blood_Orb" obj="bloodorb" layers="playertools" material="RedFluid" scripts="BLOODORB,AMBIENTPARTICLES" P(-15,5,0)R(0,0,0)S(0.32,0.32,0.32)
 name="Blood_Orb_Glass" obj="Sphere" layers="playertools" material="Glass" P(-15,5,0)R(0,0,0)S(0.7,0.7,0.7)
