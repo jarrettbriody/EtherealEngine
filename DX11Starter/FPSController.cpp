@@ -23,6 +23,11 @@ void FPSController::Init()
 
 	while (ShowCursor(Config::ShowCursor) >= 0);
 
+
+	uiDebugCb.spriteBatch = new SpriteBatch(Config::Context);
+	uiDebugCb.font = new SpriteFont(Config::Device, L"../../Assets/Fonts/Bloodlust.spritefont");
+	EERenderer->SetRenderUICallback(true, &uiDebugCb, 0);
+
 	eMap = ScriptManager::sceneEntitiesMap;
 	bloodOrb = eMap->find("Blood_Orb")->second;
 	bloodOrbScript = (BloodOrb*)scriptFunctionsMap[(*eMap)["Blood_Orb"]->GetName()]["BLOODORB"];
@@ -137,6 +142,11 @@ void FPSController::Init()
 
 void FPSController::Update()
 {
+	XMFLOAT3 playerPos = entity->GetTransform().GetPosition();
+	std::string playerPosString;
+	playerPosString += "Player Position: " + std::to_string(playerPos.x) + " | " + std::to_string(playerPos.y) + " | " + std::to_string(playerPos.z);
+	uiDebugCb.playerPos = playerPosString;
+
 	XMFLOAT3 ePos = entity->GetTransform().GetPosition();
 	XMFLOAT3 eScl = entity->GetTransform().GetScale();
 
