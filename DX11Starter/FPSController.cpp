@@ -60,7 +60,7 @@ void FPSController::Init()
 			0,								// script count
 			XMFLOAT3(0.0f, 0.0f, 0.0f),		// position
 			XMFLOAT3(0.0f, 0.0f, 0.0f),		// rotation
-			XMFLOAT3(0.4f, 0.4f, 0.4f),		// scale
+			XMFLOAT3(1.1f, 1.1f, 1.1f),		// scale
 			0.0f,							// mass
 			false
 			// defaults work for the rest
@@ -68,7 +68,9 @@ void FPSController::Init()
 
 	for (int i = 0; i < MAX_DASHES; i++)
 	{
-		dashRings.push_back(ScriptManager::CreateEntity(dashRingParams));
+		Entity* dashRing = ScriptManager::CreateEntity(dashRingParams);
+		dashRings.push_back(dashRing);
+		bloodOrb->GetTransform().AddChild(dashRing->GetTransformPtr(), false);
 	}
 
 	/*
@@ -133,10 +135,60 @@ void FPSController::Init()
 	dashBlurCallback.pShader = EESceneLoader->PixelShadersMap["DashBlur"];
 	dashBlurCallback.layerMask = EERenderer->depthStencilComponents.entityInfoSRV;
 	EERenderer->SetPostProcess(true, &dashBlurCallback, 1);
+
+	ParticleEmitterDescription emitDesc;
+	emitDesc.emitterPosition = XMFLOAT3(0.0f, 0.0f, 0.0f);
+	emitDesc.emitterDirection = NEG_Z_AXIS;
+	emitDesc.colorCount = 3;
+	ParticleColor particleColors[3] = {
+		{XMFLOAT4(0.3f, 0.3f, 0.3f, 1.0f), 1.0f},
+		{XMFLOAT4(0.2f, 0.2f, 0.2f, 1.0f), 1.0f},
+		{XMFLOAT4(0.4f, 0.4f, 0.4f, 1.0f), 1.0f},
+	};
+	emitDesc.colors = particleColors;
+	emitDesc.bakeWorldMatOnEmission = true;
+	emitDesc.emissionStartRadius = 0.1f;
+	emitDesc.emissionEndRadius = 1.0f;
+	emitDesc.emissionRate = 3000.0;
+	emitDesc.maxParticles = 3000;
+	emitDesc.particleInitMinSpeed = 5.0f;
+	emitDesc.particleInitMaxSpeed = 10.0f;
+	emitDesc.particleMinLifetime = 4.0f;
+	emitDesc.particleMaxLifetime = 6.0f;
+	emitDesc.particleInitMinScale = 0.01f;
+	emitDesc.particleInitMaxScale = 0.2f;
+	//emitDesc.fadeInEndTime = 0.1f;
+	//emitDesc.fadeIn = true;
+	emitDesc.fadeOutStartTime = 0.5f;
+	emitDesc.fadeOut = true;
+	emitDesc.particleAcceleration = XMFLOAT3(0, -35.0f, 0);
+
+	hookshotEmitter = new GPUParticleEmitter(emitDesc);
+
+	for (size_t i = 0; i < 4; i++)
+	{
+		float x = static_cast <float> ((rand()) / static_cast <float> (RAND_MAX)) * XM_2PI;
+		float y = static_cast <float> ((rand()) / static_cast <float> (RAND_MAX)) * XM_2PI;
+		float z = static_cast <float> ((rand()) / static_cast <float> (RAND_MAX)) * XM_2PI;
+
+		XMFLOAT3 xA = X_AXIS;
+		XMFLOAT3 yA = Y_AXIS;
+		XMFLOAT3 zA = Z_AXIS;
+
+		XMVECTOR rollQuat = XMQuaternionRotationAxis(XMLoadFloat3(&zA), z);
+		XMVECTOR yawQuat = XMQuaternionRotationAxis(XMLoadFloat3(&yA), y);
+		XMVECTOR tiltQuat = XMQuaternionRotationAxis(XMLoadFloat3(&xA), x);
+		XMVECTOR resultQuat = XMQuaternionNormalize(XMQuaternionMultiply(XMQuaternionMultiply(yawQuat, tiltQuat), rollQuat));
+
+		XMStoreFloat4(&ringRandomQuats[i], resultQuat);
+
+		dashRingSpd[i] = 0.01f;
+	}
 }
 
 void FPSController::Update()
 {
+	((ParticleEmitter*)hookshotEmitter)->SetIsActive(false);
 	XMFLOAT3 ePos = entity->GetTransform().GetPosition();
 	XMFLOAT3 eScl = entity->GetTransform().GetScale();
 
@@ -392,6 +444,7 @@ void FPSController::CheckHookshot()
 			PhysicsWrapper* wrapper = (PhysicsWrapper*)closestResult.m_collisionObject->getUserPointer();
 
 			hookshotPoint = closestResult.m_hitPointWorld;
+			hookshotHitNormal = closestResult.m_hitNormalWorld;
 
 			if (wrapper->type == PHYSICS_WRAPPER_TYPE::ENTITY) 
 			{
@@ -449,7 +502,9 @@ void FPSController::HookshotThrow()
 		else if (hookshotAttachedEntity->HasTag("Environment"))
 		{
 			// playerRBody->clearForces(); --> don't know if needed
-
+			((ParticleEmitter*)hookshotEmitter)->SetIsActive(true);
+			((ParticleEmitter*)hookshotEmitter)->SetPosition(Utility::BulletVectorToFloat3(hookshotPoint));
+			((ParticleEmitter*)hookshotEmitter)->SetDirectionVector(Utility::BulletVectorToFloat3(hookshotHitNormal));
 			ps = PlayerState::HookshotFlight;
 		}
 		else
@@ -582,30 +637,71 @@ void FPSController::UpdateHookShotTransform()
 
 void FPSController::UpdateDashRingsTransforms()
 {
+	totalTime += deltaTime;
 	cam->CalcViewMatrix();
 	//cam->CalcWorldMatrix();
 	XMFLOAT3 camPos = cam->GetTransform().GetPosition();
 	XMFLOAT3 camDir = cam->GetTransform().GetDirectionVector();
 	XMFLOAT3 camRight = cam->GetTransform().GetRightVector();
 
+	/*
+	for (size_t i = 0; i < 4; i++)
+	{
+		XMVECTOR current = XMLoadFloat4(&dashRings[i]->GetTransform().GetRotationQuaternion());
+		XMVECTOR to = XMLoadFloat4(&ringRandomQuats[i]);
+		XMFLOAT4 quat;
+		XMVECTOR newQuat = XMQuaternionSlerp(current, to, dashRingSpd[i] * deltaTime);
+		XMStoreFloat4(&quat, newQuat);
+		dashRings[i]->GetTransform().SetRotationQuaternion(quat);
+		dashRings[i]->GetTransform().SetPosition(XMFLOAT3(camPos.x + camDir.x * 1.1f, camPos.y + camDir.y - 0.5f, camPos.z + camDir.z * 1.1f));
+
+		dashRingSpd[i] += 1.0f * deltaTime;
+		if (dashRingSpd[i] > 0.5f) dashRingSpd[i] = 0.5f;
+
+		float dot = XMQuaternionDot(newQuat, to).m128_f32[0];
+		if (dot > 0.999f && dot < 1.001f) {
+			float x = static_cast <float> ((rand()) / static_cast <float> (RAND_MAX)) * XM_2PI;
+			float y = static_cast <float> ((rand()) / static_cast <float> (RAND_MAX)) * XM_2PI;
+			float z = static_cast <float> ((rand()) / static_cast <float> (RAND_MAX)) * XM_2PI;
+
+			XMFLOAT3 xA = X_AXIS;
+			XMFLOAT3 yA = Y_AXIS;
+			XMFLOAT3 zA = Z_AXIS;
+
+			XMVECTOR rollQuat = XMQuaternionRotationAxis(XMLoadFloat3(&zA), z);
+			XMVECTOR yawQuat = XMQuaternionRotationAxis(XMLoadFloat3(&yA), y);
+			XMVECTOR tiltQuat = XMQuaternionRotationAxis(XMLoadFloat3(&xA), x);
+			XMVECTOR resultQuat = XMQuaternionNormalize(XMQuaternionMultiply(XMQuaternionMultiply(yawQuat, tiltQuat), rollQuat));
+
+			XMStoreFloat4(&ringRandomQuats[i], resultQuat);
+
+			dashRingSpd[i] = 0.01f;
+		}
+	}
+	*/
+
 	float xDegrees;
 	float yDegrees;
 	float zDegrees;
 
 	// dash ring updating position and spinning
-	dashRings[0]->GetTransform().SetPosition(XMFLOAT3(camPos.x + camDir.x * 1.1f, camPos.y + camDir.y - 0.5f, camPos.z + camDir.z * 1.1f));
+	//dashRings[0]->GetTransform().SetPosition(XMFLOAT3(camPos.x + camDir.x * 1.1f, camPos.y + camDir.y - 0.5f, camPos.z + camDir.z * 1.1f));
+	//dashRings[0]->GetTransform().SetPosition(bloodOrb->GetTransform().GetPosition());
 	xDegrees = dashRings[0]->GetTransform().GetEulerAnglesRadians().x;
 	dashRings[0]->GetTransform().SetRotationRadians(Utility::FloatLerp(xDegrees, xDegrees + 10, 0.05 * deltaTime), 0, 0);
 	
-	dashRings[1]->GetTransform().SetPosition(XMFLOAT3(camPos.x + camDir.x * 1.1f, camPos.y + camDir.y - 0.5f, camPos.z + camDir.z * 1.1f));
+	//dashRings[1]->GetTransform().SetPosition(XMFLOAT3(camPos.x + camDir.x * 1.1f, camPos.y + camDir.y - 0.5f, camPos.z + camDir.z * 1.1f));
+	//dashRings[1]->GetTransform().SetPosition(bloodOrb->GetTransform().GetPosition());
 	xDegrees = dashRings[1]->GetTransform().GetEulerAnglesRadians().x;
 	dashRings[1]->GetTransform().SetRotationRadians(Utility::FloatLerp(xDegrees, xDegrees - 10, 0.15 * deltaTime), 0, 0);
 	
-	dashRings[2]->GetTransform().SetPosition(XMFLOAT3(camPos.x + camDir.x * 1.1f, camPos.y + camDir.y - 0.5f, camPos.z + camDir.z * 1.1f));
+	//dashRings[2]->GetTransform().SetPosition(XMFLOAT3(camPos.x + camDir.x * 1.1f, camPos.y + camDir.y - 0.5f, camPos.z + camDir.z * 1.1f));
+	//dashRings[2]->GetTransform().SetPosition(bloodOrb->GetTransform().GetPosition());
 	zDegrees = dashRings[2]->GetTransform().GetEulerAnglesRadians().z;
 	dashRings[2]->GetTransform().SetRotationRadians(0, 0, Utility::FloatLerp(zDegrees, zDegrees + 10, 0.05 * deltaTime));
 	
-	dashRings[3]->GetTransform().SetPosition(XMFLOAT3(camPos.x + camDir.x * 1.1f, camPos.y + camDir.y - 0.5f, camPos.z + camDir.z * 1.1f));
+	//dashRings[3]->GetTransform().SetPosition(XMFLOAT3(camPos.x + camDir.x * 1.1f, camPos.y + camDir.y - 0.5f, camPos.z + camDir.z * 1.1f));
+	//dashRings[3]->GetTransform().SetPosition(bloodOrb->GetTransform().GetPosition());
 	zDegrees = dashRings[3]->GetTransform().GetEulerAnglesRadians().z;
 	dashRings[3]->GetTransform().SetRotationRadians(0, 0, Utility::FloatLerp(zDegrees, zDegrees - 10, 0.15 * deltaTime));
 }
@@ -906,13 +1002,13 @@ void FPSController::UpdateSwordSway()
 	XMFLOAT3 x = X_AXIS;
 	XMFLOAT3 y = Y_AXIS;
 	XMFLOAT3 z = Z_AXIS;
-	//XMVECTOR quat = XMQuaternionRotationRollPitchYaw(swordRoll, )
+	XMVECTOR current = XMLoadFloat4(&sword->GetTransform().GetRotationQuaternion());
 	XMVECTOR rollQuat = XMQuaternionRotationAxis(XMLoadFloat3(&z), swordRoll);
 	XMVECTOR yawQuat = XMQuaternionRotationAxis(XMLoadFloat3(&y), 0.0f);
 	XMVECTOR tiltQuat = XMQuaternionRotationAxis(XMLoadFloat3(&x), swordTilt);
 	XMVECTOR resultQuat = XMVector4Normalize(XMQuaternionMultiply(XMQuaternionMultiply(yawQuat, tiltQuat), rollQuat));
 	XMFLOAT4 quat;
-	XMStoreFloat4(&quat, resultQuat);
+	XMStoreFloat4(&quat, XMQuaternionSlerp(current, resultQuat, swordRotationSpeed * deltaTime));
 	sword->GetTransform().SetRotationQuaternion(quat);
 }
 

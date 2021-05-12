@@ -5,6 +5,7 @@ TYPE="POINTLIGHT" name="hearthpoint" intensity="1.0" range="3.0" P(10.77,2,-0.6)
 
 //0.75
 TYPE="SPOTLIGHT" name="menulight" intensity="0.0001" range="50.0" spotFalloff="40" P(0,5,5)D(0,0,-1)C(1.0,0.87843,0.72941) 
+TYPE="SPOTLIGHT" name="cinematicLight" intensity="0.3" range="3.0" spotFalloff="10" P(-6.36816,3.55001,-1.79395)D(1,0,0)C(1.0,0.4,0)
 
 TYPE="POINTLIGHT" name="candleLight" intensity="1.0" range="5.0" P(0.37,4.0,-1.27)C(1.0,0.4,0)
 TYPE="POINTLIGHT" name="candleLight2" intensity="1.0" range="5.0" P(-4.0,4.0,-0.27)C(1.0,0.4,0)

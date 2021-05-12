@@ -309,13 +309,19 @@ class MainMenuManager : public ScriptManager
 	vector<Entity*> papers;
 	unsigned int numPapers = 0;
 	unsigned int paperCounter = 0;
-	bool lerpingPaperSide = false;
+	//bool lerpingPaperSide = false;
 	bool lerpingPaperBottom = false;
-	XMFLOAT3 paperSidePos = XMFLOAT3(0.4f, 0.3f, 0.2f);
+	bool lerpingPaperCamera = false;
+	//XMFLOAT3 paperSidePos = XMFLOAT3(0.4f, 0.3f, 0.2f);
 	XMFLOAT3 paperBottomPos = XMFLOAT3(0.8f, 0.0f, 0.4f);
+	XMFLOAT3 paperCameraPos;
 	XMFLOAT3 originalPaperPos;
 	float paperLerpSpd = 0.0f;
-	float paperYOffset = -0.001f;
+	float paperYOffset = 0.01f;
+	XMFLOAT3 originalPaperDir;
+	XMFLOAT3 originalPaperRight;
+	bool papersStarted = false;
+	bool skipped = false;
 
 	Mouse* mouse = nullptr;
 

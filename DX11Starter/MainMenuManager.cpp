@@ -9,6 +9,10 @@ void MainMenuManager::Init()
 	cam->rotation = rotations[0];
 	cam->CalcViewMatrix();
 
+	XMFLOAT3 camPos = cam->GetTransform().GetPosition();
+	XMFLOAT3 camDir = cam->GetTransform().GetDirectionVector();
+	XMStoreFloat3(&paperCameraPos, XMVectorAdd(XMLoadFloat3(&camPos), XMVectorScale(XMLoadFloat3(&camDir), 0.4f)));
+
 	uiCb.spriteBatch = new SpriteBatch(Config::Context);
 	uiCb.font = new SpriteFont(Config::Device, L"../../Assets/Fonts/Bloodlust.spritefont");
 	uiCb.EEMouse = Mouse::GetInstance();
@@ -19,12 +23,19 @@ void MainMenuManager::Init()
 	hearthLight = lights->GetLight("hearth");
 	hearthPtLight = lights->GetLight("hearthpoint");
 	menuLight = lights->GetLight("menulight");
+	LightContainer* cinematicLight = lights->GetLight("cinematicLight");
+	cinematicLight->light.Direction = cam->GetTransform().GetDirectionVector();
+	XMStoreFloat3(&cinematicLight->light.Position, XMVectorAdd(XMLoadFloat3(&camPos), XMVectorScale(XMLoadFloat3(&camDir), -0.5f)));
 
 	originalHearth = hearthLight->light;
 	originalMenu = menuLight->light;
 
 	papers = EESceneLoader->SceneEntitiesTagMap["paper"];
 	numPapers = papers.size();
+
+	originalPaperPos = papers[paperCounter]->GetTransform().GetPosition();
+	originalPaperDir = papers[paperCounter]->GetTransform().GetDirectionVector();
+	originalPaperRight = papers[paperCounter]->GetTransform().GetRightVector();
 
 	mouse = Mouse::GetInstance();
 
@@ -334,24 +345,128 @@ void MainMenuManager::Update()
 		}
 	}
 
-	if (mouse->OnLMBDown() && !lerpingPaperSide && !lerpingPaperBottom && paperCounter != numPapers) {
-		lerpingPaperSide = true;
-		originalPaperPos = papers[paperCounter]->GetTransform().GetPosition();
+	if (totalTime >= 8.0f && !papersStarted && !skipped) {
+		lerpingPaperCamera = true;
+		papersStarted = true;
 		paperLerpSpd = 0.0f;
-		if(uiCb.skipTooltipTransparency == 1.0f)
+	}
+
+	if (skipped && (lerpingPaperBottom || lerpingPaperCamera)) {
+		XMFLOAT3 currentPaperPos = papers[paperCounter]->GetTransform().GetPosition();
+		XMVECTOR currentPos = XMLoadFloat3(&currentPaperPos);
+		XMFLOAT3 lerpPos;
+		XMVECTOR posTo = XMVectorAdd(XMLoadFloat3(&originalPaperPos), XMVectorAdd(XMLoadFloat3(&paperBottomPos), XMVectorSet(0, paperYOffset * (paperCounter), 0, 0)));
+		XMStoreFloat3(&lerpPos, XMVectorLerp(currentPos, posTo, paperLerpSpd * deltaTime));
+		papers[paperCounter]->GetTransform().SetPosition(lerpPos);
+
+		XMFLOAT3 currentPaperDir = papers[paperCounter]->GetTransform().GetDirectionVector();
+		XMVECTOR currentDir = XMLoadFloat3(&currentPaperDir);
+		XMFLOAT3 lerpDir = originalPaperDir;
+		XMVECTOR lerpDirC = XMLoadFloat3(&lerpDir);
+		XMStoreFloat3(&lerpDir, XMVector3Normalize(XMVectorLerp(currentDir, lerpDirC, paperLerpSpd * deltaTime)));
+
+		XMFLOAT3 currentPaperRight = papers[paperCounter]->GetTransform().GetRightVector();
+		XMVECTOR currentRight = XMLoadFloat3(&currentPaperRight);
+		XMFLOAT3 lerpRight = originalPaperRight;
+		XMVECTOR lerpRightC = XMLoadFloat3(&lerpRight);
+		XMStoreFloat3(&lerpRight, XMVector3Normalize(XMVectorLerp(currentRight, lerpRightC, paperLerpSpd * deltaTime)));
+
+		papers[paperCounter]->GetTransform().SetDirectionVectorR(lerpDir, lerpRight);
+
+		if (XMVector3NearEqual(currentPos, posTo, XMVectorSet(0.1f, 0.1f, 0.1f, 0.1f)) &&
+			XMVector3NearEqual(currentDir, lerpDirC, XMVectorSet(0.001f, 0.001f, 0.001f, 0.001f)) &&
+			XMVector3NearEqual(currentRight, lerpRightC, XMVectorSet(0.001f, 0.001f, 0.001f, 0.001f))) {
+			lerpingPaperBottom = false;
+			lerpingPaperCamera = false;
+			paperCounter = numPapers;
+		}
+	}
+	else if (lerpingPaperCamera && paperCounter != numPapers) {
+		XMFLOAT3 currentPaperPos = papers[paperCounter]->GetTransform().GetPosition();
+		XMVECTOR currentPos = XMLoadFloat3(&currentPaperPos);
+		XMFLOAT3 lerpPos;
+		XMVECTOR posTo = XMLoadFloat3(&paperCameraPos);
+		XMStoreFloat3(&lerpPos, XMVectorLerp(currentPos, posTo, paperLerpSpd * deltaTime));
+		papers[paperCounter]->GetTransform().SetPosition(lerpPos);
+
+		XMFLOAT3 currentPaperDir = papers[paperCounter]->GetTransform().GetDirectionVector();
+		XMVECTOR currentDir = XMLoadFloat3(&currentPaperDir);
+		XMFLOAT3 lerpDir = cam->GetTransform().GetUpVector();
+		XMVECTOR lerpDirC = XMVectorScale(XMLoadFloat3(&lerpDir),-1.0f);
+		XMStoreFloat3(&lerpDir, XMVector3Normalize(XMVectorLerp(currentDir, lerpDirC, paperLerpSpd * deltaTime)));
+
+		XMFLOAT3 currentPaperRight = papers[paperCounter]->GetTransform().GetRightVector();
+		XMVECTOR currentRight = XMLoadFloat3(&currentPaperRight);
+		XMFLOAT3 lerpRight = cam->GetTransform().GetRightVector();
+		XMVECTOR lerpRightC = XMVectorScale(XMLoadFloat3(&lerpRight), -1.0f);
+		XMStoreFloat3(&lerpRight, XMVector3Normalize(XMVectorLerp(currentRight, lerpRightC, paperLerpSpd * deltaTime)));
+
+		papers[paperCounter]->GetTransform().SetDirectionVectorR(lerpDir, lerpRight);
+
+		if (XMVector3NearEqual(currentPos, posTo, XMVectorSet(0.1f, 0.1f, 0.1f, 0.1f)) &&
+			XMVector3NearEqual(currentDir, lerpDirC, XMVectorSet(0.001f, 0.001f, 0.001f, 0.001f))&&
+			XMVector3NearEqual(currentRight, lerpRightC, XMVectorSet(0.001f, 0.001f, 0.001f, 0.001f))) {
+			lerpingPaperCamera = false;
+			lerpingPaperBottom = false;
+		}
+	}
+	else if (lerpingPaperBottom && paperCounter != numPapers) {
+		XMFLOAT3 currentPaperPos = papers[paperCounter]->GetTransform().GetPosition();
+		XMVECTOR currentPos = XMLoadFloat3(&currentPaperPos);
+		XMFLOAT3 lerpPos;
+		XMVECTOR posTo = XMVectorAdd(XMLoadFloat3(&originalPaperPos), XMVectorAdd(XMLoadFloat3(&paperBottomPos), XMVectorSet(0, paperYOffset * (paperCounter), 0, 0)));
+		XMStoreFloat3(&lerpPos, XMVectorLerp(currentPos, posTo, paperLerpSpd * deltaTime));
+		papers[paperCounter]->GetTransform().SetPosition(lerpPos);
+
+		XMFLOAT3 currentPaperDir = papers[paperCounter]->GetTransform().GetDirectionVector();
+		XMVECTOR currentDir = XMLoadFloat3(&currentPaperDir);
+		XMFLOAT3 lerpDir = originalPaperDir;
+		XMVECTOR lerpDirC = XMLoadFloat3(&lerpDir);
+		XMStoreFloat3(&lerpDir, XMVector3Normalize(XMVectorLerp(currentDir, lerpDirC, paperLerpSpd * deltaTime)));
+
+		XMFLOAT3 currentPaperRight = papers[paperCounter]->GetTransform().GetRightVector();
+		XMVECTOR currentRight = XMLoadFloat3(&currentPaperRight);
+		XMFLOAT3 lerpRight = originalPaperRight;
+		XMVECTOR lerpRightC = XMLoadFloat3(&lerpRight);
+		XMStoreFloat3(&lerpRight, XMVector3Normalize(XMVectorLerp(currentRight, lerpRightC, paperLerpSpd * deltaTime)));
+
+		papers[paperCounter]->GetTransform().SetDirectionVectorR(lerpDir, lerpRight);
+
+		if (XMVector3NearEqual(currentPos, posTo, XMVectorSet(0.1f, 0.1f, 0.1f, 0.1f)) &&
+			XMVector3NearEqual(currentDir, lerpDirC, XMVectorSet(0.001f, 0.001f, 0.001f, 0.001f)) &&
+			XMVector3NearEqual(currentRight, lerpRightC, XMVectorSet(0.001f, 0.001f, 0.001f, 0.001f))) {
+			lerpingPaperBottom = false;
+			paperCounter++;
+			if (paperCounter < numPapers) {
+				originalPaperPos = papers[paperCounter]->GetTransform().GetPosition();
+				originalPaperDir = papers[paperCounter]->GetTransform().GetDirectionVector();
+				originalPaperRight = papers[paperCounter]->GetTransform().GetRightVector();
+				lerpingPaperCamera = true;
+			}
+		}
+	}
+
+	if (mouse->OnLMBDown() && !lerpingPaperBottom && !lerpingPaperCamera && paperCounter != numPapers && papersStarted) {
+		lerpingPaperBottom = true;
+		paperLerpSpd = 0.0f;
+		if (uiCb.skipTooltipTransparency == 1.0f)
 			tooltipClosing = true;
 	}
+
+	paperLerpSpd += 1.0f * deltaTime;
+	if (paperLerpSpd > 3.0f) paperLerpSpd = 3.0f;
 
 	if (tooltipClosing) {
 		uiCb.skipTooltipTransparency -= 1.0f * deltaTime;
 		if (uiCb.skipTooltipTransparency < 0.0f) uiCb.skipTooltipTransparency = 0.0f;
 	}
 
+	/*
 	if ((lerpingPaperSide || lerpingPaperBottom) && paperCounter != numPapers) {
 		XMFLOAT3 currentPaperPos = papers[paperCounter]->GetTransform().GetPosition();
 		XMVECTOR currentPos = XMLoadFloat3(&currentPaperPos);
 		XMFLOAT3 lerpPos;
-		XMVECTOR posTo = XMVectorAdd(XMLoadFloat3(&originalPaperPos), (lerpingPaperSide) ? XMLoadFloat3(&paperSidePos) : XMVectorAdd(XMLoadFloat3(&paperBottomPos), XMVectorSet(0, paperYOffset * (numPapers - paperCounter),0,0)));
+		XMVECTOR posTo = XMVectorAdd(XMLoadFloat3(&originalPaperPos), (lerpingPaperSide) ? XMLoadFloat3(&paperSidePos) : XMVectorAdd(XMLoadFloat3(&paperBottomPos), XMVectorSet(0, paperYOffset * (paperCounter),0,0)));
 		XMStoreFloat3(&lerpPos, XMVectorLerp(currentPos, posTo, paperLerpSpd * deltaTime));
 		papers[paperCounter]->GetTransform().SetPosition(lerpPos);
 		if (XMVector3NearEqual(currentPos, posTo, XMVectorSet(0.1f, 0.1f, 0.1f, 0.1f))) {
@@ -368,10 +483,17 @@ void MainMenuManager::Update()
 		paperLerpSpd += 1.0f * deltaTime;
 		if (paperLerpSpd > 3.0f) paperLerpSpd = 3.0f;
 	}
+	*/
 
 	if (Keyboard::GetInstance()->KeyIsPressed(32)) {
-		paperCounter = numPapers;
+		//paperCounter = numPapers;
 		tooltipClosing = true;
+		skipped = true;
+		if (!lerpingPaperBottom && !lerpingPaperCamera) {
+			lerpingPaperBottom = false;
+			lerpingPaperCamera = false;
+			paperCounter = numPapers;
+		}
 	}
 	
 	if ((((totalTime - rotTimeStamp) > timeOffsetsRotation[rotCounter]) && nearRot) && rotCounter < 4 && paperCounter == numPapers) {// || (nearRot && rotCounter != 0)  && paperCounter == numPapers

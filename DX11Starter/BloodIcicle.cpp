@@ -10,6 +10,35 @@ void BloodIcicle::Init()
 
 	// Do not allow the icicle to receive reaction forces
 	entity->GetRBody()->setCollisionFlags(entity->GetRBody()->getCollisionFlags() | btRigidBody::CF_NO_CONTACT_RESPONSE); 
+
+	ParticleEmitterDescription emitDesc;
+	emitDesc.emitterPosition = XMFLOAT3(0.0f, 0.0f, 0.0f);
+	emitDesc.parentName = entity->GetName();
+	emitDesc.parentWorld = entity->GetTransform().GetWorldMatrixPtr();//&emitterTransform;//
+	emitDesc.emitterDirection = NEG_Y_AXIS;
+	emitDesc.colorCount = 1;
+	ParticleColor particleColors[1] = {
+		{XMFLOAT4(0.45f, 0.0f, 0.0f, 0.7f), 1.0f},
+	};
+	emitDesc.colors = particleColors;
+	emitDesc.bakeWorldMatOnEmission = true;
+	emitDesc.emissionStartRadius = 0.1f;
+	emitDesc.emissionEndRadius = 0.25f;
+	emitDesc.emissionRate = 50.0;
+	emitDesc.maxParticles = 500;
+	emitDesc.particleInitMinSpeed = 10.0f;
+	emitDesc.particleInitMaxSpeed = 20.0f;
+	emitDesc.particleMinLifetime = 4.0f;
+	emitDesc.particleMaxLifetime = 6.0f;
+	emitDesc.particleInitMinScale = 0.1f;
+	emitDesc.particleInitMaxScale = 0.2f;
+	//emitDesc.fadeInEndTime = 0.1f;
+	//emitDesc.fadeIn = true;
+	emitDesc.fadeOutStartTime = 0.5f;
+	emitDesc.fadeOut = true;
+	emitDesc.particleAcceleration = XMFLOAT3(0, -15.0f, 0);
+
+	emitter = new GPUParticleEmitter(emitDesc);
 }
 
 void BloodIcicle::Update()
@@ -37,6 +66,7 @@ void BloodIcicle::OnCollision(btCollisionObject* other)
 		{
 			icicleRb->clearForces();
 			icicleRb->setActivationState(0); 
+			((ParticleEmitter*)emitter)->SetIsActive(false);
 		}
 
 		// if this icicle hits an enemy and there is not already a body part pinned to the icicle then split the enemy mesh and give each of the child entities the tag "Body Part" to detect the next necessary collision to accurately pin a body part

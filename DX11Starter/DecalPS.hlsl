@@ -97,6 +97,7 @@ float4 main(VertexToPixel input) : SV_TARGET
 	//return float4(1.0f, 0.0f, 0.0f, 1.0f);
 
 	float2 decalUV = objPos.xy + 0.5f;
+	decalUV.y = 1.0f - decalUV.y;
 
 	float4 surfaceColor = Decal.Sample(BasicSampler, decalUV);
 

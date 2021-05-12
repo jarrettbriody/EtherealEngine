@@ -31,10 +31,17 @@ class FPSController : public ScriptManager
 {
 	map<string, Entity*>* eMap;
 
+	double totalTime = 0.0;
+	XMFLOAT4 ringRandomQuats[4];
+
 	DashBlurCallback dashBlurCallback;
 
 	BloodOrb* bloodOrbScript;
 	BaseEnemy* enemyScript; 
+
+	GPUParticleEmitter* hookshotEmitter;
+
+	btVector3 hookshotHitNormal;
 
 	// Player Attributes
 	float bloodResource = 100.0f; // this is always out of 100 
@@ -94,6 +101,7 @@ class FPSController : public ScriptManager
 	float dashRegenerationTimer = 0.0f;
 	const float DASH_MAX_REGENERATION_TIME = 1.5f;
 	std::vector<Entity*> dashRings;
+	float dashRingSpd[4] = { 0.5,0.5,0.5,0.5 };
 
 	// Sword
 	EntityCreationParameters swordParams;
@@ -142,7 +150,7 @@ class FPSController : public ScriptManager
 	const float MAX_SWORD_ROT = XMConvertToRadians(3.0f);
 	float swordTilt = 0.0f;
 	float swordRoll = 0.0f;
-	float swordRotationSpeed = 0.5f;
+	float swordRotationSpeed = 5.0f;
 	bool swordRollLeft = false;
 	bool swordRollRight = false;
 	bool swordRollForwards = false;
