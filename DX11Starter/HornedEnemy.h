@@ -2,6 +2,7 @@
 #include "ScriptManager.h"
 #include "BehaviorTreeBuilder.h"
 #include "EnemySeesPlayer.h"
+#include "Invert.h"
 #include "InCombat.h"
 #include "PlayerVisible.h"
 #include "FacePlayer.h"
@@ -46,7 +47,7 @@ class HornedEnemy : public ScriptManager, public BaseEnemy
 	float totalTime = 0.0f;
 	float houndSpeed = 60.0f;
 	float houndCooldownTimer = 0.0f;
-	const float HOUND_COOLDOWN_MAX = 0.1f;
+	const float HOUND_COOLDOWN_MAX = 0.5f;
 
 	float killSpeedWhileLeashed = 35.0f;
 	bool leashed;

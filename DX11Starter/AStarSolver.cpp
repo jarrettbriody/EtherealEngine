@@ -130,3 +130,8 @@ vector<Node*> AStarSolver::FindPath(XMFLOAT3 start, XMFLOAT3 end)
 
 	return std::vector<Node*>();
 }
+
+Grid* AStarSolver::GetCurrentGrid(XMFLOAT3 start)
+{
+	return navmesh->GetGridAtPosition(start);
+}

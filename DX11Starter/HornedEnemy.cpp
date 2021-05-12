@@ -32,22 +32,34 @@ void HornedEnemy::Init()
 
 	bt =	BehaviorTreeBuilder()
 				.Composite<ActiveSelector>()
+					.Composite<Sequence>() // Attack the player if they are in range
+						.Leaf<InCombat>(&inCombat).End()
+						.Leaf<PlayerVisible>(entity, player).End()
+						.Leaf<PlayerIsInRange>(entity, player, minimumDistance, &playerIsInRange).End()
+						.Leaf<AbilityAvailable>(&houndCooldownTimer).End()
+						.Leaf<FacePlayer>(entity, player, turnSpeed, &deltaTime).End()
+						.Leaf<HoundPlayer>(entity, player, houndSpeed, &houndCooldownTimer, HOUND_COOLDOWN_MAX).End()
+					.End()
 					.Composite<Sequence>() // Seek the player if they are visible
 						.Leaf<InCombat>(&inCombat).End()
 						.Leaf<PlayerVisible>(entity, player).End()
 						.Leaf<FacePlayer>(entity, player, turnSpeed, &deltaTime).End()
-						.Leaf<SeekPlayer>(entity, player, movementSpeed, maxSpeed, minimumDistance, &playerIsInRange).End()
-						.Leaf<PlayerIsInRange>(&playerIsInRange).End()
 						.Leaf<AbilityAvailable>(&houndCooldownTimer).End()
-						.Leaf<HoundPlayer>(entity, player, houndSpeed, &houndCooldownTimer, HOUND_COOLDOWN_MAX).End()
+						.Leaf<SeekPlayer>(entity, player, movementSpeed, maxSpeed, minimumDistance, &playerIsInRange).End()
 					.End()
 					.Composite<Sequence>() // Search player's last known location
 						.Leaf<InCombat>(&inCombat).End()
+						.Decorator<Invert>()
+							.Leaf<PlayerVisible>(entity, player).End()
+						.End()
 						.Leaf<FindPlayer>(entity, player, &aStarSolver, &path).End()
 						.Leaf<FollowPath>(&path, entity, movementSpeed, minimumDistance, turnSpeed, &deltaTime).End()
 						.Leaf<Idle>(entity, &inCombat).End()
 					.End()
 					.Composite<Sequence>() // Enemy idle
+						.Decorator<Invert>()
+							.Leaf<InCombat>(&inCombat).End()
+						.End()
 						.Leaf<Idle>(entity, &inCombat).End()
 						.Leaf<EnemySeesPlayer>(entity, player, visionConeAngle, visionConeDistance, &inCombat).End()
 					.End()
@@ -133,6 +145,12 @@ void HornedEnemy::OnCollision(btCollisionObject* other)
 
 		gameManagerScript->AddRangeToTotalSplitMeshEntities(childEntities);
 		if (leashed) fpsControllerScript->SetLeashedEntity(newLeashedEntity);
+	}
+
+	if (otherE->GetName().c_str() == std::string("FPSController"))
+	{
+		entity->GetRBody()->activate();
+		entity->GetRBody()->setLinearVelocity(btVector3(0, 0, 0));
 	}
 }
 

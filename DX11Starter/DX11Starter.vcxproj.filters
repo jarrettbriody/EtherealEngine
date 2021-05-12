@@ -282,6 +282,9 @@
     <ClCompile Include="AudioManager.cpp">
       <Filter>EECore\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Invert.cpp">
+      <Filter>EEBehaviors\Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DXCore.h">
@@ -505,6 +508,9 @@
     </ClInclude>
     <ClInclude Include="AudioManager.h">
       <Filter>EECore\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Invert.h">
+      <Filter>EEBehaviors\Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

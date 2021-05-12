@@ -21,5 +21,6 @@ public:
 	AStarSolver();
 	~AStarSolver();
 	vector<Node*> FindPath(XMFLOAT3 start, XMFLOAT3 end);
+	Grid* GetCurrentGrid(XMFLOAT3 start);
 };
 

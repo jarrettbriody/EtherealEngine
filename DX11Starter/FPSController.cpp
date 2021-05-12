@@ -1133,6 +1133,10 @@ void FPSController::OnCollision(btCollisionObject* other)
 		if (otherE->HasTag(std::string("Bull")))
 		{
 			bloodResource -= 10; // this is a more constant ten because the bull keeps on the player
+
+			XMFLOAT3 pushDir = entity->GetRightVector();
+			otherE->GetRBody()->activate();
+			impulseSumVec += Utility::Float3ToBulletVector(entity->GetRightVector()).normalized() * 20.0f;
 		}
 
 		if (otherE->HasTag(std::string("Cyclops")))
