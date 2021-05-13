@@ -1423,7 +1423,7 @@ Entity* SceneLoader::CreateEntity(EntityCreationParameters& para)
 	return allocatedEntity;
 }
 
-std::vector<Entity*> SceneLoader::SplitMeshIntoChildEntities(Entity* e, float componentMass, string scriptName)
+std::vector<Entity*> SceneLoader::SplitMeshIntoChildEntities(Entity* e, float componentMass, float impulseForceScalar, float torqueScalar, string scriptName)
 {
 	std::vector<Entity*> childEntities;
 
@@ -1461,10 +1461,10 @@ std::vector<Entity*> SceneLoader::SplitMeshIntoChildEntities(Entity* e, float co
 		childEntities.push_back(allocatedEntity);
 
 		btVector3 torque = btVector3(
-			(static_cast <float> (rand()) / static_cast <float> (RAND_MAX) * 15.0f),
-			(static_cast <float> (rand()) / static_cast <float> (RAND_MAX) * 15.0f),
-			(static_cast <float> (rand()) / static_cast <float> (RAND_MAX) * 15.0f));
-		allocatedEntity->GetRBody()->applyCentralImpulse(Utility::Float3ToBulletVector(collCenter) * (20.0f + static_cast <float> ((rand()) / static_cast <float> (RAND_MAX) * 15.0f)));
+			(static_cast <float> (rand()) / static_cast <float> (RAND_MAX) * torqueScalar),
+			(static_cast <float> (rand()) / static_cast <float> (RAND_MAX) * torqueScalar),
+			(static_cast <float> (rand()) / static_cast <float> (RAND_MAX) * torqueScalar));
+		allocatedEntity->GetRBody()->applyCentralImpulse(Utility::Float3ToBulletVector(collCenter) * (static_cast <float> ((rand()) / static_cast <float> (RAND_MAX) * impulseForceScalar)));
 		allocatedEntity->GetRBody()->applyTorqueImpulse(torque);
 
 		if (scriptName != "") {

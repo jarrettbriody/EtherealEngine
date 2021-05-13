@@ -72,13 +72,14 @@ void BloodIcicle::OnCollision(btCollisionObject* other)
 		// if this icicle hits an enemy and there is not already a body part pinned to the icicle then split the enemy mesh and give each of the child entities the tag "Body Part" to detect the next necessary collision to accurately pin a body part
 		if (otherE->HasTag("Enemy") && !bodyPartPinned && !otherE->destroyed)
 		{
+			XMFLOAT3 epos = otherE->GetTransform().GetPosition();
 			// Update the game manager attribute for enemies alive
 			gameManagerScript->DecrementEnemiesAlive();
 
 			// if an enemy is currently leashed when hit by a blood icicle reset the hookshot
 			if(fpsControllerScript->GetPlayerState() == PlayerState::HookshotLeash && fpsControllerScript->GetLeashedEntity() == otherE) fpsControllerScript->ResetHookshotTransform();
 			otherE->RemoveFromPhysicsSimulation();
-			std::vector<Entity*> childEntities = EESceneLoader->SplitMeshIntoChildEntities(otherE, 10.0f, "BODYPART");  
+			std::vector<Entity*> childEntities = EESceneLoader->SplitMeshIntoChildEntities(otherE, 10.0f,30.0f,20.0f, "BODYPART");  
 
 			for each (Entity* e in childEntities)
 			{
@@ -92,13 +93,22 @@ void BloodIcicle::OnCollision(btCollisionObject* other)
 			}
 
 			gameManagerScript->AddRangeToTotalSplitMeshEntities(childEntities);
+
+			int index = (rand() % 6);
+			Config::FMODResult = Config::FMODSystem->playSound(Config::Icicle[index], Config::SFXGroup, false, &Config::SFXChannel);
+			Config::SFXChannel->setVolume(ICICLE_IMPACT_VOLUME);
+			FMOD_VECTOR pos = { epos.x, epos.y, epos.z };
+			FMOD_VECTOR vel = { 0, 0, 0 };
+
+			Config::SFXChannel->set3DAttributes(&pos, &vel);
+			Config::SFXChannel->set3DMinMaxDistance(0, 75.0f);
 		}
 
 		// if this icicle hits a child entity of a recently split enemy and there is not already a body part pinned to the icicle then pin the collided body part
 		if (otherE->HasTag("Body Part") && !bodyPartPinned)
 		{
 			closestChild = otherE;
-
+			XMFLOAT3 epos = otherE->GetTransform().GetPosition();
 			//closestChild->RemoveFromPhysicsSimulation(); //---> works better without this right now
 			bodyPartPinned = true;
 
@@ -120,6 +130,15 @@ void BloodIcicle::OnCollision(btCollisionObject* other)
 			XMFLOAT3 entityPos = entity->GetTransform().GetPosition();
 			closestChild->GetTransform().SetParent(&translation);
 			closestChild->GetTransform().SetPosition(XMFLOAT3(closestPos.x - entityPos.x, closestPos.y - entityPos.y, closestPos.z - entityPos.z));
+
+			int index = (rand() % 6);
+			Config::FMODResult = Config::FMODSystem->playSound(Config::Icicle[index], Config::SFXGroup, false, &Config::SFXChannel);
+			Config::SFXChannel->setVolume(ICICLE_IMPACT_VOLUME);
+			FMOD_VECTOR pos = { epos.x, epos.y, epos.z };
+			FMOD_VECTOR vel = { 0, 0, 0 };
+
+			Config::SFXChannel->set3DAttributes(&pos, &vel);
+			Config::SFXChannel->set3DMinMaxDistance(0, 75.0f);
 
 			/*
 			XMFLOAT3 closestPos = closestChild->GetTransform().GetPosition();

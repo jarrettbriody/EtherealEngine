@@ -25,7 +25,7 @@
 #define GIGABYTE 1073741824
 
 #define MAX_KERNEL_SAMPLES 32
-#define MAX_DECALS_PER_ENTITY 256
+#define MAX_DECALS_PER_ENTITY 512
 #define MAX_PARTICLE_COLORS 16
 #define MAX_PARTICLE_TEXTURES 8
 #define MAX_SHADOW_CASCADES 4
@@ -105,12 +105,45 @@ public:
 	static bool DecalsEnabled;
 	static unsigned int InitialDecalVectorSize;
 
+	static float MusicVolume;
+
 	static btDiscreteDynamicsWorld* DynamicsWorld;
 	
 	static FMOD_RESULT FMODResult;
 	static FMOD::System* FMODSystem;
 	static FMOD::Sound* MainTheme[4];
 	static FMOD::Sound* CombatTheme[3];
+
+	static FMOD::Channel* SFXChannel;
+	static FMOD::Channel* SFXChannel2D;
+	static FMOD::ChannelGroup* SFXGroup;
+	static FMOD::ChannelGroup* SFXGroup2D;
+
+	static FMOD::Sound* Sword[9];
+	static FMOD::Sound* Hookshot[5];
+	static FMOD::Sound* Icicle[9];
+
+	static FMOD::Sound* CyclopsAttack[7];
+	static FMOD::Sound* CyclopsChatter[12];
+	static FMOD::Sound* CyclopsDeath[6];
+
+	static FMOD::Sound* BullAttack[7];
+	static FMOD::Sound* BullChatter[12];
+	static FMOD::Sound* BullDeath[6];
+
+	static FMOD::Sound* HornedAttack[9];
+	static FMOD::Sound* HornedChatter[6];
+	static FMOD::Sound* HornedDeath[10];
+
+	static FMOD::Sound* TowerAttack[9];
+	static FMOD::Sound* TowerChatter[6];
+	static FMOD::Sound* TowerDeath[10];
+
+	static FMOD::Sound* Dash[6];
+	static FMOD::Sound* Footstep; //Stone 10
+	static FMOD::Sound* Jump[6];
+	static FMOD::Sound* PlayerHit[10];
+
 	static FMOD::Channel* MusicChannel;
 	static FMOD::ChannelGroup* MasterGroup;
 	static FMOD::ChannelGroup* MusicGroup;

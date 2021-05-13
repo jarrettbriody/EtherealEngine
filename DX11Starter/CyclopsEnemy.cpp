@@ -4,6 +4,15 @@
 CyclopsEnemy::~CyclopsEnemy()
 {
 	delete bt; 
+	int index = (rand() % 6);
+	Config::FMODResult = Config::FMODSystem->playSound(Config::CyclopsDeath[index], Config::SFXGroup, false, &Config::SFXChannel);
+	Config::SFXChannel->setVolume(CYCLOPS_DEATH_VOLUME);
+	XMFLOAT3 epos = entity->GetTransform().GetPosition();
+	FMOD_VECTOR pos = { epos.x, epos.y, epos.z };
+	FMOD_VECTOR vel = { 0, 0, 0 };
+
+	Config::SFXChannel->set3DAttributes(&pos, &vel);
+	Config::SFXChannel->set3DMinMaxDistance(0, 75.0f);
 }
 
 void CyclopsEnemy::Init()
@@ -18,7 +27,7 @@ void CyclopsEnemy::Init()
 	gameManagerScript = (GameManager*)(scriptFunctionsMap["GameManager"]["GAMEMANAGER"]);
 	//grid = &controller->grid;
 
-	entity->AddTag(std::string("Cyclops"));
+	//entity->AddTag(std::string("Cyclops"));
 
 	Entity* player = eMap->find("FPSController")->second;
 
@@ -130,7 +139,7 @@ void CyclopsEnemy::OnCollision(btCollisionObject* other)
 		btVector3 oldEnemyPos = entity->GetRBody()->getCenterOfMassPosition();
 
 		// enemy is in the triangle, split it apart
-		std::vector<Entity*> childEntities = EESceneLoader->SplitMeshIntoChildEntities(entity, 10.0f, "BODYPART");
+		std::vector<Entity*> childEntities = EESceneLoader->SplitMeshIntoChildEntities(entity, 10.0f, 30.0f, 20.0f, "BODYPART");
 
 		// Update the game manager attribute for enemies alive
 		gameManagerScript->DecrementEnemiesAlive();

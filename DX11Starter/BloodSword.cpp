@@ -259,6 +259,11 @@ void BloodSword::RaisedState()
 		slashPointsIndex++;
 		CheckSwordSlashHit();
 		ss = SwordState::Slashing;
+
+		int index = (rand() % 4) + 5;
+		Config::FMODResult = Config::FMODSystem->playSound(Config::Sword[index], Config::SFXGroup2D, false, &Config::SFXChannel2D);
+		Config::SFXChannel2D->setVolume(SLASH_VOLUME);
+
 		for (size_t i = 0; i < SWORD_EMITTERS; i++)
 		{
 			((ParticleEmitter*)emitters[i])->SetIsActive(true);
@@ -446,6 +451,7 @@ void BloodSword::CheckSwordSlashHit()
 	{
 		if (EntityInSlashDetectionField(enemy))
 		{
+
 			// Store the old enemy position for later use in case the enemy was killed while leashed
 			btVector3 oldEnemyPos = enemy->GetRBody()->getCenterOfMassPosition();
 
@@ -453,7 +459,7 @@ void BloodSword::CheckSwordSlashHit()
 			bool leashedWhenKilled = fpsControllerScript->GetPlayerState() == PlayerState::HookshotLeash && fpsControllerScript->GetLeashedEntity() == enemy;
 
 			// enemy is in the triangle, split it apart
-			std::vector<Entity*> childEntities = EESceneLoader->SplitMeshIntoChildEntities(enemy, 10.0f, "BODYPART");
+			std::vector<Entity*> childEntities = EESceneLoader->SplitMeshIntoChildEntities(enemy, 10.0f, 50.0f, 50.0f, "BODYPART");
 
 			// Update the game manager attribute for enemies alive
 			gameManagerScript->DecrementEnemiesAlive();
@@ -517,6 +523,16 @@ void BloodSword::CheckSwordSlashHit()
 			{
 				fpsControllerScript->SetLeashedEntity(newLeashedEntity);
 			}
+
+
+			int index = (rand() % 5);
+			Config::FMODResult = Config::FMODSystem->playSound(Config::Sword[index], Config::SFXGroup, false, &Config::SFXChannel);
+			Config::SFXChannel->setVolume(SLASH_HIT_VOLUME);
+			FMOD_VECTOR pos = { oldEnemyPos.getX(), oldEnemyPos.getY(), oldEnemyPos.getZ() };
+			FMOD_VECTOR vel = { 0, 0, 0 };
+
+			Config::SFXChannel->set3DAttributes(&pos, &vel);
+			Config::SFXChannel->set3DMinMaxDistance(0, 50.0f);
 		}
 	}
 
@@ -592,7 +608,7 @@ void BloodSword::OnCollision(btCollisionObject* other)
 		
 		if (otherE->HasTag("Enemy"))
 		{
-			std::vector<Entity*> childEntities = EESceneLoader->SplitMeshIntoChildEntities(otherE, 10.0f, "BODYPART");
+			std::vector<Entity*> childEntities = EESceneLoader->SplitMeshIntoChildEntities(otherE, 10.0f, 50.0f, 50.0f, "BODYPART");
 		}
 	}
 }

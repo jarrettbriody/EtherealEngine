@@ -4,6 +4,8 @@
 #include "FPSController.h"
 #include "GPUParticleEmitter.h"
 
+#define ICICLE_IMPACT_VOLUME 0.5f
+
 class BloodIcicle : public ScriptManager
 {
 	map<string, Entity*>* eMap;

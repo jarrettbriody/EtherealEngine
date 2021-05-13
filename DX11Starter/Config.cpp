@@ -48,6 +48,8 @@ float Config::SceneBrightness = 0.05f;
 bool Config::DecalsEnabled = true;
 unsigned int Config::InitialDecalVectorSize = 3000;
 
+float Config::MusicVolume = 0.0f; //0.1
+
 btDiscreteDynamicsWorld* Config::DynamicsWorld = nullptr;
 
 FMOD_RESULT Config::FMODResult = FMOD_RESULT();
@@ -57,6 +59,35 @@ FMOD::Sound* Config::CombatTheme[3];
 FMOD::Channel* Config::MusicChannel;
 FMOD::ChannelGroup* Config::MasterGroup = nullptr;
 FMOD::ChannelGroup* Config::MusicGroup = nullptr;
+
+FMOD::Channel* Config::SFXChannel;
+FMOD::Channel* Config::SFXChannel2D;
+FMOD::ChannelGroup* Config::SFXGroup;
+FMOD::ChannelGroup* Config::SFXGroup2D;
+
+FMOD::Sound* Config::Sword[9];
+FMOD::Sound* Config::Hookshot[5];
+FMOD::Sound* Config::Icicle[9];
+FMOD::Sound* Config::CyclopsAttack[7];
+FMOD::Sound* Config::CyclopsChatter[12];
+FMOD::Sound* Config::CyclopsDeath[6];
+
+FMOD::Sound* Config::BullAttack[7];
+FMOD::Sound* Config::BullChatter[12];
+FMOD::Sound* Config::BullDeath[6];
+
+FMOD::Sound* Config::HornedAttack[9];
+FMOD::Sound* Config::HornedChatter[6];
+FMOD::Sound* Config::HornedDeath[10];
+
+FMOD::Sound* Config::TowerAttack[9];
+FMOD::Sound* Config::TowerChatter[6];
+FMOD::Sound* Config::TowerDeath[10];
+			
+FMOD::Sound* Config::Dash[6];
+FMOD::Sound* Config::Footstep; //Stone 10
+FMOD::Sound* Config::Jump[6];
+FMOD::Sound* Config::PlayerHit[10];
 
 unsigned int Config::SSAOSampleCount = 32;
 float Config::SSAOKernelRadius = 1.0f;

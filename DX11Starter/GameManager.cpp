@@ -104,6 +104,9 @@ void GameManager::Init()
 		Config::FMODResult = Config::FMODSystem->playSound(Config::CombatTheme[count], Config::MusicGroup, true, &Config::MusicChannel); // Start a part of the combat theme, but leave it paused
 		AudioManager::FMODErrorCheck(Config::FMODResult);
 
+		Config::FMODResult = Config::MusicChannel->setVolume(Config::MusicVolume);
+		AudioManager::FMODErrorCheck(Config::FMODResult);
+
 		if (!clock_start)
 		{
 			Config::FMODResult = Config::MusicChannel->setChannelGroup(Config::MusicGroup);

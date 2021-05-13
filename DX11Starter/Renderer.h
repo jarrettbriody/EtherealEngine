@@ -56,6 +56,7 @@ public:
 	static bool DestroyInstance();
 
 	ID3D11BlendState* blendState = nullptr;
+	ID3D11DepthStencilState* alwaysDrawDepthStencil = nullptr;
 	ShadowComponents shadowComponents = {};
 	DepthStencilComponents depthStencilComponents = {};
 	HBAOPlusComponents hbaoPlusComponents = {};

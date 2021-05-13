@@ -154,6 +154,12 @@ std::vector<Node*> Grid::GetAdjacentNodes(Node* node)
 	int row = node->GetRow();
 	int col = node->GetCol();
 
+	//
+	//
+	// 	   CRASH HERE, ACCESS VIOLATION INTO THE GRID
+	//
+	//
+
 	if (row + 1 < numberOfRows)
 	{
 		adjacent.push_back(&grid[row + 1][col]);

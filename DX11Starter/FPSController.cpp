@@ -26,7 +26,7 @@ void FPSController::Init()
 
 	uiDebugCb.spriteBatch = new SpriteBatch(Config::Context);
 	uiDebugCb.font = new SpriteFont(Config::Device, L"../../Assets/Fonts/Bloodlust.spritefont");
-	EERenderer->SetRenderUICallback(true, &uiDebugCb, 0);
+	//EERenderer->SetRenderUICallback(true, &uiDebugCb, 0);
 
 	eMap = ScriptManager::sceneEntitiesMap;
 	bloodOrb = eMap->find("Blood_Orb")->second;
@@ -41,8 +41,8 @@ void FPSController::Init()
 			"Blood Icicle",					// name
 			"Blood Icicle",					// tag
 			"Blood Icicle",					// layer
-			"bloodicicle",							// mesh
-			"swordgradient",							// material
+			"bloodicicle",					// mesh
+			"swordgradient",				// material
 			{"BLOODICICLE"},				// script names
 			1,								// script count
 			XMFLOAT3(0.0f, 0.0f, 0.0f),		// position
@@ -59,9 +59,9 @@ void FPSController::Init()
 			"Dash Ring",					// name
 			"Dash Ring",					// tag
 			"Dash Ring",					// layer
-			"dashring",							// mesh
+			"dashring",						// mesh
 			"Red",							// material
-			{""},				// script names
+			{""},							// script names
 			0,								// script count
 			XMFLOAT3(0.0f, 0.0f, 0.0f),		// position
 			XMFLOAT3(0.0f, 0.0f, 0.0f),		// rotation
@@ -83,9 +83,9 @@ void FPSController::Init()
 			"Blood Sword",					// name
 			"Blood Sword",					// tag
 			"Blood Sword",					// layer
-			"bloodsword",							// mesh
+			"bloodsword",					// mesh
 			"Red",							// material
-			{"BLOODSWORD"},				// script names
+			{"BLOODSWORD"},					// script names
 			1,								// script count
 			XMFLOAT3(0.0f, 0.0f, 0.0f),		// position
 			XMFLOAT3(0.0f, XMConvertToRadians(-90.0f), 0.0f),		// rotation
@@ -99,7 +99,6 @@ void FPSController::Init()
 	sword->collisionsEnabled = false;
 	*/
 	sword = (*eMap)["Blood Sword"];
-	
 
 	hookshotParams = {	
 			"Hookshot",						// name
@@ -189,10 +188,20 @@ void FPSController::Init()
 
 		dashRingSpd[i] = 0.01f;
 	}
+
+	Config::FMODResult = Config::FMODSystem->playSound(Config::Footstep, Config::SFXGroup, true, &footstepChannel);
+	footstepChannel->setVolume(FOOTSTEP_VOLUME);
+	XMFLOAT3 epos = entity->GetTransform().GetPosition();
+	FMOD_VECTOR pos = { epos.x,epos.y, epos.z };
+	FMOD_VECTOR vel = { 0, 0, 0 };
+
+	footstepChannel->set3DAttributes(&pos, &vel);
+	footstepChannel->set3DMinMaxDistance(0, 8.0f);
 }
 
 void FPSController::Update()
 {
+
 	XMFLOAT3 playerPos = entity->GetTransform().GetPosition();
 	std::string playerPosString;
 	playerPosString += "Player Position: " + std::to_string(playerPos.x) + " | " + std::to_string(playerPos.y) + " | " + std::to_string(playerPos.z);
@@ -324,6 +333,14 @@ void FPSController::Update()
 
 			break;
 	}
+
+
+	XMFLOAT3 epos = entity->GetTransform().GetPosition();
+	FMOD_VECTOR pos = { epos.x,epos.y - 3.0f, epos.z };
+	FMOD_VECTOR vel = { 0, 0, 0 };
+
+	footstepChannel->set3DAttributes(&pos, &vel);
+	footstepChannel->set3DMinMaxDistance(0, 8.0f);
 }
 
 
@@ -341,6 +358,10 @@ void FPSController::CheckBloodSword()
 	{
 		BloodSword* swordScript = (BloodSword*)scriptFunctionsMap[sword->GetName()]["BLOODSWORD"];
 		swordScript->StartSlash();
+
+
+			//Config::MusicChannel->set3DAttributes(&pos, &vel);
+			//Config::MusicChannel->set3DMinMaxDistance(0, 15.0f);
 	}
 }
 
@@ -369,6 +390,10 @@ void FPSController::CheckBloodIcicle()
 		bloodIcicleRecoilDampTimer = BLOOD_ICICLE_RECOIL_DAMP_TIMER_MAX;
 
 		bloodIcicleCooldownTimer = BLOOD_ICICLE_MAX_COOLDOWN_TIME;
+
+		int index = (rand() % 3) + 6;
+		Config::FMODResult = Config::FMODSystem->playSound(Config::Icicle[index], Config::SFXGroup2D, false, &Config::SFXChannel2D);
+		Config::SFXChannel2D->setVolume(ICICLE_THROW_VOLUME);
 	}
 	else if(bloodIcicleCooldownTimer > 0)
 	{
@@ -462,6 +487,12 @@ void FPSController::CheckHookshot()
 				hookshotAttachedEntity = (Entity*)wrapper->objectPointer;
 
 				ps = PlayerState::HookshotThrow;
+
+				Config::FMODResult = Config::FMODSystem->playSound(Config::Hookshot[0], Config::SFXGroup2D, false, &Config::SFXChannel2D);
+				Config::SFXChannel2D->setVolume(HOOKSHOT_THROW_VOLUME);
+
+				Config::FMODResult = Config::FMODSystem->playSound(Config::Hookshot[1], Config::SFXGroup2D, false, &hookshotChannel);
+				hookshotChannel->setVolume(HOOKSHOT_EXTENDING_VOLUME);
 			}
 		}
 	}
@@ -475,6 +506,8 @@ void FPSController::HookshotThrow()
 	}
 	else
 	{
+		hookshotChannel->stop();
+
 		if (hookshotAttachedEntity->HasTag("Enemy") || hookshotAttachedEntity->HasTag("Body Part"))
 		{
 			leashedEnemy = hookshotAttachedEntity;
@@ -515,7 +548,19 @@ void FPSController::HookshotThrow()
 			((ParticleEmitter*)hookshotEmitter)->SetIsActive(true);
 			((ParticleEmitter*)hookshotEmitter)->SetPosition(Utility::BulletVectorToFloat3(hookshotPoint));
 			((ParticleEmitter*)hookshotEmitter)->SetDirectionVector(Utility::BulletVectorToFloat3(hookshotHitNormal));
+
 			ps = PlayerState::HookshotFlight;
+
+			Config::FMODResult = Config::FMODSystem->playSound(Config::Hookshot[2], Config::SFXGroup, false, &Config::SFXChannel);
+			Config::SFXChannel->setVolume(HOOKSHOT_IMPACT_VOLUME);
+			FMOD_VECTOR pos = { hookshotPoint.getX(), hookshotPoint.getY(), hookshotPoint.getZ() };
+			FMOD_VECTOR vel = { 0, 0, 0 };
+
+			Config::SFXChannel->set3DAttributes(&pos, &vel);
+			Config::SFXChannel->set3DMinMaxDistance(0, 100.0f);
+
+			Config::FMODResult = Config::FMODSystem->playSound(Config::Hookshot[3], Config::SFXGroup, false, &hookshotChannel);
+			hookshotChannel->setVolume(HOOKSHOT_REEL_VOLUME);
 		}
 		else
 		{
@@ -549,11 +594,17 @@ void FPSController::HookshotFlight()
 		if (distanceToHitPoint < EXIT_RANGE)
 		{
 			ResetHookshotTransform();
+			hookshotChannel->stop();
+			Config::FMODResult = Config::FMODSystem->playSound(Config::Hookshot[4], Config::SFXGroup2D, false, &Config::SFXChannel2D);
+			Config::SFXChannel2D->setVolume(HOOKSHOT_RELEASE_VOLUME);
 		}
 	}
 	else // cancel if not holding E
 	{
 		ResetHookshotTransform();
+		hookshotChannel->stop();
+		Config::FMODResult = Config::FMODSystem->playSound(Config::Hookshot[4], Config::SFXGroup2D, false, &Config::SFXChannel2D);
+		Config::SFXChannel2D->setVolume(HOOKSHOT_RELEASE_VOLUME);
 	}
 }
 
@@ -723,6 +774,12 @@ void FPSController::ResetHookshotTransform()
 	ps = PlayerState::Normal;
 }
 
+FPSController::~FPSController()
+{
+	delete uiDebugCb.spriteBatch;
+	delete uiDebugCb.font;
+}
+
 
 PlayerState FPSController::GetPlayerState()
 {
@@ -785,10 +842,13 @@ void FPSController::Move()
 		if (midAir)
 		{
 			forwardForce = btVector3(direction.x, 0, direction.z);
+			footstepChannel->setPaused(true);
 		}
 		else
 		{
 			forwardForce = btVector3(direction.x, 0, direction.z) * spd;
+
+			footstepChannel->setPaused(false);
 		}
 
 		controllerVelocity += forwardForce;
@@ -805,10 +865,13 @@ void FPSController::Move()
 		if (midAir)
 		{
 			backwardForce = btVector3(direction.x, 0, direction.z) * -1;
+			footstepChannel->setPaused(true);
 		}
 		else
 		{
 			backwardForce = btVector3(direction.x, 0, direction.z) * -spd;
+
+			footstepChannel->setPaused(false);
 		}
 
 		controllerVelocity += backwardForce;
@@ -825,10 +888,12 @@ void FPSController::Move()
 		if (midAir)
 		{
 			leftwardForce = btVector3(right.x, 0, right.z);
+			footstepChannel->setPaused(true);
 		}
 		else
 		{
 			leftwardForce = btVector3(right.x, 0, right.z) * spd;
+			footstepChannel->setPaused(false);
 		}
 
 		controllerVelocity += leftwardForce;
@@ -848,21 +913,28 @@ void FPSController::Move()
 		if (midAir)
 		{
 			rightwardForce = btVector3(right.x, 0, right.z) * -1;
+			footstepChannel->setPaused(true);
 		}
 		else
 		{
 			rightwardForce = btVector3(right.x, 0, right.z) * -spd;
+
+			footstepChannel->setPaused(false);
 		}
 
 		controllerVelocity += rightwardForce;
 
 		rollLeft = true;
-		swordRollLeft = true;
+		swordRollLeft = true; 
 	}
 	else
 	{
 		rollLeft = false;
 		swordRollLeft = false;
+	}
+
+	if (!swordRollLeft && !swordRollRight && !swordRollForwards && !swordRollBackwards) {
+		footstepChannel->setPaused(true);
 	}
 
 	// jump/double jump
@@ -1038,7 +1110,10 @@ btVector3 FPSController::JumpForceFromInput()
 			}
 
 			jumpCount++;
-			midAir = true;
+			midAir = true; 
+			int index = (rand() % 6);
+			Config::FMODResult = Config::FMODSystem->playSound(Config::Jump[index], Config::SFXGroup2D, false, &Config::SFXChannel2D);
+			Config::SFXChannel2D->setVolume(JUMP_VOLUME);
 		}
 	}
 
@@ -1094,6 +1169,10 @@ btVector3 FPSController::DashImpulseFromInput()
 		dashDampTimer = DASH_DAMP_TIMER_MAX;
 
 		dashBlurCallback.active = true;
+
+		int index = (rand() % 6);
+		Config::FMODResult = Config::FMODSystem->playSound(Config::Dash[index], Config::SFXGroup2D, false, &Config::SFXChannel2D);
+		Config::SFXChannel2D->setVolume(DASH_VOLUME);
 	}
 
 	return dashImpulse;
@@ -1218,6 +1297,10 @@ void FPSController::OnCollision(btCollisionObject* other)
 		bloodResource -= 10;
 		impulseSumVec += Utility::Float3ToBulletVector(otherE->GetTransform().GetDirectionVector()).normalized() * 100.0f;
 		otherE->Destroy();
+
+		int index = (rand() % 10);
+		Config::FMODResult = Config::FMODSystem->playSound(Config::PlayerHit[index], Config::SFXGroup2D, false, &Config::SFXChannel2D);
+		Config::SFXChannel2D->setVolume(PLAYER_HIT_VOLUME);
 	}
 
 	if (otherE->HasTag(std::string("towerProjectile")))
@@ -1225,6 +1308,9 @@ void FPSController::OnCollision(btCollisionObject* other)
 		bloodResource -= 25;
 		impulseSumVec += Utility::Float3ToBulletVector(otherE->GetTransform().GetDirectionVector()).normalized() * 500.0f;
 		otherE->Destroy();
+		int index = (rand() % 10);
+		Config::FMODResult = Config::FMODSystem->playSound(Config::PlayerHit[index], Config::SFXGroup2D, false, &Config::SFXChannel2D);
+		Config::SFXChannel2D->setVolume(PLAYER_HIT_VOLUME);
 	}
 
 	if (otherE->HasTag(std::string("Enemy")) && onHitDampTimer <= 0)
@@ -1251,5 +1337,9 @@ void FPSController::OnCollision(btCollisionObject* other)
 		}
 
 		onHitDampTimer = ON_HIT_DAMP_TIMER_MAX;
+
+		int index = (rand() % 10);
+		Config::FMODResult = Config::FMODSystem->playSound(Config::PlayerHit[index], Config::SFXGroup2D, false, &Config::SFXChannel2D);
+		Config::SFXChannel2D->setVolume(PLAYER_HIT_VOLUME);
 	}
 }

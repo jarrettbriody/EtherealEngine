@@ -268,6 +268,9 @@ void MainMenuManager::Init()
 		Config::FMODResult = Config::FMODSystem->playSound(Config::MainTheme[count], Config::MusicGroup, true, &Config::MusicChannel); // Start a part of the main theme, but leave it paused
 		AudioManager::FMODErrorCheck(Config::FMODResult);
 
+		Config::FMODResult = Config::MusicChannel->setVolume(Config::MusicVolume);
+		AudioManager::FMODErrorCheck(Config::FMODResult);
+
 		if (!clock_start)
 		{
 			Config::FMODResult = Config::MusicChannel->setChannelGroup(Config::MusicGroup);
@@ -336,6 +339,17 @@ void MainMenuManager::Update()
 	if (bloodFired && totalTime - firedTime > 0.1f) {
 		((ParticleEmitter*)splatter)->SetIsActive(false);
 	}
+	
+	if (bloodFired && (totalTime - firedTime > 0.15f) && !soundPlayed) {
+		soundPlayed = true;
+		Config::FMODResult = Config::FMODSystem->playSound(Config::Sword[0], Config::SFXGroup, false, &Config::SFXChannel);
+		Config::SFXChannel->setVolume(0.3f);
+		FMOD_VECTOR pos = { 0.31f, 4.95f, 2.0f };
+		FMOD_VECTOR vel = { 0, 0, 0 };
+
+		Config::SFXChannel->set3DAttributes(&pos, &vel);
+		Config::SFXChannel->set3DMinMaxDistance(0, 10.0f);
+	}
 
 	if (totalTime >= 5.0f && !tooltipOn && !tooltipClosing) {
 		uiCb.skipTooltipTransparency += 1.0f * deltaTime;
@@ -351,7 +365,7 @@ void MainMenuManager::Update()
 		paperLerpSpd = 0.0f;
 	}
 
-	if (skipped && (lerpingPaperBottom || lerpingPaperCamera)) {
+	if (skipped && (lerpingPaperBottom || lerpingPaperCamera || paperAtCam)) {
 		XMFLOAT3 currentPaperPos = papers[paperCounter]->GetTransform().GetPosition();
 		XMVECTOR currentPos = XMLoadFloat3(&currentPaperPos);
 		XMFLOAT3 lerpPos;
@@ -378,6 +392,7 @@ void MainMenuManager::Update()
 			XMVector3NearEqual(currentRight, lerpRightC, XMVectorSet(0.001f, 0.001f, 0.001f, 0.001f))) {
 			lerpingPaperBottom = false;
 			lerpingPaperCamera = false;
+			paperAtCam = false;
 			paperCounter = numPapers;
 		}
 	}
@@ -408,6 +423,7 @@ void MainMenuManager::Update()
 			XMVector3NearEqual(currentRight, lerpRightC, XMVectorSet(0.001f, 0.001f, 0.001f, 0.001f))) {
 			lerpingPaperCamera = false;
 			lerpingPaperBottom = false;
+			paperAtCam = true;
 		}
 	}
 	else if (lerpingPaperBottom && paperCounter != numPapers) {
@@ -448,6 +464,7 @@ void MainMenuManager::Update()
 
 	if (mouse->OnLMBDown() && !lerpingPaperBottom && !lerpingPaperCamera && paperCounter != numPapers && papersStarted) {
 		lerpingPaperBottom = true;
+		paperAtCam = false;
 		paperLerpSpd = 0.0f;
 		if (uiCb.skipTooltipTransparency == 1.0f)
 			tooltipClosing = true;
@@ -489,9 +506,10 @@ void MainMenuManager::Update()
 		//paperCounter = numPapers;
 		tooltipClosing = true;
 		skipped = true;
-		if (!lerpingPaperBottom && !lerpingPaperCamera) {
+		if (!lerpingPaperBottom && !lerpingPaperCamera && !paperAtCam) {
 			lerpingPaperBottom = false;
 			lerpingPaperCamera = false;
+			paperAtCam = false;
 			paperCounter = numPapers;
 		}
 	}

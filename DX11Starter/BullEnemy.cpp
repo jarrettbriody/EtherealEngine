@@ -1,9 +1,20 @@
 #include "pch.h"
 #include "BullEnemy.h"
 
+#define BULL_DEATH_VOLUME 0.5f
+
 BullEnemy::~BullEnemy()
 {
 	delete bt;
+	int index = (rand() % 6);
+	Config::FMODResult = Config::FMODSystem->playSound(Config::BullDeath[index], Config::SFXGroup, false, &Config::SFXChannel);
+	Config::SFXChannel->setVolume(BULL_DEATH_VOLUME);
+	XMFLOAT3 epos = entity->GetTransform().GetPosition();
+	FMOD_VECTOR pos = { epos.x, epos.y, epos.z };
+	FMOD_VECTOR vel = { 0, 0, 0 };
+
+	Config::SFXChannel->set3DAttributes(&pos, &vel);
+	Config::SFXChannel->set3DMinMaxDistance(0, 75.0f);
 }
 
 void BullEnemy::Init()
@@ -17,7 +28,7 @@ void BullEnemy::Init()
 
 	//grid = &controller->grid;
 
-	entity->AddTag(std::string("Bull"));
+	//entity->AddTag(std::string("Bull"));
 
 	Entity* player = eMap->find("FPSController")->second;
 
@@ -120,7 +131,7 @@ void BullEnemy::OnCollision(btCollisionObject* other)
 		btVector3 oldEnemyPos = entity->GetRBody()->getCenterOfMassPosition();
 
 		// enemy is in the triangle, split it apart
-		std::vector<Entity*> childEntities = EESceneLoader->SplitMeshIntoChildEntities(entity, 10.0f, "BODYPART");
+		std::vector<Entity*> childEntities = EESceneLoader->SplitMeshIntoChildEntities(entity, 10.0f, 30.0f, 20.0f, "BODYPART");
 
 		// Update the game manager attribute for enemies alive
 		gameManagerScript->DecrementEnemiesAlive();

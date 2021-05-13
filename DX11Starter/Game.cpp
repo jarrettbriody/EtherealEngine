@@ -99,8 +99,86 @@ Game::~Game()
 		Config::MainTheme[count]->release();
 	for (count = 0; count < 3; count++)
 		Config::CombatTheme[count]->release();
+	
+
+	Config::Footstep->release();
+	for (size_t i = 0; i < 9; i++)
+	{
+		Config::Sword[i]->release();
+	}
+	for (size_t i = 0; i < 5; i++)
+	{
+		Config::Hookshot[i]->release();
+	}
+	for (size_t i = 0; i < 9; i++)
+	{
+		Config::Icicle[i]->release();
+	}
+	for (size_t i = 0; i < 7; i++)
+	{
+		Config::CyclopsAttack[i]->release();
+	}
+	for (size_t i = 0; i < 12; i++)
+	{
+		Config::CyclopsChatter[i]->release();
+	}
+	for (size_t i = 0; i < 6; i++)
+	{
+		Config::CyclopsDeath[i]->release();
+	}
+	for (size_t i = 0; i < 7; i++)
+	{
+		Config::BullAttack[i]->release();
+	}
+	for (size_t i = 0; i < 12; i++)
+	{
+		Config::BullChatter[i]->release();
+	}
+	for (size_t i = 0; i < 6; i++)
+	{
+		Config::BullDeath[i]->release();
+	}
+	for (size_t i = 0; i < 9; i++)
+	{
+		Config::HornedAttack[i]->release();
+	}
+	for (size_t i = 0; i < 6; i++)
+	{
+		Config::HornedChatter[i]->release();
+	}
+	for (size_t i = 0; i < 10; i++)
+	{
+		Config::HornedDeath[i]->release();
+	}
+	for (size_t i = 0; i < 9; i++)
+	{
+		Config::TowerAttack[i]->release();
+	}
+	for (size_t i = 0; i < 6; i++)
+	{
+		Config::TowerChatter[i]->release();
+	}
+	for (size_t i = 0; i < 10; i++)
+	{
+		Config::TowerDeath[i]->release();
+	}
+	for (size_t i = 0; i < 6; i++)
+	{
+		Config::Dash[i]->release();
+	}
+	for (size_t i = 0; i < 6; i++)
+	{
+		Config::Jump[i]->release();
+	}
+	for (size_t i = 0; i < 10; i++)
+	{
+		Config::PlayerHit[i]->release();
+	}
+
 	Config::MasterGroup->release();
 	Config::MusicGroup->release();
+	Config::SFXGroup->release();
+	Config::SFXGroup2D->release();
 	Config::FMODSystem->close();
 	Config::FMODSystem->release();
 
@@ -210,11 +288,11 @@ void Game::Init()
 	EERenderer->InitPostProcessRTV();
 	EESceneLoader->EERenderer = EERenderer;
 
-	//EESceneLoader->SetModelPath("../../Assets/Models/MainMenu/");
-	//EESceneLoader->LoadScene("MainMenu");
+	EESceneLoader->SetModelPath("../../Assets/Models/MainMenu/");
+	EESceneLoader->LoadScene("MainMenu");
 
-	EESceneLoader->SetModelPath("../../Assets/Models/Kamchatka/");
-	EESceneLoader->LoadScene("Kamchatka");
+	//EESceneLoader->SetModelPath("../../Assets/Models/Kamchatka/");
+	//EESceneLoader->LoadScene("Kamchatka");
 
 	EERenderer->SetShadowCascadeInfo(0, 4096, 0.1f, 2000.0f, 100.0f, 100.0f);
 	EERenderer->SetShadowCascadeInfo(1, 4096, 0.1f, 2000.0f, 250.0f, 250.0f);
@@ -418,13 +496,198 @@ void Game::Init()
 	Config::FMODResult = Config::FMODSystem->createSound("../../Assets/Audio/Music/Track 2/Section 3 (Outro).wav", FMOD_2D | FMOD_LOOP_OFF, 0, &Config::CombatTheme[2]);
 	AudioManager::FMODErrorCheck(Config::FMODResult);
 
+
+
+
+	Config::FMODResult = Config::FMODSystem->createSound("../../Assets/Audio/SFX/Grapple Hook/1.Grapple Hook Fire.wav", FMOD_2D | FMOD_LOOP_OFF, 0, &Config::Hookshot[0]);
+	AudioManager::FMODErrorCheck(Config::FMODResult);
+
+	Config::FMODResult = Config::FMODSystem->createSound("../../Assets/Audio/SFX/Grapple Hook/2.Grapple Hook Extending.wav", FMOD_2D | FMOD_LOOP_OFF, 0, &Config::Hookshot[1]);
+	AudioManager::FMODErrorCheck(Config::FMODResult);
+
+	Config::FMODResult = Config::FMODSystem->createSound("../../Assets/Audio/SFX/Grapple Hook/3.Grapple Hook Impact.wav", FMOD_3D | FMOD_LOOP_OFF | FMOD_3D_LINEARROLLOFF, 0, &Config::Hookshot[2]);
+	AudioManager::FMODErrorCheck(Config::FMODResult);
+
+	Config::FMODResult = Config::FMODSystem->createSound("../../Assets/Audio/SFX/Grapple Hook/4.Grapple Hook In Use.wav", FMOD_2D | FMOD_LOOP_OFF, 0, &Config::Hookshot[3]);
+	AudioManager::FMODErrorCheck(Config::FMODResult);
+
+	Config::FMODResult = Config::FMODSystem->createSound("../../Assets/Audio/SFX/Grapple Hook/5.Grapple Hook Releasing.wav", FMOD_2D | FMOD_LOOP_OFF, 0, &Config::Hookshot[4]);
+	AudioManager::FMODErrorCheck(Config::FMODResult);
+
+	Config::FMODResult = Config::FMODSystem->createSound("../../Assets/Audio/SFX/Voices/Player/Footsteps/Stone/Footsteps_Casual_Stone_10.wav", FMOD_3D | FMOD_LOOP_NORMAL | FMOD_3D_LINEARROLLOFF, 0, &Config::Footstep);
+	AudioManager::FMODErrorCheck(Config::FMODResult);
+
+	string str = "../../Assets/Audio/SFX/Sword/Sword Impact/Sword Impact ";
+	for (size_t i = 1; i < 6; i++)
+	{
+		string newStr = str + to_string(i) + ".wav";
+		Config::FMODResult = Config::FMODSystem->createSound(newStr.c_str(), FMOD_3D | FMOD_LOOP_OFF | FMOD_3D_LINEARROLLOFF, 0, &Config::Sword[i - 1]);
+		AudioManager::FMODErrorCheck(Config::FMODResult);
+	}
+
+	str = "../../Assets/Audio/SFX/Sword/Sword Whoosh/Sword Whoosh ";
+	for (size_t i = 1; i < 5; i++)
+	{
+		string newStr = str + to_string(i) + ".wav";
+		Config::FMODResult = Config::FMODSystem->createSound(newStr.c_str(), FMOD_2D | FMOD_LOOP_OFF, 0, &Config::Sword[5 + i - 1]);
+		AudioManager::FMODErrorCheck(Config::FMODResult);
+	}
+
+	str = "../../Assets/Audio/SFX/Throwing Knife/Throwing Knife Impact/Knife Impact ";
+	for (size_t i = 1; i < 7; i++)
+	{
+		string newStr = str + to_string(i) + ".wav";
+		Config::FMODResult = Config::FMODSystem->createSound(newStr.c_str(), FMOD_3D | FMOD_LOOP_OFF | FMOD_3D_LINEARROLLOFF, 0, &Config::Icicle[i - 1]);
+		AudioManager::FMODErrorCheck(Config::FMODResult);
+	}
+
+	str = "../../Assets/Audio/SFX/Throwing Knife/Throwing Knife Throw/Throwing Knife Throw ";
+	for (size_t i = 1; i < 4; i++)
+	{
+		string newStr = str + to_string(i) + ".wav";
+		Config::FMODResult = Config::FMODSystem->createSound(newStr.c_str(), FMOD_2D | FMOD_LOOP_OFF, 0, &Config::Icicle[6 + i - 1]);
+		AudioManager::FMODErrorCheck(Config::FMODResult);
+	}
+
+	str = "../../Assets/Audio/SFX/Voices/Enemy 1/Enemy 1 Attack/Enemy 1 Attack ";
+	for (size_t i = 1; i < 8; i++)
+	{
+		string newStr = str + to_string(i) + ".wav";
+		Config::FMODResult = Config::FMODSystem->createSound(newStr.c_str(), FMOD_3D | FMOD_LOOP_OFF | FMOD_3D_LINEARROLLOFF, 0, &Config::CyclopsAttack[i - 1]);
+		AudioManager::FMODErrorCheck(Config::FMODResult);
+	}
+
+	str = "../../Assets/Audio/SFX/Voices/Enemy 1/Enemy 1 Chatter/Enemy 1 Chatter ";
+	for (size_t i = 1; i < 13; i++)
+	{
+		string newStr = str + to_string(i) + ".wav";
+		Config::FMODResult = Config::FMODSystem->createSound(newStr.c_str(), FMOD_3D | FMOD_LOOP_OFF | FMOD_3D_LINEARROLLOFF, 0, &Config::CyclopsChatter[i - 1]);
+		AudioManager::FMODErrorCheck(Config::FMODResult);
+	}
+
+	str = "../../Assets/Audio/SFX/Voices/Enemy 1/Enemy 1 Death/Enemy 1 Death ";
+	for (size_t i = 1; i < 7; i++)
+	{
+		string newStr = str + to_string(i) + ".wav";
+		Config::FMODResult = Config::FMODSystem->createSound(newStr.c_str(), FMOD_3D | FMOD_LOOP_OFF | FMOD_3D_LINEARROLLOFF, 0, &Config::CyclopsDeath[i - 1]);
+		AudioManager::FMODErrorCheck(Config::FMODResult);
+	}
+
+	str = "../../Assets/Audio/SFX/Voices/Enemy 2/Enemy 2 Attack/Enemy 2 Attack ";
+	for (size_t i = 1; i < 8; i++)
+	{
+		string newStr = str + to_string(i) + ".wav";
+		Config::FMODResult = Config::FMODSystem->createSound(newStr.c_str(), FMOD_3D | FMOD_LOOP_OFF | FMOD_3D_LINEARROLLOFF, 0, &Config::BullAttack[i - 1]);
+		AudioManager::FMODErrorCheck(Config::FMODResult);
+	}
+
+	str = "../../Assets/Audio/SFX/Voices/Enemy 2/Enemy 2 Chatter/Enemy 2 Chatter ";
+	for (size_t i = 1; i < 13; i++)
+	{
+		string newStr = str + to_string(i) + ".wav";
+		Config::FMODResult = Config::FMODSystem->createSound(newStr.c_str(), FMOD_3D | FMOD_LOOP_OFF | FMOD_3D_LINEARROLLOFF, 0, &Config::BullChatter[i - 1]);
+		AudioManager::FMODErrorCheck(Config::FMODResult);
+	}
+
+	str = "../../Assets/Audio/SFX/Voices/Enemy 2/Enemy 2 Death/Enemy 2 Death ";
+	for (size_t i = 1; i < 7; i++)
+	{
+		string newStr = str + to_string(i) + ".wav";
+		Config::FMODResult = Config::FMODSystem->createSound(newStr.c_str(), FMOD_3D | FMOD_LOOP_OFF | FMOD_3D_LINEARROLLOFF, 0, &Config::BullDeath[i - 1]);
+		AudioManager::FMODErrorCheck(Config::FMODResult);
+	}
+
+	str = "../../Assets/Audio/SFX/Voices/Enemy 3/Enemy 3 Attack/Enemy 3 Attack ";
+	for (size_t i = 1; i < 10; i++)
+	{
+		string newStr = str + to_string(i) + ".wav";
+		Config::FMODResult = Config::FMODSystem->createSound(newStr.c_str(), FMOD_3D | FMOD_LOOP_OFF | FMOD_3D_LINEARROLLOFF, 0, &Config::HornedAttack[i - 1]);
+		AudioManager::FMODErrorCheck(Config::FMODResult);
+	}
+
+	str = "../../Assets/Audio/SFX/Voices/Enemy 3/Enemy 3 Chatter/Enemy 3 Chatter ";
+	for (size_t i = 1; i < 7; i++)
+	{
+		string newStr = str + to_string(i) + ".wav";
+		Config::FMODResult = Config::FMODSystem->createSound(newStr.c_str(), FMOD_3D | FMOD_LOOP_OFF | FMOD_3D_LINEARROLLOFF, 0, &Config::HornedChatter[i - 1]);
+		AudioManager::FMODErrorCheck(Config::FMODResult);
+	}
+
+	str = "../../Assets/Audio/SFX/Voices/Enemy 3/Enemy 3 Death/Enemy 3 Death ";
+	for (size_t i = 1; i < 11; i++)
+	{
+		string newStr = str + to_string(i) + ".wav";
+		Config::FMODResult = Config::FMODSystem->createSound(newStr.c_str(), FMOD_3D | FMOD_LOOP_OFF | FMOD_3D_LINEARROLLOFF, 0, &Config::HornedDeath[i - 1]);
+		AudioManager::FMODErrorCheck(Config::FMODResult);
+	}
+
+	str = "../../Assets/Audio/SFX/Voices/Enemy 4/Enemy 4 Attack/Enemy 4 Attack ";
+	for (size_t i = 1; i < 10; i++)
+	{
+		string newStr = str + to_string(i) + ".wav";
+		Config::FMODResult = Config::FMODSystem->createSound(newStr.c_str(), FMOD_3D | FMOD_LOOP_OFF | FMOD_3D_LINEARROLLOFF, 0, &Config::TowerAttack[i - 1]);
+		AudioManager::FMODErrorCheck(Config::FMODResult);
+	}
+
+	str = "../../Assets/Audio/SFX/Voices/Enemy 4/Enemy 4 Chatter/Enemy 4 Chatter ";
+	for (size_t i = 1; i < 7; i++)
+	{
+		string newStr = str + to_string(i) + ".wav";
+		Config::FMODResult = Config::FMODSystem->createSound(newStr.c_str(), FMOD_3D | FMOD_LOOP_OFF | FMOD_3D_LINEARROLLOFF, 0, &Config::TowerChatter[i - 1]);
+		AudioManager::FMODErrorCheck(Config::FMODResult);
+	}
+
+	str = "../../Assets/Audio/SFX/Voices/Enemy 4/Enemy 4 Death/Enemy 4 Death ";
+	for (size_t i = 1; i < 11; i++)
+	{
+		string newStr = str + to_string(i) + ".wav";
+		Config::FMODResult = Config::FMODSystem->createSound(newStr.c_str(), FMOD_3D | FMOD_LOOP_OFF | FMOD_3D_LINEARROLLOFF, 0, &Config::TowerDeath[i - 1]);
+		AudioManager::FMODErrorCheck(Config::FMODResult);
+	}
+
+	str = "../../Assets/Audio/SFX/Voices/Player/Dash/Dash ";
+	for (size_t i = 1; i < 7; i++)
+	{
+		string newStr = str + to_string(i) + ".wav";
+		Config::FMODResult = Config::FMODSystem->createSound(newStr.c_str(), FMOD_2D | FMOD_LOOP_OFF, 0, &Config::Dash[i - 1]);
+		AudioManager::FMODErrorCheck(Config::FMODResult);
+	}
+
+	str = "../../Assets/Audio/SFX/Voices/Player/Jump/Jump ";
+	for (size_t i = 1; i < 7; i++)
+	{
+		string newStr = str + to_string(i) + ".wav";
+		Config::FMODResult = Config::FMODSystem->createSound(newStr.c_str(), FMOD_2D | FMOD_LOOP_OFF, 0, &Config::Jump[i - 1]);
+		AudioManager::FMODErrorCheck(Config::FMODResult);
+	}
+
+	str = "../../Assets/Audio/SFX/Voices/Player/Player Hit/Player Hit_";
+	for (size_t i = 1; i < 11; i++)
+	{
+		string newStr = str + to_string(i) + ".wav";
+		Config::FMODResult = Config::FMODSystem->createSound(newStr.c_str(), FMOD_2D | FMOD_LOOP_OFF, 0, &Config::PlayerHit[i - 1]);
+		AudioManager::FMODErrorCheck(Config::FMODResult);
+	}
+
 	Config::FMODResult = Config::FMODSystem->createChannelGroup("Music Group", &Config::MusicGroup); // Create a channel group for playing music
+	AudioManager::FMODErrorCheck(Config::FMODResult);
+
+	Config::FMODResult = Config::FMODSystem->createChannelGroup("SFX Group", &Config::SFXGroup); // Create a channel group for playing music
+	AudioManager::FMODErrorCheck(Config::FMODResult);
+
+	Config::FMODResult = Config::FMODSystem->createChannelGroup("SFX Group 2D", &Config::SFXGroup2D); // Create a channel group for playing music
 	AudioManager::FMODErrorCheck(Config::FMODResult);
 
 	Config::FMODResult = Config::FMODSystem->getMasterChannelGroup(&Config::MasterGroup); // Assign MasterGroup as the master channel
 	AudioManager::FMODErrorCheck(Config::FMODResult);
 
 	Config::FMODResult = Config::MasterGroup->addGroup(Config::MusicGroup);
+	AudioManager::FMODErrorCheck(Config::FMODResult);
+
+	Config::FMODResult = Config::MasterGroup->addGroup(Config::SFXGroup);
+	AudioManager::FMODErrorCheck(Config::FMODResult);
+
+	Config::FMODResult = Config::MasterGroup->addGroup(Config::SFXGroup2D);
 	AudioManager::FMODErrorCheck(Config::FMODResult);
 
 
@@ -500,12 +763,12 @@ void Game::Update(double deltaTime, double totalTime)
 	}*/
 
 	// Mute/unmute the master group
-	if (GetAsyncKeyState('M') & 0x8000)
-	{
-		bool mute = true;
-		Config::MasterGroup->getMute(&mute);
-		Config::MasterGroup->setMute(!mute);
-	}
+	//if (GetAsyncKeyState('M') & 0x8000)
+	//{
+	//	bool mute = true;
+	//	Config::MasterGroup->getMute(&mute);
+	//	Config::MasterGroup->setMute(!mute);
+	//}
 
 	int numManifolds = Config::DynamicsWorld->getDispatcher()->getNumManifolds();
 	//btPersistentManifold** manifolds = Config::DynamicsWorld->getDispatcher()->getInternalManifoldPointer();

@@ -4,6 +4,16 @@
 
 using namespace std;
 
+struct RenderRingsCallback : RendererCallback {
+	void PreDraw() {
+		//Config::Context->OMSetDepthStencilState(Renderer::GetInstance()->alwaysDrawDepthStencil, 0);
+	}
+
+	void PostDraw() {
+		//Config::Context->OMSetDepthStencilState(NULL, 0);
+	}
+};
+
 struct FluidCallback : RendererCallback {
 	float totalTime = 0.0f;
 	int waveCounter = 0;
@@ -12,6 +22,10 @@ struct FluidCallback : RendererCallback {
 	float waveHeight = 0.0f;
 	float radius = 0.0f;
 	XMFLOAT3 pos;
+
+	void PreDraw() {
+		//Config::Context->OMSetDepthStencilState(Renderer::GetInstance()->alwaysDrawDepthStencil, 0);
+	}
 
 	void PreVertexShaderCallback() {
 		vShader->SetFloat("fillLineY", fillLineY);
@@ -39,6 +53,10 @@ struct FluidCallback : RendererCallback {
 	void PrePrepassPixelShaderCallback() {
 		prepassPShader->SetFloat3("orbCenter", pos);
 		prepassPShader->SetFloat("radius", radius + 0.002f);
+	}
+
+	void PostDraw() {
+		//Config::Context->OMSetDepthStencilState(NULL, 0);
 	}
 };
 

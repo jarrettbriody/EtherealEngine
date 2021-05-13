@@ -13,7 +13,7 @@ TYPE="POINTLIGHT" name="candleLight2" intensity="1.0" range="5.0" P(-4.0,4.0,-0.
 //TYPE="POINTLIGHT" name="hearth" intensity="0.1" range="10.0" P(10.77,2.0,-0.6)C(1.0,0.61569,0)
 //TYPE="SPOTLIGHT" name="menulight" intensity="0.3" range="30.0" spotFalloff="20" P(0,5,5)D(0,0,-1)C(1.0,0.87843,0.72941)
 
-TYPE="AMBIENTLIGHT" intensity="0.005"
+TYPE="AMBIENTLIGHT" intensity="0.01"
 TYPE="AMBIENTOCCLUSION" enabled="true" unitsPerMeter="1.0" radius="1.0" power="2.0" blurEnabled="true" blurSharpness="16.0" blurRadius="0" 
 
 name="MainMenuManager" scripts="MAINMENUMANAGER" P(0,0,0)R(0,0,0)S(0,0,0)

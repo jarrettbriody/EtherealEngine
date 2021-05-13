@@ -11,7 +11,19 @@
 #include "SpriteFont.h"
 #include "SpriteBatch.h"
 
+#define HOOKSHOT_THROW_VOLUME 0.4f
+#define HOOKSHOT_EXTENDING_VOLUME 0.4f
+#define HOOKSHOT_IMPACT_VOLUME 0.5f
+#define HOOKSHOT_REEL_VOLUME 0.4f
+#define HOOKSHOT_RELEASE_VOLUME 0.4f
+#define ICICLE_THROW_VOLUME 0.5f
+#define FOOTSTEP_VOLUME 0.4f
+#define DASH_VOLUME 0.4f
+#define PLAYER_HIT_VOLUME 0.4f
+#define JUMP_VOLUME 0.2f
+
 // struct in script from utility callback
+
 
 struct DashBlurCallback : RendererCallback {
 	int blurAmount = 1;
@@ -73,6 +85,9 @@ enum class PlayerState
 class FPSController : public ScriptManager
 {
 	map<string, Entity*>* eMap;
+
+	FMOD::Channel* hookshotChannel;
+	FMOD::Channel* footstepChannel;
 
 	double totalTime = 0.0;
 	XMFLOAT4 ringRandomQuats[4];
@@ -258,6 +273,8 @@ public:
 	void SetLeashedEntity(Entity* e);
 
 	void ResetHookshotTransform();
+
+	~FPSController();
 };
 
 /*

@@ -51,6 +51,7 @@ Renderer::~Renderer()
 	}
 
 	blendState->Release();
+	alwaysDrawDepthStencil->Release();
 
 	map<string, Camera*>::iterator cameraMapIterator;
 	for (int i = 0; i < cameraCount; i++)
@@ -522,6 +523,32 @@ void Renderer::InitBlendState()
 	bd.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
 
 	Config::Device->CreateBlendState(&bd, &blendState);
+
+	D3D11_DEPTH_STENCIL_DESC dsDesc;
+
+	dsDesc.DepthEnable = true;
+	dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+	dsDesc.DepthFunc = D3D11_COMPARISON_ALWAYS;
+
+	// Stencil test parameters
+	dsDesc.StencilEnable = false;
+	dsDesc.StencilReadMask = 0xFF;
+	dsDesc.StencilWriteMask = 0xFF;
+
+	// Stencil operations if pixel is front-facing
+	dsDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_INCR;
+	dsDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_INCR;
+	dsDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_INCR;
+	dsDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+
+	// Stencil operations if pixel is back-facing
+	dsDesc.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+	dsDesc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_INCR;
+	dsDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+	dsDesc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+
+	// Create depth stencil state
+	Config::Device->CreateDepthStencilState(&dsDesc, &alwaysDrawDepthStencil);
 }
 
 void Renderer::ToggleBlendState(bool toggle)
@@ -575,6 +602,7 @@ void Renderer::RenderFrame()
 
 		if (e->isEmptyObj) continue;
 		if (!e->renderObject) continue;
+
 		e->ToggleShadows(Config::ShadowsEnabled);
 		if (Config::ShadowsEnabled) {
 			ShadowData d;
@@ -632,10 +660,22 @@ void Renderer::RenderFrame()
 		}
 		e->PrepareMaterialForDraw(mat->GetName(), camera->GetViewMatrix(), camera->GetProjMatrix());
 
+		if (callback != nullptr) {
+			if (callback->active) {
+				callback->PreDraw();
+			}
+		}
+
 		Config::Context->DrawIndexed(
 			mesh->GetIndexCount(),		// The number of indices to use (we could draw a subset if we wanted)
 			0,											// Offset to the first index we want to use
 			0);											// Offset to add to each index when looking up vertices
+
+		if (callback != nullptr) {
+			if (callback->active) {
+				callback->PostDraw();
+			}
+		}
 
 		mat->GetPixelShader()->SetShaderResourceView("ShadowMap0", NULL);
 		mat->GetPixelShader()->SetShaderResourceView("ShadowMap1", NULL);

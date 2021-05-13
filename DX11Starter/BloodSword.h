@@ -6,6 +6,9 @@
 
 #define SWORD_EMITTERS 16
 
+#define SLASH_VOLUME 0.2f
+#define SLASH_HIT_VOLUME 0.75f
+
 enum class SwordState
 {
 	Raised, Slashing, Idle, Reset
@@ -20,6 +23,14 @@ struct SwordWaveCallback : RendererCallback {
 	float waveRateX;
 	float waveRateY;
 	float waveRateZ;
+
+	void PreDraw() {
+		//Config::Context->OMSetDepthStencilState(Renderer::GetInstance()->alwaysDrawDepthStencil, 0);
+	}
+
+	void PostDraw() {
+		//Config::Context->OMSetDepthStencilState(NULL, 0);
+	}
 
 	void PreVertexShaderCallback() {
 		vShader->SetFloat("totalTime", totalTime);

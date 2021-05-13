@@ -27,6 +27,8 @@ void BodyPart::Init()
 	emitDesc.particleMaxLifetime = 15.0f;
 	//emitDesc.particleInitMinScale = 0.1f;
 	//emitDesc.particleInitMaxScale = 0.2f;
+	emitDesc.emissionStartRadius = 0.1f;
+	emitDesc.emissionEndRadius = 0.6f;
 	emitDesc.particleInitMinScale = 0.1f;
 	emitDesc.particleInitMaxScale = 0.11f;
 	emitDesc.particleAcceleration = XMFLOAT3(0.0f,-20.0f, 0.0f);
@@ -80,10 +82,10 @@ void BodyPart::Init()
 		}
 		});
 
-	emitDesc.maxParticles = 3000;
+	emitDesc.maxParticles = 6000;
 	emitDesc.emissionRate = 400.0f;
-	emitDesc.particleMinLifetime = 2.0f;
-	emitDesc.particleMaxLifetime = 3.0f;
+	emitDesc.particleMinLifetime = 3.0f;
+	emitDesc.particleMaxLifetime = 4.0f;
 	gpuPSys = new GPUParticleEmitter(emitDesc);
 }
 

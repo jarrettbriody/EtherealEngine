@@ -230,7 +230,7 @@ public:
 	void SetScriptLoader(void (*callback)(Entity* e, string script));
 
 	Entity* CreateEntity(EntityCreationParameters& para);
-	std::vector<Entity*> SplitMeshIntoChildEntities(Entity* e, float componentMass, string scriptName = "");
+	std::vector<Entity*> SplitMeshIntoChildEntities(Entity* e, float componentMass, float impulseForceScalar = 20.0f, float torqueScalar = 15.0f, string scriptName = "");
 
 	void DestroyEntity(string entityName);
 	void DestroyEntitiesByTag(string tag);

@@ -17,6 +17,9 @@
 #include "NavmeshHandler.h"
 #include "AStarSolver.h"
 
+#define CYCLOPS_CHATTER_VOLUME 0.5f
+#define CYCLOPS_DEATH_VOLUME 0.5f
+
 class CyclopsEnemy : public ScriptManager, public BaseEnemy
 {
 	~CyclopsEnemy();

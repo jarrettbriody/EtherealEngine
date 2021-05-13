@@ -142,6 +142,7 @@ void AmbientParticles::Init()
 	//gpuEmitter->SetBlendingEnabled(true);
 	//---------------------------------------------------------------------------------------------
 
+	/*
 	LightContainer testLight;
 	testLight.light.Type = LIGHT_TYPE_POINT;
 	//testLight->Direction = EECamera->direction;
@@ -152,6 +153,7 @@ void AmbientParticles::Init()
 	//testLight->SpotFalloff = 20.f;
 	testLight.lightName = "fire";
 	LightHandler::GetInstance()->AddLight(testLight);
+	*/
 
 	callback.active = true;
 	callback.vShader = EESceneLoader->VertexShadersMap["PostProcess"];

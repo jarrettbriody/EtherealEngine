@@ -312,6 +312,7 @@ class MainMenuManager : public ScriptManager
 	//bool lerpingPaperSide = false;
 	bool lerpingPaperBottom = false;
 	bool lerpingPaperCamera = false;
+	bool paperAtCam = false;
 	//XMFLOAT3 paperSidePos = XMFLOAT3(0.4f, 0.3f, 0.2f);
 	XMFLOAT3 paperBottomPos = XMFLOAT3(0.8f, 0.0f, 0.4f);
 	XMFLOAT3 paperCameraPos;
@@ -361,6 +362,8 @@ class MainMenuManager : public ScriptManager
 
 	bool tooltipOn = false;
 	bool tooltipClosing = false;
+
+	bool soundPlayed = false;
 
 	~MainMenuManager();
 

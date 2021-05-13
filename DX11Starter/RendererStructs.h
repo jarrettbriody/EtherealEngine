@@ -24,10 +24,14 @@ struct RendererCallback {
 	SimpleVertexShader* prepassVShader = nullptr;
 	SimplePixelShader* prepassPShader = nullptr;
 
+	virtual void PreDraw() {};
+
 	virtual void PreVertexShaderCallback() {};
 	virtual void PrePixelShaderCallback() {};
 	virtual void PrePrepassVertexShaderCallback() {};
 	virtual void PrePrepassPixelShaderCallback() {};
+
+	virtual void PostDraw() {};
 };
 
 struct RenderObject {
