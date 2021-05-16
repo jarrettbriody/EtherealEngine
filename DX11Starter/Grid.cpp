@@ -116,24 +116,24 @@ Node* Grid::FindNearestNode(DirectX::XMFLOAT3 position)
 	unsigned int xIndex = 0;
 	unsigned int zIndex = 0;
 
-	if (position.x >= gridStartPosition.x && position.x <= gridEndPosition.x) {
+	if (position.x > gridStartPosition.x && position.x < gridEndPosition.x) {
 		xIndex = (unsigned int)((position.x - gridStartPosition.x) / nodeSpacing);
 	}
-	if (position.z >= gridStartPosition.z && position.z <= gridEndPosition.z) {
+	if (position.z > gridStartPosition.z && position.z < gridEndPosition.z) {
 		zIndex = (unsigned int)((position.z - gridStartPosition.z) / nodeSpacing);
 	}
 
-	if (position.x < gridStartPosition.x) {
+	if (position.x <= gridStartPosition.x) {
 		xIndex = 0;
 	}
-	else if (position.x > gridEndPosition.x) {
+	else if (position.x >= gridEndPosition.x) {
 		xIndex = numberOfRows - 1;
 	}
 
-	if (position.z < gridStartPosition.z) {
+	if (position.z <= gridStartPosition.z) {
 		zIndex = 0;
 	}
-	else if (position.z > gridEndPosition.z) {
+	else if (position.z >= gridEndPosition.z) {
 		zIndex = numberOfColumns - 1;
 	}
 

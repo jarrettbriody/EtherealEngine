@@ -43,37 +43,49 @@ Status SeekAndFleePlayer::Update()
 
 			//enemy->SetPosition(teleportPos);
 
-			Node* teleportNode = currentGrid->FindNearestNode(enemy->GetTransform().GetPosition());
+			//Node* teleportNode = currentGrid->FindNearestNode(enemy->GetTransform().GetPosition());
+
+			Grid* cGrid = NavmeshHandler::GetInstance()->GetGridAtPosition(player->GetTransform().GetPosition());
+
+			Node* teleportNode = cGrid->FindNearestNode(player->GetTransform().GetPosition());
 
 			vector<Node*> possibleTeleports;
 			int adjacentCount;
 
-			currentGrid->GetUnobstructedMoves(currentGrid->FindNearestNode(player->GetTransform().GetPosition()), possibleTeleports, adjacentCount);
+			cGrid->GetUnobstructedMoves(teleportNode, possibleTeleports, adjacentCount);
 
-			if (!possibleTeleports.empty())
+			if (possibleTeleports.size() > 0)
 			{
-				static std::random_device rd;  // Will be used to obtain a seed for the random number engine.
-				static std::mt19937 gen(rd()); // Standard Mersenne twister seeded with rd().
 				static std::uniform_int_distribution<> dist1(0, possibleTeleports.size() - 1);
 
-				teleportNode = possibleTeleports[dist1(gen)];
+				teleportNode = possibleTeleports[rand() % possibleTeleports.size()];
 
 				possibleTeleports.clear();
-				currentGrid->GetUnobstructedMoves(teleportNode, possibleTeleports, adjacentCount);
+				cGrid = NavmeshHandler::GetInstance()->GetGridAtPosition(teleportNode->GetPos());
+				cGrid->GetUnobstructedMoves(teleportNode, possibleTeleports, adjacentCount);
 
 				if (!possibleTeleports.empty())
 				{
-					static std::uniform_int_distribution<> dist2(0, possibleTeleports.size() - 1);
-					teleportNode = possibleTeleports[dist2(gen)];
+					teleportNode = possibleTeleports[rand() % possibleTeleports.size()];
+				}
+			}
+			else {
+				cGrid = NavmeshHandler::GetInstance()->GetGridAtPosition(enemy->GetTransform().GetPosition());
+				teleportNode = cGrid->FindNearestNode(player->GetTransform().GetPosition());
+				cGrid->GetUnobstructedMoves(teleportNode, possibleTeleports, adjacentCount);
+				if (possibleTeleports.size() > 0) {
+					teleportNode = possibleTeleports[rand() % possibleTeleports.size()];
 				}
 			}
 
-			XMFLOAT3 teleportPos = teleportNode->GetPos();
-			teleportPos.y = enemyPos.y;
+			if (possibleTeleports.size() > 0) {
+				XMFLOAT3 teleportPos = teleportNode->GetPos();
+				teleportPos.y = enemyPos.y;
 
-			enemy->GetTransform().SetPosition(teleportPos);
+				enemy->GetTransform().SetPosition(teleportPos);
 
-			*cooldownTimer = maxCooldownTime;
+				*cooldownTimer = maxCooldownTime;
+			}
 		}
 		
 

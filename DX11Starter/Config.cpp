@@ -48,7 +48,7 @@ float Config::SceneBrightness = 0.05f;
 bool Config::DecalsEnabled = true;
 unsigned int Config::InitialDecalVectorSize = 3000;
 
-float Config::MusicVolume = 0.0f; //0.1
+float Config::MusicVolume = 0.1f; //0.1
 
 btDiscreteDynamicsWorld* Config::DynamicsWorld = nullptr;
 

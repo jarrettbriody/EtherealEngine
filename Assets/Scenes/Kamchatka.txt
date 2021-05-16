@@ -21,7 +21,7 @@ name="Blood Sword" tags="Blood Sword" layers="playertools" scripts="BLOODSWORD" 
 //obj="verteyedemon_UPDATED" layers="outline" tags="Enemy" colliders="true" scripts="TOWERENEMY" mass="1.0" P(-298.98,6,400)R(0,0,0)S(0.3,0.3,0.3)
 
 //obj="burningcommieblocv2" P(500,240,0)R(0,90,0)S(25,25,25)
-obj="street" tags="Environment,navmesh,street" layers="decal" colliders="true" P(-298.8318,-7.8,361.4137)R(0,180,0)S(5,1,1)
+obj="street" tags="Environment,street" layers="decal" colliders="true" P(-298.8318,-7.8,361.4137)R(0,180,0)S(5,1,1)
 obj="street" tags="Environment,navmesh,street" layers="decal" colliders="true" P(-108.7,-1.5,37.6)R(0,180,0)S(5,1,5)
 obj="street" tags="Environment,navmesh,street" layers="decal" colliders="true" P(-110.7,-3.39,930)R(0,270,0)S(8,5,8)
 obj="street" tags="Environment,navmesh,street" layers="decal" colliders="true" P(-298.98,-3.4,37)R(0,180,0)S(5,5,7.4)
