@@ -78,6 +78,7 @@ public:
 	bool isEmptyObj = false;
 	bool renderObject = true;
 	bool hbaoPlusEnabled = true;
+	bool drawOnTop = false;
 	Entity();
 	Entity(string entityName);
 	Entity(string entityName, Mesh* entityMesh, Material* mat = nullptr);

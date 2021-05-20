@@ -24,9 +24,10 @@ void FPSController::Init()
 	while (ShowCursor(Config::ShowCursor) >= 0);
 
 
-	uiDebugCb.spriteBatch = new SpriteBatch(Config::Context);
-	uiDebugCb.font = new SpriteFont(Config::Device, L"../../Assets/Fonts/Bloodlust.spritefont");
-	//EERenderer->SetRenderUICallback(true, &uiDebugCb, 0);
+	FPSCtrlUICb.spriteBatch = new SpriteBatch(Config::Context);
+	FPSCtrlUICb.font = EESceneLoader->FontMap["Arial"];
+	FPSCtrlUICb.hitUI = EESceneLoader->DefaultTexturesMap["playerHitUI"];
+	EERenderer->SetRenderUICallback(true, &FPSCtrlUICb, 1);
 
 	eMap = ScriptManager::sceneEntitiesMap;
 	bloodOrb = eMap->find("Blood_Orb")->second;
@@ -42,7 +43,7 @@ void FPSController::Init()
 			"Blood Icicle",					// tag
 			"Blood Icicle",					// layer
 			"bloodicicle",					// mesh
-			"swordgradient",				// material
+			"bloodpool",					// material
 			{"BLOODICICLE"},				// script names
 			1,								// script count
 			XMFLOAT3(0.0f, 0.0f, 0.0f),		// position
@@ -190,7 +191,7 @@ void FPSController::Init()
 	}
 
 	Config::FMODResult = Config::FMODSystem->playSound(Config::Footstep, Config::SFXGroup, true, &footstepChannel);
-	footstepChannel->setVolume(FOOTSTEP_VOLUME);
+	footstepChannel->setVolume(FOOTSTEP_VOLUME * Config::SFXVolume);
 	XMFLOAT3 epos = entity->GetTransform().GetPosition();
 	FMOD_VECTOR pos = { epos.x,epos.y, epos.z };
 	FMOD_VECTOR vel = { 0, 0, 0 };
@@ -201,11 +202,28 @@ void FPSController::Init()
 
 void FPSController::Update()
 {
+	RECT window;
+	RECT client;
+	if (GetWindowRect(Config::hWnd, &window)) {
+		if (GetClientRect(Config::hWnd, &client)) {
+			FPSCtrlUICb.windowCenter.x = round(client.left + (float)Config::ViewPortWidth / 2.0f);
+			FPSCtrlUICb.windowCenter.y = round(client.top + (float)Config::ViewPortHeight / 2.0f);
+			
+			FPSCtrlUICb.windowWidthRatio = (float)Config::ViewPortWidth / 1920.0f;
+			FPSCtrlUICb.windowHeightRatio = (float)Config::ViewPortHeight / 1080.0f;
+		}
+	}
 
 	XMFLOAT3 playerPos = entity->GetTransform().GetPosition();
 	std::string playerPosString;
 	playerPosString += "Player Position: " + std::to_string(playerPos.x) + " | " + std::to_string(playerPos.y) + " | " + std::to_string(playerPos.z);
-	uiDebugCb.playerPos = playerPosString;
+	FPSCtrlUICb.playerPos = playerPosString;
+
+	FPSCtrlUICb.headbobOffset = to_string(headbobOffset);
+	FPSCtrlUICb.midair = to_string(midAir);
+
+	FPSCtrlUICb.hitUITransparency -= 1.0f * deltaTime;
+	if (FPSCtrlUICb.hitUITransparency < 0.0f) FPSCtrlUICb.hitUITransparency = 0.0f;
 
 	((ParticleEmitter*)hookshotEmitter)->SetIsActive(false);
 	XMFLOAT3 ePos = entity->GetTransform().GetPosition();
@@ -238,7 +256,7 @@ void FPSController::Update()
 		case PlayerState::Normal:
 			Move();
 			MouseLook();
-			cam->GetTransform().SetPosition(XMFLOAT3(ePos.x, ePos.y + eScl.y + headbobOffset, ePos.z)); // after all updates make sure camera is following the affected entity
+			cam->GetTransform().SetPosition(XMFLOAT3(ePos.x, ePos.y + eScl.y / 3.0f + headbobOffset, ePos.z)); // after all updates make sure camera is following the affected entity
 			UpdateDashRingsTransforms();
 			CheckAllAbilities();
 			UpdateSwordSway();
@@ -247,7 +265,7 @@ void FPSController::Update()
 		case PlayerState::HookshotThrow:
 			HookshotThrow();
 			MouseLook();
-			cam->GetTransform().SetPosition(XMFLOAT3(ePos.x, ePos.y + eScl.y + headbobOffset, ePos.z)); // after all updates make sure camera is following the affected entity
+			cam->GetTransform().SetPosition(XMFLOAT3(ePos.x, ePos.y + eScl.y / 3.0f + headbobOffset, ePos.z)); // after all updates make sure camera is following the affected entity
 			UpdateHookShotTransform();
 			UpdateDashRingsTransforms();
 			CheckBloodSword();
@@ -259,7 +277,7 @@ void FPSController::Update()
 		case PlayerState::HookshotFlight:
 			HookshotFlight();
 			MouseLook();
-			cam->GetTransform().SetPosition(XMFLOAT3(ePos.x, ePos.y + eScl.y + headbobOffset, ePos.z)); // after all updates make sure camera is following the affected entity
+			cam->GetTransform().SetPosition(XMFLOAT3(ePos.x, ePos.y + eScl.y / 3.0f + headbobOffset, ePos.z)); // after all updates make sure camera is following the affected entity
 			UpdateHookShotTransform();
 			UpdateDashRingsTransforms();
 			CheckBloodSword();
@@ -272,7 +290,7 @@ void FPSController::Update()
 			HookshotLeash();
 			Move();
 			MouseLook();
-			cam->GetTransform().SetPosition(XMFLOAT3(ePos.x, ePos.y + eScl.y + headbobOffset, ePos.z)); // after all updates make sure camera is following the affected entity
+			cam->GetTransform().SetPosition(XMFLOAT3(ePos.x, ePos.y + eScl.y / 3.0f + headbobOffset, ePos.z)); // after all updates make sure camera is following the affected entity
 			UpdateHookShotTransform();
 			UpdateDashRingsTransforms();
 			CheckBloodSword();
@@ -302,10 +320,11 @@ void FPSController::Update()
 				// ragdoll the player
 				playerRBody->setAngularFactor(btVector3(1, 1, 1)); // free rotations on x and z axes
 				playerRBody->setGravity(btVector3(0.0f, -30.0f, 0.0f));
-				playerRBody->setMassProps(10, btVector3(0, 0, 0));
-				playerRBody->setFriction(1.0f);
+				playerRBody->setMassProps(10.0f, btVector3(0, 0, 0));
+				playerRBody->setFriction(0.5f);
+				//playerRBody->setDamping(0.5f, 0.5f);
 				//playerRBody->applyImpulse(btVector3(5, 2, 10), btVector3(0, playerRBody->getCenterOfMassPosition().getY() - entity->GetScale().y, 0));
-				playerRBody->applyTorqueImpulse(btVector3(0,-2, 0)); // fall back
+				playerRBody->applyTorqueImpulse(btVector3(-10.0f, 0, 0)); // fall back
 
 				DXCore::deltaTimeScalar = 0.75;
 				/*sword->InitRigidBody(BulletColliderShape::BOX, 1.0f);
@@ -313,15 +332,25 @@ void FPSController::Update()
 
 				bloodOrb->InitRigidBody(BulletColliderShape::CAPSULE, 1.0f);
 				bloodOrb->GetRBody()->setGravity(btVector3(0, -25, 0));*/
+
+				ragdollTimeout = 0.3f;
+			}
+			ragdollTimeout -= deltaTime;
+			if (ragdollTimeout <= 0.0f) {
+				ragdollTimeout = 0.0f;
+				playerRBody->clearForces();
+				playerRBody->setAngularVelocity(btVector3(0, 0, 0));
 			}
 
-			cam->GetTransform().SetPosition(XMFLOAT3(entity->GetTransform().GetPosition().x, entity->GetTransform().GetPosition().y + entity->GetTransform().GetScale().y + headbobOffset, entity->GetTransform().GetPosition().z)); // after all updates make sure camera is following the affected entity
-			float rotX;
-			float rotY;
-			float rotZ;
-			playerRBody->getCenterOfMassTransform().getRotation().getEulerZYX(rotX, rotY, rotZ);
-
-			cam->RotateCamera(rotX * deltaTime, rotY * deltaTime, rotZ * deltaTime);
+			cam->GetTransform().SetPosition(XMFLOAT3(entity->GetTransform().GetPosition().x, entity->GetTransform().GetPosition().y + entity->GetTransform().GetScale().y / 3.0f + headbobOffset, entity->GetTransform().GetPosition().z)); // after all updates make sure camera is following the affected entity
+			//float rotX;
+			//float rotY;
+			//float rotZ;
+			//playerRBody->getCenterOfMassTransform().getRotation().getEulerZYX(rotX, rotY, rotZ);
+			//
+			//cam->RotateCamera(rotX * deltaTime, rotY * deltaTime, rotZ * deltaTime);
+			cam->GetTransform().SetDirectionVectorR(entity->GetTransform().GetDirectionVector(), entity->GetTransform().GetRightVector());
+			cam->rotation = cam->GetTransform().GetEulerAnglesRadians();
 	
 			break;
 
@@ -393,7 +422,7 @@ void FPSController::CheckBloodIcicle()
 
 		int index = (rand() % 3) + 6;
 		Config::FMODResult = Config::FMODSystem->playSound(Config::Icicle[index], Config::SFXGroup2D, false, &Config::SFXChannel2D);
-		Config::SFXChannel2D->setVolume(ICICLE_THROW_VOLUME);
+		Config::SFXChannel2D->setVolume(ICICLE_THROW_VOLUME * Config::SFXVolume);
 	}
 	else if(bloodIcicleCooldownTimer > 0)
 	{
@@ -489,10 +518,10 @@ void FPSController::CheckHookshot()
 				ps = PlayerState::HookshotThrow;
 
 				Config::FMODResult = Config::FMODSystem->playSound(Config::Hookshot[0], Config::SFXGroup2D, false, &Config::SFXChannel2D);
-				Config::SFXChannel2D->setVolume(HOOKSHOT_THROW_VOLUME);
+				Config::SFXChannel2D->setVolume(HOOKSHOT_THROW_VOLUME * Config::SFXVolume);
 
 				Config::FMODResult = Config::FMODSystem->playSound(Config::Hookshot[1], Config::SFXGroup2D, false, &hookshotChannel);
-				hookshotChannel->setVolume(HOOKSHOT_EXTENDING_VOLUME);
+				hookshotChannel->setVolume(HOOKSHOT_EXTENDING_VOLUME * Config::SFXVolume);
 			}
 		}
 	}
@@ -552,7 +581,7 @@ void FPSController::HookshotThrow()
 			ps = PlayerState::HookshotFlight;
 
 			Config::FMODResult = Config::FMODSystem->playSound(Config::Hookshot[2], Config::SFXGroup, false, &Config::SFXChannel);
-			Config::SFXChannel->setVolume(HOOKSHOT_IMPACT_VOLUME);
+			Config::SFXChannel->setVolume(HOOKSHOT_IMPACT_VOLUME * Config::SFXVolume);
 			FMOD_VECTOR pos = { hookshotPoint.getX(), hookshotPoint.getY(), hookshotPoint.getZ() };
 			FMOD_VECTOR vel = { 0, 0, 0 };
 
@@ -560,7 +589,7 @@ void FPSController::HookshotThrow()
 			Config::SFXChannel->set3DMinMaxDistance(0, 100.0f);
 
 			Config::FMODResult = Config::FMODSystem->playSound(Config::Hookshot[3], Config::SFXGroup, false, &hookshotChannel);
-			hookshotChannel->setVolume(HOOKSHOT_REEL_VOLUME);
+			hookshotChannel->setVolume(HOOKSHOT_REEL_VOLUME * Config::SFXVolume);
 		}
 		else
 		{
@@ -596,7 +625,7 @@ void FPSController::HookshotFlight()
 			ResetHookshotTransform();
 			hookshotChannel->stop();
 			Config::FMODResult = Config::FMODSystem->playSound(Config::Hookshot[4], Config::SFXGroup2D, false, &Config::SFXChannel2D);
-			Config::SFXChannel2D->setVolume(HOOKSHOT_RELEASE_VOLUME);
+			Config::SFXChannel2D->setVolume(HOOKSHOT_RELEASE_VOLUME * Config::SFXVolume);
 		}
 	}
 	else // cancel if not holding E
@@ -604,7 +633,7 @@ void FPSController::HookshotFlight()
 		ResetHookshotTransform();
 		hookshotChannel->stop();
 		Config::FMODResult = Config::FMODSystem->playSound(Config::Hookshot[4], Config::SFXGroup2D, false, &Config::SFXChannel2D);
-		Config::SFXChannel2D->setVolume(HOOKSHOT_RELEASE_VOLUME);
+		Config::SFXChannel2D->setVolume(HOOKSHOT_RELEASE_VOLUME * Config::SFXVolume);
 	}
 }
 
@@ -776,8 +805,7 @@ void FPSController::ResetHookshotTransform()
 
 FPSController::~FPSController()
 {
-	delete uiDebugCb.spriteBatch;
-	delete uiDebugCb.font;
+	delete FPSCtrlUICb.spriteBatch;
 }
 
 
@@ -957,6 +985,7 @@ void FPSController::Move()
 	playerRBody->activate();
 	controllerVelocity += jumpForce;
 	playerRBody->setLinearVelocity(controllerVelocity);
+	playerRBody->setAngularVelocity(btVector3(0, 0, 0));
 	playerRBody->applyCentralImpulse(impulseSumVec);
 
 	// Damping
@@ -975,6 +1004,12 @@ void FPSController::Move()
 
 void FPSController::GroundCheck()
 {
+	jumpForgiveness -= deltaTime;
+	if (jumpForgiveness <= 0.0f) {
+		jumpForgiveness = 0.0f;
+	}
+	else return;
+
 	// Ground check
 	Config::DynamicsWorld->updateAabbs();
 	Config::DynamicsWorld->computeOverlappingPairs();
@@ -984,11 +1019,11 @@ void FPSController::GroundCheck()
 	//cout << pos.x << "|" << pos.y << "|" << pos.z << endl;
 	//XMFLOAT3 dir = entity->GetDirectionVector();
 	btVector3 from(pos.x, pos.y, pos.z);
-	btVector3 to(pos.x, pos.y - 3.01f, pos.z); // check a little below the player for any surface to stand on 
+	btVector3 to(pos.x, pos.y - 4.1f, pos.z); // check a little below the player for any surface to stand on 
 
 	// Create variable to store the ray hit and set flags
 	btCollisionWorld::ClosestRayResultCallback closestResult(from, to);
-	closestResult.m_flags &= btTriangleRaycastCallback::kF_FilterBackfaces;
+	closestResult.m_flags = btTriangleRaycastCallback::kF_FilterBackfaces;
 
 	Config::DynamicsWorld->rayTest(from, to, closestResult); // Raycast
 
@@ -1000,10 +1035,15 @@ void FPSController::GroundCheck()
 		PhysicsWrapper* wrapper = (PhysicsWrapper*)closestResult.m_collisionObject->getUserPointer();
 		if (wrapper->type == PHYSICS_WRAPPER_TYPE::ENTITY) {
 			Entity* e = (Entity*)wrapper->objectPointer;
+			FPSCtrlUICb.standObj = e->GetName();
 			if (e != entity) {
 				//cout << e->GetName() << endl;
  				midAir = false;
 				playerRBody->setGravity(btVector3(0.0f, 0.0f, 0.0f));
+				btVector3 vel = playerRBody->getLinearVelocity();
+				vel.setY(0.0f);
+				playerRBody->setLinearVelocity(vel);
+				playerRBody->clearForces();
 				jumpCount = 0;
 			}
 		}
@@ -1011,7 +1051,8 @@ void FPSController::GroundCheck()
 	else
 	{
 		midAir = true;
-		playerRBody->setGravity(btVector3(0.0f, -30.0f, 0.0f));
+		playerRBody->setGravity(btVector3(0.0f, -30.0f, 0.0f)); 
+		FPSCtrlUICb.standObj = "";
 	}
 }
 
@@ -1019,31 +1060,23 @@ void FPSController::UpdateHeadbob()
 {
 	if (keyboard->CheckKeysPressed(baseMovementKeys, 4) && !midAir) // if any base movement keys are down and we are on the ground we want to headbob
 	{
-		if (headbobOffset < HEADBOB_OFFSET_MAX && !resetHeadbob) // increase headbob offset if it is less than the max and we are not resetting 
+		if ((headbobOffset < HEADBOB_OFFSET_MAX) && !resetHeadbob) // increase headbob offset if it is less than the max and we are not resetting 
 		{
 			headbobOffset += HEADBOB_OFFSET_INTERVAL * deltaTime;
+			if (headbobOffset > HEADBOB_OFFSET_MAX) {
+				headbobOffset = HEADBOB_OFFSET_MAX;
+				resetHeadbob = true; // reset headbob sice we reached the max
+			}
 		}
-		else
-		{
-			resetHeadbob = true; // reset headbob sice we reached the max
-		}
-
-		if (headbobOffset > HEADBOB_OFFSET_MIN && resetHeadbob) // decrease headbob offset if it is greater than the min and we are resetting
-		{
-			headbobOffset -= HEADBOB_OFFSET_INTERVAL * deltaTime;
-		}
-		else
-		{
-			resetHeadbob = false; // resetting is complete after reaching the min
-		}
-
-	}
-	else // return to min headbob position if no keys are down or we are in midair
-	{
-		if (headbobOffset > HEADBOB_OFFSET_MIN)
+		else if ((headbobOffset > HEADBOB_OFFSET_MIN) && resetHeadbob) // decrease headbob offset if it is greater than the min and we are resetting
 		{
 			headbobOffset -= HEADBOB_OFFSET_INTERVAL * deltaTime;
+			if (headbobOffset < HEADBOB_OFFSET_MIN) {
+				headbobOffset = HEADBOB_OFFSET_MIN;
+				resetHeadbob = false; // resetting is complete after reaching the min
+			}
 		}
+
 	}
 
 	// cout << headbobOffset << endl;
@@ -1098,7 +1131,8 @@ btVector3 FPSController::JumpForceFromInput()
 {
 	btVector3 jumpForce = btVector3(0, 0, 0);
 	if (keyboard->OnKeyDown(VK_SPACE)) {
-		if (!midAir || midAir && jumpCount < 2) {
+		if (!midAir) jumpForgiveness = 0.25f;
+		if (!midAir || (midAir && jumpCount < 2)) {
 
 			if (!midAir)
 			{
@@ -1113,7 +1147,7 @@ btVector3 FPSController::JumpForceFromInput()
 			midAir = true; 
 			int index = (rand() % 6);
 			Config::FMODResult = Config::FMODSystem->playSound(Config::Jump[index], Config::SFXGroup2D, false, &Config::SFXChannel2D);
-			Config::SFXChannel2D->setVolume(JUMP_VOLUME);
+			Config::SFXChannel2D->setVolume(JUMP_VOLUME * Config::SFXVolume);
 		}
 	}
 
@@ -1172,7 +1206,7 @@ btVector3 FPSController::DashImpulseFromInput()
 
 		int index = (rand() % 6);
 		Config::FMODResult = Config::FMODSystem->playSound(Config::Dash[index], Config::SFXGroup2D, false, &Config::SFXChannel2D);
-		Config::SFXChannel2D->setVolume(DASH_VOLUME);
+		Config::SFXChannel2D->setVolume(DASH_VOLUME * Config::SFXVolume);
 	}
 
 	return dashImpulse;
@@ -1295,22 +1329,24 @@ void FPSController::OnCollision(btCollisionObject* other)
 	if (otherE->HasTag(std::string("cyclopsProjectile")))
 	{
 		bloodResource -= 10;
-		impulseSumVec += Utility::Float3ToBulletVector(otherE->GetTransform().GetDirectionVector()).normalized() * 100.0f;
+		FPSCtrlUICb.hitUITransparency = 1.0f;
+		impulseSumVec += Utility::Float3ToBulletVector(otherE->GetTransform().GetDirectionVector()).normalized() * -100.0f;
 		otherE->Destroy();
 
 		int index = (rand() % 10);
 		Config::FMODResult = Config::FMODSystem->playSound(Config::PlayerHit[index], Config::SFXGroup2D, false, &Config::SFXChannel2D);
-		Config::SFXChannel2D->setVolume(PLAYER_HIT_VOLUME);
+		Config::SFXChannel2D->setVolume(PLAYER_HIT_VOLUME * Config::SFXVolume);
 	}
 
 	if (otherE->HasTag(std::string("towerProjectile")))
 	{
 		bloodResource -= 25;
+		FPSCtrlUICb.hitUITransparency = 1.0f;
 		impulseSumVec += Utility::Float3ToBulletVector(otherE->GetTransform().GetDirectionVector()).normalized() * 500.0f;
 		otherE->Destroy();
 		int index = (rand() % 10);
 		Config::FMODResult = Config::FMODSystem->playSound(Config::PlayerHit[index], Config::SFXGroup2D, false, &Config::SFXChannel2D);
-		Config::SFXChannel2D->setVolume(PLAYER_HIT_VOLUME);
+		Config::SFXChannel2D->setVolume(PLAYER_HIT_VOLUME * Config::SFXVolume);
 	}
 
 	if (otherE->HasTag(std::string("Enemy")) && onHitDampTimer <= 0)
@@ -1319,12 +1355,14 @@ void FPSController::OnCollision(btCollisionObject* other)
 		if (otherE->HasTag(std::string("Horned")))
 		{
 			bloodResource -= 10;
+			FPSCtrlUICb.hitUITransparency = 1.0f;
 			impulseSumVec += Utility::Float3ToBulletVector(otherE->GetTransform().GetDirectionVector()).normalized() * 40.0f;
 		}
 
 		if (otherE->HasTag(std::string("Bull")))
 		{
 			bloodResource -= 10; // this is a more constant ten because the bull keeps on the player
+			FPSCtrlUICb.hitUITransparency = 1.0f;
 
 			XMFLOAT3 pushDir = entity->GetTransform().GetRightVector();
 			otherE->GetRBody()->activate();
@@ -1334,12 +1372,13 @@ void FPSController::OnCollision(btCollisionObject* other)
 		if (otherE->HasTag(std::string("Cyclops")))
 		{
 			bloodResource -= 3;
+			FPSCtrlUICb.hitUITransparency = 1.0f;
 		}
 
 		onHitDampTimer = ON_HIT_DAMP_TIMER_MAX;
 
 		int index = (rand() % 10);
 		Config::FMODResult = Config::FMODSystem->playSound(Config::PlayerHit[index], Config::SFXGroup2D, false, &Config::SFXChannel2D);
-		Config::SFXChannel2D->setVolume(PLAYER_HIT_VOLUME);
+		Config::SFXChannel2D->setVolume(PLAYER_HIT_VOLUME * Config::SFXVolume);
 	}
 }

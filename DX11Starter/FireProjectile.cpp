@@ -29,7 +29,7 @@ Status FireProjectile::Update()
 	if (enemy->HasTag("Cyclops")) {
 		int index = (rand() % 7);
 		Config::FMODResult = Config::FMODSystem->playSound(Config::CyclopsAttack[index], Config::SFXGroup, false, &Config::SFXChannel);
-		Config::SFXChannel->setVolume(CYCLOPS_ATTACK_VOLUME);
+		Config::SFXChannel->setVolume(CYCLOPS_ATTACK_VOLUME * Config::SFXVolume);
 		XMFLOAT3 epos = enemy->GetTransform().GetPosition();
 		FMOD_VECTOR pos = { epos.x, epos.y, epos.z };
 		FMOD_VECTOR vel = { 0, 0, 0 };
@@ -40,7 +40,7 @@ Status FireProjectile::Update()
 	else if (enemy->HasTag("Tower")) {
 		int index = (rand() % 9);
 		Config::FMODResult = Config::FMODSystem->playSound(Config::TowerAttack[index], Config::SFXGroup, false, &Config::SFXChannel);
-		Config::SFXChannel->setVolume(CYCLOPS_ATTACK_VOLUME);
+		Config::SFXChannel->setVolume(CYCLOPS_ATTACK_VOLUME * Config::SFXVolume);
 		XMFLOAT3 epos = enemy->GetTransform().GetPosition();
 		FMOD_VECTOR pos = { epos.x, epos.y, epos.z };
 		FMOD_VECTOR vel = { 0, 0, 0 };

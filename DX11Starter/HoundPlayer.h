@@ -11,9 +11,10 @@ private:
 	float pounceSpeed;
 	float* cooldownTimer;
 	float maxCooldownTime;
+	bool* hooked;
 
 public:
-	HoundPlayer(Entity* e, Entity* p, float pSpeed, float* cdTime, float maxCdTime) : enemy(e), player(p), pounceSpeed(pSpeed), cooldownTimer(cdTime), maxCooldownTime(maxCdTime) {}
+	HoundPlayer(Entity* e, Entity* p, float pSpeed, float* cdTime, float maxCdTime, bool* hooked) : enemy(e), player(p), pounceSpeed(pSpeed), cooldownTimer(cdTime), maxCooldownTime(maxCdTime), hooked(hooked) {}
 	~HoundPlayer() {}
 
 	void OnInitialize();

@@ -14,8 +14,9 @@ void MainMenuManager::Init()
 	XMStoreFloat3(&paperCameraPos, XMVectorAdd(XMLoadFloat3(&camPos), XMVectorScale(XMLoadFloat3(&camDir), 0.4f)));
 
 	uiCb.spriteBatch = new SpriteBatch(Config::Context);
-	uiCb.font = new SpriteFont(Config::Device, L"../../Assets/Fonts/Bloodlust.spritefont");
+	uiCb.font = EESceneLoader->FontMap["Bloodlust"];
 	uiCb.EEMouse = Mouse::GetInstance();
+	uiCb.EEKeyboard = Keyboard::GetInstance();
 	uiCb.EESceneLoader = EESceneLoader;
 	EERenderer->SetRenderUICallback(true, &uiCb, 0);
 
@@ -265,11 +266,15 @@ void MainMenuManager::Init()
 		static unsigned long long clock_start = 0;
 		unsigned int slen;
 
+		//FMOD::Channel* mChannel;
+
 		Config::FMODResult = Config::FMODSystem->playSound(Config::MainTheme[count], Config::MusicGroup, true, &Config::MusicChannel); // Start a part of the main theme, but leave it paused
 		AudioManager::FMODErrorCheck(Config::FMODResult);
 
 		Config::FMODResult = Config::MusicChannel->setVolume(Config::MusicVolume);
 		AudioManager::FMODErrorCheck(Config::FMODResult);
+
+		uiCb.music[count] = Config::MusicChannel;
 
 		if (!clock_start)
 		{
@@ -325,7 +330,7 @@ void MainMenuManager::Update()
 			uiCb.windowCenter = windowCenter;
 
 			uiCb.windowWidthRatio = (float)Config::ViewPortWidth / 1600.0f;
-			uiCb.windowHeightRatio = (float)Config::ViewPortWidth / 900.0f;
+			uiCb.windowHeightRatio = (float)Config::ViewPortHeight / 900.0f;
 		}
 	}
 
@@ -343,7 +348,7 @@ void MainMenuManager::Update()
 	if (bloodFired && (totalTime - firedTime > 0.15f) && !soundPlayed) {
 		soundPlayed = true;
 		Config::FMODResult = Config::FMODSystem->playSound(Config::Sword[0], Config::SFXGroup, false, &Config::SFXChannel);
-		Config::SFXChannel->setVolume(0.3f);
+		Config::SFXChannel->setVolume(0.3f * Config::SFXVolume);
 		FMOD_VECTOR pos = { 0.31f, 4.95f, 2.0f };
 		FMOD_VECTOR vel = { 0, 0, 0 };
 
@@ -462,13 +467,16 @@ void MainMenuManager::Update()
 		}
 	}
 
-	if (mouse->OnLMBDown() && !lerpingPaperBottom && !lerpingPaperCamera && paperCounter != numPapers && papersStarted) {
-		lerpingPaperBottom = true;
-		paperAtCam = false;
-		paperLerpSpd = 0.0f;
-		if (uiCb.skipTooltipTransparency == 1.0f)
-			tooltipClosing = true;
+	if (!lerpingPaperBottom && !lerpingPaperCamera && paperCounter != numPapers && papersStarted) {
+		if (mouse->OnLMBDown()) {
+			lerpingPaperBottom = true;
+			paperAtCam = false;
+			paperLerpSpd = 0.0f;
+			if (uiCb.skipTooltipTransparency == 1.0f)
+				tooltipClosing = true;
+		}
 	}
+	
 
 	paperLerpSpd += 1.0f * deltaTime;
 	if (paperLerpSpd > 3.0f) paperLerpSpd = 3.0f;
@@ -552,8 +560,12 @@ void MainMenuManager::Update()
 			uiCb.transparency += scalar * deltaTime;
 			if (uiCb.transparency > 1.0f) uiCb.transparency = 1.0f;
 			if (uiCb.transparency == 1.0f && ((totalTime - firedTime) > 2.0f)) {
+				if(!finishedAnimation) Mouse::GetInstance()->PurgeBuffers();
 				uiCb.otherTransparency += scalar * deltaTime;
-				if (uiCb.otherTransparency > 1.0f) uiCb.otherTransparency = 1.0f;
+				if (uiCb.otherTransparency > 1.0f) {
+					uiCb.otherTransparency = 1.0f;
+					finishedAnimation = true;
+				}
 			}
 		}
 		if (XMVector3NearEqual(currentPos, posTo, XMVectorSet(0.3f, 0.3f, 0.3f, 0.3f)) && posCounter < 1) {
@@ -569,5 +581,4 @@ void MainMenuManager::Update()
 MainMenuManager::~MainMenuManager()
 {
 	delete uiCb.spriteBatch;
-	delete uiCb.font;
 }

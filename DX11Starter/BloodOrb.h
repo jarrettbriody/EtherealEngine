@@ -68,7 +68,7 @@ class BloodOrb : public ScriptManager
 	float totalTime = 0.0f;
 	int waveCounter = 0;
 
-	float defaultWaveHeight = 0.03f;
+	float defaultWaveHeight = 0.02f;
 
 	float bobMagnitude = 0.03f;
 

@@ -86,7 +86,7 @@ void Material::Prepare()
 		
 	pixelShader->SetInt("illumination", materialData.Illumination);
 
-	pixelShader->SetFloat("brightness", Config::SceneBrightness);
+	pixelShader->SetFloat("brightness", Config::SceneBrightness * Config::SceneBrightnessMult);
 
 	if (pixelShader->GetShaderType() == ShaderType::DEFAULT)
 		pixelShader->SetFloat3("manualColor", materialData.DiffuseColor);

@@ -55,6 +55,8 @@ public:
 	static Renderer* GetInstance();
 	static bool DestroyInstance();
 
+	void GarbageCollect();
+
 	ID3D11BlendState* blendState = nullptr;
 	ID3D11DepthStencilState* alwaysDrawDepthStencil = nullptr;
 	ShadowComponents shadowComponents = {};

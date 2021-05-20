@@ -1,5 +1,6 @@
 #pragma once
 #include "ScriptManager.h"
+#include "GPUParticleEmitter.h"
 
 class Projectile : public ScriptManager
 {

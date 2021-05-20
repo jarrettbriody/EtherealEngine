@@ -9,6 +9,19 @@
 #include "Mouse.h"
 #include "AudioManager.h"
 
+enum class MainMenuState {
+	MAIN,
+	OPTIONS,
+	CREDITS,
+};
+
+enum class OptionsButton {
+	NONE,
+	BRIGHTNESS,
+	MUSIC_VOL,
+	SFX_VOL,
+};
+
 struct uiCallback : Utility::Callback {
 	DirectX::SpriteFont* font;
 	DirectX::SpriteBatch* spriteBatch;
@@ -19,8 +32,13 @@ struct uiCallback : Utility::Callback {
 	float otherTransparency = 0.0f;
 	SceneLoader* EESceneLoader = nullptr;
 	Mouse* EEMouse = nullptr;
+	Keyboard* EEKeyboard = nullptr;
+	MainMenuState state = MainMenuState::MAIN;
+	OptionsButton optionsButton = OptionsButton::NONE;
 
 	float skipTooltipTransparency = 0.0f;
+
+	FMOD::Channel* music[3];
 
 	bool AABB(XMVECTOR position, XMVECTOR origin, XMVECTOR scale) {
 		XMFLOAT2 start(position.m128_f32[0] - origin.m128_f32[0] * scale.m128_f32[0], position.m128_f32[1] - origin.m128_f32[1] * scale.m128_f32[1]);
@@ -32,28 +50,26 @@ struct uiCallback : Utility::Callback {
 	}
 
 	void DrawMainMenu() {
-		spriteBatch->Begin(SpriteSortMode_Deferred, Renderer::GetInstance()->blendState);
-
 		XMVECTOR titleLen = font->MeasureString(L"A Demon Killed My Babushka");
 		font->DrawString(
 			spriteBatch,
 			L"A Demon Killed My Babushka",
-			XMVectorSet(windowCenter.x + 3.0f, windowCenter.y - 150.0f * windowHeightRatio + 3.0f, 0, 0),
+			XMVectorSet(windowCenter.x + 3.0f, windowCenter.y - 275.0f * windowHeightRatio + 3.0f, 0, 0),
 			XMVectorSet(0, 0, 0, transparency),
 			0.0f,
 			XMVectorSet(titleLen.m128_f32[0] / 2.0f, titleLen.m128_f32[1] / 2.0f, 0, 0),
-			XMVectorSet(1.001f, 1.001f, 0, 0),
+			XMVectorSet(1.001f * windowWidthRatio, 1.001f * windowHeightRatio, 0, 0),
 			SpriteEffects::SpriteEffects_None,
 			0.0f
 		);
 		font->DrawString(
 			spriteBatch,
 			L"A Demon Killed My Babushka",
-			XMVectorSet(windowCenter.x, windowCenter.y - 150.0f * windowHeightRatio, 0, 0),
+			XMVectorSet(windowCenter.x, windowCenter.y - 275.0f * windowHeightRatio, 0, 0),
 			XMVectorSet(0.6f, 0, 0, transparency),
 			0.0f,
 			XMVectorSet(titleLen.m128_f32[0] / 2.0f, titleLen.m128_f32[1] / 2.0f, 0, 0),
-			XMVectorSet(1.0f, 1.0f, 0, 0),
+			XMVectorSet(1.0f * windowWidthRatio, 1.0f * windowHeightRatio, 0, 0),
 			SpriteEffects::SpriteEffects_None,
 			0.0f
 		);
@@ -70,12 +86,12 @@ struct uiCallback : Utility::Callback {
 
 		XMVECTOR origin = XMVectorSet(startLen.m128_f32[0] / 2.0f, startLen.m128_f32[1] / 2.0f, 0, 0);
 
-		XMVECTOR posFront = XMVectorSet(windowCenter.x, windowCenter.y - 60.0f * windowHeightRatio, 0, 0);
-		XMVECTOR scaleFront = XMVectorSet(0.75f, 0.75f, 0, 0);
+		XMVECTOR posFront = XMVectorSet(windowCenter.x, windowCenter.y - 100.0f * windowHeightRatio, 0, 0);
+		XMVECTOR scaleFront = XMVectorSet(0.75f * windowWidthRatio, 0.75f * windowHeightRatio, 0, 0);
 		XMVECTOR colorFront = (AABB(posFront, origin, scaleFront)) ? frontColorHighlight : frontColorNormal;
 
-		XMVECTOR posBack = XMVectorSet(windowCenter.x + 3.0f, windowCenter.y - 60.0f * windowHeightRatio + 3.0f, 0, 0);
-		XMVECTOR scaleBack = XMVectorSet(0.751f, 0.751f, 0, 0);
+		XMVECTOR posBack = XMVectorSet(windowCenter.x + 3.0f, windowCenter.y - 100.0f * windowHeightRatio + 3.0f, 0, 0);
+		XMVECTOR scaleBack = XMVectorSet(0.751f * windowWidthRatio, 0.751f * windowHeightRatio, 0, 0);
 		XMVECTOR colorBack = (AABB(posFront, origin, scaleFront)) ? backColorHighlight : backColorNormal;
 
 		font->DrawString(
@@ -102,7 +118,7 @@ struct uiCallback : Utility::Callback {
 		);
 
 		if (AABB(posFront, origin, scaleFront) && otherTransparency >= 0.3f) {
-			if (EEMouse->LMBIsPressed()) {
+			if (EEMouse->OnLMBDown()) {
 				/*
 				// Variable for sound scheduling
 				int outputrate = 0;
@@ -141,10 +157,10 @@ struct uiCallback : Utility::Callback {
 
 		origin = XMVectorSet(startLen.m128_f32[0] / 2.0f, startLen.m128_f32[1] / 2.0f, 0, 0);
 
-		posFront = XMVectorSet(windowCenter.x, windowCenter.y - 20.0f * windowHeightRatio, 0, 0);
+		posFront = XMVectorSet(windowCenter.x, windowCenter.y - 30.0f * windowHeightRatio, 0, 0);
 		colorFront = (AABB(posFront, origin, scaleFront)) ? frontColorHighlight : frontColorNormal;
 
-		posBack = XMVectorSet(windowCenter.x + 3.0f, windowCenter.y - 20.0f * windowHeightRatio + 3.0f, 0, 0);
+		posBack = XMVectorSet(windowCenter.x + 3.0f, windowCenter.y - 30.0f * windowHeightRatio + 3.0f, 0, 0);
 		colorBack = (AABB(posFront, origin, scaleFront)) ? backColorHighlight : backColorNormal;
 
 		font->DrawString(
@@ -169,6 +185,12 @@ struct uiCallback : Utility::Callback {
 			SpriteEffects::SpriteEffects_None,
 			0.0f
 		);
+
+		if (AABB(posFront, origin, scaleFront) && transparency >= 0.3f) {
+			if (EEMouse->OnLMBDown()) {
+				state = MainMenuState::OPTIONS;
+			}
+		}
 
 		str = L"CREDITS";
 
@@ -176,10 +198,10 @@ struct uiCallback : Utility::Callback {
 
 		origin = XMVectorSet(startLen.m128_f32[0] / 2.0f, startLen.m128_f32[1] / 2.0f, 0, 0);
 
-		posFront = XMVectorSet(windowCenter.x, windowCenter.y + 20.0f * windowHeightRatio, 0, 0);
+		posFront = XMVectorSet(windowCenter.x, windowCenter.y + 40.0f * windowHeightRatio, 0, 0);
 		colorFront = (AABB(posFront, origin, scaleFront)) ? frontColorHighlight : frontColorNormal;
 
-		posBack = XMVectorSet(windowCenter.x + 3.0f, windowCenter.y + 20.0f * windowHeightRatio + 3.0f, 0, 0);
+		posBack = XMVectorSet(windowCenter.x + 3.0f, windowCenter.y + 40.0f * windowHeightRatio + 3.0f, 0, 0);
 		colorBack = (AABB(posFront, origin, scaleFront)) ? backColorHighlight : backColorNormal;
 
 		font->DrawString(
@@ -204,6 +226,12 @@ struct uiCallback : Utility::Callback {
 			SpriteEffects::SpriteEffects_None,
 			0.0f
 		);
+
+		if (AABB(posFront, origin, scaleFront) && transparency >= 0.3f) {
+			if (EEMouse->OnLMBDown()) {
+				state = MainMenuState::CREDITS;
+			}
+		}
 
 		str = L"QUIT";
 
@@ -211,10 +239,10 @@ struct uiCallback : Utility::Callback {
 
 		origin = XMVectorSet(startLen.m128_f32[0] / 2.0f, startLen.m128_f32[1] / 2.0f, 0, 0);
 
-		posFront = XMVectorSet(windowCenter.x, windowCenter.y + 60.0f * windowHeightRatio, 0, 0);
+		posFront = XMVectorSet(windowCenter.x, windowCenter.y + 110.0f * windowHeightRatio, 0, 0);
 		colorFront = (AABB(posFront, origin, scaleFront)) ? frontColorHighlight : frontColorNormal;
 
-		posBack = XMVectorSet(windowCenter.x + 3.0f, windowCenter.y + 60.0f * windowHeightRatio + 3.0f, 0, 0);
+		posBack = XMVectorSet(windowCenter.x + 3.0f, windowCenter.y + 110.0f * windowHeightRatio + 3.0f, 0, 0);
 		colorBack = (AABB(posFront, origin, scaleFront)) ? backColorHighlight : backColorNormal;
 
 		font->DrawString(
@@ -240,16 +268,15 @@ struct uiCallback : Utility::Callback {
 			0.0f
 		);
 
-		spriteBatch->End();
-
-		// Reset render states, since sprite batch changes these!
-		Config::Context->OMSetBlendState(0, 0, 0xFFFFFFFF);
-		Config::Context->OMSetDepthStencilState(0, 0);
+		if (AABB(posFront, origin, scaleFront) && transparency >= 0.3f) {
+			if (EEMouse->OnLMBDown()) {
+				Config::SwapChain->SetFullscreenState(false, NULL);
+				PostMessage(Config::hWnd, WM_CLOSE, NULL, NULL);
+			}
+		}
 	}
 
 	void DrawTooltip() {
-		spriteBatch->Begin(SpriteSortMode_Deferred, Renderer::GetInstance()->blendState);
-
 		XMVECTOR frontColorNormal = XMVectorSet(0.3f, 0, 0, skipTooltipTransparency);
 
 		XMVECTOR backColorNormal = XMVectorSet(0, 0, 0, skipTooltipTransparency);
@@ -260,11 +287,11 @@ struct uiCallback : Utility::Callback {
 
 		XMVECTOR origin = XMVectorSet(startLen.m128_f32[0] / 2.0f, startLen.m128_f32[1] / 2.0f, 0, 0);
 
-		XMVECTOR posFront = XMVectorSet(windowCenter.x, windowCenter.y + 200.0f * windowHeightRatio, 0, 0);
+		XMVECTOR posFront = XMVectorSet(windowCenter.x, windowCenter.y + 350.0f * windowHeightRatio, 0, 0);
 		XMVECTOR scaleFront = XMVectorSet(0.5f, 0.5f, 0, 0);
 		XMVECTOR colorFront = frontColorNormal;
 
-		XMVECTOR posBack = XMVectorSet(windowCenter.x + 3.0f, windowCenter.y + 200.0f * windowHeightRatio + 3.0f, 0, 0);
+		XMVECTOR posBack = XMVectorSet(windowCenter.x + 3.0f, windowCenter.y + 350.0f * windowHeightRatio + 3.0f, 0, 0);
 		XMVECTOR scaleBack = XMVectorSet(0.501f, 0.501f, 0, 0);
 		XMVECTOR colorBack = backColorNormal;
 
@@ -290,17 +317,753 @@ struct uiCallback : Utility::Callback {
 			SpriteEffects::SpriteEffects_None,
 			0.0f
 		);
+	}
+
+	void DrawOptionsMenu() {
+		XMVECTOR frontColorNormal = XMVectorSet(0, 0, 0, otherTransparency);
+		XMVECTOR frontColorHighlight = XMVectorSet(0, 0, 0, otherTransparency - 0.4f);
+
+		XMVECTOR backColorNormal = XMVectorSet(0.2f, 0, 0, otherTransparency);
+		XMVECTOR backColorHighlight = XMVectorSet(0.2f, 0, 0, otherTransparency - 0.4f);
+
+		LPCWSTR str = L"OPTIONS";
+
+		XMVECTOR startLen = font->MeasureString(str);
+
+		XMVECTOR origin = XMVectorSet(startLen.m128_f32[0] / 2.0f, startLen.m128_f32[1] / 2.0f, 0, 0);
+
+		XMVECTOR posFront = XMVectorSet(windowCenter.x, windowCenter.y - 275.0f * windowHeightRatio, 0, 0);
+		XMVECTOR scaleFront = XMVectorSet(0.75f * windowWidthRatio, 0.75f * windowHeightRatio, 0, 0);
+		XMVECTOR colorFront = (AABB(posFront, origin, scaleFront)) ? frontColorHighlight : frontColorNormal;
+
+		XMVECTOR posBack = XMVectorSet(windowCenter.x + 3.0f, windowCenter.y - 275.0f * windowHeightRatio + 3.0f, 0, 0);
+		XMVECTOR scaleBack = XMVectorSet(0.751f * windowWidthRatio, 0.751f * windowHeightRatio, 0, 0);
+		XMVECTOR colorBack = (AABB(posFront, origin, scaleFront)) ? backColorHighlight : backColorNormal;
+
+		font->DrawString(
+			spriteBatch,
+			str,
+			posBack,
+			frontColorNormal,
+			0.0f,
+			origin,
+			XMVectorSet(1.001f * windowWidthRatio, 1.001f * windowHeightRatio, 0, 0),
+			SpriteEffects::SpriteEffects_None,
+			0.0f
+		);
+		font->DrawString(
+			spriteBatch,
+			str,
+			posFront,
+			XMVectorSet(0.6f, 0, 0, 1.0f),
+			0.0f,
+			origin,
+			XMVectorSet(1.00f * windowWidthRatio, 1.00f * windowHeightRatio, 0, 0),
+			SpriteEffects::SpriteEffects_None,
+			0.0f
+		);
+
+		XMVECTOR optionSelectedColor = XMVectorSet(0, 0.5f, 0, 1);
+
+		str = Utility::StringToWideString("BRIGHTNESS (UP/DOWN): " + to_string(Config::SceneBrightnessMult));
+
+		startLen = font->MeasureString(str);
+
+		origin = XMVectorSet(startLen.m128_f32[0] / 2.0f, startLen.m128_f32[1] / 2.0f, 0, 0);
+
+		posFront = XMVectorSet(windowCenter.x, windowCenter.y - 100.0f * windowHeightRatio, 0, 0);
+		colorFront = (optionsButton == OptionsButton::BRIGHTNESS) ? optionSelectedColor : (AABB(posFront, origin, scaleFront)) ? frontColorHighlight : frontColorNormal;
+
+		posBack = XMVectorSet(windowCenter.x + 3.0f, windowCenter.y - 100.0f * windowHeightRatio + 3.0f, 0, 0);
+		colorBack = (AABB(posFront, origin, scaleFront)) ? backColorHighlight : backColorNormal;
+
+		font->DrawString(
+			spriteBatch,
+			str,
+			posBack,
+			colorBack,
+			0.0f,
+			origin,
+			scaleBack,
+			SpriteEffects::SpriteEffects_None,
+			0.0f
+		);
+		font->DrawString(
+			spriteBatch,
+			str,
+			posFront,
+			colorFront,
+			0.0f,
+			origin,
+			scaleFront,
+			SpriteEffects::SpriteEffects_None,
+			0.0f
+		);
+
+		if (AABB(posFront, origin, scaleFront) && transparency >= 0.3f) {
+			if (EEMouse->OnLMBDown()) {
+				optionsButton = OptionsButton::BRIGHTNESS;
+			}
+		}
+
+		str = Utility::StringToWideString("MUSIC VOLUME (UP/DOWN): " + to_string(Config::MusicVolume));
+
+		startLen = font->MeasureString(str);
+
+		origin = XMVectorSet(startLen.m128_f32[0] / 2.0f, startLen.m128_f32[1] / 2.0f, 0, 0);
+
+		posFront = XMVectorSet(windowCenter.x, windowCenter.y - 30.0f * windowHeightRatio, 0, 0);
+		colorFront = (optionsButton == OptionsButton::MUSIC_VOL) ? optionSelectedColor : (AABB(posFront, origin, scaleFront)) ? frontColorHighlight : frontColorNormal;
+
+		posBack = XMVectorSet(windowCenter.x + 3.0f, windowCenter.y - 30.0f * windowHeightRatio + 3.0f, 0, 0);
+		colorBack = (AABB(posFront, origin, scaleFront)) ? backColorHighlight : backColorNormal;
+
+		font->DrawString(
+			spriteBatch,
+			str,
+			posBack,
+			colorBack,
+			0.0f,
+			origin,
+			scaleBack,
+			SpriteEffects::SpriteEffects_None,
+			0.0f
+		);
+		font->DrawString(
+			spriteBatch,
+			str,
+			posFront,
+			colorFront,
+			0.0f,
+			origin,
+			scaleFront,
+			SpriteEffects::SpriteEffects_None,
+			0.0f
+		);
+
+		if (AABB(posFront, origin, scaleFront) && transparency >= 0.3f) {
+			if (EEMouse->OnLMBDown()) {
+				optionsButton = OptionsButton::MUSIC_VOL;
+			}
+		}
+
+		str = Utility::StringToWideString("SFX VOLUME (UP/DOWN): " + to_string(Config::SFXVolume));
+
+		startLen = font->MeasureString(str);
+
+		origin = XMVectorSet(startLen.m128_f32[0] / 2.0f, startLen.m128_f32[1] / 2.0f, 0, 0);
+
+		posFront = XMVectorSet(windowCenter.x, windowCenter.y + 40.0f * windowHeightRatio, 0, 0);
+		colorFront = (optionsButton == OptionsButton::SFX_VOL) ? optionSelectedColor : (AABB(posFront, origin, scaleFront)) ? frontColorHighlight : frontColorNormal;
+
+		posBack = XMVectorSet(windowCenter.x + 3.0f, windowCenter.y + 40.0f * windowHeightRatio + 3.0f, 0, 0);
+		colorBack = (AABB(posFront, origin, scaleFront)) ? backColorHighlight : backColorNormal;
+		
+		font->DrawString(
+			spriteBatch,
+			str,
+			posBack,
+			colorBack,
+			0.0f,
+			origin,
+			scaleBack,
+			SpriteEffects::SpriteEffects_None,
+			0.0f
+		);
+		font->DrawString(
+			spriteBatch,
+			str,
+			posFront,
+			colorFront,
+			0.0f,
+			origin,
+			scaleFront,
+			SpriteEffects::SpriteEffects_None,
+			0.0f
+		);
+
+		if (AABB(posFront, origin, scaleFront) && transparency >= 0.3f) {
+			if (EEMouse->OnLMBDown()) {
+				optionsButton = OptionsButton::SFX_VOL;
+			}
+		}
+
+		str = L"BACK";
+
+		startLen = font->MeasureString(str);
+
+		origin = XMVectorSet(startLen.m128_f32[0] / 2.0f, startLen.m128_f32[1] / 2.0f, 0, 0);
+
+		posFront = XMVectorSet(windowCenter.x, windowCenter.y + 110.0f * windowHeightRatio, 0, 0);
+		colorFront = (AABB(posFront, origin, scaleFront)) ? frontColorHighlight : frontColorNormal;
+
+		posBack = XMVectorSet(windowCenter.x + 3.0f, windowCenter.y + 110.0f * windowHeightRatio + 3.0f, 0, 0);
+		colorBack = (AABB(posFront, origin, scaleFront)) ? backColorHighlight : backColorNormal;
+
+		font->DrawString(
+			spriteBatch,
+			str,
+			posBack,
+			colorBack,
+			0.0f,
+			origin,
+			scaleBack,
+			SpriteEffects::SpriteEffects_None,
+			0.0f
+		);
+		font->DrawString(
+			spriteBatch,
+			str,
+			posFront,
+			colorFront,
+			0.0f,
+			origin,
+			scaleFront,
+			SpriteEffects::SpriteEffects_None,
+			0.0f
+		);
+
+		if (AABB(posFront, origin, scaleFront) && transparency >= 0.3f) {
+			if (EEMouse->OnLMBDown()) {
+				state = MainMenuState::MAIN;
+			}
+		}
+
+		switch (optionsButton)
+		{
+		case OptionsButton::NONE:
+			break;
+		case OptionsButton::BRIGHTNESS:
+		{
+			if (EEKeyboard->OnKeyDown(0x26)) {
+				Config::SceneBrightnessMult += 0.05f;
+				if (Config::SceneBrightnessMult > 2.0f) Config::SceneBrightnessMult = 2.0f;
+			}
+			if (EEKeyboard->OnKeyDown(0x28)) {
+				Config::SceneBrightnessMult -= 0.05f;
+				if (Config::SceneBrightnessMult < 0.1f) Config::SceneBrightnessMult = 0.1f;
+			}
+			break;
+		}
+		case OptionsButton::MUSIC_VOL:
+		{
+			if (EEKeyboard->OnKeyDown(0x26)) {
+				Config::MusicVolume += 0.05f;
+				if (Config::MusicVolume > 1.0f) Config::MusicVolume = 1.0f;
+
+				for (size_t i = 0; i < 3; i++)
+				{
+					Config::FMODResult = music[i]->setVolume(Config::MusicVolume);
+					AudioManager::FMODErrorCheck(Config::FMODResult);
+				}
+			}
+			if (EEKeyboard->OnKeyDown(0x28)) {
+				Config::MusicVolume -= 0.05f;
+				if (Config::MusicVolume < 0.0f) Config::MusicVolume = 0.0f;
+
+				for (size_t i = 0; i < 3; i++)
+				{
+					Config::FMODResult = music[i]->setVolume(Config::MusicVolume);
+					AudioManager::FMODErrorCheck(Config::FMODResult);
+				}
+			}
+			break;
+		}
+		case OptionsButton::SFX_VOL:
+		{
+			if (EEKeyboard->OnKeyDown(0x26)) {
+				Config::SFXVolume += 0.05f;
+				if (Config::SFXVolume > 2.0f) Config::SFXVolume = 2.0f;
+			}
+			if (EEKeyboard->OnKeyDown(0x28)) {
+				Config::SFXVolume -= 0.05f;
+				if (Config::SFXVolume < 0.0f) Config::SFXVolume = 0.0f;
+			}
+			break;
+		}
+		default:
+			break;
+		}
+	}
+
+	void DrawCreditsMenu() {
+		XMVECTOR frontColorNormal = XMVectorSet(0, 0, 0, otherTransparency);
+		XMVECTOR frontColorHighlight = XMVectorSet(0, 0, 0, otherTransparency - 0.4f);
+
+		XMVECTOR backColorNormal = XMVectorSet(0.2f, 0, 0, otherTransparency);
+		XMVECTOR backColorHighlight = XMVectorSet(0.2f, 0, 0, otherTransparency - 0.4f);
+
+		LPCWSTR str = L"CREDITS";
+
+		XMVECTOR startLen = font->MeasureString(str);
+
+		XMVECTOR origin = XMVectorSet(startLen.m128_f32[0] / 2.0f, startLen.m128_f32[1] / 2.0f, 0, 0);
+
+		XMVECTOR posFront = XMVectorSet(windowCenter.x, windowCenter.y - 275.0f * windowHeightRatio, 0, 0);
+		XMVECTOR scaleFront = XMVectorSet(0.5f * windowWidthRatio, 0.5f * windowHeightRatio, 0, 0);
+		XMVECTOR colorFront = frontColorNormal;
+
+		XMVECTOR posBack = XMVectorSet(windowCenter.x + 3.0f, windowCenter.y - 275.0f * windowHeightRatio + 3.0f, 0, 0);
+		XMVECTOR scaleBack = XMVectorSet(0.501f * windowWidthRatio, 0.501f * windowHeightRatio, 0, 0);
+		XMVECTOR colorBack = backColorNormal;
+
+		font->DrawString(
+			spriteBatch,
+			str,
+			posBack,
+			frontColorNormal,
+			0.0f,
+			origin,
+			XMVectorSet(1.001f * windowWidthRatio, 1.001f * windowHeightRatio, 0, 0),
+			SpriteEffects::SpriteEffects_None,
+			0.0f
+		);
+		font->DrawString(
+			spriteBatch,
+			str,
+			posFront,
+			XMVectorSet(0.6f, 0, 0, 1.0f),
+			0.0f,
+			origin,
+			XMVectorSet(1.00f * windowWidthRatio, 1.00f * windowHeightRatio, 0, 0),
+			SpriteEffects::SpriteEffects_None,
+			0.0f
+		);
+
+		str = L"Niko Bazos | Project Lead, Gameplay & Engine Developer";
+
+		startLen = font->MeasureString(str);
+
+		origin = XMVectorSet(startLen.m128_f32[0] / 2.0f, startLen.m128_f32[1] / 2.0f, 0, 0);
+
+		posFront = XMVectorSet(windowCenter.x, windowCenter.y - 200.0f * windowHeightRatio, 0, 0);
+
+		posBack = XMVectorSet(windowCenter.x + 3.0f, windowCenter.y - 200.0f * windowHeightRatio + 3.0f, 0, 0);
+
+		font->DrawString(
+			spriteBatch,
+			str,
+			posBack,
+			frontColorNormal,
+			0.0f,
+			origin,
+			scaleBack,
+			SpriteEffects::SpriteEffects_None,
+			0.0f
+		);
+		font->DrawString(
+			spriteBatch,
+			str,
+			posFront,
+			XMVectorSet(0.3f, 0, 0, 1.0f),
+			0.0f,
+			origin,
+			scaleFront,
+			SpriteEffects::SpriteEffects_None,
+			0.0f
+		);
+
+		str = L"Jarrett Briody | Lead Engine Developer, Gameplay Developer";
+
+		startLen = font->MeasureString(str);
+
+		origin = XMVectorSet(startLen.m128_f32[0] / 2.0f, startLen.m128_f32[1] / 2.0f, 0, 0);
+
+		posFront = XMVectorSet(windowCenter.x, windowCenter.y - 160.0f * windowHeightRatio, 0, 0);
+
+		posBack = XMVectorSet(windowCenter.x + 3.0f, windowCenter.y - 160.0f * windowHeightRatio + 3.0f, 0, 0);
+
+		font->DrawString(
+			spriteBatch,
+			str,
+			posBack,
+			frontColorNormal,
+			0.0f,
+			origin,
+			scaleBack,
+			SpriteEffects::SpriteEffects_None,
+			0.0f
+		);
+		font->DrawString(
+			spriteBatch,
+			str,
+			posFront,
+			XMVectorSet(0.3f, 0, 0, 1.0f),
+			0.0f,
+			origin,
+			scaleFront,
+			SpriteEffects::SpriteEffects_None,
+			0.0f
+		);
+
+		str = L"Robert MacLeod | Engine Developer, AI Programmer";
+
+		startLen = font->MeasureString(str);
+
+		origin = XMVectorSet(startLen.m128_f32[0] / 2.0f, startLen.m128_f32[1] / 2.0f, 0, 0);
+
+		posFront = XMVectorSet(windowCenter.x, windowCenter.y - 120.0f * windowHeightRatio, 0, 0);
+
+		posBack = XMVectorSet(windowCenter.x + 3.0f, windowCenter.y - 120.0f * windowHeightRatio + 3.0f, 0, 0);
+
+		font->DrawString(
+			spriteBatch,
+			str,
+			posBack,
+			frontColorNormal,
+			0.0f,
+			origin,
+			scaleBack,
+			SpriteEffects::SpriteEffects_None,
+			0.0f
+		);
+		font->DrawString(
+			spriteBatch,
+			str,
+			posFront,
+			XMVectorSet(0.3f, 0, 0, 1.0f),
+			0.0f,
+			origin,
+			scaleFront,
+			SpriteEffects::SpriteEffects_None,
+			0.0f
+		);
+
+		str = L"Israel Anthony | Gameplay Programmer";
+
+		startLen = font->MeasureString(str);
+
+		origin = XMVectorSet(startLen.m128_f32[0] / 2.0f, startLen.m128_f32[1] / 2.0f, 0, 0);
+
+		posFront = XMVectorSet(windowCenter.x, windowCenter.y - 80.0f * windowHeightRatio, 0, 0);
+
+		posBack = XMVectorSet(windowCenter.x + 3.0f, windowCenter.y - 80.0f * windowHeightRatio + 3.0f, 0, 0);
+
+		font->DrawString(
+			spriteBatch,
+			str,
+			posBack,
+			frontColorNormal,
+			0.0f,
+			origin,
+			scaleBack,
+			SpriteEffects::SpriteEffects_None,
+			0.0f
+		);
+		font->DrawString(
+			spriteBatch,
+			str,
+			posFront,
+			XMVectorSet(0.3f, 0, 0, 1.0f),
+			0.0f,
+			origin,
+			scaleFront,
+			SpriteEffects::SpriteEffects_None,
+			0.0f
+		);
+
+		str = L"Coehl Gleckner | Lead Designer";
+
+		startLen = font->MeasureString(str);
+
+		origin = XMVectorSet(startLen.m128_f32[0] / 2.0f, startLen.m128_f32[1] / 2.0f, 0, 0);
+
+		posFront = XMVectorSet(windowCenter.x, windowCenter.y - 40.0f * windowHeightRatio, 0, 0);
+
+		posBack = XMVectorSet(windowCenter.x + 3.0f, windowCenter.y - 40.0f * windowHeightRatio + 3.0f, 0, 0);
+
+		font->DrawString(
+			spriteBatch,
+			str,
+			posBack,
+			frontColorNormal,
+			0.0f,
+			origin,
+			scaleBack,
+			SpriteEffects::SpriteEffects_None,
+			0.0f
+		);
+		font->DrawString(
+			spriteBatch,
+			str,
+			posFront,
+			XMVectorSet(0.3f, 0, 0, 1.0f),
+			0.0f,
+			origin,
+			scaleFront,
+			SpriteEffects::SpriteEffects_None,
+			0.0f
+		);
+
+		str = L"Nathan Gibson | Sound Designer";
+
+		startLen = font->MeasureString(str);
+
+		origin = XMVectorSet(startLen.m128_f32[0] / 2.0f, startLen.m128_f32[1] / 2.0f, 0, 0);
+
+		posFront = XMVectorSet(windowCenter.x, windowCenter.y - 0.0f * windowHeightRatio, 0, 0);
+
+		posBack = XMVectorSet(windowCenter.x + 3.0f, windowCenter.y - 0.0f * windowHeightRatio + 3.0f, 0, 0);
+
+		font->DrawString(
+			spriteBatch,
+			str,
+			posBack,
+			frontColorNormal,
+			0.0f,
+			origin,
+			scaleBack,
+			SpriteEffects::SpriteEffects_None,
+			0.0f
+		);
+		font->DrawString(
+			spriteBatch,
+			str,
+			posFront,
+			XMVectorSet(0.3f, 0, 0, 1.0f),
+			0.0f,
+			origin,
+			scaleFront,
+			SpriteEffects::SpriteEffects_None,
+			0.0f
+		);
+
+		str = L"Madilyn Chandler | 3D Game Artist, Concept Artist";
+
+		startLen = font->MeasureString(str);
+
+		origin = XMVectorSet(startLen.m128_f32[0] / 2.0f, startLen.m128_f32[1] / 2.0f, 0, 0);
+
+		posFront = XMVectorSet(windowCenter.x, windowCenter.y + 40.0f * windowHeightRatio, 0, 0);
+
+		posBack = XMVectorSet(windowCenter.x + 3.0f, windowCenter.y + 40.0f * windowHeightRatio + 3.0f, 0, 0);
+
+		font->DrawString(
+			spriteBatch,
+			str,
+			posBack,
+			frontColorNormal,
+			0.0f,
+			origin,
+			scaleBack,
+			SpriteEffects::SpriteEffects_None,
+			0.0f
+		);
+		font->DrawString(
+			spriteBatch,
+			str,
+			posFront,
+			XMVectorSet(0.3f, 0, 0, 1.0f),
+			0.0f,
+			origin,
+			scaleFront,
+			SpriteEffects::SpriteEffects_None,
+			0.0f
+		);
+
+		str = L"Nathalie Simon | 2D Game Artist, Concept Artist";
+
+		startLen = font->MeasureString(str);
+
+		origin = XMVectorSet(startLen.m128_f32[0] / 2.0f, startLen.m128_f32[1] / 2.0f, 0, 0);
+
+		posFront = XMVectorSet(windowCenter.x, windowCenter.y + 80.0f * windowHeightRatio, 0, 0);
+
+		posBack = XMVectorSet(windowCenter.x + 3.0f, windowCenter.y + 80.0f * windowHeightRatio + 3.0f, 0, 0);
+
+		font->DrawString(
+			spriteBatch,
+			str,
+			posBack,
+			frontColorNormal,
+			0.0f,
+			origin,
+			scaleBack,
+			SpriteEffects::SpriteEffects_None,
+			0.0f
+		);
+		font->DrawString(
+			spriteBatch,
+			str,
+			posFront,
+			XMVectorSet(0.3f, 0, 0, 1.0f),
+			0.0f,
+			origin,
+			scaleFront,
+			SpriteEffects::SpriteEffects_None,
+			0.0f
+		);
+
+		str = L"Alex Brandt | 2D Game Artist, Concept Artist";
+
+		startLen = font->MeasureString(str);
+
+		origin = XMVectorSet(startLen.m128_f32[0] / 2.0f, startLen.m128_f32[1] / 2.0f, 0, 0);
+
+		posFront = XMVectorSet(windowCenter.x, windowCenter.y + 120.0f * windowHeightRatio, 0, 0);
+
+		posBack = XMVectorSet(windowCenter.x + 3.0f, windowCenter.y + 120.0f * windowHeightRatio + 3.0f, 0, 0);
+
+		font->DrawString(
+			spriteBatch,
+			str,
+			posBack,
+			frontColorNormal,
+			0.0f,
+			origin,
+			scaleBack,
+			SpriteEffects::SpriteEffects_None,
+			0.0f
+		);
+		font->DrawString(
+			spriteBatch,
+			str,
+			posFront,
+			XMVectorSet(0.3f, 0, 0, 1.0f),
+			0.0f,
+			origin,
+			scaleFront,
+			SpriteEffects::SpriteEffects_None,
+			0.0f
+		);
+
+		str = L"Nick Passenese | Concept Artist";
+
+		startLen = font->MeasureString(str);
+
+		origin = XMVectorSet(startLen.m128_f32[0] / 2.0f, startLen.m128_f32[1] / 2.0f, 0, 0);
+
+		posFront = XMVectorSet(windowCenter.x, windowCenter.y + 160.0f * windowHeightRatio, 0, 0);
+
+		posBack = XMVectorSet(windowCenter.x + 3.0f, windowCenter.y + 160.0f * windowHeightRatio + 3.0f, 0, 0);
+
+		font->DrawString(
+			spriteBatch,
+			str,
+			posBack,
+			frontColorNormal,
+			0.0f,
+			origin,
+			scaleBack,
+			SpriteEffects::SpriteEffects_None,
+			0.0f
+		);
+		font->DrawString(
+			spriteBatch,
+			str,
+			posFront,
+			XMVectorSet(0.3f, 0, 0, 1.0f),
+			0.0f,
+			origin,
+			scaleFront,
+			SpriteEffects::SpriteEffects_None,
+			0.0f
+		);
+
+		str = L"Elizabeth Bogart | Copy Editor";
+
+		startLen = font->MeasureString(str);
+
+		origin = XMVectorSet(startLen.m128_f32[0] / 2.0f, startLen.m128_f32[1] / 2.0f, 0, 0);
+
+		posFront = XMVectorSet(windowCenter.x, windowCenter.y + 200.0f * windowHeightRatio, 0, 0);
+
+		posBack = XMVectorSet(windowCenter.x + 3.0f, windowCenter.y + 200.0f * windowHeightRatio + 3.0f, 0, 0);
+
+		font->DrawString(
+			spriteBatch,
+			str,
+			posBack,
+			frontColorNormal,
+			0.0f,
+			origin,
+			scaleBack,
+			SpriteEffects::SpriteEffects_None,
+			0.0f
+		);
+		font->DrawString(
+			spriteBatch,
+			str,
+			posFront,
+			XMVectorSet(0.3f, 0, 0, 1.0f),
+			0.0f,
+			origin,
+			scaleFront,
+			SpriteEffects::SpriteEffects_None,
+			0.0f
+		);
+
+		scaleFront = XMVectorSet(0.75f * windowWidthRatio, 0.75f * windowHeightRatio, 0, 0);
+		scaleBack = XMVectorSet(0.751f * windowWidthRatio, 0.751f * windowHeightRatio, 0, 0);
+
+		str = L"BACK";
+
+		startLen = font->MeasureString(str);
+
+		origin = XMVectorSet(startLen.m128_f32[0] / 2.0f, startLen.m128_f32[1] / 2.0f, 0, 0);
+
+		posFront = XMVectorSet(windowCenter.x, windowCenter.y + 275.0f * windowHeightRatio, 0, 0);
+		colorFront = (AABB(posFront, origin, scaleFront)) ? frontColorHighlight : frontColorNormal;
+
+		posBack = XMVectorSet(windowCenter.x + 3.0f, windowCenter.y + 275.0f * windowHeightRatio + 3.0f, 0, 0);
+		colorBack = (AABB(posFront, origin, scaleFront)) ? backColorHighlight : backColorNormal;
+
+		font->DrawString(
+			spriteBatch,
+			str,
+			posBack,
+			colorBack,
+			0.0f,
+			origin,
+			scaleBack,
+			SpriteEffects::SpriteEffects_None,
+			0.0f
+		);
+		font->DrawString(
+			spriteBatch,
+			str,
+			posFront,
+			colorFront,
+			0.0f,
+			origin,
+			scaleFront,
+			SpriteEffects::SpriteEffects_None,
+			0.0f
+		);
+
+		if (AABB(posFront, origin, scaleFront) && transparency >= 0.3f) {
+			if (EEMouse->OnLMBDown()) {
+				state = MainMenuState::MAIN;
+			}
+		}
+	}
+
+	void Call() {
+		spriteBatch->Begin(SpriteSortMode_Deferred, Renderer::GetInstance()->blendState);
+
+		if (transparency > 0.0f) {
+			switch (state)
+			{
+			case MainMenuState::MAIN:
+				DrawMainMenu();
+				break;
+			case MainMenuState::OPTIONS:
+				DrawOptionsMenu();
+				break;
+			case MainMenuState::CREDITS:
+				DrawCreditsMenu();
+				break;
+			default:
+				break;
+			}
+		}
+		else if (skipTooltipTransparency > 0.0f) DrawTooltip();
 
 		spriteBatch->End();
 
 		// Reset render states, since sprite batch changes these!
 		Config::Context->OMSetBlendState(0, 0, 0xFFFFFFFF);
 		Config::Context->OMSetDepthStencilState(0, 0);
-	}
-
-	void Call() {
-		if (transparency > 0.0f) DrawMainMenu();
-		else if (skipTooltipTransparency > 0.0f) DrawTooltip();
 	}
 };
 
@@ -323,6 +1086,7 @@ class MainMenuManager : public ScriptManager
 	XMFLOAT3 originalPaperRight;
 	bool papersStarted = false;
 	bool skipped = false;
+	bool finishedAnimation = false;
 
 	Mouse* mouse = nullptr;
 

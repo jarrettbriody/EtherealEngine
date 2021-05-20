@@ -12,6 +12,13 @@ SceneLoader::SceneLoader()
 SceneLoader::~SceneLoader()
 {
 	//defaults
+
+	for (auto fontiter = FontMap.begin(); fontiter != FontMap.end(); ++fontiter)
+	{
+		delete fontiter->second;
+		//cout << "Deleting " << texMapIter->first << endl;
+	}
+
 	for (auto texMapIter = Texture2DMap.begin(); texMapIter != Texture2DMap.end(); ++texMapIter)
 	{
 		texMapIter->second->Release();
@@ -465,6 +472,16 @@ void SceneLoader::LoadAssetPreloadFile()
 								unsigned int value = stoi(match[1]);
 								Config::EntityLayers.insert({ name, (value << (offset * 4)) });
 							}
+						}
+						else continue;
+						break;
+					}
+					case 16:
+					{
+						if (regex_search(line, match, RegexObjects.spritefontRegex)) {
+							string spritefont = match[1];
+							spritefont = "../../Assets/Fonts/" + spritefont + ".spritefont";
+							FontMap.insert({ name, new SpriteFont(Config::Device, Utility::StringToWideString(spritefont)) });
 						}
 						else continue;
 						break;
@@ -1423,7 +1440,7 @@ Entity* SceneLoader::CreateEntity(EntityCreationParameters& para)
 	return allocatedEntity;
 }
 
-std::vector<Entity*> SceneLoader::SplitMeshIntoChildEntities(Entity* e, float componentMass, float impulseForceScalar, float torqueScalar, string scriptName)
+std::vector<Entity*> SceneLoader::SplitMeshIntoChildEntities(Entity* e, string tag, string layer, float componentMass, float impulseForceScalar, float torqueScalar, string scriptName)
 {
 	std::vector<Entity*> childEntities;
 
@@ -1439,7 +1456,15 @@ std::vector<Entity*> SceneLoader::SplitMeshIntoChildEntities(Entity* e, float co
 		Material* mat = e->GetMaterial(e->GetMeshMaterialName(i));
 		//Entity newE(children[i]->GetName(), newCenteredMesh, mat);
 		Entity* allocatedEntity = (Entity*)EEMemoryAllocator->AllocateToPool((unsigned int)MEMORY_POOL::ENTITY_POOL, sizeof(Entity), success);
-		*allocatedEntity = Entity(children[i]->GetName(), newCenteredMesh, mat);
+
+		string entityName = children[i]->GetName();
+		int sameNameEntityCnt = 1;
+		while (SceneEntitiesMap.count(entityName)) {
+			entityName = children[i]->GetName() + " (" + to_string(sameNameEntityCnt) + ")";
+			sameNameEntityCnt++;
+		}
+
+		*allocatedEntity = Entity(entityName, newCenteredMesh, mat);
 		//*allocatedEntity = newE;
 		//e->AddChildEntity(allocatedEntity);
 		//e->CalcWorldMatrix();
@@ -1454,8 +1479,18 @@ std::vector<Entity*> SceneLoader::SplitMeshIntoChildEntities(Entity* e, float co
 		allocatedEntity->AddAutoBoxCollider();
 		allocatedEntity->InitRigidBody(BulletColliderShape::BOX, componentMass);
 		// allocatedEntity->GetRBody()->getWorldTransform().setOrigin(allocatedEntity->GetRBody()->getCenterOfMassPosition());
-		SceneEntitiesMap.insert({ children[i]->GetName(), allocatedEntity });
+		SceneEntitiesMap.insert({ entityName, allocatedEntity });
 		SceneEntities.push_back(allocatedEntity);
+		if (tag != "") {
+			if (!SceneEntitiesTagMap.count(tag)) SceneEntitiesTagMap.insert({ tag, vector<Entity*>() });
+			allocatedEntity->AddTag(tag);
+			SceneEntitiesTagMap[tag].push_back(allocatedEntity);
+		}
+		if (layer != "") {
+			if (!SceneEntitiesLayerMap.count(layer)) SceneEntitiesLayerMap.insert({ layer, vector<Entity*>() });
+			allocatedEntity->AddLayer(layer);
+			SceneEntitiesLayerMap[layer].push_back(allocatedEntity);
+		}
 		EERenderer->AddRenderObject(allocatedEntity, newCenteredMesh, mat);
 
 		childEntities.push_back(allocatedEntity);

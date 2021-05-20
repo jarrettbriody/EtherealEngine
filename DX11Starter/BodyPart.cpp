@@ -3,6 +3,22 @@
 
 void BodyPart::Init()
 {
+	bloodPoolParams = {
+			"Blood Pool",					// name
+			"Blood Pool",					// tag
+			"outline",					// layer
+			"bloodpool",							// mesh
+			"bloodpool",							// material
+			{"BLOODPOOL"},				// script names
+			1,								// script count
+			XMFLOAT3(0.0f, 0.0f, 0.0f),		// position
+			XMFLOAT3(0.0f, 0.0f, 0.0f),		// rotation
+			XMFLOAT3(0.1f, 0.1f, 0.1f),		// scale
+			0.0f,							// mass
+			false
+			// defaults work for the rest
+	};
+
 	ParticleEmitterDescription emitDesc;
 	//emitDesc.parentName = "FPSController";
 	//emitDesc.parentWorld = EESceneLoader->sceneEntitiesMap["FPSController"]->GetWorldMatrixPtr();
@@ -87,11 +103,18 @@ void BodyPart::Init()
 	emitDesc.particleMinLifetime = 3.0f;
 	emitDesc.particleMaxLifetime = 4.0f;
 	gpuPSys = new GPUParticleEmitter(emitDesc);
+
+	//killPart += static_cast <float> ((rand()) / static_cast <float> (RAND_MAX));
 }
 
 void BodyPart::Update()
 {
 	totalTime += deltaTime;
+
+	if (!poolSpawned) {
+		CheckPoolSpawn();
+	}
+
 	if (totalTime > deactivate && !destroyedPSys) {
 		ParticleEmitter* emit = (ParticleEmitter*)cpuPSys;
 		emit->SetIsActive(false);
@@ -104,5 +127,33 @@ void BodyPart::Update()
 		emit = (ParticleEmitter*)gpuPSys;
 		emit->Destroy();
 		destroyedPSys = true;
+	}
+	killPart -= deltaTime;
+	if (killPart <= 0.0f && 
+		XMVector3LengthSq(XMVectorSubtract(XMLoadFloat3(&entity->GetTransform().GetPosition()), XMLoadFloat3(&EERenderer->GetCamera("main")->GetTransform().GetPosition()))).m128_f32[0] > 250000.0f) {
+		killPart = 0.0f;
+		entity->Destroy();
+	}
+}
+
+void BodyPart::CheckPoolSpawn()
+{
+	btVector3 from = entity->GetRBody()->getCenterOfMassPosition();
+	btVector3 to = btVector3(from.getX(), from.getY() - 3.0f, from.getZ());
+
+	btCollisionWorld::ClosestRayResultCallback closestResult = Utility::BulletRaycast(from, to);
+
+	if (closestResult.hasHit())
+	{
+		PhysicsWrapper* wrapper = (PhysicsWrapper*)closestResult.m_collisionObject->getUserPointer();
+		if (wrapper->type == PHYSICS_WRAPPER_TYPE::ENTITY) {
+			Entity* e = (Entity*)wrapper->objectPointer;
+			if (e->HasTag(std::string("Environment")))
+			{
+				bloodPoolParams.position = Utility::BulletVectorToFloat3(closestResult.m_hitPointWorld);
+				Entity* pool = ScriptManager::CreateEntity(bloodPoolParams);
+				poolSpawned = true;
+			}
+		}
 	}
 }

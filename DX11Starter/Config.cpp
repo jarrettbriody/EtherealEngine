@@ -44,11 +44,13 @@ float Config::HBAOBlurSharpness = 8.0f;
 GFSDK_SSAO_BlurRadius Config::HBAOBlurRadius = GFSDK_SSAO_BLUR_RADIUS_2;
 
 float Config::SceneBrightness = 0.05f;
+float Config::SceneBrightnessMult = 1.0f;
 
 bool Config::DecalsEnabled = true;
 unsigned int Config::InitialDecalVectorSize = 3000;
 
-float Config::MusicVolume = 0.1f; //0.1
+float Config::MusicVolume = 0.3f; //0.3
+float Config::SFXVolume = 1.0f; //0.3
 
 btDiscreteDynamicsWorld* Config::DynamicsWorld = nullptr;
 

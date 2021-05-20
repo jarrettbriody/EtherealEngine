@@ -19,15 +19,17 @@ Status HoundPlayer::Update()
 
 	// enemy->SetDirectionVector(Utility::BulletVectorToFloat3(direction.normalized()));
 
+	if (hooked) return SUCCESS;
+
 	enemy->GetRBody()->activate();
-	enemy->GetRBody()->setLinearVelocity(Utility::Float3ToBulletVector(enemy->GetTransform().GetDirectionVector()).normalized() * pounceSpeed);
-	//enemy->GetRBody()->applyCentralImpulse(Utility::Float3ToBulletVector(enemy->GetDirectionVector()).normalized() * pounceSpeed);
+	//enemy->GetRBody()->setLinearVelocity(Utility::Float3ToBulletVector(enemy->GetTransform().GetDirectionVector()).normalized() * pounceSpeed);
+	enemy->GetRBody()->applyCentralImpulse(Utility::Float3ToBulletVector(enemy->GetTransform().GetDirectionVector()) * pounceSpeed);
 
 	*cooldownTimer = maxCooldownTime;
 
 	int index = (rand() % 9);
 	Config::FMODResult = Config::FMODSystem->playSound(Config::HornedAttack[index], Config::SFXGroup, false, &Config::SFXChannel);
-	Config::SFXChannel->setVolume(HORNED_ATTACK_VOLUME);
+	Config::SFXChannel->setVolume(HORNED_ATTACK_VOLUME * Config::SFXVolume);
 	XMFLOAT3 epos = enemy->GetTransform().GetPosition();
 	FMOD_VECTOR pos = { epos.x, epos.y, epos.z };
 	FMOD_VECTOR vel = { 0, 0, 0 };

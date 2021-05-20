@@ -10,6 +10,8 @@
 #include "MemoryAllocator.h"
 #include "Renderer.h"
 #include "ParticleEmitter.h"
+#include "SpriteFont.h"
+#include "SpriteBatch.h"
 
 using namespace Utility;
 
@@ -69,6 +71,7 @@ private:
 		{ "AMBIENTLIGHT", 13 },
 		{ "POINTLIGHT", 14 },
 		{ "SPOTLIGHT", 15 },
+		{ "FONT", 16 },
 	};
 
 	map<string, ShaderType> shaderTypes = {
@@ -162,6 +165,8 @@ private:
 		regex powerRegex = regex("power=\"(\\d*\\.\\d*|\\d+)\"");
 		regex blurSharpnessRegex = regex("blurSharpness=\"(\\d*\\.\\d*|\\d+)\"");
 		regex blurRadiusRegex = regex("blurRadius=\"(\\d+)\"");
+
+		regex spritefontRegex = regex("spritefont=\"(\\w+)\"");
 	} RegexObjects;
 
 	map<string, bool> utilizedMeshesMap;
@@ -193,6 +198,8 @@ public:
 	LightHandler* EELightHandler = nullptr;
 
 	vector<ScriptPair> scriptPairs;
+
+	map<string, SpriteFont*> FontMap;
 
 	map<string, SimpleVertexShader*> VertexShadersMap;
 	map<string, SimplePixelShader*> PixelShadersMap;
@@ -230,7 +237,7 @@ public:
 	void SetScriptLoader(void (*callback)(Entity* e, string script));
 
 	Entity* CreateEntity(EntityCreationParameters& para);
-	std::vector<Entity*> SplitMeshIntoChildEntities(Entity* e, float componentMass, float impulseForceScalar = 20.0f, float torqueScalar = 15.0f, string scriptName = "");
+	std::vector<Entity*> SplitMeshIntoChildEntities(Entity* e, string tag, string layer, float componentMass, float impulseForceScalar = 20.0f, float torqueScalar = 15.0f, string scriptName = "");
 
 	void DestroyEntity(string entityName);
 	void DestroyEntitiesByTag(string tag);

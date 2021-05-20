@@ -3,27 +3,22 @@
 
 void GameManager::Init()
 {
+	uiCB.crosshair = EESceneLoader->DefaultTexturesMap["crosshair"];
+	ID3D11Resource* crosshairResource;
+	ID3D11Texture2D* crosshairTexture;
+	uiCB.crosshair->GetResource(&crosshairResource);
+	crosshairResource->QueryInterface<ID3D11Texture2D>(&crosshairTexture);
+	crosshairTexture->GetDesc(&uiCB.crosshairDesc);
+
+	uiCB.spriteBatch = new SpriteBatch(Config::Context);
+	uiCB.font = EESceneLoader->FontMap["Bloodlust"];
+	//uiCB.EEMouse = Mouse::GetInstance();
+	//uiCB.EESceneLoader = EESceneLoader;
+	EERenderer->SetRenderUICallback(true, &uiCB, 0);
+
 	eMap = ScriptManager::sceneEntitiesMap;
 
 	enemiesAlive = EESceneLoader->SceneEntitiesTagMap["Enemy"].size(); // enemies alive on game start
-
-	totalSplitMeshEntities = std::vector<Entity*>();
-	
-	bloodPoolParams = {
-			"Blood Pool",					// name
-			"Blood Pool",					// tag
-			"Blood Pool",					// layer
-			"bloodpool",							// mesh
-			"bloodpool",							// material
-			{"BLOODPOOL"},				// script names
-			1,								// script count
-			XMFLOAT3(0.0f, 0.0f, 0.0f),		// position
-			XMFLOAT3(0.0f, 0.0f, 0.0f),		// rotation
-			XMFLOAT3(0.1f, 0.1f, 0.1f),		// scale
-			0.0f,							// mass
-			false
-			// defaults work for the rest
-	};
 	
 	gs = GameState::Gameplay; // For testing purposes right now, change when menus and cinematic are added to the game
 
@@ -147,6 +142,18 @@ void GameManager::Update()
 	//	EESceneLoader->SceneEntitiesMap["graveyard"]->GetTransform().RotateAroundAxis(Y_AXIS, 1.0f * deltaTime);
 	//}
 
+	RECT window;
+	RECT client;
+	if (GetWindowRect(Config::hWnd, &window)) {
+		if (GetClientRect(Config::hWnd, &client)) {
+			uiCB.windowCenter.x = round(client.left + (float)Config::ViewPortWidth / 2.0f);
+			uiCB.windowCenter.y = round(client.top + (float)Config::ViewPortHeight / 2.0f);
+
+			uiCB.windowWidthRatio = (float)Config::ViewPortWidth / 1600.0f;
+			uiCB.windowHeightRatio = (float)Config::ViewPortHeight / 900.0f;
+		}
+	}
+
 	switch (gs)
 	{
 	case GameState::Intro:
@@ -160,13 +167,14 @@ void GameManager::Update()
 	case GameState::Gameplay:
 		gameTimer -= deltaTime;
 
+		CheckTooltips();
+		CheckPlayerPos();
+
 		// cout << "Game Timer: " << gameTimer << " Enemies Left: " << enemiesAlive << endl;
 		if (gameTimer <= 0 && enemiesAlive > 0) // lose condition TODO: Change to if only if boss is alive and make enemies alive part of thes coring
 		{
 			gs = GameState::GameOver;
 		}
-
-		BloodPoolSpawner();
 
 		break;
 
@@ -184,39 +192,55 @@ void GameManager::Update()
 	}
 }
 
-void GameManager::BloodPoolSpawner()
+GameManager::~GameManager()
 {
-	int cnt = totalSplitMeshEntities.size();
-	for (int i = cnt - 1; i >= 0; i--)
-	{
-		btVector3 from = totalSplitMeshEntities[i]->GetRBody()->getCenterOfMassPosition();
-		btVector3 to = btVector3(from.getX(), from.getY() - 3.0f, from.getZ());
+	delete uiCB.spriteBatch;
+}
 
-		btCollisionWorld::ClosestRayResultCallback closestResult = Utility::BulletRaycast(from, to);
-
-		if (closestResult.hasHit())
-		{
-			PhysicsWrapper* wrapper = (PhysicsWrapper*)closestResult.m_collisionObject->getUserPointer();
-			if (wrapper->type == PHYSICS_WRAPPER_TYPE::ENTITY) {
-				Entity* e = (Entity*)wrapper->objectPointer;
-				if (e->HasTag(std::string("Environment")))
-				{
-					bloodPoolParams.position = Utility::BulletVectorToFloat3(closestResult.m_hitPointWorld);
-					Entity* pool = ScriptManager::CreateEntity(bloodPoolParams);
-					pool->AddLayer("outline");
-					totalSplitMeshEntities.erase(totalSplitMeshEntities.begin() + i); // remove the body part from the list if it already was close enough to the ground to leave a blood puddle
-				}
+void GameManager::CheckTooltips()
+{
+	if (tooltipRampingUp) {
+		if (uiCB.transparency == 1.0f) {
+			tooltipTimer -= deltaTime;
+			if (tooltipTimer < 0.0f) {
+				tooltipRampingUp = false;
 			}
 		}
+		else {
+			uiCB.transparency += deltaTime;
+			if (uiCB.transparency > 1.0f) {
+				uiCB.transparency = 1.0f;
+				tooltipTimer = originalTooltipTimer;
+			}
+		}
+	}
+	else {
+		uiCB.transparency -= deltaTime;
+		if (uiCB.transparency < 0.0f) uiCB.transparency = 0.0f;
+	}
+	
+	if (tooltipIndex < 7) {
+		if (XMVector3LengthSq(XMVectorSubtract(XMLoadFloat3(&EESceneLoader->SceneEntitiesMap["FPSController"]->GetTransform().GetPosition()), XMLoadFloat3(&tooltipLocations[tooltipIndex]))).m128_f32[0] <= tooltipDistance) {
+			uiCB.transparency = 0.0f;
+			uiCB.tooltip = tooltips[tooltipIndex];
+			tooltipIndex++;
+			tooltipRampingUp = true;
+		}
+	}
+}
+
+void GameManager::CheckPlayerPos()
+{
+	Entity* player = EESceneLoader->SceneEntitiesMap["FPSController"];
+	if (player->GetTransform().GetPosition().y < -100.0f) {
+		unsigned int index = tooltipIndex;
+		player->GetTransform().SetPosition(tooltipLocations[index - 1]);
+		player->GetRBody()->clearForces();
+		player->GetRBody()->setLinearVelocity(btVector3(0, 0, 0));
 	}
 }
 
 void GameManager::DecrementEnemiesAlive()
 {
 	enemiesAlive--;
-}
-
-void GameManager::AddRangeToTotalSplitMeshEntities(std::vector<Entity*> splitMeshEntities)
-{
-	this->totalSplitMeshEntities.insert(this->totalSplitMeshEntities.end(), splitMeshEntities.begin(), splitMeshEntities.end());
 }

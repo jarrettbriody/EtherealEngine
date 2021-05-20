@@ -9,6 +9,7 @@ private:
 	Entity* player;
 	Entity* enemy;
 	float chargeSpeed;
+	FMOD::Channel* BullSFXChannel = nullptr;
 
 public:
 	ChargePlayer(Entity* e, Entity* p, float cSpeed) : enemy(e), player(p), chargeSpeed(cSpeed) {}

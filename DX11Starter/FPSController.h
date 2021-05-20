@@ -19,7 +19,7 @@
 #define ICICLE_THROW_VOLUME 0.5f
 #define FOOTSTEP_VOLUME 0.4f
 #define DASH_VOLUME 0.4f
-#define PLAYER_HIT_VOLUME 0.4f
+#define PLAYER_HIT_VOLUME 3.0f
 #define JUMP_VOLUME 0.2f
 
 // struct in script from utility callback
@@ -36,42 +36,94 @@ struct DashBlurCallback : RendererCallback {
 	}
 };
 
-struct uiDebugCallback : Utility::Callback {
+struct FPSControllerUICallback : Utility::Callback {
 	DirectX::SpriteFont* font;
 	DirectX::SpriteBatch* spriteBatch;
+	ID3D11ShaderResourceView* hitUI;
 	string playerPos;
+	string headbobOffset;
+	string midair;
+	string standObj;
 	float windowWidthRatio;
 	float windowHeightRatio;
 	POINT windowCenter;
 	float transparency = 0.0f;
 	float otherTransparency = 0.0f;
+	float hitUITransparency = 0.0f;
 
-	void DrawPlayerPos() {
-		spriteBatch->Begin(SpriteSortMode_Deferred, Renderer::GetInstance()->blendState);
-
-		XMVECTOR titleLen = font->MeasureString(Utility::StringToWideString(playerPos));
-		font->DrawString(
-			spriteBatch,
-			Utility::StringToWideString(playerPos),
-			XMVectorSet(windowCenter.x, windowCenter.y - 60.0f * windowHeightRatio, 0, 0),
-			XMVectorSet(1, 1, 1, 1),
+	void DrawPlayerHitUI() {
+		spriteBatch->Draw(
+			hitUI,
+			XMVectorSet(0, 0, 0, 0),
+			nullptr,
+			XMVectorSet(1, 1, 1, hitUITransparency),
 			0.0f,
-			XMVectorSet(0.751f, 0.751f, 0, 0),
-			XMVectorSet(1.001f, 1.001f, 0, 0),
+			XMVectorSet(0, 0, 0, 0),
+			XMVectorSet(1.0f * windowWidthRatio, 1.0f * windowHeightRatio, 0, 0),
 			SpriteEffects::SpriteEffects_None,
 			0.0f
 		);
+	}
+
+	void DrawPlayerPos() {
+		font->DrawString(
+			spriteBatch,
+			Utility::StringToWideString(playerPos),
+			XMVectorSet(0, 0, 0, 0),
+			XMVectorSet(1, 1, 1, 1),
+			0.0f,
+			XMVectorSet(0, 0, 0, 0),
+			XMVectorSet(1.0f, 1.0f, 0, 0),
+			SpriteEffects::SpriteEffects_None,
+			0.0f
+		);
+		font->DrawString(
+			spriteBatch,
+			Utility::StringToWideString(headbobOffset),
+			XMVectorSet(0, 25, 0, 0),
+			XMVectorSet(1, 1, 1, 1),
+			0.0f,
+			XMVectorSet(0, 0, 0, 0),
+			XMVectorSet(1.0f, 1.0f, 0, 0),
+			SpriteEffects::SpriteEffects_None,
+			0.0f
+		);
+		font->DrawString(
+			spriteBatch,
+			Utility::StringToWideString(midair),
+			XMVectorSet(0, 50, 0, 0),
+			XMVectorSet(1, 1, 1, 1),
+			0.0f,
+			XMVectorSet(0, 0, 0, 0),
+			XMVectorSet(1.0f, 1.0f, 0, 0),
+			SpriteEffects::SpriteEffects_None,
+			0.0f
+		);
+		font->DrawString(
+			spriteBatch,
+			Utility::StringToWideString(standObj),
+			XMVectorSet(0, 75, 0, 0),
+			XMVectorSet(1, 1, 1, 1),
+			0.0f,
+			XMVectorSet(0, 0, 0, 0),
+			XMVectorSet(1.0f, 1.0f, 0, 0),
+			SpriteEffects::SpriteEffects_None,
+			0.0f
+		);
+	}
+
+	void Call()
+	{
+		spriteBatch->Begin(SpriteSortMode_Deferred, Renderer::GetInstance()->blendState);
+
+		DrawPlayerHitUI();
+		//DrawPlayerPos();
 
 		spriteBatch->End();
 
 		// Reset render states, since sprite batch changes these!
 		Config::Context->OMSetBlendState(0, 0, 0xFFFFFFFF);
 		Config::Context->OMSetDepthStencilState(0, 0);
-	}
-
-	void Call()
-	{
-		DrawPlayerPos();
 	}
 };
 
@@ -93,7 +145,7 @@ class FPSController : public ScriptManager
 	XMFLOAT4 ringRandomQuats[4];
 
 	DashBlurCallback dashBlurCallback;
-	uiDebugCallback uiDebugCb;
+	FPSControllerUICallback FPSCtrlUICb;
 
 	BloodOrb* bloodOrbScript;
 	BaseEnemy* enemyScript; 
@@ -114,16 +166,17 @@ class FPSController : public ScriptManager
 	bool rollRight = false;
 	const float CAM_ROLL_MIN = -0.05f;
 	const float CAM_ROLL_MAX = 0.05f;
-	float headbobOffset = 0.0f;
 	const float HEADBOB_OFFSET_INTERVAL = 3.0f;
 	const float HEADBOB_OFFSET_MIN = 0.0f;
 	const float HEADBOB_OFFSET_MAX = 0.5f;
+	float headbobOffset = HEADBOB_OFFSET_MIN;
 	bool resetHeadbob = false;
 	const float NORMAL_FOV = 100.0f;
 	const float DASH_FOV = NORMAL_FOV + 20.0f;
 	float fov = NORMAL_FOV;
 	float fovNormalToDashSpeed = 180.0f;
 	float fovDashToNormalSpeed = 120.0f;
+	float ragdollTimeout = 0.0f;
 
 	// Calculation fields
 	XMFLOAT3 position;
@@ -149,7 +202,8 @@ class FPSController : public ScriptManager
 	// Jumping
 	bool midAir = true; // true if starting character in the air
 	int jumpCount = 0;
-	float jumpForceScalar = 3.0f;
+	float jumpForceScalar = 2.3f;
+	float jumpForgiveness = 0.0f;
 
 	// Dashing
 	const int MAX_DASHES = 4;

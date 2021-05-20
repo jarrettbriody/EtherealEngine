@@ -10,6 +10,7 @@ class BloodPool : public ScriptManager
 	
 	float growthScalar = 5.0f;
 	XMFLOAT3 finalScale = XMFLOAT3(2.5f, 4.0f, 2.5f);
+	float timeout = 15.0f;
 
 	void Init();
 

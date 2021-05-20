@@ -101,11 +101,13 @@ public:
 	static GFSDK_SSAO_BlurRadius HBAOBlurRadius;
 
 	static float SceneBrightness;
+	static float SceneBrightnessMult;
 
 	static bool DecalsEnabled;
 	static unsigned int InitialDecalVectorSize;
 
 	static float MusicVolume;
+	static float SFXVolume;
 
 	static btDiscreteDynamicsWorld* DynamicsWorld;
 	

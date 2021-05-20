@@ -126,6 +126,44 @@ bool Renderer::DestroyInstance()
 	return false;
 }
 
+void Renderer::GarbageCollect()
+{
+	int cnt = renderObjectCount - 1;
+	for (int i = cnt; i >= 0; i--)
+	{
+		RenderObject renderObject = renderObjects[i];
+		Entity* e = renderObject.entity;
+		Mesh* mesh = renderObject.mesh;
+		Material* mat = renderObject.material;
+		RendererCallback* callback = renderObject.callback;
+
+		if (e->destroyed || e->isEmptyObj) {
+			if (i != renderObjectCount - 1) {
+				renderObjects[i] = renderObjects[renderObjectCount - 1];
+			}
+			renderObjectCount--;
+		}
+	}
+
+	cnt = transparentObjectCount - 1;
+	for (int i = cnt; i >= 0; i--)
+	{
+		RenderObject renderObject = transparentObjects[i];
+		Entity* e = renderObject.entity;
+		Mesh* mesh = renderObject.mesh;
+		Material* mat = renderObject.material;
+		RendererCallback* callback = renderObject.callback;
+
+		if (e->destroyed || e->isEmptyObj) {
+			if (i != transparentObjectCount - 1) {
+				transparentObjects[i] = transparentObjects[transparentObjectCount - 1];
+			}
+			transparentObjectCount--;
+			continue;
+		}
+	}
+}
+
 void Renderer::SetEntities(vector<Entity*>* entities)
 {
 	this->entities = entities;
@@ -721,7 +759,7 @@ void Renderer::RenderDecals()
 
 		shaders.decalPS->SetSamplerState("ShadowSampler", shadowComponents.Sampler);
 		shaders.decalPS->SetFloat3("cameraPos", camPos);
-		shaders.decalPS->SetFloat("brightness", Config::SceneBrightness);
+		shaders.decalPS->SetFloat("brightness", Config::SceneBrightness * Config::SceneBrightnessMult);
 
 		shaders.decalPS->SetData(
 			"lights",
@@ -744,6 +782,9 @@ void Renderer::RenderDecals()
 		for (size_t i = 0; i < DecalHandler::decalsVec.size(); i++)
 		{
 			DecalBucket* db = DecalHandler::decalsVec[i];
+
+			if (XMVector3LengthSq(XMVectorSubtract(XMLoadFloat3(&db->owner->GetTransform().GetPosition()), XMLoadFloat3(&camera->GetTransform().GetPosition()))).m128_f32[0] > 250000.0f) continue;
+
 			ownerWorld = XMMatrixTranspose(XMLoadFloat4x4(&db->owner->GetTransform().GetWorldMatrix()));
 			for (size_t j = 0; j < db->count; j++)
 			{

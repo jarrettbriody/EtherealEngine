@@ -79,12 +79,10 @@ void BloodIcicle::OnCollision(btCollisionObject* other)
 			// if an enemy is currently leashed when hit by a blood icicle reset the hookshot
 			if(fpsControllerScript->GetPlayerState() == PlayerState::HookshotLeash && fpsControllerScript->GetLeashedEntity() == otherE) fpsControllerScript->ResetHookshotTransform();
 			otherE->RemoveFromPhysicsSimulation();
-			std::vector<Entity*> childEntities = EESceneLoader->SplitMeshIntoChildEntities(otherE, 10.0f,30.0f,20.0f, "BODYPART");  
+			std::vector<Entity*> childEntities = EESceneLoader->SplitMeshIntoChildEntities(otherE,"Body Part", "", 10.0f,30.0f,20.0f, "BODYPART");  
 
 			for each (Entity* e in childEntities)
 			{
-				e->AddTag("Body Part");
-
 				e->GetRBody()->activate();
 				// lower values because of incoming blood projectile
 				//e->GetRBody()->applyCentralImpulse(btVector3(15, 15, 15));
@@ -92,11 +90,11 @@ void BloodIcicle::OnCollision(btCollisionObject* other)
 				e->GetRBody()->clearForces();
 			}
 
-			gameManagerScript->AddRangeToTotalSplitMeshEntities(childEntities);
+			//gameManagerScript->AddRangeToTotalSplitMeshEntities(childEntities);
 
 			int index = (rand() % 6);
 			Config::FMODResult = Config::FMODSystem->playSound(Config::Icicle[index], Config::SFXGroup, false, &Config::SFXChannel);
-			Config::SFXChannel->setVolume(ICICLE_IMPACT_VOLUME);
+			Config::SFXChannel->setVolume(ICICLE_IMPACT_VOLUME * Config::SFXVolume);
 			FMOD_VECTOR pos = { epos.x, epos.y, epos.z };
 			FMOD_VECTOR vel = { 0, 0, 0 };
 
@@ -133,7 +131,7 @@ void BloodIcicle::OnCollision(btCollisionObject* other)
 
 			int index = (rand() % 6);
 			Config::FMODResult = Config::FMODSystem->playSound(Config::Icicle[index], Config::SFXGroup, false, &Config::SFXChannel);
-			Config::SFXChannel->setVolume(ICICLE_IMPACT_VOLUME);
+			Config::SFXChannel->setVolume(ICICLE_IMPACT_VOLUME * Config::SFXVolume);
 			FMOD_VECTOR pos = { epos.x, epos.y, epos.z };
 			FMOD_VECTOR vel = { 0, 0, 0 };
 

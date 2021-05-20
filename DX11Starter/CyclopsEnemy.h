@@ -43,8 +43,8 @@ class CyclopsEnemy : public ScriptManager, public BaseEnemy
 	float dampingScalar = 0.09f;
 	float turnSpeed = 8.0f;
 	float minimumDistance = 40.0f;
-	float visionConeAngle = 50.0f;
-	float visionConeDistance = 80.0f;
+	float visionConeAngle = 90.0f;
+	float visionConeDistance = 150.0f;
 	float oscillationMagnitude = 0.01f;
 	float totalTime = 0.0f;
 	float projectileSpeed = 100.0f;

@@ -32,6 +32,9 @@ void BloodPool::Update()
 	XMStoreFloat3(&newScale, XMVectorLerp(XMLoadFloat3(&entity->GetTransform().GetScale()), XMLoadFloat3(&finalScale), growthScalar * deltaTime));
 
 	entity->GetTransform().SetScale(newScale);
+
+	timeout -= deltaTime;
+	if (timeout < 0.0f) entity->Destroy();
 }
 
 void BloodPool::OnCollision(btCollisionObject* other)

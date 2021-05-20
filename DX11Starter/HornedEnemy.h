@@ -42,15 +42,15 @@ class HornedEnemy : public ScriptManager, public BaseEnemy
 	float turnSpeed = 10.0f;
 	float minimumDistance = 12.5f;
 	float visionConeAngle = 100.0f;
-	float visionConeDistance = 40.0f;
+	float visionConeDistance = 100.0f;
 	float oscillationMagnitude = 0.01f;
 	float totalTime = 0.0f;
 	float houndSpeed = 60.0f;
 	float houndCooldownTimer = 0.0f;
-	const float HOUND_COOLDOWN_MAX = 0.5f;
+	const float HOUND_COOLDOWN_MAX = 1.0f;
 
 	float killSpeedWhileLeashed = 35.0f;
-	bool leashed;
+	bool leashed = false;
 	float delay;
 
 	BehaviorTree* bt;

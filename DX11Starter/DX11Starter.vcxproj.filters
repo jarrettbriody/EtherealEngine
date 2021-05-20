@@ -157,31 +157,31 @@
       <Filter>EEScripts\Source</Filter>
     </ClCompile>
     <ClCompile Include="EnemySeesPlayer.cpp">
-      <Filter>EEBehaviors\Source</Filter>
+      <Filter>EEScripts\Behaviors\Source</Filter>
     </ClCompile>
     <ClCompile Include="EnemyTest.cpp">
       <Filter>EEScripts\Source</Filter>
     </ClCompile>
     <ClCompile Include="InCombat.cpp">
-      <Filter>EEBehaviors\Source</Filter>
+      <Filter>EEScripts\Behaviors\Source</Filter>
     </ClCompile>
     <ClCompile Include="PlayerVisible.cpp">
-      <Filter>EEBehaviors\Source</Filter>
+      <Filter>EEScripts\Behaviors\Source</Filter>
     </ClCompile>
     <ClCompile Include="SeekPlayer.cpp">
-      <Filter>EEBehaviors\Source</Filter>
+      <Filter>EEScripts\Behaviors\Source</Filter>
     </ClCompile>
     <ClCompile Include="FacePlayer.cpp">
-      <Filter>EEBehaviors\Source</Filter>
+      <Filter>EEScripts\Behaviors\Source</Filter>
     </ClCompile>
     <ClCompile Include="FollowPath.cpp">
-      <Filter>EEBehaviors\Source</Filter>
+      <Filter>EEScripts\Behaviors\Source</Filter>
     </ClCompile>
     <ClCompile Include="Idle.cpp">
-      <Filter>EEBehaviors\Source</Filter>
+      <Filter>EEScripts\Behaviors\Source</Filter>
     </ClCompile>
     <ClCompile Include="FindPlayer.cpp">
-      <Filter>EEBehaviors\Source</Filter>
+      <Filter>EEScripts\Behaviors\Source</Filter>
     </ClCompile>
     <ClCompile Include="MainMenuManager.cpp">
       <Filter>EEScripts\Source</Filter>
@@ -244,7 +244,7 @@
       <Filter>EECore\Source Files\Rendering</Filter>
     </ClCompile>
     <ClCompile Include="FireProjectile.cpp">
-      <Filter>EEBehaviors\Source</Filter>
+      <Filter>EEScripts\Behaviors\Source</Filter>
     </ClCompile>
     <ClCompile Include="BullEnemy.cpp">
       <Filter>EEScripts\Source</Filter>
@@ -259,22 +259,22 @@
       <Filter>EEScripts\Source</Filter>
     </ClCompile>
     <ClCompile Include="PlayerIsInRange.cpp">
-      <Filter>EEBehaviors\Source</Filter>
+      <Filter>EEScripts\Behaviors\Source</Filter>
     </ClCompile>
     <ClCompile Include="ChargePlayer.cpp">
-      <Filter>EEBehaviors\Source</Filter>
+      <Filter>EEScripts\Behaviors\Source</Filter>
     </ClCompile>
     <ClCompile Include="Projectile.cpp">
       <Filter>EEScripts\Source</Filter>
     </ClCompile>
     <ClCompile Include="HoundPlayer.cpp">
-      <Filter>EEBehaviors\Source</Filter>
+      <Filter>EEScripts\Behaviors\Source</Filter>
     </ClCompile>
     <ClCompile Include="AbilityAvailable.cpp">
-      <Filter>EEBehaviors\Source</Filter>
+      <Filter>EEScripts\Behaviors\Source</Filter>
     </ClCompile>
     <ClCompile Include="SeekAndFleePlayer.cpp">
-      <Filter>EEBehaviors\Source</Filter>
+      <Filter>EEScripts\Behaviors\Source</Filter>
     </ClCompile>
     <ClCompile Include="BodyPart.cpp">
       <Filter>EEScripts\Source</Filter>
@@ -283,7 +283,7 @@
       <Filter>EECore\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Invert.cpp">
-      <Filter>EEBehaviors\Source</Filter>
+      <Filter>EEScripts\Behaviors\Source</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -354,10 +354,10 @@
       <Filter>EEScripts\Headers</Filter>
     </ClInclude>
     <ClInclude Include="EnemySeesPlayer.h">
-      <Filter>EEBehaviors\Headers</Filter>
+      <Filter>EEScripts\Behaviors\Headers</Filter>
     </ClInclude>
     <ClInclude Include="TestBehavior.h">
-      <Filter>EEBehaviors\Headers</Filter>
+      <Filter>EEScripts\Behaviors\Headers</Filter>
     </ClInclude>
     <ClInclude Include="EnemyTest.h">
       <Filter>EEScripts\Headers</Filter>
@@ -378,25 +378,25 @@
       <Filter>EEScripts\Headers</Filter>
     </ClInclude>
     <ClInclude Include="InCombat.h">
-      <Filter>EEBehaviors\Headers</Filter>
+      <Filter>EEScripts\Behaviors\Headers</Filter>
     </ClInclude>
     <ClInclude Include="PlayerVisible.h">
-      <Filter>EEBehaviors\Headers</Filter>
+      <Filter>EEScripts\Behaviors\Headers</Filter>
     </ClInclude>
     <ClInclude Include="SeekPlayer.h">
-      <Filter>EEBehaviors\Headers</Filter>
+      <Filter>EEScripts\Behaviors\Headers</Filter>
     </ClInclude>
     <ClInclude Include="FacePlayer.h">
-      <Filter>EEBehaviors\Headers</Filter>
+      <Filter>EEScripts\Behaviors\Headers</Filter>
     </ClInclude>
     <ClInclude Include="FollowPath.h">
-      <Filter>EEBehaviors\Headers</Filter>
+      <Filter>EEScripts\Behaviors\Headers</Filter>
     </ClInclude>
     <ClInclude Include="Idle.h">
-      <Filter>EEBehaviors\Headers</Filter>
+      <Filter>EEScripts\Behaviors\Headers</Filter>
     </ClInclude>
     <ClInclude Include="FindPlayer.h">
-      <Filter>EEBehaviors\Headers</Filter>
+      <Filter>EEScripts\Behaviors\Headers</Filter>
     </ClInclude>
     <ClInclude Include="MainMenuManager.h">
       <Filter>EEScripts\Headers</Filter>
@@ -468,7 +468,7 @@
       <Filter>EECore\Utility</Filter>
     </ClInclude>
     <ClInclude Include="FireProjectile.h">
-      <Filter>EEBehaviors\Headers</Filter>
+      <Filter>EEScripts\Behaviors\Headers</Filter>
     </ClInclude>
     <ClInclude Include="BullEnemy.h">
       <Filter>EEScripts\Headers</Filter>
@@ -483,10 +483,10 @@
       <Filter>EEScripts\Headers</Filter>
     </ClInclude>
     <ClInclude Include="PlayerIsInRange.h">
-      <Filter>EEBehaviors\Headers</Filter>
+      <Filter>EEScripts\Behaviors\Headers</Filter>
     </ClInclude>
     <ClInclude Include="ChargePlayer.h">
-      <Filter>EEBehaviors\Headers</Filter>
+      <Filter>EEScripts\Behaviors\Headers</Filter>
     </ClInclude>
     <ClInclude Include="BaseEnemy.h">
       <Filter>EEScripts\Headers</Filter>
@@ -495,13 +495,13 @@
       <Filter>EEScripts\Headers</Filter>
     </ClInclude>
     <ClInclude Include="HoundPlayer.h">
-      <Filter>EEBehaviors\Headers</Filter>
+      <Filter>EEScripts\Behaviors\Headers</Filter>
     </ClInclude>
     <ClInclude Include="AbilityAvailable.h">
-      <Filter>EEBehaviors\Headers</Filter>
+      <Filter>EEScripts\Behaviors\Headers</Filter>
     </ClInclude>
     <ClInclude Include="SeekAndFleePlayer.h">
-      <Filter>EEBehaviors\Headers</Filter>
+      <Filter>EEScripts\Behaviors\Headers</Filter>
     </ClInclude>
     <ClInclude Include="BodyPart.h">
       <Filter>EEScripts\Headers</Filter>
@@ -510,7 +510,7 @@
       <Filter>EECore\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Invert.h">
-      <Filter>EEBehaviors\Headers</Filter>
+      <Filter>EEScripts\Behaviors\Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -579,15 +579,6 @@
     <Filter Include="EECore\Source Files\Particle System">
       <UniqueIdentifier>{3bc807bf-bb34-40c9-9b5b-e4b0e16b8ecb}</UniqueIdentifier>
     </Filter>
-    <Filter Include="EEBehaviors">
-      <UniqueIdentifier>{20ab4999-beb8-4190-b245-701c0506c4db}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="EEBehaviors\Headers">
-      <UniqueIdentifier>{cf572d7c-fe56-44ce-88c8-c9eeb5e4fe9a}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="EEBehaviors\Source">
-      <UniqueIdentifier>{d691ce4d-d7b1-466c-8a2a-73258e77f6fd}</UniqueIdentifier>
-    </Filter>
     <Filter Include="EEShaders\Pixel Shaders\Post Process">
       <UniqueIdentifier>{cf732fcd-48b9-4540-b758-601c9faf93c4}</UniqueIdentifier>
     </Filter>
@@ -641,6 +632,15 @@
     </Filter>
     <Filter Include="EECore\Source Files\Input\Keyboard">
       <UniqueIdentifier>{aa161763-d20f-462e-a089-4f34139a2f99}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="EEScripts\Behaviors">
+      <UniqueIdentifier>{f386ceac-1b4a-41c6-a1ea-5b33a5315cc1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="EEScripts\Behaviors\Headers">
+      <UniqueIdentifier>{cf572d7c-fe56-44ce-88c8-c9eeb5e4fe9a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="EEScripts\Behaviors\Source">
+      <UniqueIdentifier>{d691ce4d-d7b1-466c-8a2a-73258e77f6fd}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

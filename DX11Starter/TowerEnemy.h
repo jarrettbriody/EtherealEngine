@@ -41,8 +41,8 @@ class TowerEnemy : public ScriptManager, public BaseEnemy
 	float dampingScalar = 0.09f;
 	float turnSpeed = 12.0f;
 	float minimumDistance = 30.0f;
-	float visionConeAngle = 70.0f;
-	float visionConeDistance = 150.0f;
+	float visionConeAngle = 135.0f;
+	float visionConeDistance = 200.0f;
 	float oscillationMagnitude = 0.01f;
 	float totalTime = 0.0f;
 	float projectileSpeed = 50.0f;
