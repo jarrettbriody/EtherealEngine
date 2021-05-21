@@ -469,8 +469,8 @@ void MainMenuManager::Update()
 		}
 	}
 
-	if (!lerpingPaperBottom && !lerpingPaperCamera && paperCounter != numPapers && papersStarted) {
-		if (mouse->OnLMBDown()) {
+	if (paperCounter != numPapers) {
+		if (mouse->OnLMBDown() && !lerpingPaperBottom && !lerpingPaperCamera && papersStarted) {
 			lerpingPaperBottom = true;
 			paperAtCam = false;
 			paperLerpSpd = 0.0f;
@@ -478,6 +478,7 @@ void MainMenuManager::Update()
 				tooltipClosing = true;
 		}
 	}
+	
 	
 
 	paperLerpSpd += 1.0f * deltaTime;
