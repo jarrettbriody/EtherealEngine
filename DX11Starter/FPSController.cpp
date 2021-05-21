@@ -249,114 +249,120 @@ void FPSController::Update()
 		* B - Rotate Camera
 		* C - Everything else
 		*/
-		case PlayerState::Intro:
+	case PlayerState::Intro:
 
-			break;
+		break;
 
-		case PlayerState::Normal:
-			Move();
-			MouseLook();
-			cam->GetTransform().SetPosition(XMFLOAT3(ePos.x, ePos.y + eScl.y / 3.0f + headbobOffset, ePos.z)); // after all updates make sure camera is following the affected entity
-			UpdateDashRingsTransforms();
-			CheckAllAbilities();
-			UpdateSwordSway();
-			break;
-		
-		case PlayerState::HookshotThrow:
-			HookshotThrow();
-			MouseLook();
-			cam->GetTransform().SetPosition(XMFLOAT3(ePos.x, ePos.y + eScl.y / 3.0f + headbobOffset, ePos.z)); // after all updates make sure camera is following the affected entity
-			UpdateHookShotTransform();
-			UpdateDashRingsTransforms();
-			CheckBloodSword();
-			CheckBloodIcicle();
-			CheckBulletTime();
-			UpdateSwordSway();
-			break;
+	case PlayerState::Normal:
+		Move();
+		MouseLook();
+		cam->GetTransform().SetPosition(XMFLOAT3(ePos.x, ePos.y + eScl.y / 3.0f + headbobOffset, ePos.z)); // after all updates make sure camera is following the affected entity
+		UpdateDashRingsTransforms();
+		CheckAllAbilities();
+		UpdateSwordSway();
+		break;
 
-		case PlayerState::HookshotFlight:
-			HookshotFlight();
-			MouseLook();
-			cam->GetTransform().SetPosition(XMFLOAT3(ePos.x, ePos.y + eScl.y / 3.0f + headbobOffset, ePos.z)); // after all updates make sure camera is following the affected entity
-			UpdateHookShotTransform();
-			UpdateDashRingsTransforms();
-			CheckBloodSword();
-			CheckBloodIcicle();
-			CheckBulletTime();
-			UpdateSwordSway();
-			break;
+	case PlayerState::HookshotThrow:
+		HookshotThrow();
+		MouseLook();
+		cam->GetTransform().SetPosition(XMFLOAT3(ePos.x, ePos.y + eScl.y / 3.0f + headbobOffset, ePos.z)); // after all updates make sure camera is following the affected entity
+		UpdateHookShotTransform();
+		UpdateDashRingsTransforms();
+		CheckBloodSword();
+		CheckBloodIcicle();
+		CheckBulletTime();
+		UpdateSwordSway();
+		break;
 
-		case PlayerState::HookshotLeash:
-			HookshotLeash();
-			Move();
-			MouseLook();
-			cam->GetTransform().SetPosition(XMFLOAT3(ePos.x, ePos.y + eScl.y / 3.0f + headbobOffset, ePos.z)); // after all updates make sure camera is following the affected entity
-			UpdateHookShotTransform();
-			UpdateDashRingsTransforms();
-			CheckBloodSword();
-			CheckBloodIcicle();
-			CheckBulletTime();
-			UpdateSwordSway();
-			break;
+	case PlayerState::HookshotFlight:
+		HookshotFlight();
+		MouseLook();
+		cam->GetTransform().SetPosition(XMFLOAT3(ePos.x, ePos.y + eScl.y / 3.0f + headbobOffset, ePos.z)); // after all updates make sure camera is following the affected entity
+		UpdateHookShotTransform();
+		UpdateDashRingsTransforms();
+		CheckBloodSword();
+		CheckBloodIcicle();
+		CheckBulletTime();
+		UpdateSwordSway();
+		break;
 
-		case PlayerState::Paused:
+	case PlayerState::HookshotLeash:
+		HookshotLeash();
+		Move();
+		MouseLook();
+		cam->GetTransform().SetPosition(XMFLOAT3(ePos.x, ePos.y + eScl.y / 3.0f + headbobOffset, ePos.z)); // after all updates make sure camera is following the affected entity
+		UpdateHookShotTransform();
+		UpdateDashRingsTransforms();
+		CheckBloodSword();
+		CheckBloodIcicle();
+		CheckBulletTime();
+		UpdateSwordSway();
+		break;
 
-			break;
+	case PlayerState::Paused:
 
-		case PlayerState::Death:
-			// get rid of all tools
-			if (sword->renderObject) // simple check because if the sword is rendered then death is just starting and we only want to do some state things once
+		break;
+
+	case PlayerState::Death:
+	{
+		// get rid of all tools
+		if (sword->renderObject) // simple check because if the sword is rendered then death is just starting and we only want to do some state things once
+		{
+			sword->renderObject = false;
+			hookshot->renderObject = false;
+			bloodOrb->renderObject = false;
+			EESceneLoader->SceneEntitiesMap["Blood_Orb_Glass"]->renderObject = false;
+
+			for each (Entity * ring in dashRings)
 			{
-				sword->renderObject = false;
-				hookshot->renderObject = false;
-				bloodOrb->renderObject = false;
-				EESceneLoader->SceneEntitiesMap["Blood_Orb_Glass"]->renderObject = false;
-
-				for each (Entity * ring in dashRings)
-				{
-					ring->renderObject = false;
-				}
-
-				// ragdoll the player
-				playerRBody->setAngularFactor(btVector3(1, 1, 1)); // free rotations on x and z axes
-				playerRBody->setGravity(btVector3(0.0f, -30.0f, 0.0f));
-				playerRBody->setMassProps(10.0f, btVector3(0, 0, 0));
-				playerRBody->setFriction(0.5f);
-				//playerRBody->setDamping(0.5f, 0.5f);
-				//playerRBody->applyImpulse(btVector3(5, 2, 10), btVector3(0, playerRBody->getCenterOfMassPosition().getY() - entity->GetScale().y, 0));
-				playerRBody->applyTorqueImpulse(btVector3(-10.0f, 0, 0)); // fall back
-
-				DXCore::deltaTimeScalar = 0.75;
-				/*sword->InitRigidBody(BulletColliderShape::BOX, 1.0f);
-				sword->GetRBody()->setGravity(btVector3(0, -25, 0));
-
-				bloodOrb->InitRigidBody(BulletColliderShape::CAPSULE, 1.0f);
-				bloodOrb->GetRBody()->setGravity(btVector3(0, -25, 0));*/
-
-				ragdollTimeout = 0.3f;
-			}
-			ragdollTimeout -= deltaTime;
-			if (ragdollTimeout <= 0.0f) {
-				ragdollTimeout = 0.0f;
-				playerRBody->clearForces();
-				playerRBody->setAngularVelocity(btVector3(0, 0, 0));
+				ring->renderObject = false;
 			}
 
-			cam->GetTransform().SetPosition(XMFLOAT3(entity->GetTransform().GetPosition().x, entity->GetTransform().GetPosition().y + entity->GetTransform().GetScale().y / 3.0f + headbobOffset, entity->GetTransform().GetPosition().z)); // after all updates make sure camera is following the affected entity
-			//float rotX;
-			//float rotY;
-			//float rotZ;
-			//playerRBody->getCenterOfMassTransform().getRotation().getEulerZYX(rotX, rotY, rotZ);
-			//
-			//cam->RotateCamera(rotX * deltaTime, rotY * deltaTime, rotZ * deltaTime);
-			cam->GetTransform().SetDirectionVectorR(entity->GetTransform().GetDirectionVector(), entity->GetTransform().GetRightVector());
-			cam->rotation = cam->GetTransform().GetEulerAnglesRadians();
-	
-			break;
+			// ragdoll the player
+			playerRBody->setAngularFactor(btVector3(1, 1, 1)); // free rotations on x and z axes
+			playerRBody->setGravity(btVector3(0.0f, -30.0f, 0.0f));
+			playerRBody->setMassProps(10.0f, btVector3(0, 0, 0));
+			playerRBody->setFriction(0.5f);
+			//playerRBody->setDamping(0.5f, 0.5f);
+			//playerRBody->applyImpulse(btVector3(5, 2, 10), btVector3(0, playerRBody->getCenterOfMassPosition().getY() - entity->GetScale().y, 0));
+			playerRBody->applyTorqueImpulse(btVector3(-10.0f, 0, 0)); // fall back
+
+			DXCore::deltaTimeScalar = 0.75;
+			/*sword->InitRigidBody(BulletColliderShape::BOX, 1.0f);
+			sword->GetRBody()->setGravity(btVector3(0, -25, 0));
+
+			bloodOrb->InitRigidBody(BulletColliderShape::CAPSULE, 1.0f);
+			bloodOrb->GetRBody()->setGravity(btVector3(0, -25, 0));*/
+
+			ragdollTimeout = 0.3f;
+		}
+		ragdollTimeout -= deltaTime;
+		if (ragdollTimeout <= 0.0f) {
+			ragdollTimeout = 0.0f;
+			playerRBody->clearForces();
+			playerRBody->setAngularVelocity(btVector3(0, 0, 0));
+		}
+
+		cam->GetTransform().SetPosition(XMFLOAT3(entity->GetTransform().GetPosition().x, entity->GetTransform().GetPosition().y + entity->GetTransform().GetScale().y / 3.0f + headbobOffset, entity->GetTransform().GetPosition().z)); // after all updates make sure camera is following the affected entity
+		//float rotX;
+		//float rotY;
+		//float rotZ;
+		//playerRBody->getCenterOfMassTransform().getRotation().getEulerZYX(rotX, rotY, rotZ);
+		//
+		//cam->RotateCamera(rotX * deltaTime, rotY * deltaTime, rotZ * deltaTime);
+		cam->GetTransform().SetDirectionVectorR(entity->GetTransform().GetDirectionVector(), entity->GetTransform().GetRightVector());
+		cam->rotation = cam->GetTransform().GetEulerAnglesRadians();
+
+		GameManager* gm = (GameManager*)ScriptManager::scriptFunctionsMap["GameManager"]["GAMEMANAGER"];
+		gm->gs = GameState::GameOver;
+
+		break;
+	}
 
 		case PlayerState::Victory:
-			
+		{
 			break;
+		}
 
 		default:
 

@@ -77,6 +77,8 @@ public:
 	static float DebugCameraSpeed;
 	static float MouseSensitivity;
 
+	static bool UpdatePaused;
+
 	static unsigned int MemoryAllocatorSize; //1 gig ish
 	static unsigned int MemoryAllocatorAlignment; //32 byte boundary
 	static unsigned int MemoryAllocatorEntityPoolSize;

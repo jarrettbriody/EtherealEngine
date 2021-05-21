@@ -464,6 +464,9 @@ void Renderer::InitShadows(unsigned int cascadeCount)
 
 void Renderer::InitSkybox()
 {
+	if (skyboxComponents.DepthStencilState) skyboxComponents.DepthStencilState->Release();
+	if (skyboxComponents.Rasterizer) skyboxComponents.Rasterizer->Release();
+
 	D3D11_RASTERIZER_DESC skyRD = {};
 	skyRD.CullMode = D3D11_CULL_FRONT;
 	skyRD.FillMode = D3D11_FILL_SOLID;
@@ -545,6 +548,10 @@ void Renderer::SetShadowCascadeInfo(unsigned int cascadeIndex, unsigned int reso
 
 void Renderer::InitBlendState()
 {
+
+	if(blendState != nullptr) blendState->Release();
+	if(alwaysDrawDepthStencil != nullptr) alwaysDrawDepthStencil->Release();
+
 	D3D11_BLEND_DESC bd = {};
 	bd.RenderTarget[0].BlendEnable = true;
 

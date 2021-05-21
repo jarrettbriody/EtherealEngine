@@ -4,8 +4,6 @@
 void GameManager::Init()
 {
 	uiCB.crosshair = EESceneLoader->DefaultTexturesMap["crosshair"];
-	ID3D11Resource* crosshairResource;
-	ID3D11Texture2D* crosshairTexture;
 	uiCB.crosshair->GetResource(&crosshairResource);
 	crosshairResource->QueryInterface<ID3D11Texture2D>(&crosshairTexture);
 	crosshairTexture->GetDesc(&uiCB.crosshairDesc);
@@ -14,6 +12,8 @@ void GameManager::Init()
 	uiCB.font = EESceneLoader->FontMap["Bloodlust"];
 	//uiCB.EEMouse = Mouse::GetInstance();
 	//uiCB.EESceneLoader = EESceneLoader;
+
+	uiCB.gs = &gs;
 	EERenderer->SetRenderUICallback(true, &uiCB, 0);
 
 	eMap = ScriptManager::sceneEntitiesMap;
@@ -93,7 +93,6 @@ void GameManager::Init()
 	// Play the combat theme
 	for (count = 0; count < 2; count++)
 	{
-		static unsigned long long clock_start = 0;
 		unsigned int slen;
 
 		Config::FMODResult = Config::FMODSystem->playSound(Config::CombatTheme[count], Config::MusicGroup, true, &Config::MusicChannel); // Start a part of the combat theme, but leave it paused
@@ -156,45 +155,69 @@ void GameManager::Update()
 
 	switch (gs)
 	{
-	case GameState::Intro:
-
-		break;
-
-	case GameState::MainMenu:
-		
-		break;
-
-	case GameState::Gameplay:
-		gameTimer -= deltaTime;
-
-		CheckTooltips();
-		CheckPlayerPos();
-
-		// cout << "Game Timer: " << gameTimer << " Enemies Left: " << enemiesAlive << endl;
-		if (gameTimer <= 0 && enemiesAlive > 0) // lose condition TODO: Change to if only if boss is alive and make enemies alive part of thes coring
+		case GameState::Paused:
 		{
-			gs = GameState::GameOver;
+			Config::UpdatePaused = true;
+			Config::ShowCursor = true;
+			while (ShowCursor(Config::ShowCursor) < 0);
+			break;
 		}
 
-		break;
+		case GameState::Gameplay:
+		{
+			gameTimer -= deltaTime;
 
-	case GameState::Victory:
-		
-		break;
+			CheckTooltips();
+			CheckPlayerPos();
 
-	case GameState::GameOver:
-	
-		break;
+			//// cout << "Game Timer: " << gameTimer << " Enemies Left: " << enemiesAlive << endl;
+			//if (gameTimer <= 0 && enemiesAlive > 0) // lose condition TODO: Change to if only if boss is alive and make enemies alive part of thes coring
+			//{
+			//	gs = GameState::GameOver;
+			//}
+			//FPSController* playerScript = (FPSController*)scriptFunctionsMap["FPSController"]["FPSCONTROLLER"];
+			//if (playerScript->GetPlayerState() == PlayerState::Death) {
+			//	gs = GameState::GameOver;
+			//}
+			if (enemiesAlive <= 0) {
+				gs = GameState::Victory;
+			}
 
-	default:
+			if (Keyboard::GetInstance()->OnKeyDown(VK_ESCAPE)) {
+				gs = GameState::Paused;
+			}
 
-		break;
+			break;
+		}
+		case GameState::Victory:
+		{
+			Config::UpdatePaused = true;
+			Config::ShowCursor = true;
+			Config::CaptureMouse = false;
+			while (ShowCursor(Config::ShowCursor) < 0);
+			break;
+		}
+		case GameState::GameOver:
+		{
+			Config::ShowCursor = true;
+			Config::CaptureMouse = false;
+			while (ShowCursor(Config::ShowCursor) < 0);
+			break;
+		}
+		default:
+		{
+			break;
+		}
 	}
 }
 
 GameManager::~GameManager()
 {
 	delete uiCB.spriteBatch;
+
+	crosshairResource->Release();
+	crosshairTexture->Release();
+	//uiCB.crosshair->Release();
 }
 
 void GameManager::CheckTooltips()

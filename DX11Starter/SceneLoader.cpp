@@ -481,7 +481,9 @@ void SceneLoader::LoadAssetPreloadFile()
 						if (regex_search(line, match, RegexObjects.spritefontRegex)) {
 							string spritefont = match[1];
 							spritefont = "../../Assets/Fonts/" + spritefont + ".spritefont";
-							FontMap.insert({ name, new SpriteFont(Config::Device, Utility::StringToWideString(spritefont)) });
+							LPCWSTR wstr = Utility::StringToWideString(spritefont);
+							FontMap.insert({ name, new SpriteFont(Config::Device, wstr) });
+							delete wstr;
 						}
 						else continue;
 						break;
@@ -518,8 +520,8 @@ MESH_TYPE SceneLoader::AutoLoadOBJMTL(string name)
 					for (int j = 0; j < utilizedTextures.size(); j++)
 					{
 						//if the texture is not already utilized, utilize it
-						if (!utilizedTexturesMap.count(utilizedTextures[i]))
-							utilizedTexturesMap.insert({ utilizedTextures[i], true });
+						if (!utilizedTexturesMap.count(utilizedTextures[j]))
+							utilizedTexturesMap.insert({ utilizedTextures[j], true });
 					}
 				}
 			}

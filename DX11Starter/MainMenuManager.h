@@ -406,6 +406,8 @@ struct uiCallback : Utility::Callback {
 			}
 		}
 
+		delete str;
+
 		str = Utility::StringToWideString("MUSIC VOLUME (UP/DOWN): " + to_string(Config::MusicVolume));
 
 		startLen = font->MeasureString(str);
@@ -447,6 +449,8 @@ struct uiCallback : Utility::Callback {
 			}
 		}
 
+		delete str;
+
 		str = Utility::StringToWideString("SFX VOLUME (UP/DOWN): " + to_string(Config::SFXVolume));
 
 		startLen = font->MeasureString(str);
@@ -487,6 +491,8 @@ struct uiCallback : Utility::Callback {
 				optionsButton = OptionsButton::SFX_VOL;
 			}
 		}
+
+		delete str;
 
 		str = L"BACK";
 
@@ -1087,6 +1093,8 @@ class MainMenuManager : public ScriptManager
 	bool papersStarted = false;
 	bool skipped = false;
 	bool finishedAnimation = false;
+
+	unsigned long long clock_start = 0;
 
 	Mouse* mouse = nullptr;
 

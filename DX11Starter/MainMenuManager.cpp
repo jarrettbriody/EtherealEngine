@@ -263,7 +263,6 @@ void MainMenuManager::Init()
 	// Play the main theme
 	for (count = 0; count < 3; count++)
 	{
-		static unsigned long long clock_start = 0;
 		unsigned int slen;
 
 		//FMOD::Channel* mChannel;
@@ -315,6 +314,9 @@ void MainMenuManager::Init()
 		Config::FMODResult = Config::MusicChannel->setPaused(false); // Unpause this section of the main theme so it will play after the delay passes
 		AudioManager::FMODErrorCheck(Config::FMODResult);
 	}
+
+	Config::ShowCursor = true;
+	while (ShowCursor(Config::ShowCursor) < 0);
 }
 
 void MainMenuManager::Update()

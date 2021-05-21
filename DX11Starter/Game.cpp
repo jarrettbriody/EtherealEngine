@@ -193,7 +193,7 @@ void Game::Init()
 {
 	//dont delete this, its for finding mem leaks
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-	//_CrtSetBreakAlloc(527625);
+	//_CrtSetBreakAlloc(3267);
 	//_CrtSetBreakAlloc(49892);
 
 	//gContactBreakingThreshold = 0.1f;
@@ -735,13 +735,16 @@ void Game::Update(double deltaTime, double totalTime)
 		EERenderer->InitHBAOPlus();
 		EERenderer->InitPostProcessRTV();
 		EERenderer->InitShadows(4);
+		EERenderer->InitSkybox();
 		sceneChangeCallback.cancelDraw = false;
 	}
 
-	if (GetAsyncKeyState(VK_ESCAPE)) {
-		Config::SwapChain->SetFullscreenState(false, NULL);
-		Quit();
-	}
+	if (Config::UpdatePaused) return;
+
+	//if (GetAsyncKeyState(VK_ESCAPE)) {
+	//	Config::SwapChain->SetFullscreenState(false, NULL);
+	//	Quit();
+	//}
 
 	EECamera->Update(deltaTime);
 
