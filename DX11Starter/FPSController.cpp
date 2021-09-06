@@ -348,7 +348,7 @@ void FPSController::Update()
 		//float rotY;
 		//float rotZ;
 		//playerRBody->getCenterOfMassTransform().getRotation().getEulerZYX(rotX, rotY, rotZ);
-		//
+		
 		//cam->RotateCamera(rotX * deltaTime, rotY * deltaTime, rotZ * deltaTime);
 		cam->GetTransform().SetDirectionVectorR(entity->GetTransform().GetDirectionVector(), entity->GetTransform().GetRightVector());
 		cam->rotation = cam->GetTransform().GetEulerAnglesRadians();
@@ -608,6 +608,9 @@ void FPSController::HookshotFlight()
 {
 	playerRBody->setGravity(btVector3(0,0,0));
 
+	btVector3 playerCenterOfMassPos = playerRBody->getCenterOfMassPosition();
+	btScalar distanceToHitPoint = playerCenterOfMassPos.distance(hookshotPoint);
+
 	if (keyboard->KeyIsPressed(0x45))
 	{
 		if (hookshotZScale < hookshotLength)
@@ -618,10 +621,6 @@ void FPSController::HookshotFlight()
 		{
 			hookshotZScale -= hookshotThrowSpeed * deltaTime;
 		}
-
-		btVector3 playerCenterOfMassPos = playerRBody->getCenterOfMassPosition();
-
-		btScalar distanceToHitPoint = playerCenterOfMassPos.distance(hookshotPoint);
 
 		playerRBody->activate();
 		playerRBody->applyCentralForce(controllerVelocity.normalized() + (hookshotPoint - playerCenterOfMassPos).normalized() * distanceToHitPoint * 2.0f); // adjust speed according to distance away with an added small scalar
@@ -636,6 +635,9 @@ void FPSController::HookshotFlight()
 	}
 	else // cancel if not holding E
 	{
+		// TODO: Continue force after grapple release here...potential to use after-effect impulse to continue momentum?
+		// impulseSumVec += controllerVelocity.normalized() + (hookshotPoint - playerCenterOfMassPos).normalized() * 2.0f;
+
 		ResetHookshotTransform();
 		hookshotChannel->stop();
 		Config::FMODResult = Config::FMODSystem->playSound(Config::Hookshot[4], Config::SFXGroup2D, false, &Config::SFXChannel2D);
@@ -873,9 +875,10 @@ void FPSController::Move()
 	if (keyboard->KeyIsPressed(0x57)) // w
 	{ 
 		btVector3 forwardForce;
+
 		if (midAir)
 		{
-			forwardForce = btVector3(direction.x, 0, direction.z);
+			forwardForce = btVector3(direction.x, 0, direction.z) * (spd / 2);
 			footstepChannel->setPaused(true);
 		}
 		else
@@ -898,7 +901,7 @@ void FPSController::Move()
 
 		if (midAir)
 		{
-			backwardForce = btVector3(direction.x, 0, direction.z) * -1;
+			backwardForce = btVector3(direction.x, 0, direction.z) * -(spd / 2);
 			footstepChannel->setPaused(true);
 		}
 		else
@@ -921,7 +924,7 @@ void FPSController::Move()
 
 		if (midAir)
 		{
-			leftwardForce = btVector3(right.x, 0, right.z);
+			leftwardForce = btVector3(right.x, 0, right.z) * (spd / 2);
 			footstepChannel->setPaused(true);
 		}
 		else
@@ -944,9 +947,10 @@ void FPSController::Move()
 	{ 
 		btVector3 rightwardForce;
 
+
 		if (midAir)
 		{
-			rightwardForce = btVector3(right.x, 0, right.z) * -1;
+			rightwardForce = btVector3(right.x, 0, right.z) * -(spd / 2);
 			footstepChannel->setPaused(true);
 		}
 		else
@@ -980,6 +984,18 @@ void FPSController::Move()
 	// Ensuring current speed does not overtake maxSpeed
 	btScalar ySpd = playerRBody->getLinearVelocity().getY();
 	btScalar spd = controllerVelocity.length();
+
+	float maxSpeed;
+
+	if (keyboard->KeyIsPressed(VK_SHIFT))
+	{
+		maxSpeed = maxSprintSpd;
+	}
+	else
+	{
+		maxSpeed = maxWalkSpeed;
+	}
+
 	if (spd > maxSpeed) controllerVelocity = controllerVelocity.normalized() * maxSpeed;
 	controllerVelocity.setValue(controllerVelocity.getX(), ySpd, controllerVelocity.getZ());
 	
@@ -1057,7 +1073,7 @@ void FPSController::GroundCheck()
 	else
 	{
 		midAir = true;
-		playerRBody->setGravity(btVector3(0.0f, -30.0f, 0.0f)); 
+		playerRBody->setGravity(btVector3(0, playerGravity, 0)); 
 		FPSCtrlUICb.standObj = "";
 	}
 }
@@ -1066,6 +1082,16 @@ void FPSController::UpdateHeadbob()
 {
 	if (keyboard->CheckKeysPressed(baseMovementKeys, 4) && !midAir) // if any base movement keys are down and we are on the ground we want to headbob
 	{
+		float HEADBOB_OFFSET_MAX;
+		if(keyboard->KeyIsPressed(VK_SHIFT))
+		{
+			HEADBOB_OFFSET_MAX = HEADBOB_OFFSET_MAX_SPRINT;
+		}
+		else
+		{
+			HEADBOB_OFFSET_MAX = HEADBOB_OFFSET_MAX_WALK;
+		}
+
 		if ((headbobOffset < HEADBOB_OFFSET_MAX) && !resetHeadbob) // increase headbob offset if it is less than the max and we are not resetting 
 		{
 			headbobOffset += HEADBOB_OFFSET_INTERVAL * deltaTime;
@@ -1142,11 +1168,11 @@ btVector3 FPSController::JumpForceFromInput()
 
 			if (!midAir)
 			{
-				jumpForce = btVector3(direction.x, 10.0f, direction.z) * jumpForceScalar;
+				jumpForce = btVector3(direction.x, jumpHeight, direction.z) * jumpForceScalar;
 			}
 			else
 			{
-				jumpForce = btVector3(direction.x, 12.0f * jumpForceScalar, direction.z); // not allowing as much lateral movement on second jump but giving more height
+				jumpForce = btVector3(direction.x, jumpHeight * doubleJumpHeightScalar, direction.z) * jumpForceScalar; // not allowing as much lateral movement on second jump but giving more height
 			}
 
 			jumpCount++;
@@ -1184,7 +1210,7 @@ btVector3 FPSController::DashImpulseFromInput()
 
 	// dash force
 	btVector3 dashImpulse = btVector3(0, 0, 0);
-	if (dashCount > 0 && keyboard->OnKeyDown(VK_SHIFT))
+	if (dashCount > 0 && keyboard->OnKeyDown(0x43)) // TODO: Change this to double-tap activation if team approves of the shift-to-sprint model
 	{
 		dashCount--;
 		UpdateDashRingsActive(false);

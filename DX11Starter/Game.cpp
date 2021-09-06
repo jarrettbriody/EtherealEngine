@@ -288,11 +288,11 @@ void Game::Init()
 	EERenderer->InitPostProcessRTV();
 	EESceneLoader->EERenderer = EERenderer;
 
-	EESceneLoader->SetModelPath("../../Assets/Models/MainMenu/");
-	EESceneLoader->LoadScene("MainMenu");
+	// EESceneLoader->SetModelPath("../../Assets/Models/MainMenu/");
+	// EESceneLoader->LoadScene("MainMenu");
 
-	//EESceneLoader->SetModelPath("../../Assets/Models/Kamchatka/");
-	//EESceneLoader->LoadScene("Kamchatka");
+	EESceneLoader->SetModelPath("../../Assets/Models/Kamchatka/");
+	EESceneLoader->LoadScene("Kamchatka");
 
 	EERenderer->SetShadowCascadeInfo(0, 4096, 0.1f, 2000.0f, 100.0f, 100.0f);
 	EERenderer->SetShadowCascadeInfo(1, 4096, 0.1f, 2000.0f, 250.0f, 250.0f);

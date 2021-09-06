@@ -155,7 +155,10 @@ class FPSController : public ScriptManager
 	btVector3 hookshotHitNormal;
 
 	// Player Attributes
-	float bloodResource = 100.0f; // this is always out of 100 
+	float bloodResource = 100.0f; // this is always out of 100
+	float playerGravity = -45.0f;
+
+	// TODO: Update headbob amount/interval for walking/sprinting states if shit-to-sprint model is approved by the team (change FOV for sprinting?) 
 
 	// Camera related attributes
 	Camera* cam;
@@ -168,7 +171,8 @@ class FPSController : public ScriptManager
 	const float CAM_ROLL_MAX = 0.05f;
 	const float HEADBOB_OFFSET_INTERVAL = 3.0f;
 	const float HEADBOB_OFFSET_MIN = 0.0f;
-	const float HEADBOB_OFFSET_MAX = 0.5f;
+	const float HEADBOB_OFFSET_MAX_WALK = 0.5f;
+	const float HEADBOB_OFFSET_MAX_SPRINT = 1.5f;
 	float headbobOffset = HEADBOB_OFFSET_MIN;
 	bool resetHeadbob = false;
 	const float NORMAL_FOV = 100.0f;
@@ -193,16 +197,19 @@ class FPSController : public ScriptManager
 	btVector3 controllerVelocity;
 	btVector3 impulseSumVec;
 
-	float spd = 15.0f;
-	float maxSpeed = 40.0f;
+	float spd = 10.0f;
+	float maxSprintSpd = 65.0f;
+	float maxWalkSpeed = 35.0f;
 	float dampingScalar = 0.09f;
 
 	const unsigned char baseMovementKeys[4] = { 0x57, 0x53, 0x41, 0x44 }; // WASD
 
 	// Jumping
+	float jumpHeight = 10.0f;
 	bool midAir = true; // true if starting character in the air
 	int jumpCount = 0;
 	float jumpForceScalar = 2.3f;
+	float doubleJumpHeightScalar = 2.0f;
 	float jumpForgiveness = 0.0f;
 
 	// Dashing
