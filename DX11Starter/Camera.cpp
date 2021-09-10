@@ -6,9 +6,9 @@ Camera::Camera()
 {
 	transform = Transform((unsigned int)TRANSFORM_FLAGS::POSITION | (unsigned int)TRANSFORM_FLAGS::ROTATION | (unsigned int)TRANSFORM_FLAGS::LOCALAXIS);
 
-	transform.SetPosition(XMFLOAT3(-8.13f, 3.83f, -1.05f));
+	transform.SetPosition(ZERO_VECTOR3);
 
-	rotation = XMFLOAT3(0, XMConvertToRadians(90.0f), 0);
+	rotation = XMFLOAT3(ZERO_VECTOR3);
 	transform.SetRotationRadians(rotation);
 
 	mouse = Mouse::GetInstance();
