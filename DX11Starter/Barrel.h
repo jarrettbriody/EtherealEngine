@@ -14,6 +14,10 @@ struct Vec3
 	Vec3 operator* (const float& scalar) {
 		return { x * scalar, y * scalar, z * scalar };
 	}
+
+	Vec3 operator- (const Vec3& other) {
+		return { x - other.x, y - other.y, z - other.z };
+	}
 };
 struct Quaternion
 {
@@ -72,6 +76,14 @@ struct SFrustum
 	}
 };
 
+
+struct SCamera
+{
+	Vec3 position;
+	Quaternion rotation;
+	SFrustum relativeFrustum; // relative from camera’s position and rotation
+};
+
 struct TestUICallback : Utility::Callback {
 	DirectX::SpriteFont* font;
 	DirectX::SpriteBatch* spriteBatch;
@@ -117,12 +129,20 @@ class TestScript : public ScriptManager
 
 	SFrustum frustum;
 
+	SCamera cam;
+
+	AABB* obstacles = nullptr;
+	int obstacleCnt = 0;
+
+	XMFLOAT3 cubePoint;
+	XMFLOAT3 testPoint;
+
 	void Init();
 
 	void Update();
 
 	void OnCollision(btCollisionObject* other);
 
-	bool IsVisible();
+	bool IsVisible(const SCamera& camera, const Vec3& targetPosition, const AABB* obstacles, size_t numObstacles);
 };
 

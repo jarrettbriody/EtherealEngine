@@ -751,14 +751,14 @@ void Game::Update(double deltaTime, double totalTime)
 
 	EECamera->Update(deltaTime);
 
+	PhysicsStep(deltaTime);
+
 	for (size_t i = 0; i < ScriptManager::scriptFunctions.size(); i++)
 	{
 		ScriptManager* sf = ScriptManager::scriptFunctions[i];
 		if(!sf->GetIsInitialized())
 			sf->CallInit();
 	}
-
-	PhysicsStep(deltaTime);
 
 	// Play the 2D sound only if the channel group is not playing something
 	/*sfxGroup->isPlaying(&isPlaying);
