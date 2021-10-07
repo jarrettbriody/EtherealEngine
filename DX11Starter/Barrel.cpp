@@ -86,7 +86,7 @@ void TestScript::Init()
 
 	// Create debug line
 	DebugLines* dl = new DebugLines("TestRay", 0, false);
-	XMFLOAT3 c = XMFLOAT3(1.0f, 0.0f, 0.0f);
+	XMFLOAT3 c = XMFLOAT3(1.0f, 1.0f, 1.0f);
 	dl->color = c;
 	dl->worldMatrixPtr = &mat;
 
@@ -101,6 +101,52 @@ void TestScript::Init()
 	rayPoints[6] = end;
 	rayPoints[7] = end;
 	dl->GenerateCuboidVertexBuffer(rayPoints, 8);
+
+	dl = new DebugLines("TestRay", 0, false);
+	c = XMFLOAT3(1.0f, 0.0f, 0.0f);
+	dl->color = c;
+	dl->worldMatrixPtr = &mat;
+	end = { 1.0f,0,0 };
+	rayPoints[0] = start;
+	rayPoints[1] = start;
+	rayPoints[2] = start;
+	rayPoints[3] = start;
+	rayPoints[4] = end;
+	rayPoints[5] = end;
+	rayPoints[6] = end;
+	rayPoints[7] = end;
+	dl->GenerateCuboidVertexBuffer(rayPoints, 8);
+
+	dl = new DebugLines("TestRay", 0, false);
+	c = XMFLOAT3(0.0f, 1.0f, 0.0f);
+	dl->color = c;
+	dl->worldMatrixPtr = &mat;
+	end = { 0.0f,1,0 };
+	rayPoints[0] = start;
+	rayPoints[1] = start;
+	rayPoints[2] = start;
+	rayPoints[3] = start;
+	rayPoints[4] = end;
+	rayPoints[5] = end;
+	rayPoints[6] = end;
+	rayPoints[7] = end;
+	dl->GenerateCuboidVertexBuffer(rayPoints, 8);
+
+	dl = new DebugLines("TestRay", 0, false);
+	c = XMFLOAT3(0.0f, 0.0f, 1.0f);
+	dl->color = c;
+	dl->worldMatrixPtr = &mat;
+	end = { 0.0f,0,1 };
+	rayPoints[0] = start;
+	rayPoints[1] = start;
+	rayPoints[2] = start;
+	rayPoints[3] = start;
+	rayPoints[4] = end;
+	rayPoints[5] = end;
+	rayPoints[6] = end;
+	rayPoints[7] = end;
+	dl->GenerateCuboidVertexBuffer(rayPoints, 8);
+
 	delete[] rayPoints;
 
 	(*sceneEntitiesMap)["testcube"]->GetTransformPtr()->SetPosition(cubePoint);

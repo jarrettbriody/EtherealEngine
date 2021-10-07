@@ -97,7 +97,7 @@ struct TestUICallback : Utility::Callback {
 			XMVectorSet(1, 1, 1, 1),
 			0.0f,
 			XMVectorSet(0, 0, 0, 0),
-			XMVectorSet(1.0f, 1.0f, 0, 0),
+			XMVectorSet(3.0f, 3.0f, 0, 0),
 			SpriteEffects::SpriteEffects_None,
 			0.0f
 		);
